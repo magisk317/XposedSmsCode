@@ -19,10 +19,13 @@
     <string name="enable_module_message">請先激活本模組，否則本模組將無法正常運作！</string>
     <string name="pref_enable_summary">模組已激活</string>
     <string name="pref_enable_summary_alt">請先激活本模組</string>
-    <string name="open_xposed_installer">打開Xposed</string>
     <string name="pref_hide_launcher_icon_title">隱藏應用圖示</string>
     <string name="pref_hide_launcher_icon_summary">隱藏後可從模組列表中打開本模組</string>
     <string name="pref_choose_theme_title">主題</string>
+    <string name="pref_choose_theme_summary">跟隨系統、淺色或深色</string>
+    <string name="theme_follow_system">自動 (跟隨系統)</string>
+    <string name="theme_light">淺色</string>
+    <string name="theme_dark">深色</string>
     <string name="module_status_active">已激活</string>
     <string name="module_status_inactive">未激活</string>
     <!-- preferences general end -->
@@ -108,6 +111,7 @@
     <string name="pref_others_title">其他</string>
     <string name="pref_verbose_log_mode_title">輸出詳細日誌</string>
     <string name="pref_verbose_log_mode_summary">輸出詳細的日誌到Xposed(僅用於調試)</string>
+    <string name="qq_group_number">1075934453</string>
     <!-- preference others end -->
 
     <!-- preference about -->
@@ -115,12 +119,12 @@
     <string name="pref_version_title">版本</string>
     <string name="pref_version_summary"><![CDATA[當前版本：%1$s (%2$d)]]></string>
     <string name="pref_join_qq_group_title">加群反饋交流</string>
-    <string name="pref_join_qq_group_summary">QQ群：478884682</string>
-    <string name="prompt_join_qq_group_failed">請先安裝或啟用QQ</string>
+    <string name="pref_join_qq_group_summary">QQ群：%s</string>
+    <string name="prompt_join_qq_group_failed">請先安裝手機QQ</string>
     <string name="pref_source_code_title">項目源碼</string>
     <string name="browser_install_or_enable_prompt">請先安裝或啟用瀏覽器</string>
     <string name="pref_source_code_summary">歡迎Star ♪(＾∀＾)ﾉ</string>
-    <string name="pref_donate_by_alipay_title">支付寶捐贈</string>
+    <string name="pref_donate_by_alipay_title">捐贈打賞</string>
     <string name="alipay_install_prompt">請先安裝支付寶</string>
     <string name="alipay_enable_prompt">請先啟用支付寶</string>
     <string name="wechat_install_prompt">請先安裝WeChat</string>
@@ -219,32 +223,28 @@
     <!-- faq end -->
 
     <!-- alipay packet start -->
-    <string name="pref_get_alipay_packet_title">領取支付寶紅包</string>
-    <string name="pref_get_alipay_packet_summary">每天可領取支付寶紅包</string>
-    <string name="pref_get_alipay_packet_content">打開支付寶首頁搜索 %s 可每天領取紅包~</string>
-    <string name="copy_packet_code_open_alipay">複製紅包碼并打開支付寶</string>
-    <string name="alipay_red_packet_code_copied">已複製紅包碼：%s</string>
-    <string name="get_red_packet">領取紅包</string>
-    <string name="dialog_donate_by_alipay_title">捐贈</string>
-    <string name="dialog_donate_by_alipay_content">請開發者喝飲料吧 ✿✿ヽ(°▽°)ノ✿</string>
-    <string name="dialog_donate_confirm">好呀好呀</string>
-    <string name="dialog_donate_cancel">下次一定</string>
+    <string name="pref_get_alipay_packet_title">領個紅包救救孩子</string>
+    <string name="pref_get_alipay_packet_summary">每天領個免費紅包，也是對我的一點支持了 T_T</string>
+    <string name="pref_get_alipay_packet_content">求求了，打開支付寶搜這個口令，每天都能白嫖紅包，我就能吃上肉了 %s</string>
+    <string name="copy_packet_code_open_alipay"><![CDATA[複製口令並打開支付寶]]></string>
+    <string name="alipay_red_packet_code_copied">紅包口令已複製，快去白嫖吧: %s</string>
+    <string name="get_red_packet">領個紅包</string>
+    <string name="dialog_donate_title">求賞口飯吃吧 T_T</string>
+    <string name="dialog_donate_content">開發者已經餓得快寫不動代碼了，求各位老闆大發慈悲賞口飯吃吧！不管是微信還是支付寶，哪怕是一分錢也是對我的巨大救贖 ✿✿ヽ(°▽°)ノ✿</string>
+    <string name="dialog_donate_wechat">微信賞點 (多謝老闆)</string>
+    <string name="dialog_donate_alipay">支付寶賞點 (感激涕零)</string>
+    <string name="dialog_donate_alipay_choice_title">請選擇支持方式</string>
+    <string name="dialog_donate_alipay_choice_content">您可以「複製紅包口令」白嫖紅包來支持我，或者直接「保存收款碼」進行打賞。保存圖片後會自動幫您跳轉到支付寶哦~</string>
+    <string name="dialog_donate_alipay_token">複製口令並白嫖</string>
+    <string name="dialog_donate_alipay_qrcode">保存收款碼並打賞</string>
+    <string name="dialog_donate_cancel">下次一定 (雖然可能沒有下次了...)</string>
+    <string name="long_press_save_hint">長按圖片可保存到相冊</string>
+    <string name="save_to_gallery_success">圖片已保存到相冊，正在前往支付應用...</string>
+    <string name="save_to_gallery_failed">保存失敗，請檢查文件權限</string>
     <!-- alipay packet end -->
 
-    <!-- taichi users notice -->
-    <string name="taichi_users_notice">太極用戶須知</string>
-    <string name="taichi_users_notice_content">1. 本模組需在太極·magisk(太極·陽)下運行\n\n2. 太極用戶如需使用所有功能，需要將以下程式添加至太極中：\n\t· 電話語音(com.android.phone)\n\t· Android系統(android)\n\n3. 每次更新後，若模組失效，請在太極的模組管理列表中重新勾選本模組，並重啟手機。\n\n4. 如果無法自動輸入，請升級太極至5.1.8及以上版本。</string>
-    <string name="taichi_install_prompt">請先安裝太極</string>
-    <string name="taichi_enable_prompt">請先啟用太極</string>
-    <string name="xposed_not_installed">請安裝或啟用Xposed Installer</string>
-    <string name="add_apps_in_taichi">添加程式</string>
-    <string name="check_module_in_taichi">勾選模組</string>
-    <!-- taichi users notice end -->
+    <string name="xposed_not_installed">請安裝或啟用 LSPosed 會員</string>
 
-    <!-- edxposed users notice -->
-    <string name="edxposed_users_notice">EdXposed用戶須知</string>
-    <string name="edxposed_users_notice_content">1. 本模塊作用在以下應用中(也就是需要Hook以下應用)：\n\t· 電話服務(com.android.phone)\n\t· Android系統(android) \n\n2. 若模塊顯示未激活，請在模塊管理列表中重新勾選本模塊，並重啟手機。 \n\n3. 若您使用全局模式不生效，則切換為白名單（Xposed Hide 白）模式或者在作用域模式，同時需要將第1點中的應用添加進去。 </string>
-    <!-- edxposed users notice end -->
 
     <!-- check update -->
     <string name="new_version_found">發現新版本！</string>
@@ -273,23 +273,23 @@
 
     <!-- faq -->
     <string-array name="question_list">
-        <item>模組顯示未激活怎麼辦？</item>
-        <item>EdXposed用戶需要注意什麼？</item>
-        <item>太極用戶需要注意什麼？</item>
+        <item>模組未激活怎麼辦？</item>
+        <item>Android 15 會不定期閃退？</item>
+        <item>手機發燙正常嗎？</item>
         <item>empty</item>
         <item>模組失效怎麼辦？</item>
         <item>標記簡訊為已讀或者刪除簡訊，為什麼不生效？</item>
         <item>這個模組適用於什麼樣的Rom呢？</item>
-        <item>產品的初衷是什麼？</item>
+        <item>開發初衷是什麼？</item>
     </string-array>
     <string-array name="answer_list">
-        <item>在模組列表中重新勾選本模組，殺死本模組App之後重新打開即可，必要時需要重啟手機。</item>
-        <item>EdXposed用戶請參考右上角更多菜單欄中的“EdXposed用戶須知”</item>
-        <item>太極用戶請參考右上角更多菜單欄中的“太極用戶須知”</item>
+        <item>在模組列表中重新勾選本模組，結束本應用程式進程之後重新打開即可，必要時需要重啟手機。</item>
+        <item>Android 15 系統機制更新，請確保使用最新版本的 LSPosed 並適配作用域。</item>
+        <item>本模組資源佔用極低，若發燙嚴重請檢查是否與其他模組衝突。</item>
         <item>empty</item>
-        <item>1. 因為使用到ContentProvider，所以需要放在應用控制類程式(黑閾、應用管理、綠色守護等)的白名單中。\n\n2. 檢查模組的組件(ContentProvider)是否被組件控制類軟體(Blocker、寫輪眼等)禁用。\n\n3. 檢查是否打開驗證碼安全保護開關(華為，oppo等國內Rom)。\n\n4. 請聯繫開發者，反饋問題。</item>
-        <item>如果您設備上默認的簡訊 App 使用的是它自己的簡訊數據庫，而不是系統的簡訊數據庫，那麼標記為已讀或者刪除驗證碼簡訊都可能不會生效。如果發生這樣的事情，就說明在您的設備上可能不會生效。</item>
-        <item>適用於基於AOSP的類原生Rom，在其他第三方高度訂製化的Rom可能無法正常運作。</item>
+        <item>1. 因為使用到ContentProvider，所以需要將本模組放入應用控制類軟體(黑域、應用管理、綠色守護等)的白名單中。\n\n2. 檢查模組組件是否被禁用。\n\n3. 檢查系統是否開啟了驗證碼保護開關。\n\n4. 請聯繫開發者，反饋問題。</item>
+        <item>如果您設備上默認的簡訊 App 使用的是它自己的簡訊數據庫，而不是系統的簡訊數據庫，那麼這些操作都可能不會生效。</item>
+        <item>適用於基於AOSP的類原生Rom，在其他高度客製化的Rom可能無法正常運作。</item>
         <item>不做毒瘤，綠色Android，不忘初心。</item>
     </string-array>
     <!-- faq end -->

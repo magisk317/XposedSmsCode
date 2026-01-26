@@ -1,7 +1,7 @@
 # XposedSmsCode
-![Total Downloads](https://img.shields.io/github/downloads/tianma8023/XposedSmsCode/total) ![Total Stars](https://img.shields.io/github/stars/tianma8023/XposedSmsCode?style=social) [![Latest Release](https://img.shields.io/github/v/release/tianma8023/XposedSmsCode?label=Latest%20Release)](https://github.com/tianma8023/XposedSmsCode/releases)
+![Total Downloads](https://img.shields.io/github/downloads/magisk317/XposedSmsCode/total) ![Total Stars](https://img.shields.io/github/stars/magisk317/XposedSmsCode?style=social) [![Latest Release](https://img.shields.io/github/v/release/magisk317/XposedSmsCode?label=Latest%20Release)](https://github.com/magisk317/XposedSmsCode/releases)
 
-![Star History Chart](https://api.star-history.com/svg?repos=tianma8023/XposedSmsCode&type=Date)
+![Star History Chart](https://api.star-history.com/svg?repos=magisk317/XposedSmsCode&type=Date)
 
 An Xposed module which can recognize, parse SMS code and copy it to clipboard when a new message arrives. It can also input SMS code automatically.
 
@@ -11,8 +11,8 @@ An Xposed module which can recognize, parse SMS code and copy it to clipboard wh
 <img src="./art/en/01.png" width="180"/><img src="./art/en/02.png" width="180"/><img src="./art/en/03.png" width="180"/>
 
 # Download
-- [GitHub Releases](https://github.com/tianma8023/XposedSmsCode/releases)
-- [LSPosed Repository](https://github.com/Xposed-Modules-Repo/com.github.tianma8023.xposed.smscode/releases/)
+- [GitHub Releases](https://github.com/magisk317/XposedSmsCode/releases)
+- ~~[LSPosed Repository](https://github.com/Xposed-Modules-Repo/com.github.tianma8023.xposed.smscode/releases/)~~
 - ~~[Coolapk](https://www.coolapk.com/apk/com.github.tianma8023.xposed.smscode)~~
 - ~~[Xposed Repository](http://repo.xposed.info/module/com.github.tianma8023.xposed.smscode)~~
 
@@ -25,8 +25,8 @@ Welcome any feedbacks.
 
 # Attention
 - **This module is suitable for AOSP ROM, it may not work well on other 3rd-party Rom.**
-- **Compatibility: Requires Android 6.0+ (api level ≥ 23).**
-- **Support Xposed, EdXposed, LSPosed and TaiChi·Magisk**
+- **Compatibility: Requires Android 15+ (api level ≥ 35).**
+- **Support LSPosed (Android 15+)**
 - **Read the FAQ in app first if you encounter any problems.**
 
 # Features
@@ -47,16 +47,21 @@ Welcome any feedbacks.
 # Thanks To
 - [Xposed](https://github.com/rovo89/Xposed)
 - [NekoSMS](https://github.com/apsun/NekoSMS)
-- [ButterKnife](https://github.com/JakeWharton/butterknife)
+- [Xposed](https://github.com/rovo89/Xposed)
+- [NekoSMS](https://github.com/apsun/NekoSMS)
 - [Material Dialogs](https://github.com/afollestad/material-dialogs)
 - [EventBus](https://github.com/greenrobot/EventBus)
-- [GreenDao](https://github.com/greenrobot/greenDAO)
-- [GreenDaoUpgradeHelper](https://github.com/yuweiguocn/GreenDaoUpgradeHelper)
+- [Room](https://developer.android.com/training/data-storage/room)
 - [Gson](https://github.com/google/gson)
-- [dagger](https://github.com/google/dagger)
-- [rxjava](https://github.com/ReactiveX/RxJava)
-- [rxandroid](https://github.com/ReactiveX/RxAndroid)
-- [Cyanea](https://github.com/jaredrummler/Cyanea)
+- [Kotlin Coroutines](https://github.com/Kotlin/kotlinx.coroutines)
+- [Material Components](https://github.com/material-components/material-components-android)
 
 # License
 All code is licensed under [GPLv3](https://www.gnu.org/licenses/gpl-3.0.txt) 
+
+# Donation
+If you find this project helpful, please consider rewarding the developer with a cup of coffee. Your support is the greatest motivation for my persistent maintenance!
+
+| Alipay Red Packet | Alipay Receipt | WeChat Appreciation |
+| :---: | :---: | :---: |
+| ![Alipay Red Packet](./art/sponsorship/alipay_pocket.png) | ![Alipay](./art/sponsorship/alipay.png) | ![WeChat](./art/sponsorship/wx.png) |

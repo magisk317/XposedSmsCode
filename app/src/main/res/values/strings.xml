@@ -19,10 +19,13 @@
     <string name="enable_module_message">Please activate this module, or this App won\'t work!</string>
     <string name="pref_enable_summary">Module active</string>
     <string name="pref_enable_summary_alt">Please activate this module first!</string>
-    <string name="open_xposed_installer">Open Xposed Installer</string>
     <string name="pref_hide_launcher_icon_title">Hide launcher icon</string>
     <string name="pref_hide_launcher_icon_summary">You can reopen this App in Xposed modules</string>
     <string name="pref_choose_theme_title">Theme</string>
+    <string name="pref_choose_theme_summary">Follow System, Light or Dark</string>
+    <string name="theme_follow_system">Automatic (Follow System)</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
     <string name="module_status_active">Active</string>
     <string name="module_status_inactive">Inactive</string>
     <!-- preferences general end -->
@@ -115,13 +118,14 @@
     <string name="pref_about_title">About</string>
     <string name="pref_version_title">Version</string>
     <string name="pref_version_summary"><![CDATA[Current version: %1$s (%2$d)]]></string>
-    <string name="pref_join_qq_group_title">Communication and Bug report</string>
-    <string name="pref_join_qq_group_summary">QQ group: 478884682</string>
-    <string name="prompt_join_qq_group_failed">Please install or enable QQ first</string>
+    <string name="pref_join_qq_group_title">Join QQ Group</string>
+    <string name="pref_join_qq_group_summary">Click to apply for joining (%s)</string>
+    <string name="qq_group_number">1075934453</string>
+    <string name="prompt_join_qq_group_failed">Please install QQ first</string>
     <string name="pref_source_code_title">Source code</string>
     <string name="browser_install_or_enable_prompt">Please install or enable browser first</string>
     <string name="pref_source_code_summary">Welcome to star ♪(＾∀＾●)ﾉ</string>
-    <string name="pref_donate_by_alipay_title">Donate by Alipay</string>
+    <string name="pref_donate_by_alipay_title">Donation Appreciation</string>
     <string name="alipay_install_prompt">Please install Alipay</string>
     <string name="alipay_enable_prompt">Please enable Alipay</string>
     <string name="wechat_install_prompt">Please install Wechat</string>
@@ -220,32 +224,27 @@
     <!-- faq end -->
 
     <!-- alipay packet start -->
-    <string name="pref_get_alipay_packet_title">Get Alipay red packet</string>
-    <string name="pref_get_alipay_packet_summary">Get free alipay red packet everyday</string>
-    <string name="pref_get_alipay_packet_content">Open alipay and search %s, you can receive red packet everyday.</string>
-    <string name="copy_packet_code_open_alipay"><![CDATA[Copy code & Open alipay]]></string>
-    <string name="alipay_red_packet_code_copied">Alipay red packet code copied: %s</string>
+    <string name="pref_get_alipay_packet_title">Get red packet to save me</string>
+    <string name="pref_get_alipay_packet_summary">Get free alipay red packet everyday to support me T_T</string>
+    <string name="pref_get_alipay_packet_content">Please, search this token in Alipay to get free red packet, so I can afford some meat %s</string>
+    <string name="copy_packet_code_open_alipay"><![CDATA[Copy token & Open Alipay]]></string>
+    <string name="alipay_red_packet_code_copied">Red packet token copied, go get it: %s</string>
     <string name="get_red_packet">Get red packet</string>
-    <string name="dialog_donate_by_alipay_title">Donation</string>
-    <string name="dialog_donate_by_alipay_content">Buy me a coffee ^_^</string>
-    <string name="dialog_donate_confirm">Sure</string>
-    <string name="dialog_donate_cancel">No</string>
+    <string name="dialog_donate_title">Buy me a coffee T_T</string>
+    <string name="dialog_donate_content">I\'m starving and can barely code. Please show some mercy and buy me a coffee! Whether it\'s WeChat or Alipay, even a penny is a huge rescue for me ✿✿ヽ(°▽°)ノ✿</string>
+    <string name="dialog_donate_wechat">Coffee (WeChat)</string>
+    <string name="dialog_donate_alipay">Coffee (Alipay)</string>
+    <string name="dialog_donate_alipay_choice_title">Choose support method</string>
+    <string name="dialog_donate_alipay_choice_content">You can \"Copy Red Packet Token\" to support me for free, or \"Save QR Code\" to donate directly. Saving the image will automatically open Alipay for you~</string>
+    <string name="dialog_donate_alipay_token">Copy Token</string>
+    <string name="dialog_donate_alipay_qrcode">Save QR Code</string>
+    <string name="dialog_donate_cancel">Next Time</string>
+    <string name="long_press_save_hint">Long press image to save to gallery</string>
+    <string name="save_to_gallery_success">Image saved to gallery, opening payment app...</string>
+    <string name="save_to_gallery_failed">Save failed, please check file permissions</string>
     <!-- alipay packet end -->
 
-    <!-- taichi users notice -->
-    <string name="taichi_users_notice">Taichi Users Notice</string>
-    <string name="taichi_users_notice_content">1. This module should run under the TaiChi Magisk.\n\n2. These Apps should be added to TaiChi before you use this module:\n- Phone Services(com.android.phone)\n- Android System(android)\n\n3. If this module is inactive after updating, please re-check this module in TaiChi module manage list and reboot.\n\n4. If it cannot auto-input code, please upgrade TaiChi to version 5.1.8+.</string>
-    <string name="taichi_install_prompt">Please install TaiChi</string>
-    <string name="taichi_enable_prompt">Please enable TaiChi</string>
-    <string name="xposed_not_installed">Please install or enable Xposed installer</string>
-    <string name="add_apps_in_taichi">Add Apps</string>
-    <string name="check_module_in_taichi">Enable Module</string>
-    <!-- taichi users notice end -->
 
-    <!-- edxposed users notice -->
-    <string name="edxposed_users_notice">EdXposed Users Notice</string>
-    <string name="edxposed_users_notice_content">1. This module should hook these apps：\n\t· Phone Services(com.android.phone)\n\t· Android System(android) \n\n2. If this module is inactive after updating, please re-check this module in module manager list and reboot. \n\n3. If it cannot work in global mode, then try to change to whitelist(Xposed Hide White) mode or scope mode and add the apps above.</string>
-    <!-- edxposed users notice end -->
 
     <!-- check update -->
     <string name="new_version_found">New version found!</string>

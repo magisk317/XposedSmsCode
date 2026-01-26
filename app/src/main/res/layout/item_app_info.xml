@@ -1,44 +1,63 @@
-<?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingStart="@dimen/dp_16"
-                android:paddingTop="@dimen/dp_12"
-                android:paddingEnd="@dimen/dp_12"
-                android:paddingBottom="@dimen/dp_12">
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="@dimen/dp_8"
+    android:layout_marginTop="@dimen/dp_4"
+    android:layout_marginEnd="@dimen/dp_8"
+    android:layout_marginBottom="@dimen/dp_4"
+    app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+    app:cardCornerRadius="@dimen/dp_16"
+    app:cardElevation="0dp"
+    app:strokeWidth="0dp">
 
-    <ImageView
-        android:id="@+id/app_icon_view"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_centerVertical="true"
-        android:layout_marginEnd="@dimen/dp_16"/>
-
-    <TextView
-        android:id="@+id/app_label_view"
-        android:layout_width="wrap_content"
+    <RelativeLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_marginBottom="@dimen/dp_6"
-        android:layout_toEndOf="@+id/app_icon_view"
-        android:layout_toStartOf="@+id/blocked_checkbox"
-        android:textSize="16sp"/>
+        android:background="?android:attr/selectableItemBackground"
+        android:paddingStart="?attr/listPreferredItemPaddingStart"
+        android:paddingTop="@dimen/dp_12"
+        android:paddingEnd="?attr/listPreferredItemPaddingEnd"
+        android:paddingBottom="@dimen/dp_12">
 
-    <TextView
-        android:id="@+id/pkg_name_view"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/app_label_view"
-        android:layout_alignStart="@id/app_label_view"
-        android:layout_toStartOf="@+id/blocked_checkbox"
-        android:textSize="14sp"/>
+        <ImageView
+            android:id="@+id/app_icon_view"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="@dimen/dp_16"/>
 
-    <androidx.appcompat.widget.AppCompatCheckBox
-        android:id="@+id/blocked_checkbox"
-        android:layout_marginStart="4dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_centerVertical="true"/>
+        <TextView
+            android:id="@+id/app_label_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_marginBottom="@dimen/dp_2"
+            android:layout_toEndOf="@+id/app_icon_view"
+            android:layout_toStartOf="@+id/blocked_checkbox"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="16sp"
+            android:textStyle="bold"/>
 
-</RelativeLayout>
+        <TextView
+            android:id="@+id/pkg_name_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/app_label_view"
+            android:layout_alignStart="@id/app_label_view"
+            android:layout_toStartOf="@+id/blocked_checkbox"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="14sp"/>
+
+        <com.google.android.material.checkbox.MaterialCheckBox
+            android:id="@+id/blocked_checkbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="4dp"/>
+
+    </RelativeLayout>
+
+</com.google.android.material.card.MaterialCardView>

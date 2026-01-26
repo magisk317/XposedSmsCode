@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="AppNoActionBarTheme" parent="Theme.Cyanea.Light.NoActionBar">
+    <style name="AppNoActionBarTheme" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="preferenceIconColor">?android:attr/textColorPrimary</item>
-        <item name="myMenuIconColor">?attr/menuIconColor</item>
         <item name="preferenceTheme">@style/MyPreferenceStyle</item>
     </style>
 
-    <style name="AppActionBarTheme" parent="Theme.Cyanea.Light">
+    <style name="AppActionBarTheme" parent="Theme.Material3.DayNight">
         <item name="preferenceIconColor">?android:attr/textColorPrimary</item>
-        <item name="myMenuIconColor">?attr/menuIconColor</item>
         <item name="preferenceTheme">@style/MyPreferenceStyle</item>
     </style>
 

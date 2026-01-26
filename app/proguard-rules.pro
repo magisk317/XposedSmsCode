@@ -92,11 +92,25 @@
 
 # ==========================
 # okhttp3 start
+-dontwarn okhttp3.internal.platform.**
+-dontwarn org.conscrypt.**
+-dontwarn org.bouncycastle.**
+-dontwarn org.openjsse.**
 # okhttp3 end
 # ==========================
 
 
 # ==========================
 # okio start
+-dontwarn okio.**
 # okio end
+# ==========================
+
+# ==========================
+# retrofit2 start
+-dontwarn retrofit2.**
+-keep class retrofit2.** { *; }
+-keepattributes Signature
+-keepattributes Exceptions
+# retrofit2 end
 # ==========================

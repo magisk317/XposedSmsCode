@@ -3,34 +3,23 @@
 buildscript {
     
     repositories {
-        maven {
-            url "https://maven.aliyun.com/repository/public/"
-        }
         google()
         mavenCentral() // add repository
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:8.9.0'
-        
-
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
-        classpath 'org.greenrobot:greendao-gradle-plugin:3.3.1' // greenDao plugin
-
-        // classpath 'io.github.leon406:AndResGuard-gradle-plugin:1.2.23' // AndResGuard
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:2.0.21"
+        classpath "org.jetbrains.kotlin:compose-compiler-gradle-plugin:2.0.21"
+        classpath "com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:2.0.21-1.0.27"
     }
 }
 
 allprojects {
     repositories {
-        maven {
-            url "https://maven.aliyun.com/repository/public/"
-        }
         google()
         mavenCentral()
-        maven {
-            url "https://jitpack.io"
-        }
+        maven { url "https://api.xposed.info/" }
+        maven { url "https://jitpack.io" }
         maven {
             url "https://s01.oss.sonatype.org/content/repositories/snapshots/"
         }

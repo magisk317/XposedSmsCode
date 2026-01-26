@@ -23,6 +23,10 @@
     <string name="pref_hide_launcher_icon_title">隐藏应用图标</string>
     <string name="pref_hide_launcher_icon_summary">隐藏后可从模块列表中打开本模块</string>
     <string name="pref_choose_theme_title">主题</string>
+    <string name="pref_choose_theme_summary">跟随系统、浅色或深色</string>
+    <string name="theme_follow_system">自动 (跟随系统)</string>
+    <string name="theme_light">浅色</string>
+    <string name="theme_dark">深色</string>
     <string name="module_status_active">已激活</string>
     <string name="module_status_inactive">未激活</string>
     <!-- preferences general end -->
@@ -114,13 +118,13 @@
     <string name="pref_about_title">关于</string>
     <string name="pref_version_title">版本</string>
     <string name="pref_version_summary"><![CDATA[当前版本：%1$s (%2$d)]]></string>
-    <string name="pref_join_qq_group_title">加群反馈交流</string>
-    <string name="pref_join_qq_group_summary">QQ群：478884682</string>
-    <string name="prompt_join_qq_group_failed">请先安装或启用QQ</string>
     <string name="pref_source_code_title">项目源码</string>
+    <string name="pref_join_qq_group_title">加群反馈交流</string>
+    <string name="pref_join_qq_group_summary">QQ群：%s</string>
+    <string name="prompt_join_qq_group_failed">请先安装手机QQ</string>
     <string name="browser_install_or_enable_prompt">请安装或启用浏览器</string>
     <string name="pref_source_code_summary">欢迎Star ♪(＾∀＾)ﾉ</string>
-    <string name="pref_donate_by_alipay_title">支付宝捐赠</string>
+    <string name="pref_donate_by_alipay_title">捐赠打赏</string>
     <string name="alipay_install_prompt">请先安装支付宝</string>
     <string name="alipay_enable_prompt">请先启用支付宝</string>
     <string name="wechat_install_prompt">请先安装微信</string>
@@ -219,32 +223,27 @@
     <!-- faq end -->
 
     <!-- alipay packet start -->
-    <string name="pref_get_alipay_packet_title">领取支付宝红包</string>
-    <string name="pref_get_alipay_packet_summary">每天可领取支付宝红包</string>
-    <string name="pref_get_alipay_packet_content">打开支付宝首页搜索 %s 可每天领取红包~</string>
-    <string name="copy_packet_code_open_alipay">复制红包码并打开支付宝</string>
-    <string name="alipay_red_packet_code_copied">已复制红包码：%s</string>
-    <string name="get_red_packet">领取红包</string>
-    <string name="dialog_donate_by_alipay_title">捐赠</string>
-    <string name="dialog_donate_by_alipay_content">请开发者喝饮料吧 ✿✿ヽ(°▽°)ノ✿</string>
-    <string name="dialog_donate_confirm">好呀好呀</string>
-    <string name="dialog_donate_cancel">下次一定</string>
+    <string name="pref_get_alipay_packet_title">领个红包救救孩子</string>
+    <string name="pref_get_alipay_packet_summary">每天领个免费红包，也是对我的一点支持了 T_T</string>
+    <string name="pref_get_alipay_packet_content">求求了，打开支付宝搜这个口令，每天都能白嫖红包，我就能吃上肉了 %s</string>
+    <string name="copy_packet_code_open_alipay"><![CDATA[复制口令并打开支付宝]]></string>
+    <string name="alipay_red_packet_code_copied">红包口令已复制，快去白嫖吧: %s</string>
+    <string name="get_red_packet">领个红包</string>
+    <string name="dialog_donate_title">求赏口饭吃吧 T_T</string>
+    <string name="dialog_donate_content">开发者已经饿得快写不动代码了，求各位老板大发慈悲赏口饭吃吧！不管是微信还是支付宝，哪怕是一分钱也是对我的巨大救赎 ✿✿ヽ(°▽°)ノ✿</string>
+    <string name="dialog_donate_wechat">微信赏点 (多谢老板)</string>
+    <string name="dialog_donate_alipay">支付宝赏点 (感激涕零)</string>
+    <string name="dialog_donate_alipay_choice_title">请选择支持方式</string>
+    <string name="dialog_donate_alipay_choice_content">您可以“复制红包口令”白嫖红包来支持我，或者直接“保存收款码”进行打赏。保存图片后会自动帮您跳转到支付宝哦~</string>
+    <string name="dialog_donate_alipay_token">复制口令并白嫖</string>
+    <string name="dialog_donate_alipay_qrcode">保存收款码并打赏</string>
+    <string name="dialog_donate_cancel">下次一定 (虽然可能没有下次了...)</string>
+    <string name="long_press_save_hint">长按图片可保存到相册</string>
+    <string name="save_to_gallery_success">图片已保存到相册，正在前往支付应用...</string>
+    <string name="save_to_gallery_failed">保存失败，请检查文件权限</string>
     <!-- alipay packet end -->
 
-    <!-- taichi users notice -->
-    <string name="taichi_users_notice">太极用户须知</string>
-    <string name="taichi_users_notice_content">1. 本模块需在太极·magisk(太极·阳)环境下工作。\n\n2. 太极用户如需使用所有功能，需要将以下应用添加至太极中：\n\t· 电话服务(com.android.phone)\n\t· Android系统(android)\n\n3. 若模块失效，请在太极的模块管理列表中重新勾选本模块，并重启手机。\n\n4. 如果无法自动输入，请升级太极到5.1.8及以上版本。</string>
-    <string name="taichi_install_prompt">请先安装太极</string>
-    <string name="taichi_enable_prompt">请先启用太极</string>
-    <string name="xposed_not_installed">请安装或启用Xposed Installer</string>
-    <string name="add_apps_in_taichi">添加应用</string>
-    <string name="check_module_in_taichi">勾选模块</string>
-    <!-- taichi users notice end -->
 
-    <!-- edxposed users notice -->
-    <string name="edxposed_users_notice">EdXposed用户须知</string>
-    <string name="edxposed_users_notice_content">1. 本模块作用在以下应用中(也就是需要Hook以下应用)：\n\t· 电话服务(com.android.phone)\n\t· Android系统(android)\n\n2. 若模块显示未激活，请在模块管理列表中重新勾选本模块，并重启手机。\n\n3. 若您使用全局模式不生效，则切换为白名单（Xposed Hide 白）模式或者在作用域模式，同时需要将第1点中的应用添加进去。1. 本模块作用在以下应用中(也就是需要Hook以下应用)：\n\t· 电话服务(com.android.phone)\n\t· Android系统(android)\n\n2. 若模块显示未激活，请在模块管理列表中重新勾选本模块，并重启手机。\n\n3. 若您使用全局模式不生效，则切换为白名单（Xposed Hide 白）模式或者在作用域模式，同时需要将第1点中的应用添加进去。</string>
-    <!-- edxposed users notice end -->
 
     <!-- check update -->
     <string name="new_version_found">发现新版本！</string>
@@ -273,9 +272,8 @@
 
     <!-- faq -->
     <string-array name="question_list">
-        <item>模块显示未激活怎么办？</item>
-        <item>EdXposed用户需要注意什么？</item>
-        <item>太极用户需要注意什么？</item>
+        <item>empty</item>
+        <item>empty</item>
         <item>自动输入不完整，怎么办？</item>
         <item>模块失效怎么办？</item>
         <item>短信标记为已读或者删除短信，为什么不生效？</item>
@@ -284,8 +282,8 @@
     </string-array>
     <string-array name="answer_list">
         <item>在模块列表中重新勾选本模块，杀死本模块App之后重新打开即可，必要时需要重启手机。</item>
-        <item>EdXposed用户请参考右上角更多菜单栏中的“EdXposed用户须知”</item>
-        <item>太极用户请参考右上角更多菜单栏中的“太极用户须知”</item>
+        <item>empty</item>
+        <item>empty</item>
         <item>自动输入不完整，一般是因为自动输入的过程中焦点被抢占。通常的解决方案是：检查是否有监控剪切板的应用在后台工作(比如fv悬浮球)，然后关闭这些应用对剪贴板的监控，或者关闭本模块的“复制到剪切板”选项。</item>
         <item>1. 因为使用到ContentProvider，所以需要放在应用控制类软件(黑域、应用管理、绿色守护等)的白名单中。\n\n2. 检查模块的组件(ContentProvider)是否被组件控制类软件(Blocker、写轮眼等)禁用。\n\n3. 检查是否打开验证码安全保护开关(华为，OPPO等国内Rom)。\n\n4. 联系开发者，反馈问题。</item>
         <item>如果您设备上默认的短信 App 使用的是它自己的短信数据库，而不是系统的短信数据库，那么标记为已读或者删除验证码短信都可能不会生效。如果发生这样的事情，就说明在您的设备上可能不会生效。</item>

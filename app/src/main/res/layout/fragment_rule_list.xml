@@ -25,6 +25,7 @@
         android:layout_margin="@dimen/dp_16"
         android:contentDescription="@string/create_rule"
         android:src="@drawable/ic_add"
-        app:tint="@android:color/white" />
+        app:backgroundTint="?attr/colorPrimaryContainer"
+        app:tint="?attr/colorOnPrimaryContainer" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

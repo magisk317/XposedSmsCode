@@ -1,4 +1,10 @@
 # 更新日志
+- 26.01.26 v3.0.0 (重大重构项目)
+  1. 重构: 整个代码库 100% 迁移至 Kotlin。
+  2. 变化: 基准 SDK 提升至 Android 15 (API 35)，仅支持最新系统。
+  3. UI: 全面适配 Material Design 3 (MD3) 与动态配色 (Material You)。
+  4. 架构: 引入 Room 数据库、Kotlin 协程与 Jetpack Compose (Faq 页面)。
+  5. 适配: 深度优化 Android 15 全屏显示 (Edge-to-Edge) 与 现代 Hooking 机制。
 - 24.01.05 v2.5.1 需要重启
   1. 修复: 修复在 Android 14 上，不显示验证码通知的问题 @klxiaoniu
   2. 修复：修复查看源码失败的问题

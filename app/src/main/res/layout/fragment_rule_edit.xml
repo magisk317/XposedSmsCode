@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white"
+    android:background="?attr/colorSurface"
     android:orientation="vertical">
 
     <com.google.android.material.textfield.TextInputLayout
@@ -13,8 +13,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
-        android:background="@android:color/transparent"
-        app:boxBackgroundColor="@android:color/transparent"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         app:layout_constraintBottom_toTopOf="@+id/rule_keyword_input_layout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
@@ -42,8 +41,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/rule_company_input_layout"
         android:layout_marginTop="8dp"
-        android:background="@android:color/transparent"
-        app:boxBackgroundColor="@android:color/transparent"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         app:layout_constraintBottom_toTopOf="@+id/rule_code_regex_input_layout"
         app:layout_constraintEnd_toEndOf="@+id/rule_company_input_layout"
         app:layout_constraintHorizontal_bias="0.5"
@@ -71,8 +69,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:layout_toStartOf="@+id/rule_code_regex_quick_choose"
-        android:background="@android:color/transparent"
-        app:boxBackgroundColor="@android:color/transparent"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/rule_code_regex_quick_choose"
         app:layout_constraintStart_toStartOf="@+id/rule_keyword_input_layout"
@@ -91,19 +88,16 @@
 
     </com.google.android.material.textfield.TextInputLayout>
 
-    <androidx.appcompat.widget.AppCompatButton
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/rule_code_regex_quick_choose"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/rule_keyword_input_layout"
         android:layout_alignParentEnd="true"
         android:layout_marginTop="8dp"
-        android:background="@drawable/code_rule_quick_choose_bg"
-        android:padding="@dimen/dp_6"
         android:text="@string/quick_choose"
-        android:textColor="@color/faq_textColor_white"
+        style="@style/Widget.Material3.Button.TonalButton"
         app:layout_constraintEnd_toEndOf="@+id/rule_company_input_layout"
-        app:layout_constraintTop_toTopOf="@+id/rule_code_regex_input_layout"
-        app:rippleColor="?attr/colorControlHighlight" />
+        app:layout_constraintTop_toTopOf="@+id/rule_code_regex_input_layout" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

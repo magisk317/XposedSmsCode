@@ -1,21 +1,28 @@
 apply plugin: 'com.android.application'
-apply plugin: 'org.greenrobot.greendao' // apply greenDao plugin
-// apply from: 'and-res-guard.gradle'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-parcelize'
+apply plugin: 'com.google.devtools.ksp'
+apply plugin: 'org.jetbrains.kotlin.plugin.compose'
 
-def keyFile = file(findProperty("tianma.keystore.path") as String)
-def propertyFile = file(findProperty("tianma.signature.path") as String)
+def keystoreFilePath = System.getenv("KEYSTORE_FILE") ?: findProperty("tianma.keystore.path") ?: "release.jks"
+def keyFile = file(keystoreFilePath)
+def propertyFile = file(findProperty("tianma.signature.path") ?: "signature.properties")
 
 def keyProps = new Properties()
 if (propertyFile.exists()) {
     keyProps.load(new FileInputStream(propertyFile))
 }
 
+// Check if signing info is available either via properties or env vars
+def isSigningInfoAvailable = keyFile.exists() && 
+    (keyProps['STORE_PASSWORD'] != null || System.getenv("STORE_PASSWORD") != null)
+
 def static releaseTime() {
     return new Date().format("yyMMdd", TimeZone.default)
 }
 
-def VERSION_NAME = "2.5.1"
-def VERSION_CODE = 53
+def VERSION_NAME = "3.0.0"
+def VERSION_CODE = 60
 
 android {
     namespace 'com.github.tianma8023.xposed.smscode'
@@ -23,7 +30,7 @@ android {
     compileSdk 36
     defaultConfig {
         applicationId "com.github.tianma8023.xposed.smscode"
-        minSdkVersion 24
+        minSdkVersion 35
         targetSdkVersion 36
         versionCode VERSION_CODE
         versionName VERSION_NAME
@@ -42,17 +49,27 @@ android {
         }
     }
 
+    splits {
+        abi {
+            enable true
+            reset()
+            include "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+            universalApk true
+        }
+    }
+
     buildFeatures {
         viewBinding true
         buildConfig true
+        compose true
     }
 
     signingConfigs {
         release {
             storeFile keyFile
-            storePassword keyProps['STORE_PASSWORD']
-            keyAlias keyProps['KEY_ALIAS']
-            keyPassword keyProps['KEY_PASSWORD']
+            storePassword System.getenv("STORE_PASSWORD") ?: keyProps['STORE_PASSWORD']
+            keyAlias System.getenv("KEY_ALIAS") ?: keyProps['KEY_ALIAS']
+            keyPassword System.getenv("KEY_PASSWORD") ?: keyProps['KEY_PASSWORD']
         }
     }
 
@@ -61,7 +78,7 @@ android {
             buildConfigField("int", "LOG_LEVEL", "2")
             buildConfigField("boolean", "LOG_TO_XPOSED", "true")
 
-            if (keyFile.exists()) {
+            if (isSigningInfoAvailable) {
                 signingConfig signingConfigs.release
             }
         }
@@ -70,12 +87,12 @@ android {
             minifyEnabled true
             shrinkResources true
             zipAlignEnabled true
-            debuggable  true
+            debuggable  false
 
             buildConfigField("int", "LOG_LEVEL", "2")
             buildConfigField("boolean", "LOG_TO_XPOSED", "true")
 
-            if (keyFile.exists()) {
+            if (isSigningInfoAvailable) {
                 signingConfig signingConfigs.release
             }
 
@@ -89,8 +106,10 @@ android {
 
             buildConfigField("int", "LOG_LEVEL", "4")
             buildConfigField("boolean", "LOG_TO_XPOSED", "true")
-            if (keyFile.exists()) {
+            if (isSigningInfoAvailable) {
                 signingConfig signingConfigs.release
+            } else {
+                signingConfig signingConfigs.debug
             }
 
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -108,7 +127,8 @@ android {
 
     applicationVariants.all { variant ->
         variant.outputs.all { output ->
-            output.outputFileName = "XposedSmsCode_v${variant.versionName.replaceAll('\\s+', '_')}_${releaseTime()}_${variant.buildType.name.charAt(0)}.apk"
+            def abi = output.getFilter(com.android.build.OutputFile.ABI) ?: "universal"
+            output.outputFileName = "XposedSmsCode_v${variant.versionName.replaceAll('\\s+', '_')}_${releaseTime()}_${variant.buildType.name.charAt(0)}_${abi}.apk"
         }
     }
 
@@ -116,86 +136,49 @@ android {
         sourceCompatibility JavaVersion.VERSION_21
         targetCompatibility JavaVersion.VERSION_21
     }
-}
 
-greendao {
-    schemaVersion 8
+    kotlinOptions {
+        jvmTarget = "21"
+    }
+
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+        }
+    }
 }
 
 ext {
-
-
-    materialDialogVersion = "0.9.6.0" // material dialog version
-
-    andriodShellVersion = "1.0.0" // Android Shell
-
     eventBusVersion = "3.3.1" // event bus
-
-    greenDaoVersion = "3.3.0" // green dao
-    greenDaoHelperVersion = "v2.1.0" // green dao helper
-
-    gsonVersion = "2.9.0" // gson
-
-    dagger2Version = "2.40.5" // dagger 2
-
-    rxJavaVersion = "2.2.17" // RxJava 2
-    rxAndroidVersion = "2.1.1" // RxAndroid 2
-
-    okHttpVersion = "4.4.0" // OkHttp
-    retrofitVersion = "2.9.0" // retrofit
-
-    jsoupVersion = "1.15.1" // jsoup
-
-    cyaneaVersion = "1.0.2" // cyanea
+    gsonVersion = "2.11.0" // gson
+    okHttpVersion = "4.12.0" // OkHttp
+    retrofitVersion = "2.11.0" // retrofit
+    jsoupVersion = "1.18.1" // jsoup
+    composeVersion = "1.7.6" // Compose version
+    coroutinesVersion = "1.10.1" // Coroutines version
+    roomVersion = "2.6.1" // Room version
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "androidx.appcompat:appcompat:1.6.1"
-    implementation "com.google.android.material:material:1.10.0" // material design support
+    implementation "androidx.core:core-ktx:1.15.0"
+    implementation "androidx.appcompat:appcompat:1.7.0"
+    implementation "com.google.android.material:material:1.12.0" // material design support
     implementation "androidx.recyclerview:recyclerview:1.3.2" // recycler view
-    implementation "androidx.browser:browser:1.7.0" // custom tabs
+    implementation "androidx.browser:browser:1.8.0" // custom tabs
     implementation "androidx.preference:preference:1.2.1" // preference support
-    implementation "androidx.constraintlayout:constraintlayout:2.1.4" // constraint layout
+    implementation "androidx.constraintlayout:constraintlayout:2.2.0" // constraint layout
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0" // swipe refresh layout
-
-
-
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7" // ViewModel
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.8.7" // LiveData
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.8.7"
     // Xposed
     compileOnly 'de.robv.android.xposed:api:82'
-    // compileOnly 'de.robv.android.xposed:api:82:sources'
-
-    // Material Dialogs
-    implementation "com.afollestad.material-dialogs:core:$materialDialogVersion"
-
-    // Android Shell
-    // implementation "com.jaredrummler:android-shell:$andriodShellVersion"
-
     // EventBus
     implementation "org.greenrobot:eventbus:$eventBusVersion"
-    // EventBus annotation processor
-    annotationProcessor "org.greenrobot:eventbus-annotation-processor:$eventBusVersion"
-
-    // GreenDao
-    implementation "org.greenrobot:greendao:$greenDaoVersion"
-    // GreenDao Upgrade Helper
-    implementation "com.github.yuweiguocn:GreenDaoUpgradeHelper:$greenDaoHelperVersion"
 
     // Gson
     implementation "com.google.code.gson:gson:$gsonVersion"
-
-    // dagger2
-    implementation "com.google.dagger:dagger:$dagger2Version"
-    annotationProcessor "com.google.dagger:dagger-compiler:$dagger2Version"
-    // dagger2-android
-    implementation "com.google.dagger:dagger-android:$dagger2Version"
-    implementation "com.google.dagger:dagger-android-support:$dagger2Version"
-    annotationProcessor "com.google.dagger:dagger-android-processor:$dagger2Version"
-
-    // RxJava 2
-    implementation "io.reactivex.rxjava2:rxjava:$rxJavaVersion"
-    // RxAndroid 2
-    implementation "io.reactivex.rxjava2:rxandroid:$rxAndroidVersion"
 
     // OkHttp
     implementation "com.squareup.okhttp3:okhttp:$okHttpVersion"
@@ -209,11 +192,29 @@ dependencies {
     // Retrofit scalars converter
     implementation "com.squareup.retrofit2:converter-scalars:$retrofitVersion"
     // Retrofit RxJava Adapter
-    implementation "com.squareup.retrofit2:adapter-rxjava2:$retrofitVersion"
 
     // JSoup
     implementation "org.jsoup:jsoup:$jsoupVersion"
 
-    // Cyanea
-    implementation "com.jaredrummler:cyanea:$cyaneaVersion"
+    // Kotlin
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:2.0.21"
+    
+    // Coroutines
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion"
+
+    // Compose
+    implementation "androidx.compose.ui:ui:$composeVersion"
+    implementation "androidx.compose.material3:material3:1.3.1"
+    implementation "androidx.compose.ui:ui-tooling-preview:$composeVersion"
+    debugImplementation "androidx.compose.ui:ui-tooling:$composeVersion"
+    implementation "androidx.activity:activity-compose:1.10.0"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7"
+    implementation "androidx.lifecycle:lifecycle-runtime-compose:2.8.7"
+
+    // Room
+    implementation "androidx.room:room-runtime:$roomVersion"
+    implementation "androidx.room:room-ktx:$roomVersion"
+    ksp "androidx.room:room-compiler:$roomVersion"
+    // For Kotlin projects using KSP (will add later if needed)
 }
