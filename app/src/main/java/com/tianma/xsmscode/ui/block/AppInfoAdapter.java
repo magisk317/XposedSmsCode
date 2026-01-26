@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.github.tianma8023.xposed.smscode.R;
+import com.github.tianma8023.xposed.smscode.databinding.ItemAppInfoBinding;
 import com.tianma.xsmscode.common.adapter.ItemCallback;
 import com.tianma.xsmscode.data.db.entity.AppInfo;
 
@@ -18,8 +19,7 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.AppCompatCheckBox;
 import androidx.recyclerview.widget.RecyclerView;
-import butterknife.BindView;
-import butterknife.ButterKnife;
+
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
@@ -41,8 +41,7 @@ class AppInfoAdapter extends RecyclerView.Adapter<AppInfoAdapter.VH> {
     @NonNull
     @Override
     public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View rootView = LayoutInflater.from(mContext).inflate(R.layout.item_app_info, parent, false);
-        return new VH(rootView);
+        return new VH(ItemAppInfoBinding.inflate(LayoutInflater.from(mContext), parent, false));
     }
 
     @Override
@@ -63,21 +62,11 @@ class AppInfoAdapter extends RecyclerView.Adapter<AppInfoAdapter.VH> {
 
     class VH extends RecyclerView.ViewHolder {
 
-        @BindView(R.id.app_icon_view)
-        ImageView mAppIconView;
+        private final ItemAppInfoBinding binding;
 
-        @BindView(R.id.app_label_view)
-        TextView mAppLabelView;
-
-        @BindView(R.id.pkg_name_view)
-        TextView mPkgNameView;
-
-        @BindView(R.id.blocked_checkbox)
-        AppCompatCheckBox mCheckBox;
-
-        VH(@NonNull View itemView) {
-            super(itemView);
-            ButterKnife.bind(this, itemView);
+        VH(@NonNull ItemAppInfoBinding binding) {
+            super(binding.getRoot());
+            this.binding = binding;
         }
 
         @SuppressLint("CheckResult")
@@ -88,15 +77,15 @@ class AppInfoAdapter extends RecyclerView.Adapter<AppInfoAdapter.VH> {
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(drawable -> {
                         if (drawable != null) {
-                            mAppIconView.setImageDrawable(drawable);
+                            binding.appIconView.setImageDrawable(drawable);
                         }
                     }, throwable -> {
                         // ignore
                     });
-            mAppLabelView.setText(data.getLabel());
-            mPkgNameView.setText(data.getPackageName());
+            binding.appLabelView.setText(data.getLabel());
+            binding.pkgNameView.setText(data.getPackageName());
 //            itemView.setSelected(data.isBlocked());
-            mCheckBox.setChecked(data.isBlocked());
+            binding.blockedCheckbox.setChecked(data.isBlocked());
         }
 
         void bindListener(final AppInfo data, final int position) {
@@ -104,7 +93,7 @@ class AppInfoAdapter extends RecyclerView.Adapter<AppInfoAdapter.VH> {
                 itemView.setOnClickListener(v -> mItemCallback.onItemClicked(itemView, data, position));
                 itemView.setOnLongClickListener(v -> mItemCallback.onItemLongClicked(itemView, data, position));
 
-                mCheckBox.setOnClickListener(v -> mItemCallback.onItemClicked(itemView, data, position));
+                binding.blockedCheckbox.setOnClickListener(v -> mItemCallback.onItemClicked(itemView, data, position));
             }
         }
     }

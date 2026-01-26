@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.github.tianma8023.xposed.smscode.R;
+import com.github.tianma8023.xposed.smscode.databinding.ItemCodeRecordBinding;
 import com.tianma.xsmscode.common.adapter.ItemCallback;
 import com.tianma.xsmscode.common.adapter.ItemChildCallback;
 import com.tianma.xsmscode.data.db.entity.SmsMsg;
@@ -23,8 +24,7 @@ import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.AppCompatCheckBox;
 import androidx.recyclerview.widget.RecyclerView;
-import butterknife.BindView;
-import butterknife.ButterKnife;
+
 
 public class CodeRecordAdapter extends RecyclerView.Adapter<CodeRecordAdapter.VH> {
 
@@ -68,8 +68,7 @@ public class CodeRecordAdapter extends RecyclerView.Adapter<CodeRecordAdapter.VH
     @NonNull
     @Override
     public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View rootView = LayoutInflater.from(mContext).inflate(R.layout.item_code_record, parent, false);
-        return new VH(rootView);
+        return new VH(ItemCodeRecordBinding.inflate(LayoutInflater.from(mContext), parent, false));
     }
 
     @Override
@@ -86,47 +85,34 @@ public class CodeRecordAdapter extends RecyclerView.Adapter<CodeRecordAdapter.VH
 
     class VH extends RecyclerView.ViewHolder {
 
-        @BindView(R.id.company_text_view)
-        TextView mCompanyTv;
+        private final ItemCodeRecordBinding binding;
 
-        @BindView(R.id.smscode_text_view)
-        TextView mSmsCodeTv;
-
-        @BindView(R.id.date_text_view)
-        TextView mDateTv;
-
-        @BindView(R.id.record_details_view)
-        TextView mDetailsView;
-
-        @BindView(R.id.checkbox)
-        AppCompatCheckBox mCheckBox;
-
-        VH(@NonNull View itemView) {
-            super(itemView);
-            ButterKnife.bind(this, itemView);
+        VH(@NonNull ItemCodeRecordBinding binding) {
+            super(binding.getRoot());
+            this.binding = binding;
         }
 
         void bindData(RecordItem data, int position) {
             SmsMsg smsMsg = data.getSmsMsg();
-            mCompanyTv.setText(smsMsg.getCompany());
+            binding.companyTextView.setText(smsMsg.getCompany());
             String company = smsMsg.getCompany();
             if (company != null && company.trim().length() != 0) {
-                mCompanyTv.setText(company);
+                binding.companyTextView.setText(company);
             } else {
-                mCompanyTv.setText(smsMsg.getSender());
+                binding.companyTextView.setText(smsMsg.getSender());
             }
-            mSmsCodeTv.setText(smsMsg.getSmsCode());
-            mDateTv.setText(mFormat.format(new Date(smsMsg.getDate())));
+            binding.smscodeTextView.setText(smsMsg.getSmsCode());
+            binding.dateTextView.setText(mFormat.format(new Date(smsMsg.getDate())));
 
             if (mMode == RECORD_MODE_NORMAL) {
-                mCheckBox.setVisibility(View.GONE);
+                binding.checkbox.setVisibility(View.GONE);
             } else {
-                mCheckBox.setVisibility(View.VISIBLE);
-                mCheckBox.setChecked(data.isSelected());
+                binding.checkbox.setVisibility(View.VISIBLE);
+                binding.checkbox.setChecked(data.isSelected());
             }
 
             if (TextUtils.isEmpty(smsMsg.getBody())) {
-                mDetailsView.setVisibility(View.GONE);
+                binding.recordDetailsView.setVisibility(View.GONE);
             }
         }
 
@@ -138,12 +124,12 @@ public class CodeRecordAdapter extends RecyclerView.Adapter<CodeRecordAdapter.VH
             }
 
             if (mItemChildCallback != null) {
-                mDetailsView.setOnClickListener(v -> {
-                    mItemChildCallback.onItemChildClicked(mDetailsView, data, position);
+                binding.recordDetailsView.setOnClickListener(v -> {
+                    mItemChildCallback.onItemChildClicked(binding.recordDetailsView, data, position);
                 });
 
-                mCheckBox.setOnClickListener(v -> {
-                    mItemChildCallback.onItemChildClicked(mCheckBox, data, position);
+                binding.checkbox.setOnClickListener(v -> {
+                    mItemChildCallback.onItemChildClicked(binding.checkbox, data, position);
                 });
             }
         }

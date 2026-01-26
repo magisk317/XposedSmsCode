@@ -29,8 +29,7 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import butterknife.BindView;
-import butterknife.ButterKnife;
+import com.github.tianma8023.xposed.smscode.databinding.FragmentCodeRecordsBinding;
 
 import static com.tianma.xsmscode.ui.record.CodeRecordAdapter.RECORD_MODE_EDIT;
 import static com.tianma.xsmscode.ui.record.CodeRecordAdapter.RECORD_MODE_NORMAL;
@@ -42,14 +41,7 @@ public class CodeRecordFragment extends DaggerBackPressFragment implements CodeR
 
     private Activity mActivity;
 
-    @BindView(R.id.swipe_refresh_layout)
-    SwipeRefreshLayout mSwipeRefreshLayout;
-
-    @BindView(R.id.code_records_recycler_view)
-    RecyclerView mRecyclerView;
-
-    @BindView(R.id.empty_view)
-    View mEmptyView;
+    private FragmentCodeRecordsBinding binding;
 
     private CodeRecordAdapter mAdapter;
 
@@ -69,10 +61,15 @@ public class CodeRecordFragment extends DaggerBackPressFragment implements CodeR
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_code_records, container, false);
-        ButterKnife.bind(this, rootView);
-        mSwipeRefreshLayout.setOnRefreshListener(() -> mPresenter.loadData());
-        return rootView;
+        binding = FragmentCodeRecordsBinding.inflate(inflater, container, false);
+        binding.swipeRefreshLayout.setOnRefreshListener(() -> mPresenter.loadData());
+        return binding.getRoot();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
     }
 
     @Override
@@ -110,9 +107,9 @@ public class CodeRecordFragment extends DaggerBackPressFragment implements CodeR
             }
         });
 
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(mActivity));
-        mRecyclerView.setAdapter(mAdapter);
-        mRecyclerView.addItemDecoration(new DividerItemDecoration(mActivity, DividerItemDecoration.VERTICAL));
+        binding.codeRecordsRecyclerView.setLayoutManager(new LinearLayoutManager(mActivity));
+        binding.codeRecordsRecyclerView.setAdapter(mAdapter);
+        binding.codeRecordsRecyclerView.addItemDecoration(new DividerItemDecoration(mActivity, DividerItemDecoration.VERTICAL));
     }
 
     @Override
@@ -127,9 +124,9 @@ public class CodeRecordFragment extends DaggerBackPressFragment implements CodeR
 
     private void refreshEmptyView() {
         if (mAdapter.getItemCount() > 0) {
-            mEmptyView.setVisibility(View.GONE);
+            binding.emptyView.setVisibility(View.GONE);
         } else {
-            mEmptyView.setVisibility(View.VISIBLE);
+            binding.emptyView.setVisibility(View.VISIBLE);
         }
     }
 
@@ -163,14 +160,14 @@ public class CodeRecordFragment extends DaggerBackPressFragment implements CodeR
         String sms = item.getSmsMsg().getBody();
         ClipboardUtils.copyToClipboard(mActivity, sms);
         String prompt = getString(R.string.prompt_sms_copied);
-        SnackbarHelper.makeShort(mRecyclerView, prompt).show();
+        SnackbarHelper.makeShort(binding.codeRecordsRecyclerView, prompt).show();
     }
 
     private void copySmsCode(RecordItem item) {
         String smsCode = item.getSmsMsg().getSmsCode();
         ClipboardUtils.copyToClipboard(mActivity, smsCode);
         String prompt = getString(R.string.prompt_sms_code_copied, smsCode);
-        SnackbarHelper.makeShort(mRecyclerView, prompt).show();
+        SnackbarHelper.makeShort(binding.codeRecordsRecyclerView, prompt).show();
     }
 
     private void selectRecordItem(int position) {
@@ -191,16 +188,14 @@ public class CodeRecordFragment extends DaggerBackPressFragment implements CodeR
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_delete:
-                removeSelectedItems();
-                break;
-            case R.id.action_select_all:
-                boolean allSelected = mAdapter.isAllSelected();
-                mAdapter.setAllSelected(!allSelected);
-                break;
-            default:
-                return super.onOptionsItemSelected(item);
+        int id = item.getItemId();
+        if (id == R.id.action_delete) {
+            removeSelectedItems();
+        } else if (id == R.id.action_select_all) {
+            boolean allSelected = mAdapter.isAllSelected();
+            mAdapter.setAllSelected(!allSelected);
+        } else {
+            return super.onOptionsItemSelected(item);
         }
         return true;
     }
@@ -223,15 +218,15 @@ public class CodeRecordFragment extends DaggerBackPressFragment implements CodeR
 
     private void removeSelectedItems() {
         final List<SmsMsg> itemsToRemove = mAdapter.removeSelectedItems();
-        mSwipeRefreshLayout.setEnabled(false);
+        binding.swipeRefreshLayout.setEnabled(false);
         String text = getString(R.string.some_items_removed, itemsToRemove.size());
-        SnackbarHelper.makeLong(mRecyclerView, text)
+        SnackbarHelper.makeLong(binding.codeRecordsRecyclerView, text)
                 .addCallback(new Snackbar.Callback() {
                     @Override
                     public void onDismissed(Snackbar transientBottomBar, int event) {
                         if (event != DISMISS_EVENT_ACTION) {
                             mPresenter.removeSmsMsg(itemsToRemove);
-                            mSwipeRefreshLayout.setEnabled(true);
+                            binding.swipeRefreshLayout.setEnabled(true);
                         }
                     }
                 })
@@ -254,15 +249,15 @@ public class CodeRecordFragment extends DaggerBackPressFragment implements CodeR
 
     @Override
     public void showRefreshing() {
-        if (!mSwipeRefreshLayout.isRefreshing()) {
-            mSwipeRefreshLayout.setRefreshing(true);
+        if (!binding.swipeRefreshLayout.isRefreshing()) {
+            binding.swipeRefreshLayout.setRefreshing(true);
         }
     }
 
     @Override
     public void stopRefresh() {
-        if (mSwipeRefreshLayout.isRefreshing()) {
-            mSwipeRefreshLayout.setRefreshing(false);
+        if (binding.swipeRefreshLayout.isRefreshing()) {
+            binding.swipeRefreshLayout.setRefreshing(false);
         }
     }
 

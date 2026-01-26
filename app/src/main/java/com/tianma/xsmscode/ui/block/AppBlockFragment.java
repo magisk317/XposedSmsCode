@@ -27,16 +27,12 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import butterknife.BindView;
-import butterknife.ButterKnife;
+import com.github.tianma8023.xposed.smscode.databinding.FragmentAppBlockBinding;
 import dagger.android.support.DaggerFragment;
 
 public class AppBlockFragment extends DaggerFragment implements AppBlockContract.View {
 
-    @BindView(R.id.swipe_refresh_layout)
-    SwipeRefreshLayout mRefreshLayout;
-    @BindView(R.id.app_block_recycler_view)
-    RecyclerView mRecyclerView;
+    private FragmentAppBlockBinding binding;
 
     private AppInfoAdapter mAppInfoAdapter;
 
@@ -53,9 +49,14 @@ public class AppBlockFragment extends DaggerFragment implements AppBlockContract
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         setHasOptionsMenu(true);
-        View rootView = inflater.inflate(R.layout.fragment_app_block, container, false);
-        ButterKnife.bind(this, rootView);
-        return rootView;
+        binding = FragmentAppBlockBinding.inflate(inflater, container, false);
+        return binding.getRoot();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
     }
 
     @Override
@@ -83,11 +84,11 @@ public class AppBlockFragment extends DaggerFragment implements AppBlockContract
             }
         });
 
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(mActivity));
-        mRecyclerView.setAdapter(mAppInfoAdapter);
-        mRecyclerView.addItemDecoration(new DividerItemDecoration(mActivity, DividerItemDecoration.VERTICAL));
+        binding.appBlockRecyclerView.setLayoutManager(new LinearLayoutManager(mActivity));
+        binding.appBlockRecyclerView.setAdapter(mAppInfoAdapter);
+        binding.appBlockRecyclerView.addItemDecoration(new DividerItemDecoration(mActivity, DividerItemDecoration.VERTICAL));
 
-        mRefreshLayout.setOnRefreshListener(() -> mPresenter.refreshData());
+        binding.swipeRefreshLayout.setOnRefreshListener(() -> mPresenter.refreshData());
     }
 
     @Override
@@ -126,24 +127,19 @@ public class AppBlockFragment extends DaggerFragment implements AppBlockContract
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_sort_by_label_asc:
-                mPresenter.doSort(SortType.LABEL_ASC);
-                break;
-            case R.id.action_sort_by_pkg_asc:
-                mPresenter.doSort(SortType.PACKAGE_ASC);
-                break;
-            case R.id.action_sort_by_label_desc:
-                mPresenter.doSort(SortType.LABEL_DESC);
-                break;
-            case R.id.action_sort_by_pkg_desc:
-                mPresenter.doSort(SortType.PACKAGE_DESC);
-                break;
-            case R.id.action_tick:
-                mPresenter.saveData();
-                break;
-            default:
-                return super.onOptionsItemSelected(item);
+        int id = item.getItemId();
+        if (id == R.id.action_sort_by_label_asc) {
+            mPresenter.doSort(SortType.LABEL_ASC);
+        } else if (id == R.id.action_sort_by_pkg_asc) {
+            mPresenter.doSort(SortType.PACKAGE_ASC);
+        } else if (id == R.id.action_sort_by_label_desc) {
+            mPresenter.doSort(SortType.LABEL_DESC);
+        } else if (id == R.id.action_sort_by_pkg_desc) {
+            mPresenter.doSort(SortType.PACKAGE_DESC);
+        } else if (id == R.id.action_tick) {
+            mPresenter.saveData();
+        } else {
+            return super.onOptionsItemSelected(item);
         }
         return true;
     }
@@ -160,26 +156,26 @@ public class AppBlockFragment extends DaggerFragment implements AppBlockContract
     @Override
     public void showData(List<AppInfo> appInfoList) {
         mAppInfoAdapter.setItemList(appInfoList);
-        mRefreshLayout.setEnabled(false);
+        binding.swipeRefreshLayout.setEnabled(false);
     }
 
     @Override
     public void showError(Throwable t) {
-        mRefreshLayout.setEnabled(true);
-        SnackbarHelper.makeShort(mRecyclerView, R.string.load_failed).show();
+        binding.swipeRefreshLayout.setEnabled(true);
+        SnackbarHelper.makeShort(binding.appBlockRecyclerView, R.string.load_failed).show();
     }
 
     @Override
     public void showProgress() {
-        if (!mRefreshLayout.isRefreshing()) {
-            mRefreshLayout.setRefreshing(true);
+        if (!binding.swipeRefreshLayout.isRefreshing()) {
+            binding.swipeRefreshLayout.setRefreshing(true);
         }
     }
 
     @Override
     public void cancelProgress() {
-        if (mRefreshLayout.isRefreshing()) {
-            mRefreshLayout.setRefreshing(false);
+        if (binding.swipeRefreshLayout.isRefreshing()) {
+            binding.swipeRefreshLayout.setRefreshing(false);
         }
     }
 
@@ -190,6 +186,6 @@ public class AppBlockFragment extends DaggerFragment implements AppBlockContract
 
     @Override
     public void onSaveFailed() {
-        SnackbarHelper.makeShort(mRecyclerView, R.string.save_failed).show();
+        SnackbarHelper.makeShort(binding.appBlockRecyclerView, R.string.save_failed).show();
     }
 }

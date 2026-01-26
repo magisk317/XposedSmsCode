@@ -23,15 +23,13 @@ import com.tianma.xsmscode.common.utils.PackageUtils;
 import com.tianma.xsmscode.ui.app.base.BaseActivity;
 import com.tianma.xsmscode.ui.faq.FaqFragment;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
+import com.github.tianma8023.xposed.smscode.databinding.ActivityHomeBinding;
 
 /**
  * 主界面
  */
 public class HomeActivity extends BaseActivity {
-    @BindView(R.id.toolbar)
-    Toolbar mToolbar;
+    private ActivityHomeBinding binding;
 
     private static final String TAG_NESTED = "tag_nested";
     private static final String TAG_FAQ = "tag_faq";
@@ -43,8 +41,8 @@ public class HomeActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_home);
-        ButterKnife.bind(this);
+        binding = ActivityHomeBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         getExternalFilesDir("");
 
@@ -60,7 +58,7 @@ public class HomeActivity extends BaseActivity {
     }
 
     private void setupToolbar() {
-        setSupportActionBar(mToolbar);
+        setSupportActionBar(binding.toolbar.getRoot());
 
         refreshActionBar(getString(R.string.app_name));
     }
@@ -113,16 +111,16 @@ public class HomeActivity extends BaseActivity {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_home_faq:
-                onFAQSelected();
-                return true;
-            case R.id.action_taichi_users_notice:
-                onTaichiUsersNoticeSelected();
-                return true;
-            case R.id.action_edxposed_users_notice:
-                onEdxposedUsersNoticeSelected();
-                return true;
+        int id = item.getItemId();
+        if (id == R.id.action_home_faq) {
+            onFAQSelected();
+            return true;
+        } else if (id == R.id.action_taichi_users_notice) {
+            onTaichiUsersNoticeSelected();
+            return true;
+        } else if (id == R.id.action_edxposed_users_notice) {
+            onEdxposedUsersNoticeSelected();
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -185,7 +183,7 @@ public class HomeActivity extends BaseActivity {
             } else {
                 appTitle = String.format(format, appName, getString(R.string.module_status_inactive));
             }
-            mToolbar.setTitle(appTitle);
+            binding.toolbar.getRoot().setTitle(appTitle);
         }, 1000L);
     }
 

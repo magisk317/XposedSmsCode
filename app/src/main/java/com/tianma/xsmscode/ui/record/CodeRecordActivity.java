@@ -11,16 +11,14 @@ import com.github.tianma8023.xposed.smscode.R;
 import com.tianma.xsmscode.common.fragment.backpress.BackPressEventDispatchHelper;
 import com.tianma.xsmscode.ui.app.base.BaseActivity;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
+import com.github.tianma8023.xposed.smscode.databinding.ActivityCodeRecordsBinding;
 
 /**
  * Sms Code Records
  */
 public class CodeRecordActivity extends BaseActivity {
 
-    @BindView(R.id.toolbar)
-    Toolbar mToolbar;
+    private ActivityCodeRecordsBinding binding;
 
     public static void startToMe(Context context) {
         Intent intent = new Intent(context, CodeRecordActivity.class);
@@ -30,8 +28,8 @@ public class CodeRecordActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_code_records);
-        ButterKnife.bind(this);
+        binding = ActivityCodeRecordsBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         setupToolbar();
 
@@ -42,7 +40,7 @@ public class CodeRecordActivity extends BaseActivity {
     }
 
     private void setupToolbar() {
-        setSupportActionBar(mToolbar);
+        setSupportActionBar(binding.toolbar.getRoot());
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setHomeButtonEnabled(true);

@@ -31,8 +31,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.appcompat.widget.AppCompatSpinner;
-import butterknife.BindView;
-import butterknife.ButterKnife;
+import com.github.tianma8023.xposed.smscode.databinding.FragmentRuleEditBinding;
 import dagger.android.support.DaggerFragment;
 
 /**
@@ -50,17 +49,7 @@ public class RuleEditFragment extends DaggerFragment implements RuleEditContract
     static final String KEY_RULE_EDIT_TYPE = "rule_edit_type";
     static final String KEY_CODE_RULE = "code_rule";
 
-    @BindView(R.id.rule_company_edit_text)
-    TextInputEditText mCompanyEditText;
-
-    @BindView(R.id.rule_keyword_edit_text)
-    TextInputEditText mKeywordEditText;
-
-    @BindView(R.id.rule_code_regex_quick_choose)
-    Button mQuickChooseBtn;
-
-    @BindView(R.id.rule_code_regex_edit_text)
-    TextInputEditText mCodeRegexEditText;
+    private FragmentRuleEditBinding binding;
 
     private Activity mActivity;
 
@@ -87,18 +76,23 @@ public class RuleEditFragment extends DaggerFragment implements RuleEditContract
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_rule_edit, container, false);
-        ButterKnife.bind(this, rootView);
-        return rootView;
+        binding = FragmentRuleEditBinding.inflate(inflater, container, false);
+        return binding.getRoot();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         mActivity = getActivity();
-        mQuickChooseBtn.setOnClickListener(v -> showQuickChooseDialog());
+        binding.ruleCodeRegexQuickChoose.setOnClickListener(v -> showQuickChooseDialog());
 
-        mCodeRegexEditText.setOnEditorActionListener((v, actionId, event) -> {
+        binding.ruleCodeRegexEditText.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 mPresenter.saveIfValid(getCurrentCodeRule());
                 return true;
@@ -150,7 +144,7 @@ public class RuleEditFragment extends DaggerFragment implements RuleEditContract
                     // (?<![0-9])[0-9]{4}(?![0-9])
                     String format = "(?<!%s)%s{%s}(?!%s)";
                     String codeRegex = String.format(format, codeType, codeType, codeLenText, codeType);
-                    setText(mCodeRegexEditText, codeRegex);
+                    setText(binding.ruleCodeRegexEditText, codeRegex);
                     dialog.dismiss();
                 })
                 .autoDismiss(false)
@@ -179,26 +173,23 @@ public class RuleEditFragment extends DaggerFragment implements RuleEditContract
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_rules_tick:
-                mPresenter.saveIfValid(getCurrentCodeRule());
-                break;
-            case R.id.action_save_as_template:
-                mPresenter.saveAsTemplate(getCurrentCodeRule());
-                break;
-            case R.id.action_rule_help:
-                showCodeRuleHelp();
-                break;
-            default:
-                return super.onOptionsItemSelected(item);
+        int id = item.getItemId();
+        if (id == R.id.action_rules_tick) {
+            mPresenter.saveIfValid(getCurrentCodeRule());
+        } else if (id == R.id.action_save_as_template) {
+            mPresenter.saveAsTemplate(getCurrentCodeRule());
+        } else if (id == R.id.action_rule_help) {
+            showCodeRuleHelp();
+        } else {
+            return super.onOptionsItemSelected(item);
         }
         return true;
     }
 
     private SmsCodeRule getCurrentCodeRule() {
-        String company = mCompanyEditText.getText().toString();
-        String keyword = mKeywordEditText.getText().toString();
-        String codeRegex = mCodeRegexEditText.getText().toString();
+        String company = binding.ruleCompanyEditText.getText().toString();
+        String keyword = binding.ruleKeywordEditText.getText().toString();
+        String codeRegex = binding.ruleCodeRegexEditText.getText().toString();
         return new SmsCodeRule(company, keyword, codeRegex);
     }
 
@@ -210,17 +201,17 @@ public class RuleEditFragment extends DaggerFragment implements RuleEditContract
     @Override
     public void displayCodeRule(SmsCodeRule codeRule) {
         if (codeRule != null) {
-            setText(mCompanyEditText, codeRule.getCompany());
-            setText(mKeywordEditText, codeRule.getCodeKeyword());
-            setText(mCodeRegexEditText, codeRule.getCodeRegex());
+            setText(binding.ruleCompanyEditText, codeRule.getCompany());
+            setText(binding.ruleKeywordEditText, codeRule.getCodeKeyword());
+            setText(binding.ruleCodeRegexEditText, codeRule.getCodeRegex());
         }
     }
 
     @Override
     public void clearAllErrorInfo() {
-        setError(mCompanyEditText, null);
-        setError(mKeywordEditText, null);
-        setError(mCodeRegexEditText, null);
+        setError(binding.ruleCompanyEditText, null);
+        setError(binding.ruleKeywordEditText, null);
+        setError(binding.ruleCodeRegexEditText, null);
     }
 
     @Override
@@ -232,13 +223,13 @@ public class RuleEditFragment extends DaggerFragment implements RuleEditContract
     @Override
     public void showErrorInfo(boolean companyValid, boolean keywordValid, boolean codeRegexValid) {
         if (!companyValid) {
-            setError(mCompanyEditText, R.string.rule_company_empty_hint);
+            setError(binding.ruleCompanyEditText, R.string.rule_company_empty_hint);
         }
         if (!keywordValid) {
-            setError(mKeywordEditText, R.string.rule_keyword_empty_hint);
+            setError(binding.ruleKeywordEditText, R.string.rule_keyword_empty_hint);
         }
         if (!codeRegexValid) {
-            setError(mCodeRegexEditText, R.string.rule_code_regex_empty_hint);
+            setError(binding.ruleCodeRegexEditText, R.string.rule_code_regex_empty_hint);
         }
     }
 
@@ -246,7 +237,7 @@ public class RuleEditFragment extends DaggerFragment implements RuleEditContract
     public void hideSoftInput() {
         InputMethodManager imeManager = (InputMethodManager) mActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
         if (imeManager != null && imeManager.isActive()) {
-            imeManager.hideSoftInputFromWindow(mCodeRegexEditText.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+            imeManager.hideSoftInputFromWindow(binding.ruleCodeRegexEditText.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
         }
     }
 

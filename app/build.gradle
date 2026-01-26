@@ -1,6 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'org.greenrobot.greendao' // apply greenDao plugin
-apply from: 'and-res-guard.gradle'
+// apply from: 'and-res-guard.gradle'
 
 def keyFile = file(findProperty("tianma.keystore.path") as String)
 def propertyFile = file(findProperty("tianma.signature.path") as String)
@@ -20,11 +20,11 @@ def VERSION_CODE = 52
 android {
     namespace 'com.github.tianma8023.xposed.smscode'
 
-    compileSdk 34
+    compileSdk 36
     defaultConfig {
         applicationId "com.github.tianma8023.xposed.smscode"
-        minSdkVersion 23
-        targetSdkVersion 34
+        minSdkVersion 24
+        targetSdkVersion 36
         versionCode VERSION_CODE
         versionName VERSION_NAME
 
@@ -40,6 +40,11 @@ android {
                 arguments = [ eventBusIndex : 'com.tianma.xsmscode.data.eventbus.MyEventBusIndex' ]
             }
         }
+    }
+
+    buildFeatures {
+        viewBinding true
+        buildConfig true
     }
 
     signingConfigs {
@@ -108,8 +113,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
     }
 }
 
@@ -118,7 +123,7 @@ greendao {
 }
 
 ext {
-    butterKnifeVersion = "10.2.3" // butter knife
+
 
     materialDialogVersion = "0.9.6.0" // material dialog version
 
@@ -154,9 +159,7 @@ dependencies {
     implementation "androidx.constraintlayout:constraintlayout:2.1.4" // constraint layout
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0" // swipe refresh layout
 
-    // ButterKnife
-    implementation "com.jakewharton:butterknife:$butterKnifeVersion"
-    annotationProcessor "com.jakewharton:butterknife-compiler:$butterKnifeVersion"
+
 
     // Xposed
     compileOnly 'de.robv.android.xposed:api:82'

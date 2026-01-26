@@ -20,8 +20,7 @@ import com.tianma.xsmscode.ui.rule.list.RuleListFragment;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
+import com.github.tianma8023.xposed.smscode.databinding.ActivityCodeRulesBinding;
 
 /**
  * User custom smscode codeRule list
@@ -31,8 +30,7 @@ public class CodeRulesActivity extends BaseDaggerActivity {
     private static final String TAG_RULE_EDIT = "tag_rule_edit";
     private static final String TAG_RULE_LIST = "tag_rule_list";
 
-    @BindView(R.id.toolbar)
-    Toolbar mToolbar;
+    private ActivityCodeRulesBinding binding;
 
     private FragmentManager mFragmentManager;
 
@@ -45,8 +43,8 @@ public class CodeRulesActivity extends BaseDaggerActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_code_rules);
-        ButterKnife.bind(this);
+        binding = ActivityCodeRulesBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         // set up toolbar
         setupToolbar();
@@ -55,7 +53,7 @@ public class CodeRulesActivity extends BaseDaggerActivity {
     }
 
     private void setupToolbar() {
-        setSupportActionBar(mToolbar);
+        setSupportActionBar(binding.toolbar.getRoot());
         refreshActionBar(getString(R.string.rule_list));
     }
 

@@ -10,16 +10,14 @@ import com.tianma.xsmscode.ui.app.base.BaseActivity;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.widget.Toolbar;
-import butterknife.BindView;
-import butterknife.ButterKnife;
+import com.github.tianma8023.xposed.smscode.databinding.ActivityAppBlockBinding;
 
 /**
  * Activity for choosing apps where auto-input is banned.
  */
 public class AppBlockActivity extends BaseActivity {
 
-    @BindView(R.id.toolbar)
-    Toolbar mToolbar;
+    private ActivityAppBlockBinding binding;
 
     public static void startMe(Context context) {
         context.startActivity(new Intent(context, AppBlockActivity.class));
@@ -28,8 +26,8 @@ public class AppBlockActivity extends BaseActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_app_block);
-        ButterKnife.bind(this);
+        binding = ActivityAppBlockBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         setupToolbar();
 
@@ -40,7 +38,7 @@ public class AppBlockActivity extends BaseActivity {
     }
 
     private void setupToolbar() {
-        setSupportActionBar(mToolbar);
+        setSupportActionBar(binding.toolbar.getRoot());
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setHomeButtonEnabled(true);

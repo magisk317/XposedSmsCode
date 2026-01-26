@@ -56,8 +56,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
+import com.github.tianma8023.xposed.smscode.databinding.FragmentRuleListBinding;
 import dagger.android.support.DaggerFragment;
 
 
@@ -71,14 +70,7 @@ public class RuleListFragment extends DaggerFragment implements RuleListContract
 
     static final String EXTRA_IMPORT_URI = "extra_import_uri";
 
-    @BindView(R.id.rule_list_recycler_view)
-    RecyclerView mRecyclerView;
-
-    @BindView(R.id.rule_list_fab)
-    FloatingActionButton mFabButton;
-
-    @BindView(R.id.empty_view)
-    View mEmptyView;
+    private FragmentRuleListBinding binding;
 
     private Activity mActivity;
     private MaterialDialog mProgressDialog;
@@ -111,9 +103,14 @@ public class RuleListFragment extends DaggerFragment implements RuleListContract
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_rule_list, container, false);
-        ButterKnife.bind(this, rootView);
-        return rootView;
+        binding = FragmentRuleListBinding.inflate(inflater, container, false);
+        return binding.getRoot();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
     }
 
     @Override
@@ -122,14 +119,14 @@ public class RuleListFragment extends DaggerFragment implements RuleListContract
 
         mActivity = requireActivity();
 
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(mActivity));
-        mRecyclerView.addItemDecoration(new DividerItemDecoration(mActivity, DividerItemDecoration.VERTICAL));
+        binding.ruleListRecyclerView.setLayoutManager(new LinearLayoutManager(mActivity));
+        binding.ruleListRecyclerView.addItemDecoration(new DividerItemDecoration(mActivity, DividerItemDecoration.VERTICAL));
         mRuleAdapter = new RuleAdapter(mActivity, new ArrayList<>());
-        mRecyclerView.setAdapter(mRuleAdapter);
+        binding.ruleListRecyclerView.setAdapter(mRuleAdapter);
 
         // swipe to remove
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(mSwipeToRemoveCallback);
-        itemTouchHelper.attachToRecyclerView(mRecyclerView);
+        itemTouchHelper.attachToRecyclerView(binding.ruleListRecyclerView);
 
         mRuleAdapter.setItemCallback(new BaseItemCallback<SmsCodeRule>() {
             @Override
@@ -150,11 +147,11 @@ public class RuleListFragment extends DaggerFragment implements RuleListContract
         mRuleAdapter.registerAdapterDataObserver(mDataObserver);
 
         // fab settings
-        CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) mFabButton.getLayoutParams();
+        CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) binding.ruleListFab.getLayoutParams();
         params.setBehavior(new FabScrollBehavior());
-        mFabButton.setLayoutParams(params);
+        binding.ruleListFab.setLayoutParams(params);
 
-        mFabButton.setOnClickListener(v -> {
+        binding.ruleListFab.setOnClickListener(v -> {
             SmsCodeRule emptyRule = new SmsCodeRule();
             XEventBus.post(new Event.StartRuleEditEvent(RuleEditFragment.EDIT_TYPE_CREATE, emptyRule));
         });
@@ -196,15 +193,13 @@ public class RuleListFragment extends DaggerFragment implements RuleListContract
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_import_rules:
-                attemptImportRuleList();
-                break;
-            case R.id.action_export_rules:
-                attemptExportRuleList();
-                break;
-            default:
-                return super.onOptionsItemSelected(item);
+        int id = item.getItemId();
+        if (id == R.id.action_import_rules) {
+            attemptImportRuleList();
+        } else if (id == R.id.action_export_rules) {
+            attemptExportRuleList();
+        } else {
+            return super.onOptionsItemSelected(item);
         }
         return true;
     }
@@ -219,16 +214,14 @@ public class RuleListFragment extends DaggerFragment implements RuleListContract
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         SmsCodeRule smsCodeRule = mRuleAdapter.getItemAt(mSelectedPosition);
-        switch (item.getItemId()) {
-            case R.id.action_edit_rule:
-                XEventBus.post(new Event.StartRuleEditEvent(
-                        RuleEditFragment.EDIT_TYPE_UPDATE, smsCodeRule));
-                break;
-            case R.id.action_remove_rule:
-                removeItemAt(mSelectedPosition);
-                break;
-            default:
-                return super.onContextItemSelected(item);
+        int id = item.getItemId();
+        if (id == R.id.action_edit_rule) {
+            XEventBus.post(new Event.StartRuleEditEvent(
+                    RuleEditFragment.EDIT_TYPE_UPDATE, smsCodeRule));
+        } else if (id == R.id.action_remove_rule) {
+            removeItemAt(mSelectedPosition);
+        } else {
+            return super.onContextItemSelected(item);
         }
         return true;
     }
@@ -251,7 +244,7 @@ public class RuleListFragment extends DaggerFragment implements RuleListContract
         final SmsCodeRule itemToRemove = mRuleAdapter.getItemAt(position);
         mRuleAdapter.removeItemAt(position);
 
-        SnackbarHelper.makeLong(mRecyclerView, R.string.removed)
+        SnackbarHelper.makeLong(binding.ruleListRecyclerView, R.string.removed)
                 .addCallback(new Snackbar.Callback() {
                     @Override
                     public void onDismissed(Snackbar transientBottomBar, int event) {
@@ -272,9 +265,9 @@ public class RuleListFragment extends DaggerFragment implements RuleListContract
 
     private void refreshEmptyView() {
         if (mRuleAdapter.getItemCount() == 0) {
-            mEmptyView.setVisibility(View.VISIBLE);
+            binding.emptyView.setVisibility(View.VISIBLE);
         } else {
-            mEmptyView.setVisibility(View.GONE);
+            binding.emptyView.setVisibility(View.GONE);
         }
     }
 
@@ -289,7 +282,7 @@ public class RuleListFragment extends DaggerFragment implements RuleListContract
 
     private void attemptExportRuleList() {
         if (mRuleAdapter.getItemCount() == 0) {
-            SnackbarHelper.makeLong(mRecyclerView, R.string.rule_list_empty_snack_prompt).show();
+            SnackbarHelper.makeLong(binding.ruleListRecyclerView, R.string.rule_list_empty_snack_prompt).show();
             return;
         }
 
@@ -300,7 +293,7 @@ public class RuleListFragment extends DaggerFragment implements RuleListContract
                 startActivityForResult(exportIntent, REQUEST_CODE_EXPORT_RULES);
             } catch (Exception e) {
                 // 防止某些 Rom 将 DocumentUI 阉割掉
-                SnackbarHelper.makeLong(mRecyclerView, R.string.documents_ui_not_found).show();
+                SnackbarHelper.makeLong(binding.ruleListRecyclerView, R.string.documents_ui_not_found).show();
             }
         } else {
             // 考虑到在低版本的 Android 系统中，不少 Rom 将 DocumentUI 阉割掉了，无法使用 SAF
@@ -353,7 +346,7 @@ public class RuleListFragment extends DaggerFragment implements RuleListContract
                 startActivityForResult(importIntent, REQUEST_CODE_IMPORT_RULES);
             } catch (Exception e) {
                 // 防止某些 Rom 将 DocumentUI 阉割掉
-                SnackbarHelper.makeLong(mRecyclerView, R.string.documents_ui_not_found).show();
+                SnackbarHelper.makeLong(binding.ruleListRecyclerView, R.string.documents_ui_not_found).show();
             }
         } else {
             // 考虑到在低版本的 Android 系统中，不少 Rom 将 DocumentUI 阉割掉了，无法使用 SAF
@@ -367,7 +360,7 @@ public class RuleListFragment extends DaggerFragment implements RuleListContract
             final File[] files = BackupManager.getBackupFiles();
 
             if (files == null || files.length == 0) {
-                SnackbarHelper.makeLong(mRecyclerView, R.string.no_backup_exists).show();
+                SnackbarHelper.makeLong(binding.ruleListRecyclerView, R.string.no_backup_exists).show();
                 return;
             }
 
@@ -390,7 +383,7 @@ public class RuleListFragment extends DaggerFragment implements RuleListContract
 
 
     private void showNoPermissionInfo() {
-        SnackbarHelper.makeShort(mRecyclerView, R.string.no_permission_prompt).show();
+        SnackbarHelper.makeShort(binding.ruleListRecyclerView, R.string.no_permission_prompt).show();
     }
 
     @Override
@@ -424,7 +417,7 @@ public class RuleListFragment extends DaggerFragment implements RuleListContract
     @Override
     public void onExportCompletedBelowQ(boolean success, File file) {
         int msgId = success ? R.string.export_succeed : R.string.export_failed;
-        Snackbar snackbar = SnackbarHelper.makeLong(mRecyclerView, msgId);
+        Snackbar snackbar = SnackbarHelper.makeLong(binding.ruleListRecyclerView, msgId);
         if (success) {
             snackbar.setAction(R.string.share, v -> {
                 if (mActivity != null) {
@@ -438,7 +431,7 @@ public class RuleListFragment extends DaggerFragment implements RuleListContract
     @Override
     public void onExportCompletedAboveQ(boolean success) {
         int msgId = success ? R.string.export_succeed : R.string.export_failed;
-        SnackbarHelper.makeLong(mRecyclerView, msgId).show();
+        SnackbarHelper.makeLong(binding.ruleListRecyclerView, msgId).show();
     }
 
     @Override
@@ -463,7 +456,7 @@ public class RuleListFragment extends DaggerFragment implements RuleListContract
                 msg = R.string.import_failed_read_error;
                 break;
         }
-        SnackbarHelper.makeLong(mRecyclerView, msg).show();
+        SnackbarHelper.makeLong(binding.ruleListRecyclerView, msg).show();
     }
 
     @Override
