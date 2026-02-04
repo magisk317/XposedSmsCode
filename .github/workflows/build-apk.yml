@@ -16,7 +16,7 @@ jobs:
     env:
       HAS_RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE != '' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: set up JDK 25
         uses: actions/setup-java@v4
@@ -52,7 +52,7 @@ jobs:
     env:
       HAS_RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE != '' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: set up JDK 25
         uses: actions/setup-java@v4
