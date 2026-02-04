@@ -64,7 +64,7 @@ jobs:
           if [ -f storage/build/reports/detekt/detekt.sarif ]; then echo "storage=true" >> $GITHUB_OUTPUT; fi
 
       - name: Upload Scan results (app)
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always() && steps.check.outputs.app == 'true'
         continue-on-error: true
         with:
@@ -72,7 +72,7 @@ jobs:
           category: app
 
       - name: Upload Scan results (core)
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always() && steps.check.outputs.core == 'true'
         continue-on-error: true
         with:
@@ -80,7 +80,7 @@ jobs:
           category: core
 
       - name: Upload Scan results (storage)
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always() && steps.check.outputs.storage == 'true'
         continue-on-error: true
         with:
