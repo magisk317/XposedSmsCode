@@ -356,4 +356,24 @@
     <string name="item_records">记录</string>
     <string name="restore_warning_msg">现有数据将被合并或覆盖。</string>
     <!-- backup and restore end -->
+
+    <!-- overview -->
+    <string name="unknown">未知</string>
+    <string name="not_installed">未安装</string>
+    <string name="version_name">版本名称</string>
+    <string name="version_code">版本代码</string>
+    <string name="root_permission_hint">需要 Root 权限才能读取</string>
+    <string name="framework_type">框架类型</string>
+    <string name="framework_version">框架版本</string>
+    <string name="android_version">Android 版本</string>
+    <string name="android_codename">系统开发代号</string>
+    <string name="api_level">API 级别</string>
+    <string name="manufacturer">厂商</string>
+    <string name="model">型号</string>
+    <string name="status_working">工作正常</string>
+    <string name="status_not_active">未激活</string>
+    <string name="status_tip">请在管理器中启用并重启设备</string>
+    <string name="rule_company_placeholder">例如: 验证码</string>
+    <string name="rule_regex_field_prefix">正则: </string>
+    <!-- overview end -->
 </resources>

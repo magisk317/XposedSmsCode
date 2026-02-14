@@ -68,7 +68,7 @@ fun OverviewScreen(hazeState: HazeState, hazeStyle: HazeStyle) {
             PackageUtils.getLsposedModuleInfo()
         }
     }
-    val frameworkType = frameworkInfoState?.first ?: "未知"
+    val frameworkType = frameworkInfoState?.first ?: stringResource(id = R.string.unknown)
     val frameworkVersion = frameworkInfoState?.second ?: run {
         val lsposedVersion = PackageUtils.getPackageVersion(context, Const.LSPOSED_MANAGER_PACKAGE_NAME)
         when {
@@ -76,9 +76,9 @@ fun OverviewScreen(hazeState: HazeState, hazeStyle: HazeStyle) {
                 "${lsposedVersion.first} (${lsposedVersion.second})"
 
             PackageUtils.isPackageInstalled(context, Const.LSPOSED_MANAGER_PACKAGE_NAME) ->
-                "未知"
+                stringResource(id = R.string.unknown)
 
-            else -> "未安装"
+            else -> stringResource(id = R.string.not_installed)
         }
     }
 
@@ -131,18 +131,18 @@ fun OverviewScreen(hazeState: HazeState, hazeStyle: HazeStyle) {
                     ),
                 ) {
                     Column(modifier = Modifier.padding(vertical = 12.dp)) {
-                        InfoItem(Icons.AutoMirrored.Filled.Label, "版本名称", BuildConfig.VERSION_NAME)
-                        InfoItem(Icons.Default.Numbers, "版本代码", BuildConfig.VERSION_CODE.toString())
-                        val rootHint = "需要 Root 权限才能读取"
+                        InfoItem(Icons.AutoMirrored.Filled.Label, stringResource(id = R.string.version_name), BuildConfig.VERSION_NAME)
+                        InfoItem(Icons.Default.Numbers, stringResource(id = R.string.version_code), BuildConfig.VERSION_CODE.toString())
+                        val rootHint = stringResource(id = R.string.root_permission_hint)
                         InfoItem(
                             Icons.Default.Extension,
-                            "框架类型",
+                            stringResource(id = R.string.framework_type),
                             frameworkType,
                             onClick = { Toast.makeText(context, rootHint, Toast.LENGTH_SHORT).show() },
                         )
                         InfoItem(
                             Icons.Default.Verified,
-                            "框架版本",
+                            stringResource(id = R.string.framework_version),
                             frameworkVersion,
                             onClick = { Toast.makeText(context, rootHint, Toast.LENGTH_SHORT).show() },
                         )
@@ -159,10 +159,11 @@ fun OverviewScreen(hazeState: HazeState, hazeStyle: HazeStyle) {
                     ),
                 ) {
                     Column(modifier = Modifier.padding(vertical = 12.dp)) {
-                        InfoItem(Icons.Default.Android, "Android 版本", Build.VERSION.RELEASE)
-                        InfoItem(Icons.Default.Code, "API 级别", Build.VERSION.SDK_INT.toString())
-                        InfoItem(Icons.Default.Business, "厂商", Build.MANUFACTURER)
-                        InfoItem(Icons.Default.Smartphone, "型号", Build.MODEL)
+                        InfoItem(Icons.Default.Android, stringResource(id = R.string.android_version), Build.VERSION.RELEASE)
+                        InfoItem(Icons.Default.Terminal, stringResource(id = R.string.android_codename), Build.VERSION.CODENAME)
+                        InfoItem(Icons.Default.Code, stringResource(id = R.string.api_level), Build.VERSION.SDK_INT.toString())
+                        InfoItem(Icons.Default.Business, stringResource(id = R.string.manufacturer), Build.MANUFACTURER)
+                        InfoItem(Icons.Default.Smartphone, stringResource(id = R.string.model), Build.MODEL)
                     }
                 }
             }
@@ -296,13 +297,13 @@ fun StatusCard(isEnabled: Boolean, onClick: (() -> Unit)? = null) {
             )
             Column {
                 Text(
-                    text = if (isEnabled) "工作正常" else "未激活",
+                    text = if (isEnabled) stringResource(id = R.string.status_working) else stringResource(id = R.string.status_not_active),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                 )
                 if (!isEnabled) {
                     Text(
-                        text = "请在管理器中启用并重启设备",
+                        text = stringResource(id = R.string.status_tip),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }

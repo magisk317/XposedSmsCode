@@ -540,7 +540,7 @@ fun CodeRecordItem(
         }
 
         // Left Side: Icon + App Name
-        val displayLabel = (smsMsg.company ?: smsMsg.sender ?: "Unknown").trim().trim('【', '】', '[', ']')
+        val displayLabel = (smsMsg.company ?: smsMsg.sender ?: stringResource(R.string.unknown)).trim().trim('【', '】', '[', ']')
         val iconLabel = displayLabel.replace(Regex("[【】\\[\\]]"), "").trim()
 
         Column(

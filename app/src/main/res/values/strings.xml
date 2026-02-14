@@ -345,4 +345,24 @@
     <string name="item_records">Records</string>
     <string name="restore_warning_msg">Existing data will be merged or overwritten.</string>
     <!-- backup and restore end -->
+
+    <!-- overview -->
+    <string name="unknown">Unknown</string>
+    <string name="not_installed">Not installed</string>
+    <string name="version_name">Version name</string>
+    <string name="version_code">Version code</string>
+    <string name="root_permission_hint">Root permission required to read</string>
+    <string name="framework_type">Framework type</string>
+    <string name="framework_version">Framework version</string>
+    <string name="android_version">Android version</string>
+    <string name="android_codename">OS Codename</string>
+    <string name="api_level">API level</string>
+    <string name="manufacturer">Manufacturer</string>
+    <string name="model">Model</string>
+    <string name="status_working">Working normally</string>
+    <string name="status_not_active">Inactive</string>
+    <string name="status_tip">Please enable in manager and reboot device</string>
+    <string name="rule_company_placeholder">eg. Verification Code</string>
+    <string name="rule_regex_field_prefix">RE: </string>
+    <!-- overview end -->
 </resources>
