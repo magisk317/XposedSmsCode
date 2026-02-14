@@ -36,9 +36,9 @@ fun randomHex8(): String {
 
 val versionNameStr = libs.versions.versionName.get()
 val versionCodeInt = libs.versions.versionCode.get().toInt()
-val compileSdkInt = libs.versions.compileSdk.get().toInt()
+val compileSdkStr = libs.versions.compileSdk.get()
 val minSdkInt = libs.versions.minSdk.get().toInt()
-val targetSdkInt = libs.versions.targetSdk.get().toInt()
+val targetSdkStr = libs.versions.targetSdk.get()
 val sdkExtensionInt = libs.versions.compileSdkExtension.get().toInt()
 val ndkVersionStr = libs.versions.ndk.get()
 
@@ -56,7 +56,15 @@ fun releaseAabName(versionName: String): String {
 
 android {
     namespace = "com.github.tianma8023.xposed.smscode"
-    compileSdk = compileSdkInt
+    
+    val sdkCodename = compileSdkStr.removePrefix("android-")
+    val sdkAsInt = sdkCodename.toIntOrNull()
+    if (sdkAsInt != null) {
+        compileSdk = sdkAsInt
+    } else {
+        compileSdkPreview = sdkCodename
+    }
+    
     compileSdkExtension = sdkExtensionInt
     ndkVersion = ndkVersionStr
 
@@ -67,7 +75,15 @@ android {
     defaultConfig {
         applicationId = "com.github.tianma8023.xposed.smscode"
         minSdk = minSdkInt
-        targetSdk = targetSdkInt
+        
+        val targetSdkCodename = targetSdkStr.removePrefix("android-")
+        val targetSdkAsInt = targetSdkCodename.toIntOrNull()
+        if (targetSdkAsInt != null) {
+            targetSdk = targetSdkAsInt
+        } else {
+            targetSdkPreview = targetSdkCodename
+        }
+        
         versionCode = versionCodeInt
         versionName = versionNameStr
 

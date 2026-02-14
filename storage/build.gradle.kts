@@ -5,7 +5,16 @@ plugins {
 
 android {
     namespace = "com.tianma.xsmscode.storage"
-    compileSdk = libs.versions.compileSdk.get().toInt()
+    
+    val compileSdkStr = libs.versions.compileSdk.get()
+    val sdkCodename = compileSdkStr.removePrefix("android-")
+    val sdkAsInt = sdkCodename.toIntOrNull()
+    if (sdkAsInt != null) {
+        compileSdk = sdkAsInt
+    } else {
+        compileSdkPreview = sdkCodename
+    }
+    
     compileSdkExtension = libs.versions.compileSdkExtension.get().toInt()
 
     defaultConfig {
