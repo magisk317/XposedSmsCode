@@ -138,6 +138,8 @@ jobs:
             echo "track=beta" >> $GITHUB_OUTPUT
           elif [[ "$TAG_NAME" == *"-alpha"* ]]; then
             echo "track=alpha" >> $GITHUB_OUTPUT
+          elif [[ "$TAG_NAME" == *"-android17"* ]]; then
+            echo "track=Android 17" >> $GITHUB_OUTPUT
           elif [[ "$TAG_NAME" == *"-internal"* ]]; then
             echo "track=internal" >> $GITHUB_OUTPUT
           else
