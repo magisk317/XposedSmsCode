@@ -370,6 +370,13 @@ fun ComposeSettingsScreen(
                 stateOverride = autoInputEnabled,
                 onSaved = markPrefsSaved,
             )
+            SwitchItem(
+                title = stringResource(id = R.string.pref_enable_auto_enter_code_title),
+                summary = stringResource(id = R.string.pref_enable_auto_enter_code_summary),
+                key = PrefConst.KEY_ENABLE_AUTO_ENTER_CODE,
+                defaultValue = false,
+                onSaved = markPrefsSaved,
+            )
             Item(
                 title = stringResource(id = R.string.pref_auto_input_code_delay_title),
                 summary = stringResource(id = R.string.pref_auto_input_code_delay_summary, autoInputDelay),

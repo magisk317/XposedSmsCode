@@ -34,8 +34,10 @@ class AutoInputAction(pluginContext: Context, phoneContext: Context, smsMsg: Sms
     @Suppress("TooGenericExceptionCaught")
     private fun autoInputCode(code: String?) {
         try {
-            InputHelper.sendText(mPhoneContext, code)
-            XLog.d("Auto input code succeed")
+            val autoEnter = mPluginContext.getSharedPreferences("xposed_prefs", Context.MODE_PRIVATE)
+                .getBoolean(com.tianma.xsmscode.common.constant.PrefConst.KEY_ENABLE_AUTO_ENTER_CODE, false)
+            InputHelper.sendText(mPhoneContext, code, autoEnter)
+            XLog.d("Auto input code succeed, autoEnter: $autoEnter")
         } catch (throwable: Throwable) {
             XLog.e("Error occurs when auto input code", throwable)
         }

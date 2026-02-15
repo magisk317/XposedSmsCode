@@ -47,6 +47,7 @@ jobs:
             
             git add gradlew gradle/wrapper/gradle-wrapper.properties gradle/wrapper/gradle-wrapper.jar
             git commit -m "build(wrapper): update gradle wrapper to nightly $VERSION"
+            git pull origin dev --rebase
             git push origin dev
           else
             echo "No changes to commit"

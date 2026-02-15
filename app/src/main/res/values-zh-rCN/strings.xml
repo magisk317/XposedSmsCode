@@ -50,6 +50,8 @@
     <string name="pref_category_auto_input_title">自动输入</string>
     <string name="pref_enable_auto_input_code_title">自动输入验证码</string>
     <string name="pref_enable_auto_input_code_summary">尝试自动输入验证码</string>
+    <string name="pref_enable_auto_enter_code_title">自动确认/回车</string>
+    <string name="pref_enable_auto_enter_code_summary">填充验证码后自动触发回车操作</string>
     <string name="pref_auto_input_code_delay_title">自动输入延迟</string>
     <string name="pref_auto_input_code_delay_summary">延迟 %ss</string>
     <!-- preferences auto-input end -->

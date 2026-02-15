@@ -156,9 +156,10 @@ class SystemInputInjectorHook : BaseHook() {
                         return
                     }
                     val code = intent.getStringExtra("code")
+                    val autoEnter = intent.getBooleanExtra("autoEnter", false)
                     if (!code.isNullOrEmpty()) {
-                        XLog.i("SystemServer received input request: $code")
-                        injectText(code)
+                        XLog.i("SystemServer received input request: $code, autoEnter: $autoEnter")
+                        injectText(code, autoEnter)
                     } else {
                         XLog.w("SystemServer received input request with empty code")
                     }
@@ -257,7 +258,7 @@ class SystemInputInjectorHook : BaseHook() {
         }
     }
 
-    private fun injectText(text: String) {
+    private fun injectText(text: String, autoEnter: Boolean = false) {
         getInputHandler().post {
             try {
                 val events = KeyCharacterMap.load(KeyCharacterMap.VIRTUAL_KEYBOARD)
@@ -275,9 +276,24 @@ class SystemInputInjectorHook : BaseHook() {
                     val result = method.invoke(manager, event, mode) as? Boolean ?: false
                     if (result) injectedCount += 1
                 }
-                XLog.w("Injected key events from System Server, count=%d", injectedCount)
+                XLog.w("Injected key characters from System Server, count=%d", injectedCount)
+
+                if (autoEnter) {
+                    val now = android.os.SystemClock.uptimeMillis()
+                    val downEvent = android.view.KeyEvent(now, now, android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_ENTER, 0)
+                    val upEvent = android.view.KeyEvent(now, now, android.view.KeyEvent.ACTION_UP, android.view.KeyEvent.KEYCODE_ENTER, 0)
+                    
+                    val downResult = method.invoke(manager, downEvent, mode) as? Boolean ?: false
+                    val upResult = method.invoke(manager, upEvent, mode) as? Boolean ?: false
+                    
+                    if (downResult && upResult) {
+                        XLog.w("Injected KEYCODE_ENTER from System Server")
+                    } else {
+                        XLog.e("Failed to inject KEYCODE_ENTER: down=$downResult, up=$upResult")
+                    }
+                }
             } catch (t: Throwable) {
-                XLog.e("Failed to inject text from System Server", t)
+                XLog.e("Failed to inject text/enter from System Server", t)
             }
         }
     }

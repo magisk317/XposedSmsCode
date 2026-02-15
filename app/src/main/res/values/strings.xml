@@ -50,6 +50,8 @@
     <string name="pref_category_auto_input_title">Auto Input</string>
     <string name="pref_enable_auto_input_code_title">Auto input SMS code</string>
     <string name="pref_enable_auto_input_code_summary">Try to input SMS code automatically</string>
+    <string name="pref_enable_auto_enter_code_title">Auto-Enter/Submit</string>
+    <string name="pref_enable_auto_enter_code_summary">Automatically trigger Enter after filling the code</string>
     <string name="pref_auto_input_code_delay_title">Auto input delay</string>
     <string name="pref_auto_input_code_delay_summary">Delay %ss</string>
     <!-- preferences auto-input end -->

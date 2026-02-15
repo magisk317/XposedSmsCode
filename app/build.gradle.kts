@@ -93,7 +93,7 @@ android {
 
     splits {
         abi {
-            isEnable = true
+            isEnable = hasProperty("buildSplits")
             reset()
             include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
             isUniversalApk = true
@@ -192,6 +192,7 @@ androidComponents {
             val abi = output.filters.find { it.filterType == com.android.build.api.variant.FilterConfiguration.FilterType.ABI }?.identifier ?: "universal"
             // Use reflection or search for the property if outputFileName is unresolved
             try {
+                @Suppress("UNCHECKED_CAST")
                 val outputFileName = output.javaClass.getMethod("getOutputFileName").invoke(output) as org.gradle.api.provider.Property<String>
                 outputFileName.set(releaseApkName(vName, variant.buildType ?: "", abi))
             } catch (e: Exception) {
@@ -209,10 +210,7 @@ tasks.register("renameReleaseAab") {
         val bundleFile = bundleFileProvider.get().asFile
         if (bundleFile.exists()) {
             val target = targetFileProvider.get().asFile
-            if (target.exists()) {
-                target.delete()
-            }
-            bundleFile.renameTo(target)
+            bundleFile.copyTo(target, overwrite = true)
         }
     }
 }

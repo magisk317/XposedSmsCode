@@ -101,6 +101,8 @@ jobs:
       HAS_RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE != '' }}
       HAS_GOOGLE_PLAY_CREDENTIALS: ${{ secrets.ANDROID_PUBLISHER_CREDENTIALS != '' }}
     steps:
+      - uses: actions/checkout@v6
+
       - uses: actions/download-artifact@v7
         with:
           name: apks
@@ -124,11 +126,23 @@ jobs:
           files: |
             artifacts/apks/*.apk
             artifacts/bundle/bundle/release/*.aab
-          body: |
-            ## XposedSmsCode Release
-            Automated build for version ${{ github.ref_name }}
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+
+      - name: Determine Release Track
+        id: determine_track
+        run: |
+          TAG_NAME=${{ github.ref_name }}
+          if [[ "$TAG_NAME" == *"-beta"* ]]; then
+            echo "track=beta" >> $GITHUB_OUTPUT
+          elif [[ "$TAG_NAME" == *"-alpha"* ]]; then
+            echo "track=alpha" >> $GITHUB_OUTPUT
+          elif [[ "$TAG_NAME" == *"-internal"* ]]; then
+            echo "track=internal" >> $GITHUB_OUTPUT
+          else
+            echo "track=production" >> $GITHUB_OUTPUT
+          fi
 
       - name: Publish to Google Play
         uses: r0adkll/upload-google-play@v1
@@ -139,5 +153,6 @@ jobs:
           releaseFiles: artifacts/bundle/bundle/release/*.aab
           mappingFile: artifacts/bundle/mapping/release/mapping.txt
           debugSymbols: artifacts/symbols/native-debug-symbols.zip
-          track: alpha
+          track: ${{ steps.determine_track.outputs.track }}
           status: completed
+          whatsNewDirectory: distribution/whatsnew

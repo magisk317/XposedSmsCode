@@ -197,6 +197,10 @@ object AppPreferencesDataStore {
             PrefConst.KEY_AUTO_UPDATE_WIFI_ONLY,
             getBoolean(context, PrefConst.KEY_AUTO_UPDATE_WIFI_ONLY, false),
         )
+        editor.putBoolean(
+            PrefConst.KEY_ENABLE_AUTO_ENTER_CODE,
+            getBoolean(context, PrefConst.KEY_ENABLE_AUTO_ENTER_CODE, false),
+        )
         editor.apply()
         ensureSharedPrefsReadable(context)
     }

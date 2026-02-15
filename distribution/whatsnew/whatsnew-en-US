@@ -1,0 +1,5 @@
+- New: Added "Auto-Enter" support after auto-inputting verification code
+- Opt: Enhanced input injection with fallback strategies for better compatibility
+- UI: Improved internationalization and added OS codename display
+- Build: Migrated build system to Gradle Kotlin DSL (KTS)
+- Release: Automated Google Play multi-track distribution and release notes

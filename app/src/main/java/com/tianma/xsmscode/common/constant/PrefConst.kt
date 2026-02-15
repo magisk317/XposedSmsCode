@@ -15,6 +15,7 @@ object PrefConst {
     const val KEY_SHOW_TOAST = "pref_show_toast"
     const val KEY_COPY_TO_CLIPBOARD = "pref_copy_to_clipboard"
     const val KEY_ENABLE_AUTO_INPUT_CODE = "pref_enable_auto_input_code"
+    const val KEY_ENABLE_AUTO_ENTER_CODE = "pref_enable_auto_enter_code"
     const val KEY_AUTO_INPUT_CODE_DELAY = "pref_auto_input_code_delay"
     const val KEY_AUTO_INPUT_CODE_DELAY_DEFAULT = "0"
     const val KEY_APP_BLOCK_ENTRY = "pref_app_block_entry"
