@@ -18,7 +18,15 @@ android {
     compileSdkExtension = libs.versions.compileSdkExtension.get().toInt()
 
     defaultConfig {
-        minSdk = libs.versions.minSdk.get().toInt()
+        val minSdkStr = libs.versions.minSdk.get()
+        val minSdkCodename = minSdkStr.removePrefix("android-")
+        val minSdkAsInt = minSdkCodename.toIntOrNull()
+        if (minSdkAsInt != null) {
+            minSdk = minSdkAsInt
+        } else {
+            @Suppress("DEPRECATION")
+            minSdkPreview = minSdkCodename
+        }
     }
 
     val javaVersion = JavaVersion.toVersion(libs.versions.javaBytecode.get())

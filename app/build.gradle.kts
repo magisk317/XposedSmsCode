@@ -37,7 +37,7 @@ fun randomHex8(): String {
 val versionNameStr = libs.versions.versionName.get()
 val versionCodeInt = libs.versions.versionCode.get().toInt()
 val compileSdkStr = libs.versions.compileSdk.get()
-val minSdkInt = libs.versions.minSdk.get().toInt()
+val minSdkStr = libs.versions.minSdk.get()
 val targetSdkStr = libs.versions.targetSdk.get()
 val sdkExtensionInt = libs.versions.compileSdkExtension.get().toInt()
 val ndkVersionStr = libs.versions.ndk.get()
@@ -74,7 +74,13 @@ android {
 
     defaultConfig {
         applicationId = "com.github.tianma8023.xposed.smscode"
-        minSdk = minSdkInt
+        val minSdkCodename = minSdkStr.removePrefix("android-")
+        val minSdkAsInt = minSdkCodename.toIntOrNull()
+        if (minSdkAsInt != null) {
+            minSdk = minSdkAsInt
+        } else {
+            minSdkPreview = minSdkCodename
+        }
         
         val targetSdkCodename = targetSdkStr.removePrefix("android-")
         val targetSdkAsInt = targetSdkCodename.toIntOrNull()
