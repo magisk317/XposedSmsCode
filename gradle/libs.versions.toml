@@ -4,7 +4,7 @@ adaptive = "1.2.0"
 # Build SDK versions
 compileSdk = "android-CinnamonBun"
 compileSdkExtension = "1"
-minSdk = "24"
+minSdk = "android-CinnamonBun"
 targetSdk = "android-CinnamonBun"
 ndk = "28.2.13676358"
 # JVM versions
