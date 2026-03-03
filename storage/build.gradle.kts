@@ -20,6 +20,10 @@ android {
             dimension = "distribution"
             buildConfigField("boolean", "ENABLE_SMS_CHANNEL", "true")
         }
+        create("fdroid") {
+            dimension = "distribution"
+            buildConfigField("boolean", "ENABLE_SMS_CHANNEL", "true")
+        }
     }
 
     buildFeatures {

@@ -5,7 +5,6 @@ import android.graphics.Bitmap
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
@@ -50,13 +49,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.tianma.xsmscode.core.BuildConfig
 import com.tianma.xsmscode.core.R
-import com.google.android.play.core.appupdate.AppUpdateManager
-import com.google.android.play.core.appupdate.AppUpdateManagerFactory
-import com.google.android.play.core.appupdate.AppUpdateOptions
-import com.google.android.play.core.install.InstallStateUpdatedListener
-import com.google.android.play.core.install.model.AppUpdateType
-import com.google.android.play.core.install.model.InstallStatus
-import com.google.android.play.core.install.model.UpdateAvailability
 import com.tianma.xsmscode.common.constant.Const
 import com.tianma.xsmscode.common.constant.PrefConst
 import com.tianma.xsmscode.common.utils.AppPreferencesDataStore
@@ -71,11 +63,12 @@ import com.tianma.xsmscode.data.update.UpgradeCheckResult
 import com.tianma.xsmscode.data.update.UpgradeDownloader
 import com.tianma.xsmscode.data.update.UpgradeInfo
 import com.tianma.xsmscode.data.update.UpgradeInstaller
-import com.tianma.xsmscode.data.update.UpdateCoordinator
 import com.tianma.xsmscode.data.update.UpdatePolicy
 import com.tianma.xsmscode.ui.app.base.UpdateSystemBars
 import com.tianma.xsmscode.ui.app.base.applyEdgeToEdge
 import com.tianma.xsmscode.ui.app.base.rememberHazeStyle
+import com.tianma.xsmscode.ui.home.update.FlavorPlayUpdateDelegate
+import com.tianma.xsmscode.ui.home.update.PlayUpdateDelegate
 import com.tianma.xsmscode.ui.nav.SmsCodeNavHost
 import com.tianma.xsmscode.ui.privacy.PrivacyPolicyPage
 import com.tianma.xsmscode.ui.theme.AppTheme
@@ -90,20 +83,8 @@ import kotlin.math.hypot
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var appUpdateManager: AppUpdateManager
+    private val playUpdateDelegate: PlayUpdateDelegate = FlavorPlayUpdateDelegate()
     private var autoUpdateChecked = false
-    private val updateLauncher = registerForActivityResult(
-        ActivityResultContracts.StartIntentSenderForResult(),
-    ) { result ->
-        if (result.resultCode != RESULT_OK) {
-            PackageUtils.openPlayStoreOrGithub(this)
-        }
-    }
-    private val installStateUpdatedListener = InstallStateUpdatedListener { state ->
-        if (state.installStatus() == InstallStatus.DOWNLOADED) {
-            appUpdateManager.completeUpdate()
-        }
-    }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
@@ -113,8 +94,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         applyEdgeToEdge(this)
-        appUpdateManager = AppUpdateManagerFactory.create(this)
-        appUpdateManager.registerListener(installStateUpdatedListener)
+        playUpdateDelegate.onCreate(this) {
+            PackageUtils.openPlayStoreOrGithub(this)
+        }
         triggerAutoUpdateIfEnabled()
 
         setContent {
@@ -522,18 +504,14 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
-            if (info.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS) {
-                startUpdateFlow(info)
-            } else if (info.installStatus() == InstallStatus.DOWNLOADED) {
-                appUpdateManager.completeUpdate()
-            }
+        playUpdateDelegate.onResume(this) {
+            PackageUtils.openPlayStoreOrGithub(this)
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        appUpdateManager.unregisterListener(installStateUpdatedListener)
+        playUpdateDelegate.onDestroy()
     }
 
     private fun requestPlayUpdate() {
@@ -541,23 +519,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun requestPlayUpdateInternal(silentIfNoUpdate: Boolean, fallbackOnQueryFailure: Boolean) {
-        appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
-            val action = UpdateCoordinator.decidePlayAction(
-                updateAvailable = info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE,
-                flexibleAllowed = info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE),
-                inProgress = info.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS,
-                silentIfNoUpdate = silentIfNoUpdate,
-            )
-            when (action) {
-                UpdateCoordinator.PlayAction.START_UPDATE_FLOW -> startUpdateFlow(info)
-                UpdateCoordinator.PlayAction.OPEN_STORE_OR_GITHUB -> PackageUtils.openPlayStoreOrGithub(this)
-                UpdateCoordinator.PlayAction.NO_OP -> Unit
-            }
-        }.addOnFailureListener {
-            when (UpdateCoordinator.decidePlayFailureAction(fallbackOnQueryFailure)) {
-                UpdateCoordinator.PlayAction.OPEN_STORE_OR_GITHUB -> PackageUtils.openPlayStoreOrGithub(this)
-                else -> Unit
-            }
+        playUpdateDelegate.requestUpdate(
+            activity = this,
+            silentIfNoUpdate = silentIfNoUpdate,
+            fallbackOnQueryFailure = fallbackOnQueryFailure,
+        ) {
+            PackageUtils.openPlayStoreOrGithub(this)
         }
     }
 
@@ -777,17 +744,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun startUpdateFlow(info: com.google.android.play.core.appupdate.AppUpdateInfo) {
-        try {
-            appUpdateManager.startUpdateFlowForResult(
-                info,
-                updateLauncher,
-                AppUpdateOptions.newBuilder(AppUpdateType.FLEXIBLE).build(),
-            )
-        } catch (ignored: Exception) {
-            PackageUtils.openPlayStoreOrGithub(this)
-        }
-    }
 }
 
 private data class GithubStructuredUpdate(

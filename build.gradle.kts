@@ -92,8 +92,6 @@ subprojects {
         google()
         mavenCentral()
         gradlePluginPortal()
-        maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/eap")
-        maven("https://api.xposed.info/")
         maven("https://jitpack.io")
         maven("https://s01.oss.sonatype.org/content/repositories/snapshots/")
     }
@@ -168,4 +166,3 @@ exit ${"$"}EXIT_CODE
         }
     }
 }
-

@@ -72,6 +72,10 @@ android {
             dimension = "distribution"
             buildConfigField("boolean", "ENABLE_SMS_CHANNEL", "true")
         }
+        create("fdroid") {
+            dimension = "distribution"
+            buildConfigField("boolean", "ENABLE_SMS_CHANNEL", "true")
+        }
     }
 
     androidResources {
@@ -253,7 +257,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
-    compileOnly(libs.xposed.api)
+    compileOnly(project(":xposed-stub"))
 
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging.interceptor)
@@ -288,7 +292,6 @@ dependencies {
     implementation(libs.androidx.compose.material3.adaptive.layout)
     implementation(libs.androidx.compose.material3.adaptive.navigation)
 
-    implementation(libs.play.app.update)
     implementation(libs.haze.android)
 
     implementation(libs.androidx.room.runtime)

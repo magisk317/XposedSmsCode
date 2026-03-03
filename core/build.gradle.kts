@@ -21,6 +21,10 @@ android {
             dimension = "distribution"
             buildConfigField("boolean", "ENABLE_SMS_CHANNEL", "true")
         }
+        create("fdroid") {
+            dimension = "distribution"
+            buildConfigField("boolean", "ENABLE_SMS_CHANNEL", "true")
+        }
     }
 
     defaultConfig {
@@ -80,7 +84,7 @@ dependencies {
     implementation(libs.haze.android)
     implementation(libs.timber)
     implementation(libs.kotlinx.collections.immutable)
-    implementation(libs.play.app.update)
+    add("playImplementation", libs.play.app.update)
 
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.platform.launcher)
