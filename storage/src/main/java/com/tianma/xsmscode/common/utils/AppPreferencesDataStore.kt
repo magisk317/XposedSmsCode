@@ -215,7 +215,7 @@ object AppPreferencesDataStore {
         )
         editor.putBoolean(PrefConst.KEY_MARK_AS_READ, getBoolean(context, PrefConst.KEY_MARK_AS_READ, false))
         editor.putBoolean(PrefConst.KEY_DELETE_SMS, getBoolean(context, PrefConst.KEY_DELETE_SMS, false))
-        editor.putBoolean(PrefConst.KEY_COPY_TO_CLIPBOARD, getBoolean(context, PrefConst.KEY_COPY_TO_CLIPBOARD, true))
+        editor.putBoolean(PrefConst.KEY_COPY_TO_CLIPBOARD, getBoolean(context, PrefConst.KEY_COPY_TO_CLIPBOARD, false))
         editor.putBoolean(
             PrefConst.KEY_ENABLE_CODE_RECORDS,
             getBoolean(context, PrefConst.KEY_ENABLE_CODE_RECORDS, true),

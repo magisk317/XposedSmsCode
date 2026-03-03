@@ -7,6 +7,8 @@ import com.tianma.xsmscode.data.db.entity.SmsMsg
 
 object PrefsReader {
     private const val PREFS_NAME = "xposed_prefs"
+    private data class BooleanReadTrace(val value: Boolean, val source: String)
+    private data class StringReadTrace(val value: String, val source: String)
 
     private fun getSharedPrefs(context: Context): SharedPreferences? {
         return runCatching {
@@ -71,6 +73,46 @@ object PrefsReader {
         }
     }
 
+    private fun readBooleanWithTrace(context: Context, key: String, defaultValue: Boolean): BooleanReadTrace {
+        try {
+            val uri = com.tianma.xsmscode.data.prefs.PrefsProvider.BOOL_URI.buildUpon()
+                .appendQueryParameter("key", key)
+                .appendQueryParameter("default", defaultValue.toString())
+                .build()
+            context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val value = cursor.getString(0)
+                    return BooleanReadTrace(
+                        value = value == "1" || value.equals("true", ignoreCase = true),
+                        source = "provider",
+                    )
+                }
+            }
+        } catch (t: Throwable) {
+            XLog.w("PrefsReader: read boolean '%s' via provider failed, fallback sharedPrefs", key, t)
+        }
+        return try {
+            val prefs = getSharedPrefs(context)
+            if (prefs?.contains(key) == true) {
+                BooleanReadTrace(
+                    value = prefs.getBoolean(key, defaultValue),
+                    source = "shared_prefs",
+                )
+            } else {
+                BooleanReadTrace(
+                    value = defaultValue,
+                    source = "default",
+                )
+            }
+        } catch (t: Throwable) {
+            XLog.w("PrefsReader: sharedPrefs boolean '%s' failed, default=%s", key, defaultValue, t)
+            BooleanReadTrace(
+                value = defaultValue,
+                source = "default",
+            )
+        }
+    }
+
     private fun getStringViaProvider(context: Context, key: String, defaultValue: String): String {
         return try {
             val uri = com.tianma.xsmscode.data.prefs.PrefsProvider.STRING_URI.buildUpon()
@@ -86,6 +128,45 @@ object PrefsReader {
         } catch (t: Throwable) {
             XLog.w("PrefsReader: read string '%s' via provider failed, fallback sharedPrefs", key, t)
             getStringViaSharedPrefs(context, key, defaultValue)
+        }
+    }
+
+    private fun readStringWithTrace(context: Context, key: String, defaultValue: String): StringReadTrace {
+        try {
+            val uri = com.tianma.xsmscode.data.prefs.PrefsProvider.STRING_URI.buildUpon()
+                .appendQueryParameter("key", key)
+                .appendQueryParameter("default", defaultValue)
+                .build()
+            context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    return StringReadTrace(
+                        value = cursor.getString(0) ?: defaultValue,
+                        source = "provider",
+                    )
+                }
+            }
+        } catch (t: Throwable) {
+            XLog.w("PrefsReader: read string '%s' via provider failed, fallback sharedPrefs", key, t)
+        }
+        return try {
+            val prefs = getSharedPrefs(context)
+            if (prefs?.contains(key) == true) {
+                StringReadTrace(
+                    value = prefs.getString(key, defaultValue) ?: defaultValue,
+                    source = "shared_prefs",
+                )
+            } else {
+                StringReadTrace(
+                    value = defaultValue,
+                    source = "default",
+                )
+            }
+        } catch (t: Throwable) {
+            XLog.w("PrefsReader: sharedPrefs string '%s' failed, default=%s", key, defaultValue, t)
+            StringReadTrace(
+                value = defaultValue,
+                source = "default",
+            )
         }
     }
 
@@ -186,8 +267,15 @@ object PrefsReader {
 
     @JvmStatic
     fun copyToClipboardEnabled(context: Context): Boolean {
-        val defaultValue = true
-        return getBooleanViaProvider(context, PrefConst.KEY_COPY_TO_CLIPBOARD, defaultValue)
+        val defaultValue = false
+        val trace = readBooleanWithTrace(context, PrefConst.KEY_COPY_TO_CLIPBOARD, defaultValue)
+        XLog.w(
+            "Diag pref copy_to_clipboard: value=%s source=%s default=%s",
+            trace.value,
+            trace.source,
+            defaultValue,
+        )
+        return trace.value
     }
 
     @JvmStatic
@@ -350,8 +438,17 @@ object PrefsReader {
     }
 
     @JvmStatic
-    fun getIpcToken(context: Context): String =
-        getStringViaProvider(context, PrefConst.KEY_IPC_TOKEN, "")
+    fun getIpcToken(context: Context): String {
+        val trace = readStringWithTrace(context, PrefConst.KEY_IPC_TOKEN, "")
+        if (trace.value.isBlank() || trace.source != "provider") {
+            XLog.w(
+                "Diag pref ipc_token: blank=%s source=%s",
+                trace.value.isBlank(),
+                trace.source,
+            )
+        }
+        return trace.value
+    }
 
     @JvmStatic
     fun getSimSlotRemark(context: Context, simSlot: Int): String {

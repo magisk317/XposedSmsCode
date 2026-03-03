@@ -603,7 +603,7 @@ class WebUiServer(
     private suspend fun buildSettingsState(): SettingsState = withContext(Dispatchers.IO) {
         SettingsState(
             enable = AppPreferencesDataStore.getBoolean(appContext, PrefConst.KEY_ENABLE, true),
-            copyToClipboard = AppPreferencesDataStore.getBoolean(appContext, PrefConst.KEY_COPY_TO_CLIPBOARD, true),
+            copyToClipboard = AppPreferencesDataStore.getBoolean(appContext, PrefConst.KEY_COPY_TO_CLIPBOARD, false),
             showToast = AppPreferencesDataStore.getBoolean(appContext, PrefConst.KEY_SHOW_TOAST, true),
             showCodeNotification = AppPreferencesDataStore.getBoolean(
                 appContext,
