@@ -52,6 +52,7 @@ import com.tianma.xsmscode.core.R
 import com.tianma.xsmscode.common.constant.Const
 import com.tianma.xsmscode.common.constant.PrefConst
 import com.tianma.xsmscode.common.utils.AppPreferencesDataStore
+import com.tianma.xsmscode.common.utils.XLog
 import com.tianma.xsmscode.common.utils.SPUtils
 import com.tianma.xsmscode.common.utils.PackageUtils
 import com.tianma.xsmscode.common.utils.Utils
@@ -172,6 +173,15 @@ class MainActivity : AppCompatActivity() {
             val view = LocalView.current
             var requestedTab by remember { mutableStateOf<Any?>(null) }
 
+            fun clearScreenshotBitmap() {
+                screenshotBitmap?.let { bitmap ->
+                    if (!bitmap.isRecycled) {
+                        bitmap.recycle()
+                    }
+                }
+                screenshotBitmap = null
+            }
+
             LaunchedEffect(Unit) {
                 if (!SPUtils.isPrivacyPolicyAccepted(context)) {
                     showPrivacyPolicyDialog = true
@@ -184,41 +194,62 @@ class MainActivity : AppCompatActivity() {
             // Effect to trigger logic when ThemeState changes
             LaunchedEffect(themeState) {
                 if (themeState.mode != currentThemeMode) {
-                    // 1. Capture Screenshot of current state (Old Theme)
-                    try {
-                        // We need to verify if the view is laid out.
-                        if (view.width > 0 && view.height > 0) {
-                            val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
-                            val canvas = android.graphics.Canvas(bitmap)
-                            view.draw(canvas)
-                            screenshotBitmap = bitmap
-
-                            // 2. Setup Animation Parameters
-                            val centerX = if (themeState.centerX >= 0) themeState.centerX else view.width / 2f
-                            val centerY = if (themeState.centerY >= 0) themeState.centerY else view.height / 2f
-                            animationCenter = Offset(centerX, centerY)
-
-                            // 3. Update Theme to NEW Mode (Re-renders UI behind)
-                            isAnimating = true
-                            currentThemeMode = themeState.mode
-
-                            // 4. Start Animation
-                            revealAnim.snapTo(0f)
-                            revealAnim.animateTo(
-                                targetValue = 1f,
-                                animationSpec = tween(durationMillis = 600),
-                            )
-
-                            // 5. Cleanup
-                            isAnimating = false
-                            screenshotBitmap = null
-                        } else {
-                            // Fallback if view not ready
-                            currentThemeMode = themeState.mode
-                        }
-                    } catch (ignored: Exception) {
-                        // Fallback on error
+                    val width = view.width
+                    val height = view.height
+                    val pixelCount = width.toLong() * height.toLong()
+                    val exceedsLimits = width <= 0 ||
+                        height <= 0 ||
+                        width > MAX_CAPTURE_SIDE_PX ||
+                        height > MAX_CAPTURE_SIDE_PX ||
+                        pixelCount > MAX_CAPTURE_PIXELS
+                    if (exceedsLimits) {
+                        XLog.w(
+                            "Skip theme capture due to size: width=%d height=%d pixels=%d",
+                            width,
+                            height,
+                            pixelCount,
+                        )
+                        clearScreenshotBitmap()
+                        isAnimating = false
                         currentThemeMode = themeState.mode
+                        return@LaunchedEffect
+                    }
+
+                    try {
+                        clearScreenshotBitmap()
+                        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                        val canvas = android.graphics.Canvas(bitmap)
+                        view.draw(canvas)
+                        screenshotBitmap = bitmap
+
+                        val centerX = if (themeState.centerX >= 0) themeState.centerX else width / 2f
+                        val centerY = if (themeState.centerY >= 0) themeState.centerY else height / 2f
+                        animationCenter = Offset(centerX, centerY)
+
+                        isAnimating = true
+                        currentThemeMode = themeState.mode
+
+                        revealAnim.snapTo(0f)
+                        revealAnim.animateTo(
+                            targetValue = 1f,
+                            animationSpec = tween(durationMillis = 600),
+                        )
+                    } catch (oom: OutOfMemoryError) {
+                        XLog.w("Theme capture OOM, fallback to direct mode switch")
+                        currentThemeMode = themeState.mode
+                    } catch (e: RuntimeException) {
+                        if (e.message?.contains(LARGE_BITMAP_ERROR_KEYWORD, ignoreCase = true) == true) {
+                            XLog.w("Theme capture too large bitmap, fallback to direct mode switch")
+                        } else {
+                            XLog.w("Theme capture runtime exception: %s", e.message ?: "unknown")
+                        }
+                        currentThemeMode = themeState.mode
+                    } catch (t: Throwable) {
+                        XLog.w("Theme capture failed: %s", t.message ?: "unknown")
+                        currentThemeMode = themeState.mode
+                    } finally {
+                        isAnimating = false
+                        clearScreenshotBitmap()
                     }
                 } else {
                     // Initial load
@@ -468,7 +499,7 @@ class MainActivity : AppCompatActivity() {
                         }
 
                         // Overlay for Circular Reveal
-                        if (isAnimating && screenshotBitmap != null) {
+                        if (isAnimating && screenshotBitmap != null && !screenshotBitmap!!.isRecycled) {
                             val bitmap = screenshotBitmap!!.asImageBitmap()
                             Image(
                                 bitmap = bitmap,
@@ -770,3 +801,6 @@ private sealed class UpdateDownloadState {
 }
 
 private const val BYTES_PER_UNIT = 1024.0
+private const val MAX_CAPTURE_PIXELS = 8_388_608L
+private const val MAX_CAPTURE_SIDE_PX = 4096
+private const val LARGE_BITMAP_ERROR_KEYWORD = "trying to draw too large"

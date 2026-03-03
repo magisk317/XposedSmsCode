@@ -1,6 +1,7 @@
 package com.tianma.xsmscode.ui.common
 
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -13,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
@@ -34,9 +36,13 @@ fun AppIconImage(
     contentDescription: String? = null,
 ) {
     val context = LocalContext.current
+    val density = LocalDensity.current
+    val targetIconPx = remember(size, density) {
+        with(density) { size.roundToPx() }.coerceIn(1, MAX_ICON_SIZE_PX)
+    }
     var iconBitmap by remember(packageName, label) { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
 
-    LaunchedEffect(packageName, label) {
+    LaunchedEffect(packageName, label, targetIconPx) {
         withContext(Dispatchers.IO) {
             try {
                 val pm = context.packageManager
@@ -74,7 +80,11 @@ fun AppIconImage(
                 if (!finalPackageName.isNullOrBlank()) {
                     val appInfo = pm.getApplicationInfo(finalPackageName, 0)
                     val drawable = appInfo.loadIcon(pm)
-                    iconBitmap = drawable.toBitmap().asImageBitmap()
+                    iconBitmap = drawable.toBitmap(
+                        width = targetIconPx,
+                        height = targetIconPx,
+                        config = Bitmap.Config.ARGB_8888,
+                    ).asImageBitmap()
                 } else {
                     iconBitmap = null
                 }
@@ -107,3 +117,5 @@ fun AppIconImage(
         }
     }
 }
+
+private const val MAX_ICON_SIZE_PX = 256

@@ -34,6 +34,7 @@ import java.util.Comparator
 import java.io.File
 
 private const val APP_NOTIFY_LOG_LIMIT = 20
+private const val APP_LIST_PAGE_SIZE = 80
 
 class AppConfigViewModel(application: Application) : AndroidViewModel(application) {
     private val appDb = AppDatabase.getInstance(application)
@@ -43,6 +44,8 @@ class AppConfigViewModel(application: Application) : AndroidViewModel(applicatio
 
     private val _loadingFlow = MutableStateFlow(false)
     val loadingFlow: StateFlow<Boolean> = _loadingFlow.asStateFlow()
+    private val _hasMoreAppsFlow = MutableStateFlow(false)
+    val hasMoreAppsFlow: StateFlow<Boolean> = _hasMoreAppsFlow.asStateFlow()
 
     private val _hideSystemAppsFlow = MutableStateFlow(true)
     val hideSystemAppsFlow: StateFlow<Boolean> = _hideSystemAppsFlow.asStateFlow()
@@ -65,6 +68,8 @@ class AppConfigViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     private var apps: ImmutableList<AppInfo> = persistentListOf()
+    private var filteredApps: ImmutableList<AppInfo> = persistentListOf()
+    private var visibleAppCount = 0
     private var isLoadSucceed = false
     private val systemApps = HashSet<String>()
     private val persistMutex = Mutex()
@@ -84,7 +89,7 @@ class AppConfigViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun refreshData(force: Boolean = false) {
         if (isLoadSucceed && !force) {
-            applyFilterAndSort()
+            applyFilterAndSort(resetVisibleWindow = true)
             return
         }
 
@@ -138,7 +143,7 @@ class AppConfigViewModel(application: Application) : AndroidViewModel(applicatio
 
                 apps = appList
                 isLoadSucceed = true
-                applyFilterAndSort()
+                applyFilterAndSort(resetVisibleWindow = true)
                 _loadingFlow.value = false
             } catch (t: Throwable) {
                 XLog.e("Unified AppConfig load failed", t)
@@ -170,7 +175,7 @@ class AppConfigViewModel(application: Application) : AndroidViewModel(applicatio
     fun doFilter(newFilter: String) {
         _filterFlow.value = newFilter
         filter = newFilter.lowercase()
-        applyFilterAndSort()
+        applyFilterAndSort(resetVisibleWindow = true)
     }
 
     fun setSortOption(option: SortOption) {
@@ -187,18 +192,18 @@ class AppConfigViewModel(application: Application) : AndroidViewModel(applicatio
             _sortOptionFlow.value = currentSortOption
             _isAscendingFlow.value = isAscending
         }
-        applyFilterAndSort()
+        applyFilterAndSort(resetVisibleWindow = true)
     }
 
     fun setAscending(ascending: Boolean) {
         isAscending = ascending
         _isAscendingFlow.value = isAscending
-        applyFilterAndSort()
+        applyFilterAndSort(resetVisibleWindow = true)
     }
 
     fun setHideSystemApps(hide: Boolean) {
         _hideSystemAppsFlow.value = hide
-        applyFilterAndSort()
+        applyFilterAndSort(resetVisibleWindow = true)
     }
 
     private fun hasUsageStatsPermission(): Boolean {
@@ -213,7 +218,13 @@ class AppConfigViewModel(application: Application) : AndroidViewModel(applicatio
         return mode == android.app.AppOpsManager.MODE_ALLOWED
     }
 
-    private fun applyFilterAndSort() {
+    fun loadMoreApps() {
+        if (_loadingFlow.value || !_hasMoreAppsFlow.value) return
+        visibleAppCount = minOf(visibleAppCount + APP_LIST_PAGE_SIZE, filteredApps.size)
+        publishVisibleApps()
+    }
+
+    private fun applyFilterAndSort(resetVisibleWindow: Boolean) {
         viewModelScope.launch {
             val filteredList = withContext(Dispatchers.Default) {
                 apps.asSequence()
@@ -232,8 +243,20 @@ class AppConfigViewModel(application: Application) : AndroidViewModel(applicatio
                     .sortedWith(mComparator)
                     .toImmutableList()
             }
-            _appsFlow.value = filteredList
+            filteredApps = filteredList
+            if (resetVisibleWindow || visibleAppCount <= 0) {
+                visibleAppCount = minOf(APP_LIST_PAGE_SIZE, filteredApps.size)
+            } else {
+                visibleAppCount = minOf(visibleAppCount, filteredApps.size)
+            }
+            publishVisibleApps()
         }
+    }
+
+    private fun publishVisibleApps() {
+        val endIndex = visibleAppCount.coerceAtMost(filteredApps.size)
+        _appsFlow.value = filteredApps.subList(0, endIndex).toImmutableList()
+        _hasMoreAppsFlow.value = endIndex < filteredApps.size
     }
 
     fun setBlocked(item: AppInfo, blocked: Boolean) {
@@ -276,7 +299,7 @@ class AppConfigViewModel(application: Application) : AndroidViewModel(applicatio
         apps = apps.map { app ->
             if (app.packageName == packageName) updater(app) else app
         }.toImmutableList()
-        applyFilterAndSort()
+        applyFilterAndSort(resetVisibleWindow = false)
         persistAppConfig(packageName)
     }
 
