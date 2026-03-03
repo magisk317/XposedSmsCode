@@ -5,6 +5,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import android.os.Bundle
+import android.os.Process
 import com.tianma.xsmscode.common.utils.PrefsReader
 import com.tianma.xsmscode.common.utils.XLog
 import com.tianma.xsmscode.data.db.DBProvider
@@ -80,11 +81,22 @@ class RecordSmsAction(pluginContext: Context, phoneContext: Context, smsMsg: Sms
                 XLog.d("Remove outdated code records succeed by content provider")
             }
             cursor.close()
-        } catch (ignored: Exception) {
-            // ContentProvider dead.
-            // Write file to do data transition
+        } catch (t: Throwable) {
+            val callerUid = Process.myUid()
+            val appUid = mPluginContext.applicationInfo.uid
+            if (callerUid != appUid) {
+                XLog.w(
+                    "Skip record file fallback due to cross-uid context. callerUid=%d appUid=%d err=%s",
+                    callerUid,
+                    appUid,
+                    t.message ?: t.javaClass.simpleName,
+                )
+                return
+            }
             if (CodeRecordRestoreManager.exportToFile(mPluginContext, smsMsg)) {
                 XLog.d("Export code record to file succeed")
+            } else {
+                XLog.w("Export code record to file failed in app uid fallback")
             }
         }
     }

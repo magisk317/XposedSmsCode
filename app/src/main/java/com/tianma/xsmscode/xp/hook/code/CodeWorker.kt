@@ -19,6 +19,7 @@ class CodeWorker(
     private val mPluginContext: Context,
     private val mPhoneContext: Context,
     private val mSmsIntent: Intent,
+    private val eventId: String = "",
 ) {
     private val mUIHandler: Handler = Handler(Looper.getMainLooper())
     private val mScheduledExecutor = Executors.newSingleThreadScheduledExecutor()
@@ -39,9 +40,10 @@ class CodeWorker(
         val deduplicateSms = PrefsReader.deduplicateSms(mPluginContext)
         val killMe = PrefsReader.killMeEnabled(mPluginContext)
         XLog.w(
-            "Diag settings: enabled=%s, verbose=%s, showNotif=%s, autoCancel=%s, " +
+            "Diag settings: event_id=%s enabled=%s, verbose=%s, showNotif=%s, autoCancel=%s, " +
                 "retentionSec=%d, autoInput=%s, copy=%s, toast=%s, record=%s, " +
                 "block=%s, markRead=%s, delete=%s, dedup=%s, killMe=%s",
+            eventId.ifBlank { "<none>" },
             moduleEnabled,
             verboseLog,
             showNotification,
@@ -124,7 +126,13 @@ class CodeWorker(
         mScheduledExecutor.schedule(recordSmsAction, 0, TimeUnit.MILLISECONDS)
 
         // 转发 Action
-        val forwardAction = ForwardAction(mPluginContext, mPhoneContext, smsMsg, mSmsIntent)
+        val forwardAction = ForwardAction(
+            mPluginContext,
+            mPhoneContext,
+            smsMsg,
+            mSmsIntent,
+            eventId,
+        )
         mScheduledExecutor.schedule(forwardAction, 100, TimeUnit.MILLISECONDS)
 
         // 操作验证码短信（标记为已读 或者 删除） Action
@@ -184,6 +192,7 @@ class CodeWorker(
                 packageName = packageName,
             ),
             mSmsIntent,
+            eventId,
         )
         mScheduledExecutor.schedule(forwardAction, 100, TimeUnit.MILLISECONDS)
     }

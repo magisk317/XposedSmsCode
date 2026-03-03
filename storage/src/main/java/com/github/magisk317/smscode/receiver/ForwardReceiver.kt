@@ -434,22 +434,31 @@ class ForwardReceiver : BroadcastReceiver() {
         forwardSource: String,
         sentFromUid: Int?,
     ): Boolean {
-        // Keep strict token verification for all regular channels.
-        // App notification from NotificationManagerHook may temporarily fail to read token
-        // when provider is unavailable (e.g. app process cleaned). In that case:
-        // - API 34+: require sent-from UID to be system UID.
-        // - API < 34: UID API is unavailable, allow nms_hook fallback.
-        if (msgType != "app_notify" || forwardSource != "nms_hook") {
-            return false
+        // Keep strict token verification by default.
+        // Controlled bypass is only for system-origin paths when token lookup is temporarily unavailable.
+        return when {
+            msgType == "app_notify" && forwardSource == "nms_hook" -> {
+                if (sentFromUid == Process.SYSTEM_UID) {
+                    true
+                } else if (Build.VERSION.SDK_INT < API_LEVEL_34 && sentFromUid == null) {
+                    XLog.w("IPC token bypass accepted for nms_hook without sender uid (API<34)")
+                    true
+                } else {
+                    false
+                }
+            }
+            msgType == "sms" && forwardSource == "sms_hook" -> {
+                if (sentFromUid == Process.SYSTEM_UID || sentFromUid == Process.PHONE_UID) {
+                    true
+                } else if (Build.VERSION.SDK_INT < API_LEVEL_34 && sentFromUid == null) {
+                    XLog.w("IPC token bypass accepted for sms_hook without sender uid (API<34)")
+                    true
+                } else {
+                    false
+                }
+            }
+            else -> false
         }
-        if (sentFromUid == Process.SYSTEM_UID) {
-            return true
-        }
-        if (Build.VERSION.SDK_INT < API_LEVEL_34 && sentFromUid == null) {
-            XLog.w("IPC token bypass accepted for nms_hook without sender uid (API<34)")
-            return true
-        }
-        return false
     }
 
     private fun resolveSentFromUidCompat(): Int? {

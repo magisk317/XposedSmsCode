@@ -26,6 +26,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.util.concurrent.Executors
+import kotlin.math.abs
 
 /**
  * Hook class com.android.internal.telephony.InboundSmsHandler
@@ -211,9 +212,11 @@ class SmsHandlerHook : BaseHook() {
         if (Telephony.Sms.Intents.SMS_DELIVER_ACTION != action) {
             return
         }
+        val eventId = ensureEventId(intent)
         val pduCount = getPduCount(intent)
         XLog.w(
-            "Diag SMS_DELIVER intercepted: action=%s, pduCount=%d, extras=%s",
+            "Diag SMS_DELIVER intercepted: event_id=%s action=%s, pduCount=%d, extras=%s",
+            eventId,
             action,
             pduCount,
             intent.extras != null,
@@ -229,7 +232,8 @@ class SmsHandlerHook : BaseHook() {
         val blacklistResult = SmsBlacklistUtils.match(pluginContext, smsMsg?.sender, smsMsg?.body)
         if (blacklistResult.matched) {
             XLog.w(
-                "Diag sms blacklist matched: type=%s, pattern=%s, delete=%s, block=%s",
+                "Diag sms blacklist matched: event_id=%s type=%s, pattern=%s, delete=%s, block=%s",
+                eventId,
                 blacklistResult.matchType,
                 blacklistResult.pattern,
                 blacklistResult.actionDelete,
@@ -239,28 +243,45 @@ class SmsHandlerHook : BaseHook() {
                 scheduleBlacklistDelete(pluginContext, phoneContext, smsMsg)
             }
             if (blacklistResult.actionBlock) {
-                XLog.w("Diag sms blacklist action: blocking broadcast")
+                XLog.w("Diag sms block reason=%s event_id=%s", BLOCK_REASON_BLACKLIST, eventId)
                 param.args.getOrNull(receiverIndex)?.let { receiver ->
-                    deleteRawTableAndSendMessage(param.thisObject, receiver)
+                    deleteRawTableAndSendMessage(
+                        inboundSmsHandler = param.thisObject,
+                        smsReceiver = receiver,
+                        reason = BLOCK_REASON_BLACKLIST,
+                        eventId = eventId,
+                    )
                     param.result = null
                 }
                 return
             }
         }
 
-        val parseResult = CodeWorker(pluginContext, phoneContext, intent).parse()
+        val parseResult = CodeWorker(pluginContext, phoneContext, intent, eventId).parse()
         if (parseResult == null) {
-            XLog.w("Diag parse result is null: no code matched or parse failed")
+            XLog.w("Diag parse result is null: event_id=%s no code matched or parse failed", eventId)
         } else {
-            XLog.w("Diag parse result: blockSms=%s", parseResult.isBlockSms)
+            XLog.w("Diag parse result: event_id=%s blockSms=%s", eventId, parseResult.isBlockSms)
         }
         if (parseResult != null) {
             if (parseResult.isBlockSms) {
-                XLog.d("Blocking code SMS...")
+                XLog.w("Diag sms block reason=%s event_id=%s", BLOCK_REASON_PREF_BLOCK, eventId)
                 param.args.getOrNull(receiverIndex)?.let { receiver ->
-                    deleteRawTableAndSendMessage(param.thisObject, receiver)
+                    deleteRawTableAndSendMessage(
+                        inboundSmsHandler = param.thisObject,
+                        smsReceiver = receiver,
+                        reason = BLOCK_REASON_PREF_BLOCK,
+                        eventId = eventId,
+                    )
                     param.result = null
                 }
+            } else {
+                XLog.w(
+                    "Diag allow system inbox persist: event_id=%s sender_hash=%s body_len=%d",
+                    eventId,
+                    senderHash(smsMsg?.sender),
+                    smsMsg?.body?.length ?: 0,
+                )
             }
         }
     }
@@ -289,33 +310,39 @@ class SmsHandlerHook : BaseHook() {
         }
     }
 
-    private fun deleteRawTableAndSendMessage(inboundSmsHandler: Any, smsReceiver: Any) {
+    private fun deleteRawTableAndSendMessage(
+        inboundSmsHandler: Any,
+        smsReceiver: Any,
+        reason: String,
+        eventId: String,
+    ) {
+        XLog.w("Diag raw-table delete start: reason=%s event_id=%s", reason, eventId)
         val token = Binder.clearCallingIdentity()
         try {
-            deleteFromRawTable(inboundSmsHandler, smsReceiver)
+            deleteFromRawTable(inboundSmsHandler, smsReceiver, reason, eventId)
         } catch (e: Throwable) {
             XLog.e("Error occurs when delete SMS data from raw table", e)
         } finally {
             Binder.restoreCallingIdentity(token)
         }
 
-        sendEventBroadcastComplete(inboundSmsHandler)
+        sendEventBroadcastComplete(inboundSmsHandler, reason, eventId)
     }
 
-    private fun sendEventBroadcastComplete(inboundSmsHandler: Any) {
-        XLog.d("Send event(EVENT_BROADCAST_COMPLETE)")
+    private fun sendEventBroadcastComplete(inboundSmsHandler: Any, reason: String, eventId: String) {
+        XLog.d("Send event(EVENT_BROADCAST_COMPLETE): reason=%s event_id=%s", reason, eventId)
         XposedHelpers.callMethod(inboundSmsHandler, "sendMessage", EVENT_BROADCAST_COMPLETE)
     }
 
     @Throws(ReflectiveOperationException::class)
-    private fun deleteFromRawTable(inboundSmsHandler: Any, smsReceiver: Any) {
+    private fun deleteFromRawTable(inboundSmsHandler: Any, smsReceiver: Any, reason: String, eventId: String) {
         // minSdkVersion 35: Always use Android 24+ method
-        deleteFromRawTable24(inboundSmsHandler, smsReceiver)
+        deleteFromRawTable24(inboundSmsHandler, smsReceiver, reason, eventId)
     }
 
     @Throws(ReflectiveOperationException::class)
-    private fun deleteFromRawTable24(inboundSmsHandler: Any, smsReceiver: Any) {
-        XLog.d("Delete raw SMS data from database on Android 24+")
+    private fun deleteFromRawTable24(inboundSmsHandler: Any, smsReceiver: Any, reason: String, eventId: String) {
+        XLog.d("Delete raw SMS data from database on Android 24+: reason=%s event_id=%s", reason, eventId)
         val deleteWhere = XposedHelpers.getObjectField(smsReceiver, "mDeleteWhere")
         val deleteWhereArgs = XposedHelpers.getObjectField(smsReceiver, "mDeleteWhereArgs")
         val markDeleted = 2
@@ -328,6 +355,22 @@ class SmsHandlerHook : BaseHook() {
             deleteWhereArgs,
             markDeleted,
         )
+    }
+
+    private fun ensureEventId(intent: Intent): String {
+        val existing = intent.getStringExtra(EVENT_ID_EXTRA).orEmpty().trim()
+        if (existing.isNotEmpty()) {
+            return existing
+        }
+        val generated = "sms_${System.currentTimeMillis().toString(36)}_${abs(intent.hashCode()).toString(36)}"
+        intent.putExtra(EVENT_ID_EXTRA, generated)
+        return generated
+    }
+
+    private fun senderHash(sender: String?): String {
+        val value = sender.orEmpty()
+        if (value.isBlank()) return "none"
+        return Integer.toHexString(value.hashCode())
     }
 
     private fun getPluginContext(): Context? {
@@ -350,6 +393,9 @@ class SmsHandlerHook : BaseHook() {
         private const val SMS_HANDLER_CLASS = "$TELEPHONY_PACKAGE.InboundSmsHandler"
         private val SMSCODE_PACKAGE = BuildConfig.APPLICATION_ID
         private const val EVENT_BROADCAST_COMPLETE = 3
+        private const val EVENT_ID_EXTRA = "event_id"
+        private const val BLOCK_REASON_BLACKLIST = "blacklist_block"
+        private const val BLOCK_REASON_PREF_BLOCK = "pref_block_sms"
         private val SMS_OPERATION_EXECUTOR = Executors.newSingleThreadExecutor()
 
         @Throws(InvocationTargetException::class, IllegalAccessException::class)

@@ -4,7 +4,9 @@ import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.os.Process
 import com.tianma.xsmscode.common.utils.PrefsReader
 import com.tianma.xsmscode.common.utils.XLog
 import com.tianma.xsmscode.data.db.DBProvider
@@ -19,6 +21,7 @@ class ForwardAction(
     phoneContext: Context,
     smsMsg: SmsMsg,
     private val mSmsIntent: Intent? = null,
+    private val eventId: String = "",
 ) :
     CallableAction(pluginContext, phoneContext, smsMsg) {
 
@@ -26,13 +29,17 @@ class ForwardAction(
         try {
             val isCodeSms = !mSmsMsg.smsCode.isNullOrBlank()
             XLog.w(
-                "Diag ForwardAction: delegate to app process, isCode=%s",
+                "Diag ForwardAction: event_id=%s delegate to app process, isCode=%s",
+                eventId.ifBlank { "<none>" },
                 isCodeSms,
             )
             // Send IPC Broadcast to the integrated SmsCode App Module
             val intent = Intent(ACTION_FORWARD_SMS)
             // ForwardReceiver is now merged into the same APK; target the host app package.
             intent.setPackage(mPluginContext.packageName)
+            if (eventId.isNotBlank()) {
+                intent.putExtra(EVENT_ID_EXTRA, eventId)
+            }
             
             intent.putExtra("sender", mSmsMsg.sender)
             intent.putExtra("body", mSmsMsg.body)
@@ -40,25 +47,42 @@ class ForwardAction(
             intent.putExtra("company", mSmsMsg.company)
             intent.putExtra("smsCode", mSmsMsg.smsCode)
             intent.putExtra("packageName", mSmsMsg.packageName)
+            intent.putExtra("msgType", "sms")
+            intent.putExtra("forward_source", "sms_hook")
             copySimExtras(intent)
 
             // Securing IPC with Token: Only the receiver matching our token can process this msg.
             // We use PrefsReader to retrieve token via cross-process Provider.
             val token = PrefsReader.getIpcToken(mPluginContext)
             if (token.isBlank()) {
-                XLog.e("IPC token is empty, skip forwarding broadcast for security.")
-                persistForwardResult(
-                    success = false,
-                    target = "SmsCode Engine",
-                    message = "IPC token missing",
+                if (!shouldAllowSmsTokenBypass()) {
+                    XLog.e("IPC token is empty, skip forwarding broadcast for security. event_id=%s", eventId.ifBlank { "<none>" })
+                    persistForwardResult(
+                        success = false,
+                        target = "SmsCode Engine",
+                        message = "IPC token missing",
+                    )
+                    return null
+                }
+                XLog.w(
+                    "IPC token empty, continue forwarding with receiver-side bypass. event_id=%s source=sms_hook uid=%d sdk=%d",
+                    eventId.ifBlank { "<none>" },
+                    Process.myUid(),
+                    Build.VERSION.SDK_INT,
                 )
-                return null
+            } else {
+                intent.putExtra("ipc_token", token)
             }
-            intent.putExtra("ipc_token", token)
 
             mPluginContext.sendBroadcast(intent)
             
-            XLog.i("Successfully broadcasted SMS info to SmsCode Engine with token (length ${token.length}): ${mSmsMsg.smsCode}")
+            XLog.i(
+                "Successfully broadcasted SMS info to SmsCode Engine (event_id=%s tokenPresent=%s length=%d): %s",
+                eventId.ifBlank { "<none>" },
+                token.isNotBlank(),
+                token.length,
+                mSmsMsg.smsCode,
+            )
         } catch (t: Throwable) {
             XLog.e("Failed to broadcast SMS info to SmsCode Engine", t)
             persistForwardResult(
@@ -107,6 +131,11 @@ class ForwardAction(
             sourceIntent.getStringExtra(key)?.toIntOrNull()?.let { return it }
         }
         return null
+    }
+
+    private fun shouldAllowSmsTokenBypass(): Boolean {
+        val uid = Process.myUid()
+        return uid == Process.SYSTEM_UID || uid == Process.PHONE_UID
     }
 
     private fun persistForwardResult(success: Boolean, target: String?, message: String) {
@@ -160,6 +189,7 @@ class ForwardAction(
 
     companion object {
         const val ACTION_FORWARD_SMS = "com.tianma.xsmscode.ACTION_FORWARD_SMS"
+        private const val EVENT_ID_EXTRA = "event_id"
         private const val MAX_MESSAGE_LEN = 300
     }
 }
