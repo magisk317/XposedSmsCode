@@ -59,6 +59,11 @@
 # 待实现
 - 定时发送短信
 
+# 发布元数据维护
+- Fastlane 元数据目录：`fastlane/metadata/android`
+- 发版前同步 Fastlane 更新日志与截图：`scripts/sync_fastlane_metadata.sh`
+- 发版前校验版本与发布元数据：`scripts/check_release_guard.sh`
+- Fastlane 的 `changelogs/{versionCode}.txt` 由 `distribution/whatsnew` 自动同步生成。
 
 # 文档
 - [更新日志 (Changelog)](docs/CHANGELOG.md)
