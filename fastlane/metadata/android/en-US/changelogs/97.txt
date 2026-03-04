@@ -1,0 +1,5 @@
+- Forwarding was rebuilt with channels/templates + non-code SMS control.
+- Added app-notify forwarding, App Control, WebUI, and log bundle export.
+- Added per-type record retention/export, auto-input interval, non-Play in-app upgrade checks, and keep-alive options.
+- Stability: SMS event_id tracing + block reasons, cross-uid fallback cleanup, large-bitmap guards, segmented app list loading.
+- GitHub: https://github.com/magisk317/XposedSmsCode

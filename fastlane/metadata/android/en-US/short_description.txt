@@ -1,0 +1,1 @@
+Extract OTP codes from incoming SMS and copy or auto-fill instantly.
