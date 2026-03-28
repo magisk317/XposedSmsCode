@@ -314,7 +314,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/') && env.HAS_GOOGLE_PLAY_CREDENTIALS == 'true'
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.2'
+          ruby-version: '4.0.2'
 
       - name: Install fastlane
         if: startsWith(github.ref, 'refs/tags/') && env.HAS_GOOGLE_PLAY_CREDENTIALS == 'true'
