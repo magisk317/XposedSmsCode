@@ -310,13 +310,22 @@ jobs:
             echo "has_symbols=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Set up Ruby for fastlane
+        if: startsWith(github.ref, 'refs/tags/') && env.HAS_GOOGLE_PLAY_CREDENTIALS == 'true'
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+
       - name: Install fastlane
         if: startsWith(github.ref, 'refs/tags/') && env.HAS_GOOGLE_PLAY_CREDENTIALS == 'true'
         shell: bash
         run: |
           ruby --version
           gem --version
-          gem install fastlane --no-document
+          gem_user_bin="$(ruby -r rubygems -e 'print Gem.user_dir')/bin"
+          echo "$gem_user_bin" >> "$GITHUB_PATH"
+          gem install fastlane --no-document --user-install
+          fastlane --version
 
       - name: Publish to Google Play
         if: startsWith(github.ref, 'refs/tags/') && env.HAS_GOOGLE_PLAY_CREDENTIALS == 'true'
