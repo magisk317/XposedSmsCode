@@ -14,7 +14,7 @@ versionName = "3.2.7"
 
 activity-compose = "1.13.0"
 adaptive = "1.2.0"
-agp = "9.1.0"
+agp = "9.2.0"
 androidx-browser = "1.10.0"
 androidx-core-ktx = "1.18.0"
 androidx-annotation = "1.10.0"
