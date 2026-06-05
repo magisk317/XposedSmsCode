@@ -1,17 +1,17 @@
 package com.github.magisk317.smscode.ui.home.update
 
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
 
 class FlavorPlayUpdateDelegate : PlayUpdateDelegate {
 
-    override fun onCreate(activity: AppCompatActivity, onFallbackToStore: () -> Unit) = Unit
+    override fun onCreate(activity: ComponentActivity, onFallbackToStore: () -> Unit) = Unit
 
-    override fun onResume(activity: AppCompatActivity, onFallbackToStore: () -> Unit) = Unit
+    override fun onResume(activity: ComponentActivity, onFallbackToStore: () -> Unit) = Unit
 
     override fun onDestroy() = Unit
 
     override fun requestUpdate(
-        activity: AppCompatActivity,
+        activity: ComponentActivity,
         silentIfNoUpdate: Boolean,
         fallbackOnQueryFailure: Boolean,
         onFallbackToStore: () -> Unit,

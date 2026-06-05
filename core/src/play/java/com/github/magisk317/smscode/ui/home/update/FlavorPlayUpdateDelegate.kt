@@ -4,7 +4,7 @@ import android.app.Activity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
 import com.google.android.play.core.appupdate.AppUpdateInfo
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
@@ -22,7 +22,7 @@ class FlavorPlayUpdateDelegate : PlayUpdateDelegate {
     private var updateLauncher: ActivityResultLauncher<IntentSenderRequest>? = null
     private var installStateUpdatedListener: InstallStateUpdatedListener? = null
 
-    override fun onCreate(activity: AppCompatActivity, onFallbackToStore: () -> Unit) {
+    override fun onCreate(activity: ComponentActivity, onFallbackToStore: () -> Unit) {
         val manager = AppUpdateManagerFactory.create(activity)
         appUpdateManager = manager
         updateLauncher = activity.registerForActivityResult(
@@ -42,7 +42,7 @@ class FlavorPlayUpdateDelegate : PlayUpdateDelegate {
         manager.registerListener(listener)
     }
 
-    override fun onResume(activity: AppCompatActivity, onFallbackToStore: () -> Unit) {
+    override fun onResume(activity: ComponentActivity, onFallbackToStore: () -> Unit) {
         val manager = appUpdateManager ?: return
         manager.appUpdateInfo.addOnSuccessListener { info ->
             if (info.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS) {
@@ -65,7 +65,7 @@ class FlavorPlayUpdateDelegate : PlayUpdateDelegate {
     }
 
     override fun requestUpdate(
-        activity: AppCompatActivity,
+        activity: ComponentActivity,
         silentIfNoUpdate: Boolean,
         fallbackOnQueryFailure: Boolean,
         onFallbackToStore: () -> Unit,
