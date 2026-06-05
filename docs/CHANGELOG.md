@@ -4,9 +4,13 @@
 
 ---
 
-## [v3.2.10] - 2026-05-15
+## [v3.2.10] - 2026-06-05
 - 版本：`versionCode 115` / `versionName 3.2.10`。
-- 开始下一轮开发周期。
+- `[build]` 全面迁移至 Java 26 目标版本与 Kotlin RC2 构建工具链。
+- `[ui]` 更新 `magisk-ui-kit`，将 `PlayUpdateDelegate` 适配为 `ComponentActivity` 架构。
+- `[core]` 接入并适配统一的共享日志契约（Shared logging contracts）。
+- `[sms]` 修复短信测试输入框重置逻辑，以及验证码“官方”命中标签的展示异常。
+- `[ci/deps]` 增强 Renovate 自动合并流程（支持 Gradle wrapper 的自动刷锁），完善 Telegram 发布通知格式。
 
 > Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.2.9...HEAD
 
