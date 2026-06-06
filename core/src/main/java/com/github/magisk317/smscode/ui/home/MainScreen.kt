@@ -1,6 +1,9 @@
 package com.github.magisk317.smscode.ui.home
 
 import android.os.SystemClock
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -39,6 +42,7 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -66,6 +70,62 @@ import org.koin.compose.viewmodel.koinViewModel
 data class TabItem<T : Any>(val label: String, val icon: ImageVector, val route: T)
 
 private const val TAB_DOUBLE_TAP_REFRESH_WINDOW_MS = 350L
+private const val TAB_NAV_TRANSITION_MS = 300
+
+private fun resolveTabIndex(destination: NavDestination?): Int {
+    if (destination == null) return 0
+    val hierarchy = destination.hierarchy
+    return when {
+        hierarchy.any { it.hasRoute(OverviewRoute::class) } -> 0
+        hierarchy.any { it.hasRoute(AppBlockRoute::class) } ||
+            hierarchy.any { it.hasRoute(AppConfigRoute::class) } -> 1
+        hierarchy.any { it.hasRoute(RecordsRoute::class) } -> 2
+        hierarchy.any { it.hasRoute(SettingsRoute::class) } ||
+            hierarchy.any { it.hasRoute(SmsCodeRulesRoute::class) } ||
+            hierarchy.any { it.hasRoute(SmsCodeRuleEditorRoute::class) } -> 3
+        else -> 0
+    }
+}
+
+private fun shouldShowCompactBottomBar(destination: NavDestination?): Boolean {
+    if (destination == null) return true
+    val hierarchy = destination.hierarchy
+    return hierarchy.any { it.hasRoute(OverviewRoute::class) } ||
+        hierarchy.any { it.hasRoute(AppBlockRoute::class) } ||
+        hierarchy.any { it.hasRoute(RecordsRoute::class) } ||
+        hierarchy.any { it.hasRoute(SettingsRoute::class) }
+}
+
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.tabTransitionDirection(isPop: Boolean): Int {
+    val initialIndex = resolveTabIndex(initialState.destination)
+    val targetIndex = resolveTabIndex(targetState.destination)
+    return when {
+        targetIndex > initialIndex -> 1
+        targetIndex < initialIndex -> -1
+        isPop -> -1
+        else -> 1
+    }
+}
+
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.tabEnterTransition(
+    isPop: Boolean = false,
+): EnterTransition {
+    val direction = tabTransitionDirection(isPop)
+    return slideInHorizontally(
+        animationSpec = tween(TAB_NAV_TRANSITION_MS),
+        initialOffsetX = { fullWidth -> direction * fullWidth },
+    ) + fadeIn(animationSpec = tween(TAB_NAV_TRANSITION_MS))
+}
+
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.tabExitTransition(
+    isPop: Boolean = false,
+): ExitTransition {
+    val direction = tabTransitionDirection(isPop)
+    return slideOutHorizontally(
+        animationSpec = tween(TAB_NAV_TRANSITION_MS),
+        targetOffsetX = { fullWidth -> -direction * fullWidth },
+    ) + fadeOut(animationSpec = tween(TAB_NAV_TRANSITION_MS))
+}
 
 @Composable
 @Suppress("CyclomaticComplexMethod")
@@ -86,30 +146,6 @@ fun MainScreen(
         TabItem(stringResource(R.string.tab_records), Icons.Default.History, RecordsRoute),
         TabItem(stringResource(R.string.tab_settings), Icons.Default.Settings, SettingsRoute),
     )
-
-    fun resolveTabIndex(destination: NavDestination?): Int {
-        if (destination == null) return 0
-        val hierarchy = destination.hierarchy
-        return when {
-            hierarchy.any { it.hasRoute(OverviewRoute::class) } -> 0
-            hierarchy.any { it.hasRoute(AppBlockRoute::class) } ||
-                hierarchy.any { it.hasRoute(AppConfigRoute::class) } -> 1
-            hierarchy.any { it.hasRoute(RecordsRoute::class) } -> 2
-            hierarchy.any { it.hasRoute(SettingsRoute::class) } ||
-                hierarchy.any { it.hasRoute(SmsCodeRulesRoute::class) } ||
-                hierarchy.any { it.hasRoute(SmsCodeRuleEditorRoute::class) } -> 3
-            else -> 0
-        }
-    }
-
-    fun shouldShowCompactBottomBar(destination: NavDestination?): Boolean {
-        if (destination == null) return true
-        val hierarchy = destination.hierarchy
-        return hierarchy.any { it.hasRoute(OverviewRoute::class) } ||
-            hierarchy.any { it.hasRoute(AppBlockRoute::class) } ||
-            hierarchy.any { it.hasRoute(RecordsRoute::class) } ||
-            hierarchy.any { it.hasRoute(SettingsRoute::class) }
-    }
 
     val selectedIndex = resolveTabIndex(currentDestination)
 
@@ -202,26 +238,12 @@ fun MainScreen(
                 NavHost(
                     navController = navController,
                     startDestination = OverviewRoute,
-                    enterTransition = {
-                        val initialIndex = resolveTabIndex(initialState.destination)
-                        val targetIndex = resolveTabIndex(targetState.destination)
-                        val direction = if (targetIndex >= initialIndex) 1 else -1
-
-                        slideInHorizontally(
-                            animationSpec = tween(300),
-                            initialOffsetX = { fullWidth -> direction * fullWidth },
-                        ) + fadeIn(animationSpec = tween(300))
-                    },
-                    exitTransition = {
-                        val initialIndex = resolveTabIndex(initialState.destination)
-                        val targetIndex = resolveTabIndex(targetState.destination)
-                        val direction = if (targetIndex >= initialIndex) 1 else -1
-
-                        slideOutHorizontally(
-                            animationSpec = tween(300),
-                            targetOffsetX = { fullWidth -> -direction * fullWidth },
-                        ) + fadeOut(animationSpec = tween(300))
-                    },
+                    enterTransition = { tabEnterTransition() },
+                    exitTransition = { tabExitTransition() },
+                    popEnterTransition = { tabEnterTransition(isPop = true) },
+                    popExitTransition = { tabExitTransition(isPop = true) },
+                    predictivePopEnterTransition = { _ -> tabEnterTransition(isPop = true) },
+                    predictivePopExitTransition = { _ -> tabExitTransition(isPop = true) },
                 ) {
                     composable<OverviewRoute> {
                         OverviewScreen(hazeState = hazeState, hazeStyle = hazeStyle)
