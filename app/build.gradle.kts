@@ -126,26 +126,20 @@ dependencies {
     implementation(project(":smscode-core:smscode-runtime-common"))
     implementation(project(":smscode-core:smscode-verification-core"))
     implementation(project(":smscode-core:smscode-xposed-core"))
-
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.browser)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
-
     add("legacyCompileOnly", project(":xposed-stub"))
     add("api101CompileOnly", libs.libxposed.api)
     add("api101Implementation", libs.libxposed.service)
-
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging.interceptor)
-
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.gson)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
-
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.material3)
@@ -153,28 +147,22 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.compose.ui.tooling.preview)
     debugImplementation(libs.androidx.compose.ui.tooling)
-
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.compose.runtime.livedata)
     implementation(libs.androidx.navigation.compose)
-
     implementation(libs.androidx.compose.material3.windowSizeClass)
     implementation(libs.androidx.compose.material3.adaptive)
     implementation(libs.androidx.compose.material3.adaptive.layout)
     implementation(libs.androidx.compose.material3.adaptive.navigation)
-
     implementation(libs.haze.android)
-
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
-
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.mockk)
-
     implementation(libs.timber)
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)

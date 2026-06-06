@@ -7,7 +7,7 @@ import android.graphics.Bitmap
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -99,7 +99,7 @@ import org.koin.androidx.compose.koinViewModel
 import java.io.File
 import kotlin.math.hypot
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
 
     private val playUpdateDelegate: PlayUpdateDelegate = FlavorPlayUpdateDelegate()
     private var autoUpdateChecked = false

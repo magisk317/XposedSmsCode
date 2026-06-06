@@ -43,12 +43,9 @@ dependencies {
     implementation(project(":magisk-ui-kit"))
     implementation(project(":smscode-core:smscode-domain"))
     implementation(project(":smscode-core:smscode-runtime-common"))
-
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.browser)
     implementation(libs.kotlinx.serialization.json)
-
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.material3)
@@ -58,7 +55,6 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
     implementation(libs.koin.compose.viewmodel)

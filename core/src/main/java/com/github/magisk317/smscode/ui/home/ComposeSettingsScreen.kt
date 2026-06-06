@@ -1104,12 +1104,14 @@ internal fun ComposeSettingsScreenShared(
         LanguageChooserDialog(
             onDismiss = { showLanguageDialog = false },
             onLanguageSelected = { tag ->
-                val locales = if (tag.isEmpty()) {
-                    androidx.core.os.LocaleListCompat.getEmptyLocaleList()
-                } else {
-                    androidx.core.os.LocaleListCompat.forLanguageTags(tag)
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                    val localeManager = context.getSystemService(android.app.LocaleManager::class.java)
+                    localeManager?.applicationLocales = if (tag.isEmpty()) {
+                        android.os.LocaleList.getEmptyLocaleList()
+                    } else {
+                        android.os.LocaleList.forLanguageTags(tag)
+                    }
                 }
-                androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(locales)
                 showLanguageDialog = false
             },
         )
@@ -2212,8 +2214,13 @@ private fun uiKitStyleLabel(style: Int): String {
 @Composable
 fun LanguageChooserDialog(onDismiss: () -> Unit, onLanguageSelected: (String) -> Unit) {
     val context = LocalContext.current
-    val currentLocales = androidx.appcompat.app.AppCompatDelegate.getApplicationLocales()
-    val currentTag = if (currentLocales.isEmpty) "" else currentLocales.get(0)?.toLanguageTag() ?: ""
+    val currentTag = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+        val localeManager = context.getSystemService(android.app.LocaleManager::class.java)
+        val appLocales = localeManager?.applicationLocales ?: android.os.LocaleList.getEmptyLocaleList()
+        if (appLocales.isEmpty) "" else appLocales.get(0)?.toLanguageTag() ?: ""
+    } else {
+        ""
+    }
 
     val languages = listOf(
         stringResource(id = R.string.language_follow_system) to "",
