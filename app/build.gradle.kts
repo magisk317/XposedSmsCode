@@ -35,11 +35,6 @@ android {
     namespace = "com.github.tianma8023.xposed.smscode"
     ndkVersion = ndkVersionStr
 
-    productFlavors {
-        named("api101") {
-            proguardFile("proguard-api101.pro")
-        }
-    }
 
     androidResources {
         localeFilters.addAll(listOf("en", "zh-rCN", "zh-rTW"))
@@ -128,8 +123,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
-    add("api101CompileOnly", libs.libxposed.api)
-    add("api101Implementation", libs.libxposed.service)
+    compileOnly(libs.libxposed.api)
+    implementation(libs.libxposed.service)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging.interceptor)
     implementation(libs.kotlinx.serialization.json)
