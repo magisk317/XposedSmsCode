@@ -96,7 +96,6 @@ class SmsCodeApplication : Application() {
             override val logToXposed: Boolean = BuildConfig.LOG_TO_XPOSED
             override val debug: Boolean = BuildConfig.DEBUG
             override val applicationId: String = BuildConfig.APPLICATION_ID
-            // Keep legacy action namespace for system input broadcast compatibility.
             override val actionNamespace: String = "com.github.magisk317.smscode"
         })
         CoreLogSinkHolder.install(object : CoreLogSink {
