@@ -31,6 +31,7 @@ import io.github.magisk317.smscode.runtime.contract.logging.DefaultLogSanitizer
 import com.github.magisk317.smscode.di.appModule
 import com.github.magisk317.smscode.ui.record.CodeRecordRestoreManager
 import java.io.File
+import java.util.concurrent.TimeUnit
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -286,8 +287,16 @@ class SmsCodeApplication : Application() {
             val process = ProcessBuilder("su", "-c", command)
                 .redirectErrorStream(true)
                 .start()
+            val completed = process.waitFor(SU_COMMAND_TIMEOUT_SEC, TimeUnit.SECONDS)
+            if (!completed) {
+                process.destroy()
+                if (process.isAlive) {
+                    process.destroyForcibly()
+                }
+                return SuCommandResult(exitCode = -2, output = "")
+            }
             val output = process.inputStream.bufferedReader().use { it.readText() }
-            val exitCode = process.waitFor()
+            val exitCode = process.exitValue()
             SuCommandResult(exitCode = exitCode, output = output)
         } catch (_: Throwable) {
             SuCommandResult(exitCode = -1, output = "")
@@ -304,6 +313,7 @@ class SmsCodeApplication : Application() {
         private const val KEY_LAST_HANDLED_INSTALL_TOKEN = "last_handled_install_token"
         private const val KEY_LAST_RESTART_ATTEMPT_AT = "last_restart_attempt_at"
         private const val RESTART_ATTEMPT_COOLDOWN_MS = 60_000L
+        private const val SU_COMMAND_TIMEOUT_SEC = 10L
         private val PHONE_PROCESS_PACKAGES = listOf(
             "com.android.phone",
             "com.xiaomi.phone",

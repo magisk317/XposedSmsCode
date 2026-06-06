@@ -45,9 +45,12 @@ class LibXposedEntry : XposedModule {
 
     override fun onModuleLoaded(param: ModuleLoadedParam) {
         val api = apiVersion
-        if (api != LIBXPOSED_API_VERSION) {
-            Log.w("XSmsCode", "LibXposedEntry skipped: apiVersion=$api")
+        if (api < LIBXPOSED_API_VERSION) {
+            Log.w("XSmsCode", "LibXposedEntry skipped: apiVersion=$api < $LIBXPOSED_API_VERSION")
             return
+        }
+        if (api > LIBXPOSED_API_VERSION) {
+            Log.i("XSmsCode", "LibXposedEntry: apiVersion=$api > expected $LIBXPOSED_API_VERSION, proceeding")
         }
         installCoreRuntime()
         HookEnv.init(LibXposedHookApi(this))
