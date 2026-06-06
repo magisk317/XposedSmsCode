@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.unit.dp
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.blur.HazeBlurStyle
 import androidx.compose.ui.unit.Dp
 import io.github.magisk317.uikit.theme.SystemBarsScrim as UiKitSystemBarsScrim
 import io.github.magisk317.uikit.theme.UpdateSystemBars as UpdateUiKitSystemBars
@@ -16,7 +16,7 @@ fun applyEdgeToEdge(activity: ComponentActivity) {
 }
 
 @Composable
-fun SystemBarsScrim(hazeState: HazeState, hazeStyle: HazeStyle) {
+fun SystemBarsScrim(hazeState: HazeState, hazeStyle: HazeBlurStyle) {
     UiKitSystemBarsScrim(hazeState = hazeState, hazeStyle = hazeStyle)
 }
 
@@ -24,7 +24,7 @@ fun SystemBarsScrim(hazeState: HazeState, hazeStyle: HazeStyle) {
 fun rememberHazeStyle(
     blurRadius: Dp = 25.dp,
     tintAlpha: Float = 0.2f,
-): HazeStyle = rememberUiKitHazeStyle(
+): HazeBlurStyle = rememberUiKitHazeStyle(
     blurRadius = blurRadius,
     tintAlpha = tintAlpha,
 )

@@ -879,7 +879,6 @@ class MainActivity : ComponentActivity() {
 
                 val selectedApk = RuntimeUpdateFacade.selectBestApkForDevice(
                     apks = info.apks,
-                    requiredXposedApiFlavor = BuildConfig.XPOSED_API_FLAVOR,
                 )
                 if (selectedApk != null && selectedApk.sha256.isNotBlank() && info.signingCertSha256.isNotBlank()) {
                     GithubUpdateUiState.Structured(

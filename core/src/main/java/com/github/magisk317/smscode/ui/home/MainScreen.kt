@@ -54,8 +54,9 @@ import com.github.magisk317.smscode.ui.nav.SmsCodeRuleEditorRoute
 import com.github.magisk317.smscode.ui.nav.SmsCodeRulesRoute
 import com.github.magisk317.smscode.ui.record.CodeRecordScreen
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.blur.HazeBlurStyle
 import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.blur.blurEffect
 import io.github.magisk317.uikit.surface.AppBottomNavigationBar
 import io.github.magisk317.uikit.surface.AppNavigationItemSpec
 import io.github.magisk317.uikit.surface.AppNavigationRail
@@ -72,7 +73,7 @@ fun MainScreen(
     initialTab: Any? = null,
     onInitialTabConsumed: (() -> Unit)? = null,
     hazeState: HazeState,
-    hazeStyle: HazeStyle,
+    hazeStyle: HazeBlurStyle,
 ) {
     val navController = rememberNavController()
     val appConfigViewModel: AppConfigViewModel = koinViewModel()
@@ -285,7 +286,8 @@ fun MainScreen(
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .hazeEffect(hazeState, hazeStyle) {
+                    .hazeEffect(hazeState) {
+                    blurEffect { style = hazeStyle }
                         forceInvalidateOnPreDraw = true
                     }
                     .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)),

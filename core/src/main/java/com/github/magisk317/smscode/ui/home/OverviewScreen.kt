@@ -47,8 +47,9 @@ import io.github.magisk317.uikit.surface.SummarySectionCard
 import io.github.magisk317.uikit.theme.UiKitStyle
 import io.github.magisk317.uikit.theme.currentUiKitStyle
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.blur.HazeBlurStyle
 import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.blur.blurEffect
 import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -61,7 +62,7 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OverviewScreen(hazeState: HazeState, hazeStyle: HazeStyle) {
+fun OverviewScreen(hazeState: HazeState, hazeStyle: HazeBlurStyle) {
     when (currentUiKitStyle()) {
         UiKitStyle.Miuix -> OverviewScreenMiuix(hazeState = hazeState, hazeStyle = hazeStyle)
         UiKitStyle.Expressive -> OverviewScreenMaterial(hazeState = hazeState, hazeStyle = hazeStyle)
@@ -70,7 +71,7 @@ fun OverviewScreen(hazeState: HazeState, hazeStyle: HazeStyle) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun OverviewScreenShared(hazeState: HazeState, hazeStyle: HazeStyle) {
+internal fun OverviewScreenShared(hazeState: HazeState, hazeStyle: HazeBlurStyle) {
     val context = LocalContext.current
     val activityOwner = context as? ComponentActivity
     val settingsViewModel = if (activityOwner != null) {
@@ -284,7 +285,8 @@ internal fun OverviewScreenShared(hazeState: HazeState, hazeStyle: HazeStyle) {
             windowInsets = WindowInsets.statusBars,
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .hazeEffect(hazeState, hazeStyle) {
+                .hazeEffect(hazeState) {
+                    blurEffect { style = hazeStyle }
                     forceInvalidateOnPreDraw = true
                 },
             containerColor = Color.Transparent,

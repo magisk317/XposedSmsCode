@@ -26,6 +26,7 @@ import com.github.magisk317.smscode.ui.app.base.SystemBarsScrim
 import com.github.magisk317.smscode.ui.app.base.rememberHazeStyle
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.blur.blurEffect
 import dev.chrisbanes.haze.hazeSource
 import io.github.magisk317.uikit.surface.AppTopBar
 import io.github.magisk317.uikit.surface.SummarySectionCard
@@ -104,7 +105,8 @@ fun PrivacyPolicyPage(onDismiss: () -> Unit) {
             containerColor = Color.Transparent,
             scrolledContainerColor = Color.Transparent,
             windowInsets = WindowInsets.statusBars,
-            modifier = Modifier.hazeEffect(hazeState, hazeStyle) {
+            modifier = Modifier.hazeEffect(hazeState) {
+                    blurEffect { style = hazeStyle }
                 forceInvalidateOnPreDraw = true
             },
         )

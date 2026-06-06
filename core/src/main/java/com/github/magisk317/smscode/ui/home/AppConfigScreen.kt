@@ -59,8 +59,9 @@ import com.github.magisk317.smscode.ui.common.PolygonMorphLoadingIndicator
 import com.github.magisk317.smscode.ui.common.SessionLoadingRegistry
 import com.github.magisk317.smscode.ui.common.rememberMinDurationLoading
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.blur.HazeBlurStyle
 import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.blur.blurEffect
 import dev.chrisbanes.haze.hazeSource
 import io.github.magisk317.uikit.surface.OverlayHeaderScaffold
 import io.github.magisk317.uikit.surface.WorkspaceTopBarSearchOverlay
@@ -77,7 +78,7 @@ private const val APP_LIST_PREFETCH_DISTANCE = 12
 @Composable
 fun AppConfigScreen(
     hazeState: HazeState,
-    hazeStyle: HazeStyle,
+    hazeStyle: HazeBlurStyle,
     onBack: (() -> Unit)? = null,
     refreshTrigger: Int = 0,
     viewModel: AppConfigViewModel = koinViewModel(),
@@ -105,7 +106,7 @@ fun AppConfigScreen(
 @Composable
 internal fun AppConfigScreenShared(
     hazeState: HazeState,
-    hazeStyle: HazeStyle,
+    hazeStyle: HazeBlurStyle,
     onBack: (() -> Unit)? = null,
     refreshTrigger: Int = 0,
     viewModel: AppConfigViewModel = koinViewModel(),
@@ -207,7 +208,8 @@ internal fun AppConfigScreenShared(
             overlayModifier = Modifier
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
-                .hazeEffect(hazeState, hazeStyle) {
+                .hazeEffect(hazeState) {
+                    blurEffect { style = hazeStyle }
                     forceInvalidateOnPreDraw = true
                 },
             overlay = {
