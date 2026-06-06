@@ -7,7 +7,7 @@ import io.github.libxposed.service.XposedServiceHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-internal object FlavorXposedServiceBridge {
+internal object XposedServiceBridge {
     fun initialize(application: SmsCodeApplication, applicationScope: CoroutineScope) {
         runCatching<Unit> {
             XposedServiceHelper.registerListener(

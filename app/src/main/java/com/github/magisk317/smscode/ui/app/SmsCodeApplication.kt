@@ -86,7 +86,7 @@ class SmsCodeApplication : Application() {
     }
 
     private fun initXposedServiceActivationMonitor() {
-        FlavorXposedServiceBridge.initialize(this, applicationScope)
+        XposedServiceBridge.initialize(this, applicationScope)
     }
 
     private fun installCoreRuntime() {
