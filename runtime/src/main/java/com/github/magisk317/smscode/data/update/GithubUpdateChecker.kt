@@ -1,7 +1,6 @@
 package com.github.magisk317.smscode.data.update
 
 import android.os.Build
-import com.github.magisk317.smscode.runtime.BuildConfig
 import io.github.magisk317.smscode.runtime.common.update.GithubUpdateChecker as SharedGithubUpdateChecker
 import io.github.magisk317.smscode.runtime.common.update.GithubUpdateConfig
 
@@ -40,12 +39,10 @@ object GithubUpdateChecker {
     fun selectBestApkForDevice(
         apks: List<UpgradeApkAsset>,
         supportedAbis: List<String> = Build.SUPPORTED_ABIS.toList(),
-        requiredXposedApiFlavor: String = BuildConfig.XPOSED_API_FLAVOR,
     ): UpgradeApkAsset? {
         return SharedGithubUpdateChecker.selectBestApkForDevice(
             apks = apks,
             supportedAbis = supportedAbis,
-            requiredXposedApiFlavor = requiredXposedApiFlavor,
         )
     }
 

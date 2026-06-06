@@ -19,11 +19,9 @@ object RuntimeUpdateFacade {
 
     fun selectBestApkForDevice(
         apks: List<RuntimeUpgradeApkAsset>,
-        requiredXposedApiFlavor: String,
     ): RuntimeUpgradeApkAsset? {
         return GithubUpdateChecker.selectBestApkForDevice(
             apks = apks.map(RuntimeUpgradeApkAsset::toInternal),
-            requiredXposedApiFlavor = requiredXposedApiFlavor,
         )?.toRuntime()
     }
 

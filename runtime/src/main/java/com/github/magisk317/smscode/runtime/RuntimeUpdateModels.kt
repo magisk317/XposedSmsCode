@@ -23,7 +23,6 @@ data class RuntimeUpgradeApkAsset(
     val downloadUrl: String = "",
     val fileSize: Long = 0L,
     val sha256: String = "",
-    val xposedApiFlavor: String = "",
 )
 
 data class RuntimeUpgradeInfo(
@@ -86,7 +85,6 @@ internal fun UpgradeApkAsset.toRuntime(): RuntimeUpgradeApkAsset {
         downloadUrl = downloadUrl,
         fileSize = fileSize,
         sha256 = sha256,
-        xposedApiFlavor = xposedApiFlavor,
     )
 }
 
@@ -96,7 +94,6 @@ internal fun RuntimeUpgradeApkAsset.toInternal(): UpgradeApkAsset {
         downloadUrl = downloadUrl,
         fileSize = fileSize,
         sha256 = sha256,
-        xposedApiFlavor = xposedApiFlavor,
     )
 }
 
