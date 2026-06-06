@@ -18,6 +18,5 @@ include(
     ":smscode-core:smscode-runtime-contract",
     ":smscode-core:smscode-rule-core",
     ":smscode-core:smscode-verification-core",
-    ":xposed-stub",
     ":magisk-ui-kit",
 )

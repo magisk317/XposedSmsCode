@@ -36,9 +36,6 @@ android {
     ndkVersion = ndkVersionStr
 
     productFlavors {
-        named("legacy") {
-            proguardFile("proguard-legacy.pro")
-        }
         named("api101") {
             proguardFile("proguard-api101.pro")
         }
@@ -131,7 +128,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
-    add("legacyCompileOnly", project(":xposed-stub"))
     add("api101CompileOnly", libs.libxposed.api)
     add("api101Implementation", libs.libxposed.service)
     implementation(libs.okhttp)
