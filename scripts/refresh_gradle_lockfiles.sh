@@ -14,16 +14,12 @@ bash "${ROOT_DIR}/scripts/with_workspace_gradle_lock.sh" \
   :core:check \
   :runtime:check \
   :app:check \
-  :app:compileGithubApi101DebugAndroidTestKotlin \
-  :app:compileGithubLegacyDebugAndroidTestKotlin \
-  :app:compilePlayApi101DebugAndroidTestKotlin \
-  :runtime:compileGithubApi101DebugAndroidTestKotlin \
-  :runtime:compileGithubLegacyDebugAndroidTestKotlin \
-  :runtime:compilePlayApi101DebugAndroidTestKotlin \
-  :runtime:compilePlayLegacyDebugAndroidTestKotlin \
-  assembleGithubApi101Debug \
-  assembleGithubLegacyDebug \
-  :app:koverVerifyGithubApi101Debug \
-  :app:koverHtmlReportGithubApi101Debug \
+  :app:compileGithubDebugAndroidTestKotlin \
+  :app:compilePlayDebugAndroidTestKotlin \
+  :runtime:compileGithubDebugAndroidTestKotlin \
+  :runtime:compilePlayDebugAndroidTestKotlin \
+  assembleGithubDebug \
+  :app:koverVerifyGithubDebug \
+  :app:koverHtmlReportGithubDebug \
   -PbuildSplits \
   "$@"

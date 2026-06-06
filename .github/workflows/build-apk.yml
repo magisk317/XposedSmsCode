@@ -42,7 +42,7 @@ jobs:
 
       - name: Run quality gate
         run: >
-          bash scripts/with_workspace_gradle_lock.sh --warning-mode all
+          bash scripts/with_workspace_gradle_lock.sh --ignore-submodule-lockfiles --warning-mode all
           :core:check
           :runtime:check
           :app:check
@@ -55,16 +55,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - flavor_id: github-api101
-            assemble_task: assembleGithubApi101Release
-            artifact_name: apks-github-api101
-            symbols_artifact_name: native-symbols-github-api101
-            symbols_glob: app/build/outputs/native-debug-symbols/githubApi101Release/native-debug-symbols.zip
-          - flavor_id: github-legacy
-            assemble_task: assembleGithubLegacyRelease
-            artifact_name: apks-github-legacy
-            symbols_artifact_name: native-symbols-github-legacy
-            symbols_glob: app/build/outputs/native-debug-symbols/githubLegacyRelease/native-debug-symbols.zip
+          - flavor_id: github
+            assemble_task: assembleGithubRelease
+            artifact_name: apks-github
+            symbols_artifact_name: native-symbols-github
+            symbols_glob: app/build/outputs/native-debug-symbols/githubRelease/native-debug-symbols.zip
     env:
       HAS_RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE != '' }}
     steps:
@@ -91,7 +86,7 @@ jobs:
 
       - name: Build GitHub APK with Splits
         run: >
-          bash scripts/with_workspace_gradle_lock.sh
+          bash scripts/with_workspace_gradle_lock.sh --ignore-submodule-lockfiles
           ${{ matrix.assemble_task }}
           -PbuildSplits
         env:
@@ -161,7 +156,7 @@ jobs:
         run: echo "${{ secrets.RELEASE_KEYSTORE }}" | base64 --decode > app/release.jks
 
       - name: Build App Bundle
-        run: bash scripts/with_workspace_gradle_lock.sh bundlePlayApi101Release
+        run: bash scripts/with_workspace_gradle_lock.sh --ignore-submodule-lockfiles bundlePlayRelease
         env:
           KEYSTORE_FILE: release.jks
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
@@ -173,14 +168,14 @@ jobs:
         with:
           name: bundle-assets
           path: |
-            app/build/outputs/bundle/playApi101Release/*.aab
-            app/build/outputs/mapping/playApi101Release/mapping.txt
+            app/build/outputs/bundle/playRelease/*.aab
+            app/build/outputs/mapping/playRelease/mapping.txt
 
       - name: Detect Play Native Symbols
         id: play_symbols
         shell: bash
         run: |
-          file="app/build/outputs/native-debug-symbols/playApi101Release/native-debug-symbols.zip"
+          file="app/build/outputs/native-debug-symbols/playRelease/native-debug-symbols.zip"
           if [[ -f "$file" ]]; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
             echo "path=$file" >> "$GITHUB_OUTPUT"

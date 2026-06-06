@@ -38,8 +38,7 @@ jobs:
             settings-gradle.lockfile \
             app/gradle.lockfile \
             core/gradle.lockfile \
-            runtime/gradle.lockfile \
-            xposed-stub/gradle.lockfile
+            runtime/gradle.lockfile
       - name: Write build summary
         if: always()
         run: |

@@ -18,14 +18,13 @@ run_pre_push_checks() {
   echo "Running pre-push CI command..."
   (
     cd "$ROOT_DIR"
-    bash scripts/with_workspace_gradle_lock.sh --warning-mode all \
+    bash scripts/with_workspace_gradle_lock.sh --ignore-submodule-lockfiles --warning-mode all \
       :core:check \
       :runtime:check \
       :app:check \
-      assembleGithubApi101Debug \
-      assembleGithubLegacyDebug \
-      :app:koverVerifyGithubApi101Debug \
-      :app:koverHtmlReportGithubApi101Debug \
+      assembleGithubDebug \
+      :app:koverVerifyGithubDebug \
+      :app:koverHtmlReportGithubDebug \
       -PbuildSplits
   )
 

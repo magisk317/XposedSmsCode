@@ -47,7 +47,7 @@ jobs:
         )
       )
     env:
-      DEPENDENCY_FORCE_CONFIGS: githubApi101DebugRuntimeClasspath,githubLegacyDebugRuntimeClasspath,playApi101DebugRuntimeClasspath
+      DEPENDENCY_FORCE_CONFIGS: githubDebugRuntimeClasspath,playDebugRuntimeClasspath
       DEPENDENCY_FORCE_HISTORICAL_ALERT_COOLDOWN_HOURS: 168
     steps:
       - name: Checkout

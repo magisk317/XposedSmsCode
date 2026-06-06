@@ -63,8 +63,7 @@ jobs:
             settings-gradle.lockfile \
             app/gradle.lockfile \
             core/gradle.lockfile \
-            runtime/gradle.lockfile \
-            xposed-stub/gradle.lockfile; then
+            runtime/gradle.lockfile; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
@@ -82,8 +81,7 @@ jobs:
             settings-gradle.lockfile \
             app/gradle.lockfile \
             core/gradle.lockfile \
-            runtime/gradle.lockfile \
-            xposed-stub/gradle.lockfile
+            runtime/gradle.lockfile
           git commit -m "chore(deps): refresh Gradle lockfiles"
           git push origin "HEAD:${PR_HEAD_REF}"
 
