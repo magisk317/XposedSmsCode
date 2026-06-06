@@ -506,7 +506,6 @@
     <string name="status_not_active">未激活</string>
     <string name="status_tip">请在管理器中启用并重启设备</string>
     <string name="framework_incompatibility_title">检测到框架不兼容</string>
-    <string name="framework_incompatibility_known_framework_message">检测到当前使用的是 %1$s。该框架已出现较多兼容性问题，可能导致模块异常、闪退或功能失效。建议尽快更换为官方 LSPosed 框架；你可以自行获取，或到群组内获取对应版本。</string>
     <string name="framework_incompatibility_hooker_annotation_message">当前框架与模块不兼容，Hook 注册失败。请安装兼容的新版本，或到群组内获取对应构建。</string>
     <string name="status_diag_shown">已显示运行时诊断</string>
     <string name="status_diag_hidden">已隐藏运行时诊断</string>

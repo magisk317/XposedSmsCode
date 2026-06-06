@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test
 class FrameworkCompatibilityMonitorTest {
 
     @Test
-    fun detectIssue_returnsKnownIncompatibleFrameworkIssueForVector() {
+    fun detectIssue_allowsPreviouslyKnownIncompatibleFramework() {
         val frameworkInfo = FrameworkInfo(
             name = "Vector",
             version = "2.0 (3021)",
@@ -26,12 +26,7 @@ class FrameworkCompatibilityMonitorTest {
             detectedAt = 123L,
         )
 
-        assertNotNull(issue)
-        assertEquals(
-            FrameworkCompatibilityMonitor.FrameworkIssueType.KNOWN_INCOMPATIBLE_FRAMEWORK,
-            issue?.issueType,
-        )
-        assertEquals("Vector 2.0 (3021)", issue?.frameworkInfo?.displayLabel)
+        assertNull(issue)
     }
 
     @Test
@@ -87,7 +82,7 @@ class FrameworkCompatibilityMonitorTest {
     }
 
     @Test
-    fun detectIssue_blocksJingMatrixFrameworkWhenNotOfficialLsposed() {
+    fun detectIssue_allowsJingMatrixFrameworkWhenNoRuntimeErrorAppears() {
         val issue = FrameworkCompatibilityMonitor.detectIssue(
             frameworkInfo = FrameworkInfo(
                 name = "DreamLand",
@@ -100,10 +95,6 @@ class FrameworkCompatibilityMonitorTest {
             detectedAt = 101L,
         )
 
-        assertNotNull(issue)
-        assertEquals(
-            FrameworkCompatibilityMonitor.FrameworkIssueType.KNOWN_INCOMPATIBLE_FRAMEWORK,
-            issue?.issueType,
-        )
+        assertNull(issue)
     }
 }

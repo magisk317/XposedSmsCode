@@ -483,13 +483,6 @@ class MainActivity : ComponentActivity() {
                                         buildAnnotatedString {
                                             append(
                                                 when (issue.issueType) {
-                                                    FrameworkCompatibilityMonitor.FrameworkIssueType.KNOWN_INCOMPATIBLE_FRAMEWORK ->
-                                                        getString(
-                                                            R.string.framework_incompatibility_known_framework_message,
-                                                            issue.frameworkInfo?.displayLabel
-                                                                ?: getString(R.string.unknown),
-                                                        )
-
                                                     FrameworkCompatibilityMonitor.FrameworkIssueType.HOOKER_ANNOTATION_INCOMPATIBLE ->
                                                         getString(R.string.framework_incompatibility_hooker_annotation_message)
                                                 },

@@ -495,7 +495,6 @@
     <string name="status_not_active">Inactive</string>
     <string name="status_tip">Please enable in manager and reboot device</string>
     <string name="framework_incompatibility_title">Framework incompatibility detected</string>
-    <string name="framework_incompatibility_known_framework_message">Detected that the current framework is %1$s. This framework has had many compatibility problems and may cause crashes, broken hooks, or missing features. Please switch to the official LSPosed framework as soon as possible; you can obtain it yourself or get the appropriate build from the community group.</string>
     <string name="framework_incompatibility_hooker_annotation_message">Current framework is incompatible and hook registration failed. Please install a compatible newer build, or get the appropriate build from the community group.</string>
     <string name="status_diag_shown">Runtime diagnostics shown</string>
     <string name="status_diag_hidden">Runtime diagnostics hidden</string>
