@@ -6,7 +6,10 @@
     "forkProcessing": "enabled",
     "pruneStaleBranches": true,
     "pruneBranchAfterAutomerge": true,
-    "baseBranchPatterns": [
+    "minimumReleaseAge": "24 hours",
+    "internalChecksFilter": "strict",
+    "prCreation": "immediate",
+    "baseBranches": [
         "beta"
     ],
     "packageRules": [
@@ -21,16 +24,18 @@
             "groupName": "other non-major dependencies",
             "groupSlug": "all-minor-patch",
             "commitMessageExtra": "",
-            "matchPackageNames": [
-                "*"
-            ],
             "excludePackagePatterns": [
                 "^androidx\\.",
                 "^org\\.jetbrains\\.kotlin",
                 "^io\\.insert-koin\\.",
                 "^org\\.junit\\.",
                 "^dev\\.chrisbanes\\.haze",
-                "^com\\.squareup\\.okhttp3"
+                "^com\\.squareup\\.okhttp3",
+                "^com\\.squareup\\.retrofit2",
+                "^io\\.ktor\\.",
+                "^io\\.coil-kt",
+                "^io\\.kotest",
+                "^com\\.google\\.firebase"
             ]
         },
         {
@@ -45,8 +50,7 @@
         },
         {
             "matchManagers": [
-                "npm",
-                "pnpm"
+                "npm"
             ],
             "addLabels": [
                 "dependencies",
