@@ -11,6 +11,7 @@
 - `[core]` 接入并适配统一的共享日志契约（Shared logging contracts）。
 - `[sms]` 修复短信测试输入框重置逻辑，以及验证码“官方”命中标签的展示异常。
 - `[ci/deps]` 增强 Renovate 自动合并流程（支持 Gradle wrapper 的自动刷锁），完善 Telegram 发布通知格式。
+- `[legacy]` 从本版本开始，legacy 构建正式归档到 `legacy` 分支，不再进行功能性修改；后续正式发布只提供 `api101` 版本。仍停留在旧 Xposed 框架的用户请尽快升级框架，或到 Legacy CI 产物中下载 legacy 构建。
 
 > Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.2.9...HEAD
 
