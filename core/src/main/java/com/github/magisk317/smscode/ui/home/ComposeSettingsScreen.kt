@@ -86,8 +86,9 @@ import com.github.magisk317.smscode.ui.common.SessionLoadingRegistry
 import com.github.magisk317.smscode.ui.common.rememberMinDurationLoading
 import com.github.magisk317.smscode.ui.privacy.PrivacyPolicyPage
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.blur.HazeBlurStyle
 import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.blur.blurEffect
 import dev.chrisbanes.haze.hazeSource
 import io.github.magisk317.uikit.theme.UiKitStyle
 import io.github.magisk317.uikit.theme.currentUiKitStyle
@@ -108,7 +109,7 @@ import java.util.Locale
 @Composable
 fun ComposeSettingsScreen(
     hazeState: HazeState,
-    hazeStyle: HazeStyle,
+    hazeStyle: HazeBlurStyle,
     viewModel: SettingsViewModel? = null,
     refreshTrigger: Int = 0,
     onExit: () -> Unit = {},
@@ -137,7 +138,7 @@ fun ComposeSettingsScreen(
 @Composable
 internal fun ComposeSettingsScreenShared(
     hazeState: HazeState,
-    hazeStyle: HazeStyle,
+    hazeStyle: HazeBlurStyle,
     viewModel: SettingsViewModel? = null,
     refreshTrigger: Int = 0,
     onExit: () -> Unit = {},
@@ -961,7 +962,8 @@ internal fun ComposeSettingsScreenShared(
                 scrollBehavior = scrollBehavior,
                 windowInsets = WindowInsets.statusBars,
                 modifier = Modifier
-                    .hazeEffect(hazeState, hazeStyle) {
+                    .hazeEffect(hazeState) {
+                    blurEffect { style = hazeStyle }
                         forceInvalidateOnPreDraw = true
                     },
             )

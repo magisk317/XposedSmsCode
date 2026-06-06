@@ -65,8 +65,9 @@ import com.github.magisk317.smscode.ui.home.SectionHeader
 import com.github.magisk317.smscode.ui.home.SwitchItem
 import com.github.magisk317.smscode.ui.home.TextInputDialog
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.blur.HazeBlurStyle
 import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.blur.blurEffect
 import dev.chrisbanes.haze.hazeSource
 import io.github.magisk317.uikit.preference.AppCheckbox
 import io.github.magisk317.uikit.surface.AppTopBar
@@ -89,7 +90,7 @@ private const val CODE_RECORD_DEDUP_WINDOW_MS = CodeRecordSimilarityUtils.DEFAUL
 @Composable
 fun CodeRecordScreen(
     hazeState: HazeState,
-    hazeStyle: HazeStyle,
+    hazeStyle: HazeBlurStyle,
     onBack: (() -> Unit)? = null,
     refreshTrigger: Int = 0,
     viewModel: CodeRecordViewModel = koinViewModel(),
@@ -118,7 +119,7 @@ fun CodeRecordScreen(
 @Composable
 internal fun CodeRecordScreenShared(
     hazeState: HazeState,
-    hazeStyle: HazeStyle,
+    hazeStyle: HazeBlurStyle,
     onBack: (() -> Unit)? = null,
     refreshTrigger: Int = 0,
     viewModel: CodeRecordViewModel = koinViewModel(),
@@ -490,7 +491,8 @@ internal fun CodeRecordScreenShared(
                 .fillMaxWidth()
                 .align(Alignment.TopCenter)
                 .onSizeChanged { fixedTopHeightPx = it.height }
-                .hazeEffect(hazeState, hazeStyle) {
+                .hazeEffect(hazeState) {
+                    blurEffect { style = hazeStyle }
                     forceInvalidateOnPreDraw = true
                 },
         ) {
@@ -610,7 +612,7 @@ private fun deduplicateCodeRecords(records: List<SmsMsg>): List<SmsMsg> {
 @Composable
 private fun RecordDetailOverlay(
     hazeState: HazeState,
-    hazeStyle: HazeStyle,
+    hazeStyle: HazeBlurStyle,
     sms: SmsMsg,
     onDismiss: () -> Unit,
     onCopy: (label: String, value: String, toast: String) -> Unit,
@@ -632,7 +634,10 @@ private fun RecordDetailOverlay(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .hazeEffect(hazeState, hazeStyle) { forceInvalidateOnPreDraw = true }
+            .hazeEffect(hazeState) {
+                    blurEffect { style = hazeStyle }
+                    forceInvalidateOnPreDraw = true
+            }
             .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.28f))
             .clickable(
                 interactionSource = dismissInteraction,

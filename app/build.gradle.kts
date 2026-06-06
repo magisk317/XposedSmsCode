@@ -39,9 +39,6 @@ android {
         named("legacy") {
             proguardFile("proguard-legacy.pro")
         }
-        named("api101") {
-            proguardFile("proguard-api101.pro")
-        }
     }
 
     androidResources {
@@ -114,6 +111,17 @@ android {
     }
 }
 
+androidComponents {
+    beforeVariants(selector().all()) { variantBuilder ->
+        val flavors = variantBuilder.productFlavors.toMap()
+        val enabledForLegacyBranch = flavors["distribution"] == "github" &&
+            flavors["xposedApi"] == "legacy"
+        if (!enabledForLegacyBranch) {
+            variantBuilder.enable = false
+        }
+    }
+}
+
 tasks.named("preBuild") {
     dependsOn(syncSmsCodeRulesAssets)
 }
@@ -132,8 +140,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     add("legacyCompileOnly", project(":xposed-stub"))
-    add("api101CompileOnly", libs.libxposed.api)
-    add("api101Implementation", libs.libxposed.service)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging.interceptor)
     implementation(libs.kotlinx.serialization.json)
