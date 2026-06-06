@@ -15,7 +15,7 @@ versionName = "3.2.10"
 
 activity-compose = "1.13.0"
 adaptive = "1.3.0-beta02"
-agp = "9.3.0-alpha09"
+agp = "9.3.0-alpha10"
 asm = "9.10"
 bouncycastle = "1.84"
 netty-codec = "5.0.0.Alpha2"
