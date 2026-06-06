@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">XposedSmsCode</string>
-    <string name="xposed_description">擷取新簡訊中的驗證碼複製到剪貼板，並自動輸入驗證碼</string>
 
     <!-- general -->
 

@@ -1,13 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="xposed_scope">
-        <item>android</item>
-        <item>system</item>
-        <item>com.android.phone</item>
-        <item>com.android.providers.telephony</item>
-        <item>com.android.mms</item>
-    </string-array>
-
     <string-array name="history_limit_entry_list">
         <item>@string/history_limit_10_entry</item>
         <item>@string/history_limit_20_entry</item>
