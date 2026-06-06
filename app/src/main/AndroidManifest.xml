@@ -31,23 +31,6 @@
         android:theme="@style/AppNoActionBarTheme"
         tools:ignore="GoogleAppIndexingWarning,UnusedAttribute">
 
-        <!-- xposed module configuration -->
-        <meta-data
-            android:name="xposedmodule"
-            android:value="true" />
-        <meta-data
-            android:name="xposeddescription"
-            android:value="@string/xposed_description" />
-        <meta-data
-            android:name="xposedminversion"
-            android:value="30" />
-        <meta-data
-            android:name="xposedscope"
-            android:resource="@array/xposed_scope" />
-        <meta-data
-            android:name="xposedsharedprefs"
-            android:value="true" />
-
         <receiver
             android:name="com.github.magisk317.smscode.receiver.SecretCodeReceiver"
             android:exported="true">
@@ -81,7 +64,6 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.INFO" />
-                <category android:name="de.robv.android.xposed.category.MODULE_SETTINGS" />
             </intent-filter>
             <!-- Intent filters for rule import -->
             <intent-filter>
@@ -109,6 +91,12 @@
             android:name="com.github.magisk317.smscode.data.db.DBProvider"
             android:authorities="${applicationId}.db.provider"
             android:exported="true" />
+
+        <provider
+            android:name="io.github.libxposed.service.XposedProvider"
+            android:authorities="${applicationId}.XposedService"
+            android:exported="true"
+            tools:ignore="ExportedContentProvider" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
