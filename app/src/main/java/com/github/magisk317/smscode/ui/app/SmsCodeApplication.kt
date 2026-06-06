@@ -266,10 +266,14 @@ class SmsCodeApplication : Application() {
     }
 
     private fun restartPhoneProcessViaRoot() {
+        val packages = PHONE_PROCESS_PACKAGES.joinToString(separator = " ")
         val command =
-            "PIDS=\$(pidof com.android.phone 2>/dev/null); " +
-                "if [ -n \"${'$'}PIDS\" ]; then kill -9 ${'$'}PIDS; exit 0; fi; " +
-                "pkill -f com.android.phone >/dev/null 2>&1 && exit 0; " +
+            "for PKG in $packages; do " +
+                "PIDS=\$(pidof \"${'$'}PKG\" 2>/dev/null); " +
+                "if [ -n \"${'$'}PIDS\" ]; then kill -9 ${'$'}PIDS; FOUND=1; fi; " +
+                "pkill -f \"${'$'}PKG\" >/dev/null 2>&1 && FOUND=1; " +
+                "done; " +
+                "if [ \"${'$'}FOUND\" = 1 ]; then exit 0; fi; " +
                 "exit 1"
         val result = runSuCommand(command)
         if (result.exitCode == 0) {
@@ -300,5 +304,9 @@ class SmsCodeApplication : Application() {
         private const val KEY_LAST_HANDLED_INSTALL_TOKEN = "last_handled_install_token"
         private const val KEY_LAST_RESTART_ATTEMPT_AT = "last_restart_attempt_at"
         private const val RESTART_ATTEMPT_COOLDOWN_MS = 60_000L
+        private val PHONE_PROCESS_PACKAGES = listOf(
+            "com.android.phone",
+            "com.xiaomi.phone",
+        )
     }
 }

@@ -77,7 +77,7 @@ class SmsHandlerHook : BaseHook() {
     }
 
     private fun onLoadPackageRouted(lpparam: LoadParam) {
-        if (ANDROID_PHONE_PACKAGE == lpparam.packageName) {
+        if (isSmsHandlerPackage(lpparam.packageName)) {
             val classLoader = lpparam.classLoader ?: run {
                 XLog.w(
                     "SmsHandlerHook skip: classLoader is null for pkg=%s process=%s",
@@ -115,7 +115,7 @@ class SmsHandlerHook : BaseHook() {
                 )
                 return
             }
-            XLog.i("SmsCode initializing")
+            XLog.i("SmsCode initializing in %s", lpparam.packageName)
             printDeviceInfo()
             try {
                 hookSmsHandler(classLoader)
@@ -365,8 +365,8 @@ class SmsHandlerHook : BaseHook() {
         val runtime = currentRuntime() ?: return
         ActivationDiagnosticsStore.recordHookHeartbeat(
             context = runtime.pluginContext,
-            packageName = ANDROID_PHONE_PACKAGE,
-            processName = runtime.phoneContext.applicationInfo?.processName ?: ANDROID_PHONE_PACKAGE,
+            packageName = runtime.phoneContext.packageName,
+            processName = runtime.phoneContext.applicationInfo?.processName ?: runtime.phoneContext.packageName,
             source = source,
             verboseLogging = PrefsReader.isVerboseLogMode(runtime.pluginContext),
         )
@@ -583,8 +583,8 @@ class SmsHandlerHook : BaseHook() {
         }
         ActivationDiagnosticsStore.recordHookHeartbeat(
             context = pluginContext,
-            packageName = ANDROID_PHONE_PACKAGE,
-            processName = phoneContext.applicationInfo?.processName ?: ANDROID_PHONE_PACKAGE,
+            packageName = phoneContext.packageName,
+            processName = phoneContext.applicationInfo?.processName ?: phoneContext.packageName,
             source = "sms_handler_dispatch_chain",
             verboseLogging = PrefsReader.isVerboseLogMode(pluginContext),
         )
@@ -762,6 +762,7 @@ class SmsHandlerHook : BaseHook() {
 
     companion object {
         const val ANDROID_PHONE_PACKAGE = "com.android.phone"
+        const val XIAOMI_PHONE_PACKAGE = "com.xiaomi.phone"
         private const val TELEPHONY_PACKAGE = "com.android.internal.telephony"
         private const val SMS_HANDLER_CLASS = "$TELEPHONY_PACKAGE.InboundSmsHandler"
         private val SMSCODE_PACKAGE = BuildConfig.APPLICATION_ID
@@ -772,6 +773,10 @@ class SmsHandlerHook : BaseHook() {
         private val SMS_OPERATION_EXECUTOR = Executors.newSingleThreadExecutor()
         private val installedHookKeys = Collections.synchronizedSet(mutableSetOf<String>())
         private val dispatchChainBlockHistory = LinkedHashMap<String, Long>()
+
+        fun isSmsHandlerPackage(packageName: String): Boolean {
+            return packageName == ANDROID_PHONE_PACKAGE || packageName == XIAOMI_PHONE_PACKAGE
+        }
 
         private fun buildHookInstallKey(lpparam: LoadParam): String {
             return buildString {
