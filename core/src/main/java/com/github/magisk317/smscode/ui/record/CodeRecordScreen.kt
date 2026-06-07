@@ -56,7 +56,6 @@ import io.github.magisk317.smscode.rule.utils.CodeRecordSimilarityUtils
 import com.github.magisk317.smscode.ui.common.AppIconImage
 import com.github.magisk317.smscode.ui.common.LoadingIndicatorTokens
 import io.github.magisk317.uikit.foundation.LocalSnackbarHostState
-import io.github.magisk317.uikit.common.DismissibleSnackbarHost
 import io.github.magisk317.uikit.common.showLatestSnackbar
 import com.github.magisk317.smscode.ui.common.PolygonMorphLoadingIndicator
 import com.github.magisk317.smscode.ui.common.SessionLoadingRegistry
@@ -137,7 +136,7 @@ internal fun CodeRecordScreenShared(
         actualLoading = isLoading && shouldShowInitialLoading,
         minDurationMillis = LoadingIndicatorTokens.MIN_VISIBLE_DURATION_MILLIS,
     )
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarHostState = LocalSnackbarHostState.current
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
@@ -567,11 +566,6 @@ internal fun CodeRecordScreenShared(
                 windowInsets = WindowInsets.statusBars,
             )
         }
-
-        io.github.magisk317.uikit.common.DismissibleSnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter).navigationBarsPadding(),
-        )
 
         val sms = detailSmsMsg
         if (sms != null) {

@@ -2,6 +2,7 @@ package com.github.magisk317.smscode.ui.nav
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -44,6 +45,7 @@ fun SmsCodeNavHost(
     onBack: () -> Unit,
     initialTab: Any? = null,
     onInitialTabConsumed: (() -> Unit)? = null,
+    onBottomOverlayPaddingChanged: (Dp) -> Unit = {},
     modifier: Modifier = Modifier,
     hazeState: HazeState,
     hazeStyle: HazeBlurStyle,
@@ -57,6 +59,7 @@ fun SmsCodeNavHost(
             MainScreen(
                 initialTab = initialTab,
                 onInitialTabConsumed = onInitialTabConsumed,
+                onBottomOverlayPaddingChanged = onBottomOverlayPaddingChanged,
                 hazeState = hazeState,
                 hazeStyle = hazeStyle,
             )

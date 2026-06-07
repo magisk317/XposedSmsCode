@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.rememberScrollState
@@ -138,6 +139,7 @@ class MainActivity : ComponentActivity() {
             var downloadState by remember { mutableStateOf<UpdateDownloadState>(UpdateDownloadState.Idle) }
             var unknownSourceApk by remember { mutableStateOf<File?>(null) }
             var downloadJob by remember { mutableStateOf<Job?>(null) }
+            var snackbarBottomOverlayPadding by remember { mutableStateOf(0.dp) }
 
             fun startStructuredDownload(update: GithubStructuredUpdate) {
                 downloadJob?.cancel()
@@ -401,6 +403,7 @@ class MainActivity : ComponentActivity() {
                                 onBack = { finish() },
                                 initialTab = requestedTab,
                                 onInitialTabConsumed = { requestedTab = null },
+                                onBottomOverlayPaddingChanged = { snackbarBottomOverlayPadding = it },
                                 modifier = Modifier,
                                 hazeState = hazeState,
                                 hazeStyle = hazeStyle,
@@ -702,7 +705,13 @@ class MainActivity : ComponentActivity() {
                             hostState = appSnackbarHostState,
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
-                                .navigationBarsPadding(),
+                                .then(
+                                    if (snackbarBottomOverlayPadding > 0.dp) {
+                                        Modifier.padding(bottom = snackbarBottomOverlayPadding)
+                                    } else {
+                                        Modifier.navigationBarsPadding()
+                                    },
+                                ),
                         )
                     }
                 }

@@ -28,15 +28,19 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -132,6 +136,7 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.tabExitTransition(
 fun MainScreen(
     initialTab: Any? = null,
     onInitialTabConsumed: (() -> Unit)? = null,
+    onBottomOverlayPaddingChanged: (Dp) -> Unit = {},
     hazeState: HazeState,
     hazeStyle: HazeBlurStyle,
 ) {
@@ -150,7 +155,14 @@ fun MainScreen(
     val selectedIndex = resolveTabIndex(currentDestination)
 
     val configuration = LocalConfiguration.current
+    val density = LocalDensity.current
     val isCompact = configuration.screenWidthDp < 600
+    var compactBottomBarHeight by remember { mutableStateOf(0.dp) }
+    val bottomOverlayPadding = if (isCompact && shouldShowCompactBottomBar(currentDestination)) {
+        compactBottomBarHeight
+    } else {
+        0.dp
+    }
     var appBlockRefreshTrigger by remember { mutableIntStateOf(0) }
     var recordsRefreshTrigger by remember { mutableIntStateOf(0) }
     var settingsRefreshTrigger by remember { mutableIntStateOf(0) }
@@ -211,6 +223,10 @@ fun MainScreen(
         if (initialTab != null) {
             onInitialTabConsumed?.invoke()
         }
+    }
+
+    LaunchedEffect(bottomOverlayPadding) {
+        onBottomOverlayPaddingChanged(bottomOverlayPadding)
     }
 
     Box(
@@ -308,6 +324,9 @@ fun MainScreen(
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
+                    .onSizeChanged { size ->
+                        compactBottomBarHeight = with(density) { size.height.toDp() }
+                    }
                     .hazeEffect(hazeState) {
                     blurEffect { style = hazeStyle }
                         forceInvalidateOnPreDraw = true
