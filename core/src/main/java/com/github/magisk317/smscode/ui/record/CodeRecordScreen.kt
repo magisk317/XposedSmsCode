@@ -1008,7 +1008,7 @@ fun CodeRecordItem(
                 }
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.width(92.dp),
+                    modifier = Modifier.width(64.dp),
                 ) {
                     AppIconImage(
                         packageName = smsMsg.packageName,
@@ -1018,7 +1018,7 @@ fun CodeRecordItem(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = displayLabel,
-                        style = MaterialTheme.typography.labelMedium,
+                        style = MaterialTheme.typography.labelSmall,
                         textAlign = TextAlign.Center,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,

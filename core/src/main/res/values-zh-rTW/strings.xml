@@ -322,6 +322,7 @@
     <string name="action_share">分享</string>
     <string name="action_clear">清空</string>
     <string name="list_empty_prompt">空空如也~</string>
+    <string name="record_empty_summary">等待新簡訊到達，或觸發一個已設定的測試流程。</string>
 
 
 

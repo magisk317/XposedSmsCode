@@ -325,6 +325,7 @@
     <string name="action_share">分享</string>
     <string name="action_clear">清空</string>
     <string name="list_empty_prompt">空空如也！</string>
+    <string name="record_empty_summary">等待新短信到达，或触发一个已配置的测试流程。</string>
 
 
 
