@@ -64,7 +64,7 @@ class NotifyAction(
     private fun showAppOwnedNotification(
         request: NotifyActionHelper.AppOwnedNotificationRequest<VerificationSmsMsg>,
     ): Bundle? {
-        CodeNotificationDeliveryHelper.requestAppOwnedNotification(
+        val deliveryResult = CodeNotificationDeliveryHelper.requestAppOwnedNotification(
             context = mPhoneContext,
             smsMsg = request.smsMsg,
             notificationId = request.notificationId,
@@ -73,6 +73,20 @@ class NotifyAction(
             token = request.token,
             intentFactory = CodeNotificationBroadcastContract::createIntent,
         )
+        if (!deliveryResult.success) {
+            XLog.w(
+                "App-owned code notification request failed, fallback to phone-owned: reason=%s",
+                deliveryResult.reason,
+            )
+            return showPhoneOwnedNotification(
+                NotifyActionHelper.PhoneOwnedNotificationRequest(
+                    smsMsg = request.smsMsg,
+                    notificationId = request.notificationId,
+                    autoCancelEnabled = request.autoCancelEnabled,
+                    retentionTimeMs = request.retentionTimeMs,
+                ),
+            )
+        }
         return null
     }
 

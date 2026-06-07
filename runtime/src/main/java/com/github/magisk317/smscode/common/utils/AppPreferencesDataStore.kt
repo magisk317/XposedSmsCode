@@ -246,6 +246,10 @@ object AppPreferencesDataStore {
             PrefConst.KEY_HAZE_TINT_ALPHA,
             getFloat(context, PrefConst.KEY_HAZE_TINT_ALPHA, PrefConst.HAZE_TINT_ALPHA_DEFAULT),
         )
+        editor.putString(
+            PrefConst.KEY_IPC_TOKEN,
+            getString(context, PrefConst.KEY_IPC_TOKEN, ""),
+        )
     }
 
     suspend fun isBackupCompatTipShown(context: Context): Boolean = getInstance(context).data
