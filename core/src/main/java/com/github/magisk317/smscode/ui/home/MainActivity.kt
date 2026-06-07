@@ -75,8 +75,8 @@ import com.github.magisk317.smscode.runtime.RuntimeUpgradeDownloadProgress
 import com.github.magisk317.smscode.ui.app.base.UpdateSystemBars
 import com.github.magisk317.smscode.ui.app.base.applyEdgeToEdge
 import com.github.magisk317.smscode.ui.app.base.rememberHazeStyle
-import com.github.magisk317.smscode.ui.common.DismissibleSnackbarHost
-import com.github.magisk317.smscode.ui.common.LocalSnackbarHostState
+import io.github.magisk317.uikit.common.DismissibleSnackbarHost
+import io.github.magisk317.uikit.foundation.LocalSnackbarHostState
 import com.github.magisk317.smscode.ui.home.update.FlavorPlayUpdateDelegate
 import com.github.magisk317.smscode.ui.home.update.PlayUpdateDelegate
 import com.github.magisk317.smscode.ui.nav.SmsCodeNavHost

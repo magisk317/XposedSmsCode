@@ -55,7 +55,9 @@ import com.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.smscode.rule.utils.CodeRecordSimilarityUtils
 import com.github.magisk317.smscode.ui.common.AppIconImage
 import com.github.magisk317.smscode.ui.common.LoadingIndicatorTokens
-import com.github.magisk317.smscode.ui.common.LocalSnackbarHostState
+import io.github.magisk317.uikit.foundation.LocalSnackbarHostState
+import io.github.magisk317.uikit.common.DismissibleSnackbarHost
+import io.github.magisk317.uikit.common.showLatestSnackbar
 import com.github.magisk317.smscode.ui.common.PolygonMorphLoadingIndicator
 import com.github.magisk317.smscode.ui.common.SessionLoadingRegistry
 import com.github.magisk317.smscode.ui.common.rememberMinDurationLoading
@@ -227,7 +229,7 @@ internal fun CodeRecordScreenShared(
         { target: SmsMsg ->
             viewModel.removeSmsMsg(listOf(target))
             scope.launch {
-                val result = snackbarHostState.showSnackbar(
+                val result = snackbarHostState.showLatestSnackbar(
                     message = context.getString(R.string.some_items_removed, 1),
                     actionLabel = context.getString(R.string.revoke),
                     duration = SnackbarDuration.Long,
@@ -248,7 +250,7 @@ internal fun CodeRecordScreenShared(
         selectedIds = emptySet()
 
         scope.launch {
-            val result = snackbarHostState.showSnackbar(
+            val result = snackbarHostState.showLatestSnackbar(
                 message = context.getString(R.string.some_items_removed, deleteList.size),
                 actionLabel = context.getString(R.string.revoke),
                 duration = SnackbarDuration.Long,
@@ -566,7 +568,7 @@ internal fun CodeRecordScreenShared(
             )
         }
 
-        SnackbarHost(
+        io.github.magisk317.uikit.common.DismissibleSnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter).navigationBarsPadding(),
         )

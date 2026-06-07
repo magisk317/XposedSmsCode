@@ -191,7 +191,7 @@ internal fun SmsCodeRuleListScreenShared(
             )
         },
         snackbarHost = {
-            com.github.magisk317.smscode.ui.common.DismissibleSnackbarHost(
+            io.github.magisk317.uikit.common.DismissibleSnackbarHost(
                 hostState = snackbarHostState,
                 modifier = Modifier.navigationBarsPadding(),
             )
@@ -536,7 +536,7 @@ internal fun SmsCodeRuleEditorScreenShared(
             )
         },
         snackbarHost = {
-            com.github.magisk317.smscode.ui.common.DismissibleSnackbarHost(
+            io.github.magisk317.uikit.common.DismissibleSnackbarHost(
                 hostState = snackbarHostState,
                 modifier = Modifier.navigationBarsPadding(),
             )

@@ -29,7 +29,7 @@ import com.github.magisk317.smscode.core.R
 import com.github.magisk317.smscode.common.constant.PrefConst
 import com.github.magisk317.smscode.common.utils.AppPreferencesDataStore
 import com.github.magisk317.smscode.common.utils.HookPreferenceMirror
-import com.github.magisk317.smscode.ui.common.DismissibleSnackbarHost
+import io.github.magisk317.uikit.common.DismissibleSnackbarHost
 import io.github.magisk317.uikit.preference.StateSwitchItem
 import io.github.magisk317.uikit.surface.AppTextField
 import io.github.magisk317.uikit.surface.DetailSectionCard
