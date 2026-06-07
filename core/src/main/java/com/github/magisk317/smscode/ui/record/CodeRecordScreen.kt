@@ -895,26 +895,37 @@ private fun RecordSplitColumn(
                                 enableDismissFromStartToEnd = true,
                                 enableDismissFromEndToStart = true,
                                 backgroundContent = {
-                                    val bgColor by androidx.compose.animation.animateColorAsState(
-                                        if (dismissState.targetValue == SwipeToDismissBoxValue.Settled) {
-                                            Color.Transparent
-                                        } else {
-                                            MaterialTheme.colorScheme.errorContainer
+                                    val dismissDirection = dismissState.dismissDirection
+                                    val isDismissing = dismissDirection != SwipeToDismissBoxValue.Settled
+                                    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                                        val revealWidth = with(LocalDensity.current) {
+                                            val offset = runCatching { dismissState.requireOffset() }.getOrDefault(0f)
+                                            (if (offset < 0f) -offset else offset).toDp()
+                                        }.coerceAtMost(maxWidth)
+                                        if (isDismissing && revealWidth > 0.dp) {
+                                            val revealAlignment = if (dismissDirection == SwipeToDismissBoxValue.StartToEnd) {
+                                                Alignment.CenterStart
+                                            } else {
+                                                Alignment.CenterEnd
+                                            }
+                                            Box(
+                                                modifier = Modifier
+                                                    .align(revealAlignment)
+                                                    .fillMaxHeight()
+                                                    .width(revealWidth)
+                                                    .background(MaterialTheme.colorScheme.errorContainer)
+                                                    .padding(horizontal = 24.dp),
+                                                contentAlignment = revealAlignment,
+                                            ) {
+                                                if (revealWidth >= 56.dp) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Delete,
+                                                        contentDescription = stringResource(R.string.remove),
+                                                        tint = MaterialTheme.colorScheme.onErrorContainer,
+                                                    )
+                                                }
+                                            }
                                         }
-                                    )
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .background(bgColor)
-                                            .padding(horizontal = 24.dp),
-                                        contentAlignment = if (dismissState.dismissDirection ==
-                                            SwipeToDismissBoxValue.StartToEnd
-                                        ) {
-                                            Alignment.CenterStart
-                                        } else {
-                                            Alignment.CenterEnd
-                                        },
-                                    ) {
                                     }
                                 },
                                 content = {
