@@ -62,9 +62,9 @@ android {
 }
 
 dependencies {
-    implementation(project(":smscode-core:smscode-xposed-core"))
-    implementation(project(":smscode-core:smscode-domain"))
-    implementation(project(":smscode-core:smscode-runtime-common"))
+    implementation(project(":smscode-core:xposed"))
+    implementation(project(":smscode-core:domain"))
+    implementation(project(":smscode-core:runtime"))
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.serialization.json)
@@ -87,7 +87,7 @@ dependencies {
     testImplementation(libs.mockk)
 }
 
-val verifyNoComposeUiLeak by tasks.registering {
+val verifyNoComposeUiLeak = tasks.register("verifyNoComposeUiLeak") {
     group = "verification"
     description = "Ensure the runtime module does not pick up Compose UI dependencies."
 

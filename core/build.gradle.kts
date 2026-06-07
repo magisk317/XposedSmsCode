@@ -41,8 +41,8 @@ android {
 dependencies {
     implementation(project(":runtime"))
     implementation(project(":magisk-ui-kit"))
-    implementation(project(":smscode-core:smscode-domain"))
-    implementation(project(":smscode-core:smscode-runtime-common"))
+    implementation(project(":smscode-core:domain"))
+    implementation(project(":smscode-core:runtime"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.browser)
     implementation(libs.kotlinx.serialization.json)
@@ -69,7 +69,7 @@ dependencies {
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 
-val verifyNoRuntimeStorageImplLeak by tasks.registering {
+val verifyNoRuntimeStorageImplLeak = tasks.register("verifyNoRuntimeStorageImplLeak") {
     group = "verification"
     description = "Ensure the core module does not directly depend on runtime storage/update implementation types."
 

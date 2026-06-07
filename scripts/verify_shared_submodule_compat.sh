@@ -7,7 +7,7 @@ cd "$ROOT_DIR"
 
 bash scripts/with_workspace_gradle_lock.sh \
   --ignore-submodule-lockfiles \
-  :smscode-core:smscode-domain:testDebugUnitTest \
+  :smscode-core:domain:testDebugUnitTest \
   :core:testGithubDebugUnitTest \
   :core:compileGithubDebugKotlin \
   :app:check

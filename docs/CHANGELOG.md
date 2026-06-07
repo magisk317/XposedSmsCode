@@ -23,7 +23,7 @@
 - `[diagnostics]` 日志系统切换到共享 JSONL 形态并支持按天轮转（默认保留 2 天，最低 1 天）；设置页新增“详细日志”预览能力，可查看文件列表与格式化 JSON 后再执行分享/清空，定位问题更直接。
 - `[auto-input]` 自动输入链路新增 `attemptId` 贯穿调度；系统注入改为高优先级主路径（成功则终止广播），无障碍作为失败兜底回退；`KillMe` 改为等待本次自动输入结果后再执行，并补齐监听预注册与超时兜底，降低误杀和时序竞态。
 - `[prefs/hook]` `api101` 下的 hook 配置与 kill 控制从旧 Provider 读写路径迁移为更清晰的桥接与控制链路，补齐 `CorePrefsBridge`、镜像同步与控制接收器，减少跨进程配置读取漂移。
-- `[build/submodule]` 构建侧纳入 `smscode-hook-core`、`smscode-runtime-contract`、`smscode-rule-core` 依赖，新增 `smscode-rules` 内容子模块并同步 `build-logic`/`smscode-core`/`magisk-ui-kit` 指针，保持主工程与子模块能力一致。
+- `[build/submodule]` 构建侧纳入 `hook`、`contract`、`rule` 依赖，新增 `smscode-rules` 内容子模块并同步 `build-logic`/`smscode-core`/`magisk-ui-kit` 指针，保持主工程与子模块能力一致。
 - `[deps/security]` 依赖治理从 Dependabot 迁移到自托管 Renovate，启用 OSV 安全联动、强制依赖修复和全模块 lockfile；同步修复 Netty `4.1.133.Final` 系列安全升级并更新 AGP/KSP/Gradle 相关版本与校验。
 - `[ci/release]` CI 补强依赖图提交流程（校验、重试、失败治理），通知流改为 `workflow_run` 并对齐 arm64 产物投递策略，发版链路与元数据同步检查继续收敛。
 

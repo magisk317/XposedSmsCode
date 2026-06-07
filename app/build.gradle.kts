@@ -20,7 +20,7 @@ val allowConflictBypass = findProperty("allowConflictBypass")
     ?.toBooleanStrictOrNull()
     ?: false
 val generatedSmsCodeRulesAssetsDir = layout.buildDirectory.dir("generated/smscodeRulesAssets")
-val syncSmsCodeRulesAssets by tasks.registering(Sync::class) {
+val syncSmsCodeRulesAssets = tasks.register<Sync>("syncSmsCodeRulesAssets") {
     val rulesRoot = rootProject.layout.projectDirectory.dir("smscode-rules")
     from(rulesRoot.dir("_meta")) {
         into("meta")
@@ -76,7 +76,7 @@ android {
 
     sourceSets {
         getByName("main") {
-            assets.srcDir(generatedSmsCodeRulesAssetsDir.get().asFile)
+            assets.directories.add(generatedSmsCodeRulesAssetsDir.get().asFile.absolutePath)
         }
     }
     packaging {
@@ -114,10 +114,10 @@ dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     implementation(project(":core"))
     implementation(project(":runtime"))
-    implementation(project(":smscode-core:smscode-domain"))
-    implementation(project(":smscode-core:smscode-runtime-common"))
-    implementation(project(":smscode-core:smscode-verification-core"))
-    implementation(project(":smscode-core:smscode-xposed-core"))
+    implementation(project(":smscode-core:domain"))
+    implementation(project(":smscode-core:runtime"))
+    implementation(project(":smscode-core:verification"))
+    implementation(project(":smscode-core:xposed"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.browser)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
@@ -162,7 +162,7 @@ dependencies {
     implementation(libs.kotlinx.collections.immutable)
 }
 
-val verifyNoLocalVerificationEngine by tasks.registering {
+val verifyNoLocalVerificationEngine = tasks.register("verifyNoLocalVerificationEngine") {
     group = "verification"
     description = "Ensure app does not reintroduce local verification engine infrastructure already shared in smscode-core."
 
