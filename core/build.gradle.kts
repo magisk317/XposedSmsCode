@@ -63,6 +63,7 @@ dependencies {
     implementation(libs.timber)
     implementation(libs.kotlinx.collections.immutable)
     add("playImplementation", libs.play.app.update)
+    add("playImplementation", libs.billing.ktx)
 
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.platform.launcher)

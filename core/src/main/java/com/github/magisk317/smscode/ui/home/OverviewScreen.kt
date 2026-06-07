@@ -39,7 +39,7 @@ import com.github.magisk317.smscode.common.utils.ActivationDiagnosticsSnapshot
 import com.github.magisk317.smscode.common.utils.ActivationDiagnosticsStore
 import com.github.magisk317.smscode.common.utils.PackageUtils
 import com.github.magisk317.smscode.common.utils.Utils
-import com.github.magisk317.smscode.ui.common.LocalSnackbarHostState
+import io.github.magisk317.uikit.foundation.LocalSnackbarHostState
 import io.github.magisk317.uikit.surface.AppTopBar
 import io.github.magisk317.uikit.surface.StatusHeroCard
 import io.github.magisk317.uikit.surface.SummaryRow
@@ -80,6 +80,7 @@ internal fun OverviewScreenShared(hazeState: HazeState, hazeStyle: HazeBlurStyle
         koinViewModel()
     }
     var showDonateDialog by remember { mutableStateOf(false) }
+    val billingProvider: com.github.magisk317.smscode.billing.BillingProvider = org.koin.compose.koinInject()
     var showQRCodeDialog by remember { mutableStateOf<Pair<Int, String>?>(null) }
     var statusTapCount by remember { mutableStateOf(0) }
     var statusTapStartedAtMs by remember { mutableStateOf(0L) }
@@ -305,6 +306,11 @@ internal fun OverviewScreenShared(hazeState: HazeState, hazeStyle: HazeBlurStyle
                 showDonateDialog = false
                 showQRCodeDialog = Pair(R.drawable.wx, "wechat")
             },
+            showPlayDonations = com.github.magisk317.smscode.core.BuildConfig.HAS_BILLING,
+            onDonate099 = { activityOwner?.let { billingProvider.launchDonation(it, "donate_099") } },
+            onDonate200 = { activityOwner?.let { billingProvider.launchDonation(it, "donate_200") } },
+            onDonate999 = { activityOwner?.let { billingProvider.launchDonation(it, "donate_999") } },
+            onDonate1999 = { activityOwner?.let { billingProvider.launchDonation(it, "donate_1999") } },
         )
     }
 
@@ -407,5 +413,120 @@ fun InfoItem(icon: ImageVector, label: String, value: String, onClick: (() -> Un
         label = label,
         value = value,
         onClick = onClick,
+    )
+}
+
+@Composable
+fun DonateDialog(
+    onDismiss: () -> Unit,
+    onAlipay: () -> Unit,
+    onWechat: () -> Unit,
+    showPlayDonations: Boolean = false,
+    onDonate099: () -> Unit = {},
+    onDonate200: () -> Unit = {},
+    onDonate999: () -> Unit = {},
+    onDonate1999: () -> Unit = {},
+) {
+    io.github.magisk317.uikit.surface.AppAlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(id = com.github.magisk317.smscode.core.R.string.dialog_donate_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(stringResource(id = com.github.magisk317.smscode.core.R.string.dialog_donate_content))
+                if (showPlayDonations) {
+                    Text(
+                        text = stringResource(id = com.github.magisk317.smscode.core.R.string.donate_one_time_title),
+                        style = MaterialTheme.typography.titleSmall,
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        io.github.magisk317.uikit.surface.AppPrimaryButton(
+                            text = stringResource(id = com.github.magisk317.smscode.core.R.string.donate_one_time_099),
+                            onClick = onDonate099,
+                            modifier = Modifier.weight(1f),
+                        )
+                        io.github.magisk317.uikit.surface.AppPrimaryButton(
+                            text = stringResource(id = com.github.magisk317.smscode.core.R.string.donate_one_time_200),
+                            onClick = onDonate200,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        io.github.magisk317.uikit.surface.AppPrimaryButton(
+                            text = stringResource(id = com.github.magisk317.smscode.core.R.string.donate_one_time_999),
+                            onClick = onDonate999,
+                            modifier = Modifier.weight(1f),
+                        )
+                        io.github.magisk317.uikit.surface.AppPrimaryButton(
+                            text = stringResource(id = com.github.magisk317.smscode.core.R.string.donate_one_time_1999),
+                            onClick = onDonate1999,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                io.github.magisk317.uikit.surface.AppPrimaryButton(
+                    text = stringResource(id = com.github.magisk317.smscode.core.R.string.dialog_donate_alipay),
+                    onClick = onAlipay,
+                )
+                io.github.magisk317.uikit.surface.AppSecondaryButton(
+                    text = stringResource(id = com.github.magisk317.smscode.core.R.string.dialog_donate_wechat),
+                    onClick = onWechat,
+                )
+            }
+        },
+    )
+}
+
+@Composable
+fun QRCodeDialog(resId: Int, type: String, onDismiss: () -> Unit, onSave: () -> Unit) {
+    io.github.magisk317.uikit.surface.AppAlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                if (type == "alipay") {
+                    stringResource(
+                        id = com.github.magisk317.smscode.core.R.string.dialog_donate_alipay,
+                    )
+                } else {
+                    stringResource(id = com.github.magisk317.smscode.core.R.string.dialog_donate_wechat)
+                },
+            )
+        },
+        text = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                androidx.compose.foundation.Image(
+                    painter = androidx.compose.ui.res.painterResource(id = resId),
+                    contentDescription = if (type == "alipay") {
+                        stringResource(
+                            id = com.github.magisk317.smscode.core.R.string.dialog_donate_alipay,
+                        )
+                    } else {
+                        stringResource(id = com.github.magisk317.smscode.core.R.string.dialog_donate_wechat)
+                    },
+                    modifier = Modifier.size(200.dp),
+                )
+            }
+        },
+        confirmButton = {
+            io.github.magisk317.uikit.surface.AppPrimaryButton(
+                text = stringResource(id = com.github.magisk317.smscode.core.R.string.save_to_gallery),
+                onClick = onSave,
+            )
+        },
+        dismissButton = {
+            io.github.magisk317.uikit.surface.AppSecondaryButton(
+                text = stringResource(id = com.github.magisk317.smscode.core.R.string.cancel),
+                onClick = onDismiss,
+            )
+        },
     )
 }

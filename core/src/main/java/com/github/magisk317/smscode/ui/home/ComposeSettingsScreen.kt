@@ -80,8 +80,8 @@ import com.github.magisk317.smscode.common.utils.SPUtils
 import com.github.magisk317.smscode.common.utils.Utils
 import com.github.magisk317.smscode.common.utils.XLog
 import com.github.magisk317.smscode.ui.common.LoadingIndicatorTokens
-import com.github.magisk317.smscode.ui.common.LocalSnackbarHostState
-import com.github.magisk317.smscode.ui.common.DismissibleSnackbarHost
+import io.github.magisk317.uikit.foundation.LocalSnackbarHostState
+import io.github.magisk317.uikit.common.DismissibleSnackbarHost
 import com.github.magisk317.smscode.ui.common.PolygonMorphLoadingIndicator
 import com.github.magisk317.smscode.ui.common.SessionLoadingRegistry
 import com.github.magisk317.smscode.ui.common.rememberMinDurationLoading
@@ -175,7 +175,6 @@ internal fun ComposeSettingsScreenShared(
     var smsTestInput by remember { mutableStateOf("") }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showUiKitStyleDialog by remember { mutableStateOf(false) }
-    var showDonateDialog by remember { mutableStateOf(false) }
     var showQRCodeDialog by remember { mutableStateOf<Pair<Int, String>?>(null) }
     var showPrivacyPolicyDialog by remember { mutableStateOf(false) }
     var showPrivacyPolicyPage by remember { mutableStateOf(false) }
@@ -588,7 +587,6 @@ internal fun ComposeSettingsScreenShared(
                     scope = scope,
                     snackbarHostState = snackbarHostState,
                     onShowPrivacyPolicy = {},
-                    onShowDonate = { showDonateDialog = true },
                     onShowRestoreConfirm = { uri ->
                         restoreUri = uri
                         showRestoreDialog = true
@@ -1039,7 +1037,6 @@ internal fun ComposeSettingsScreenShared(
         showKeywordsDialog = showKeywordsDialog,
         showThemeDialog = showThemeDialog,
         showUiKitStyleDialog = showUiKitStyleDialog,
-        showDonateDialog = showDonateDialog,
         showQRCodeDialog = showQRCodeDialog,
         showPrivacyPolicyDialog = showPrivacyPolicyDialog,
         showPrivacyPolicyPage = showPrivacyPolicyPage,
@@ -1058,7 +1055,6 @@ internal fun ComposeSettingsScreenShared(
         onShowKeywordsDialogChange = { showKeywordsDialog = it },
         onShowThemeDialogChange = { showThemeDialog = it },
         onShowUiKitStyleDialogChange = { showUiKitStyleDialog = it },
-        onShowDonateDialogChange = { showDonateDialog = it },
         onShowQrCodeDialogChange = { showQRCodeDialog = it },
         onShowPrivacyPolicyDialogChange = { showPrivacyPolicyDialog = it },
         onShowPrivacyPolicyPageChange = { showPrivacyPolicyPage = it },
@@ -1443,7 +1439,6 @@ private fun handleSettingsEvent(
     scope: kotlinx.coroutines.CoroutineScope,
     snackbarHostState: SnackbarHostState,
     onShowPrivacyPolicy: () -> Unit,
-    onShowDonate: () -> Unit,
     onShowRestoreConfirm: (android.net.Uri) -> Unit,
 ) {
     when (event) {
@@ -1505,7 +1500,6 @@ private fun SettingsDialogs(
     showKeywordsDialog: Boolean,
     showThemeDialog: Boolean,
     showUiKitStyleDialog: Boolean,
-    showDonateDialog: Boolean,
     showQRCodeDialog: Pair<Int, String>?,
     showPrivacyPolicyDialog: Boolean,
     showPrivacyPolicyPage: Boolean,
@@ -1524,7 +1518,6 @@ private fun SettingsDialogs(
     onShowKeywordsDialogChange: (Boolean) -> Unit,
     onShowThemeDialogChange: (Boolean) -> Unit,
     onShowUiKitStyleDialogChange: (Boolean) -> Unit,
-    onShowDonateDialogChange: (Boolean) -> Unit,
     onShowQrCodeDialogChange: (Pair<Int, String>?) -> Unit,
     onShowPrivacyPolicyDialogChange: (Boolean) -> Unit,
     onShowPrivacyPolicyPageChange: (Boolean) -> Unit,
@@ -1538,6 +1531,7 @@ private fun SettingsDialogs(
     onSetTheme: (Int, Float, Float) -> Unit,
     onSetUiKitStyle: (Int) -> Unit,
 ) {
+    val activityOwner = context as? Activity
     val snackbarHostState = LocalSnackbarHostState.current
     if (showAutoInputDialog) {
         val nonNegativeNumberError = stringResource(id = R.string.pref_number_non_negative_error)
@@ -1648,20 +1642,6 @@ private fun SettingsDialogs(
             onStyleSelected = {
                 onSetUiKitStyle(it)
                 onShowUiKitStyleDialogChange(false)
-            },
-        )
-    }
-
-    if (showDonateDialog) {
-        DonateDialog(
-            onDismiss = { onShowDonateDialogChange(false) },
-            onAlipay = {
-                onShowDonateDialogChange(false)
-                onShowQrCodeDialogChange(Pair(R.drawable.alipay, "alipay"))
-            },
-            onWechat = {
-                onShowDonateDialogChange(false)
-                onShowQrCodeDialogChange(Pair(R.drawable.wx, "wechat"))
             },
         )
     }
@@ -2269,72 +2249,6 @@ private fun SingleChoiceDialogSurface(
         title = title,
         modifier = modifier,
         content = content,
-    )
-}
-
-@Composable
-fun DonateDialog(onDismiss: () -> Unit, onAlipay: () -> Unit, onWechat: () -> Unit) {
-    io.github.magisk317.uikit.surface.AppAlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(id = R.string.dialog_donate_title)) },
-        text = { Text(stringResource(id = R.string.dialog_donate_content)) },
-        confirmButton = {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                io.github.magisk317.uikit.surface.AppPrimaryButton(
-                    text = stringResource(id = R.string.dialog_donate_alipay),
-                    onClick = onAlipay,
-                )
-                io.github.magisk317.uikit.surface.AppSecondaryButton(
-                    text = stringResource(id = R.string.dialog_donate_wechat),
-                    onClick = onWechat,
-                )
-            }
-        },
-    )
-}
-
-@Composable
-fun QRCodeDialog(resId: Int, type: String, onDismiss: () -> Unit, onSave: () -> Unit) {
-    io.github.magisk317.uikit.surface.AppAlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                if (type == "alipay") {
-                    stringResource(
-                        id = R.string.dialog_donate_alipay,
-                    )
-                } else {
-                    stringResource(id = R.string.dialog_donate_wechat)
-                },
-            )
-        },
-        text = {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                androidx.compose.foundation.Image(
-                    painter = painterResource(id = resId),
-                    contentDescription = if (type == "alipay") {
-                        stringResource(
-                            id = R.string.dialog_donate_alipay,
-                        )
-                    } else {
-                        stringResource(id = R.string.dialog_donate_wechat)
-                    },
-                    modifier = Modifier.size(200.dp),
-                )
-            }
-        },
-        confirmButton = {
-            io.github.magisk317.uikit.surface.AppPrimaryButton(
-                text = stringResource(id = R.string.save_to_gallery),
-                onClick = onSave,
-            )
-        },
-        dismissButton = {
-            io.github.magisk317.uikit.surface.AppSecondaryButton(
-                text = stringResource(id = R.string.cancel),
-                onClick = onDismiss,
-            )
-        },
     )
 }
 

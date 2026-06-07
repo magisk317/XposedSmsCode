@@ -395,6 +395,12 @@
     <string name="dialog_donate_wechat">Coffee (WeChat)</string>
     <string name="dialog_donate_alipay">Coffee (Alipay)</string>
 
+    <string name="donate_one_time_title">Donate via Google Play</string>
+    <string name="donate_one_time_099">$0.99</string>
+    <string name="donate_one_time_200">$2.00</string>
+    <string name="donate_one_time_999">$9.99</string>
+    <string name="donate_one_time_1999">$19.99</string>
+
     <string name="dialog_donate_alipay_qrcode">View QR Code</string>
 
     <string name="save_to_gallery_success">Image saved to gallery, opening %s...</string>

@@ -59,8 +59,13 @@ class SmsCodeApplication : Application() {
         startKoin {
             androidLogger()
             androidContext(this@SmsCodeApplication)
-            modules(appModule)
+            modules(appModule, com.github.magisk317.smscode.di.billingModule)
         }
+        
+        org.koin.core.context.GlobalContext.get().getAll<com.github.magisk317.smscode.app.AppInitializer>().forEach {
+            it.init(this)
+        }
+
         initXposedServiceActivationMonitor()
         importPendingCodeRecords()
         syncPreferences()
