@@ -893,10 +893,17 @@ private fun RecordSplitColumn(
                                 enableDismissFromStartToEnd = true,
                                 enableDismissFromEndToStart = true,
                                 backgroundContent = {
+                                    val bgColor by androidx.compose.animation.animateColorAsState(
+                                        if (dismissState.targetValue == SwipeToDismissBoxValue.Settled) {
+                                            Color.Transparent
+                                        } else {
+                                            MaterialTheme.colorScheme.errorContainer
+                                        }
+                                    )
                                     Box(
                                         modifier = Modifier
                                             .fillMaxSize()
-                                            .background(MaterialTheme.colorScheme.errorContainer)
+                                            .background(bgColor)
                                             .padding(horizontal = 24.dp),
                                         contentAlignment = if (dismissState.dismissDirection ==
                                             SwipeToDismissBoxValue.StartToEnd
@@ -906,11 +913,6 @@ private fun RecordSplitColumn(
                                             Alignment.CenterEnd
                                         },
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Delete,
-                                            contentDescription = stringResource(R.string.remove),
-                                            tint = MaterialTheme.colorScheme.onErrorContainer,
-                                        )
                                     }
                                 },
                                 content = {
@@ -1036,6 +1038,7 @@ fun CodeRecordItem(
                     Modifier
                         .weight(1f)
                         .padding(end = 8.dp)
+                        .basicMarquee()
                 } else {
                     Modifier
                         .width(120.dp)

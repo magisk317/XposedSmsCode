@@ -64,7 +64,7 @@
     <string name="pref_auto_input_accessibility_service_status_disabled">未開啟</string>
     <string name="pref_auto_input_accessibility_service_open_failed">無法開啟無障礙設定</string>
     <string name="pref_number_non_negative_error">請輸入大於等於 0 的數字。</string>
-    <string name="accessibility_auto_input_service_label">自動輸入輔助服務</string>
+    <string name="accessibility_auto_input_service_label">XposedSmsCode</string>
     <string name="accessibility_auto_input_service_description">優先尋找目前的驗證碼輸入框並直接填入，失敗後再回退到模擬按鍵輸入。</string>
     <string name="pref_enable_auto_enter_code_title">自動確認/回車</string>
     <string name="pref_enable_auto_enter_code_summary">填充驗證碼後自動觸發回車操作</string>
@@ -199,6 +199,9 @@
     <string name="runtime_log_share_failed">分享失敗：%1$s</string>
     <string name="runtime_log_cleared">日誌與崩潰檔案已清空</string>
     <string name="runtime_log_clear_partial_failed">部分清空失敗：%1$s</string>
+    <string name="runtime_log_clear_confirm_title">清空日誌</string>
+    <string name="runtime_log_clear_confirm_message">確認要清空所有日誌和崩潰檔案嗎？</string>
+    <string name="runtime_log_clear_summary">清空所有運行日誌和崩潰檔案</string>
     <string name="runtime_log_info_loading">正在載入日誌...</string>
     <string name="runtime_log_info_empty">暫無執行日誌</string>
     <string name="runtime_log_info_summary">檔案：%1$d 個，大小：%2$s，條目：%3$d</string>

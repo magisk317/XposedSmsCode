@@ -64,7 +64,7 @@
     <string name="pref_auto_input_accessibility_service_status_disabled">Not enabled</string>
     <string name="pref_auto_input_accessibility_service_open_failed">Unable to open Accessibility settings</string>
     <string name="pref_number_non_negative_error">Please enter a number greater than or equal to 0.</string>
-    <string name="accessibility_auto_input_service_label">Auto input assistant</string>
+    <string name="accessibility_auto_input_service_label">XposedSmsCode</string>
     <string name="accessibility_auto_input_service_description">Find the active verification code input box and fill it before falling back to simulated key input.</string>
     <string name="pref_enable_auto_enter_code_title">Auto-Enter/Submit</string>
     <string name="pref_enable_auto_enter_code_summary">Automatically trigger Enter after filling the code</string>
@@ -200,6 +200,9 @@
     <string name="runtime_log_share_failed">Share failed: %1$s</string>
     <string name="runtime_log_cleared">Logs and crash files cleared</string>
     <string name="runtime_log_clear_partial_failed">Partially cleared: %1$s</string>
+    <string name="runtime_log_clear_confirm_title">Clear logs</string>
+    <string name="runtime_log_clear_confirm_message">Are you sure you want to clear all logs and crash files?</string>
+    <string name="runtime_log_clear_summary">Clear all runtime logs and crash files</string>
     <string name="runtime_log_info_loading">Loading logs...</string>
     <string name="runtime_log_info_empty">No runtime logs yet</string>
     <string name="runtime_log_info_summary">Files: %1$d, size: %2$s, entries: %3$d</string>

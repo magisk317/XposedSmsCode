@@ -10,6 +10,7 @@ import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.os.SystemClock
 import android.provider.Settings
 import android.util.Log
@@ -198,9 +199,7 @@ internal fun ComposeSettingsScreenShared(
     val launcherIconVisible = remember { mutableStateOf(settingsViewModel.isLauncherIconVisible()) }
     var runtimeLogRetentionDays by remember { mutableIntStateOf(PrefConst.RUNTIME_LOG_RETENTION_DAYS_DEFAULT) }
     var showRuntimeLogRetentionDialog by remember { mutableStateOf(false) }
-    var showRuntimeLogInfoDialog by remember { mutableStateOf(false) }
-    var runtimeLogDialogData by remember { mutableStateOf<RuntimeLogDialogData?>(null) }
-    var showRuntimeLogFullScreenPreview by remember { mutableStateOf(false) }
+    var showClearLogConfirmDialog by remember { mutableStateOf(false) }
     var runtimeLogWrapLines by rememberSaveable { mutableStateOf(false) }
 
     val reloadSettingsData: suspend () -> Unit = {
@@ -377,14 +376,6 @@ internal fun ComposeSettingsScreenShared(
         }
     }
 
-    fun loadRuntimeLogDialog(selectedFileName: String? = null) {
-        scope.launch {
-            runtimeLogDialogData = withContext(Dispatchers.IO) {
-                loadRuntimeLogDialogData(selectedFileName)
-            }
-        }
-    }
-
     suspend fun persistNotificationOwnerSelection(owner: String, enableNotification: Boolean) {
         codeNotificationOwner = owner
         AppPreferencesDataStore.setString(
@@ -435,8 +426,40 @@ internal fun ComposeSettingsScreenShared(
         autoInputAccessibilityEnabled =
             supportsAccessibilityAutoInput && isAutoInputAccessibilityServiceEnabled(context)
     }
+
+    suspend fun toggleAccessibilityServiceViaRoot(context: android.content.Context, enable: Boolean): Boolean {
+        return kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val component = android.content.ComponentName(context, "com.github.magisk317.smscode.service.AutoInputAccessibilityService").flattenToString()
+                val currentServices = android.provider.Settings.Secure.getString(context.contentResolver, android.provider.Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES) ?: ""
+                val newServices = if (enable) {
+                    if (currentServices.contains(component)) return@withContext true
+                    if (currentServices.isEmpty()) component else "$currentServices:$component"
+                } else {
+                    if (!currentServices.contains(component)) return@withContext true
+                    currentServices.split(":").filter { it.isNotEmpty() && it != component }.joinToString(":")
+                }
+
+                val process = Runtime.getRuntime().exec("su")
+                val os = java.io.DataOutputStream(process.outputStream)
+                os.writeBytes("settings put secure enabled_accessibility_services $newServices\n")
+                if (enable) {
+                    os.writeBytes("settings put secure accessibility_enabled 1\n")
+                }
+                os.writeBytes("exit\n")
+                os.flush()
+                process.waitFor() == 0
+            } catch (e: Exception) {
+                false
+            }
+        }
+    }
+
     fun openAccessibilitySettings() {
         val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+        val componentName = ComponentName(context, "com.github.magisk317.smscode.service.AutoInputAccessibilityService").flattenToString()
+        intent.putExtra(":settings:fragment_args_key", componentName)
+        intent.putExtra(":settings:show_fragment_args", Bundle())
         if (activityOwner != null) {
             runCatching {
                 accessibilitySettingsLauncher.launch(intent)
@@ -760,8 +783,26 @@ internal fun ComposeSettingsScreenShared(
                                 title = stringResource(id = R.string.pref_auto_input_accessibility_service_title),
                                 summary = stringResource(id = R.string.pref_auto_input_accessibility_service_summary),
                                 checked = autoInputAccessibilityEnabled,
-                                onClick = { openAccessibilitySettings() },
-                                onCheckedChange = { openAccessibilitySettings() },
+                                onClick = {
+                                    scope.launch {
+                                        val success = toggleAccessibilityServiceViaRoot(context, !autoInputAccessibilityEnabled)
+                                        if (success) {
+                                            autoInputAccessibilityEnabled = !autoInputAccessibilityEnabled
+                                        } else {
+                                            openAccessibilitySettings()
+                                        }
+                                    }
+                                },
+                                onCheckedChange = { isChecked ->
+                                    scope.launch {
+                                        val success = toggleAccessibilityServiceViaRoot(context, isChecked)
+                                        if (success) {
+                                            autoInputAccessibilityEnabled = isChecked
+                                        } else {
+                                            openAccessibilitySettings()
+                                        }
+                                    }
+                                },
                             )
                         }
                         SwitchItem(
@@ -898,8 +939,7 @@ internal fun ComposeSettingsScreenShared(
                             key = PrefConst.KEY_VERBOSE_LOG_MODE,
                             defaultValue = false,
                             onItemClick = {
-                                runtimeLogDialogData = null
-                                showRuntimeLogInfoDialog = true
+                                shareRuntimeLogBundle()
                             },
                             onToggle = { on ->
                                 RuntimeLogStore.setEnabled(on)
@@ -914,6 +954,10 @@ internal fun ComposeSettingsScreenShared(
                                 runtimeLogRetentionDays,
                             ),
                         ) { showRuntimeLogRetentionDialog = true }
+                        Item(
+                            title = stringResource(id = R.string.runtime_log_clear_confirm_title),
+                            summary = stringResource(id = R.string.runtime_log_clear_summary),
+                        ) { showClearLogConfirmDialog = true }
                         if (BuildConfig.DEBUG) {
                             SwitchItem(
                                 title = stringResource(id = R.string.pref_sensitive_debug_log_mode_title),
@@ -1029,48 +1073,6 @@ internal fun ComposeSettingsScreenShared(
         onSetUiKitStyle = { style -> settingsViewModel.setUiKitStyle(style) },
     )
 
-    if (showRuntimeLogInfoDialog) {
-        LaunchedEffect(showRuntimeLogInfoDialog) {
-            runtimeLogDialogData = withContext(Dispatchers.IO) {
-                loadRuntimeLogDialogData(runtimeLogDialogData?.selectedFileName)
-            }
-        }
-        val dialogData = runtimeLogDialogData
-        RuntimeLogInfoDialog(
-            data = dialogData,
-            onDismiss = { showRuntimeLogInfoDialog = false },
-            onShare = { shareRuntimeLogBundle() },
-            onSelectFile = { fileName -> loadRuntimeLogDialog(fileName) },
-            onOpenPreview = { showRuntimeLogFullScreenPreview = true },
-            onClear = {
-                scope.launch {
-                    val result = withContext(Dispatchers.IO) {
-                        LogBundleExporter.clearLogFolders(context)
-                    }
-                    runtimeLogDialogData = withContext(Dispatchers.IO) {
-                        loadRuntimeLogDialogData()
-                    }
-                    snackbarHostState.showSnackbar(
-                        if (result.success) {
-                            context.getString(R.string.runtime_log_cleared)
-                        } else {
-                            context.getString(R.string.runtime_log_clear_partial_failed, result.details)
-                        },
-                    )
-                }
-            },
-        )
-        val content = dialogData?.content
-        if (showRuntimeLogFullScreenPreview && content != null) {
-            RuntimeLogFullScreenPreviewDialog(
-                fileName = content.name,
-                text = dialogData.formattedPreview,
-                wrapLines = runtimeLogWrapLines,
-                onWrapLinesChange = { runtimeLogWrapLines = it },
-                onDismiss = { showRuntimeLogFullScreenPreview = false },
-            )
-        }
-    }
 
     if (showRuntimeLogRetentionDialog) {
         val runtimeLogRetentionDaysError = stringResource(id = R.string.pref_runtime_log_retention_days_error)
