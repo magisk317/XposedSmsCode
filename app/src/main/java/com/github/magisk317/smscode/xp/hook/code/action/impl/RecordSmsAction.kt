@@ -9,8 +9,8 @@ import com.github.magisk317.smscode.runtime.RuntimePrefsFacade as PrefsReader
 import io.github.magisk317.smscode.runtime.common.utils.SharedRuntimeGate
 import com.github.magisk317.smscode.data.db.DBProvider
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
+import com.github.magisk317.smscode.runtime.RuntimeCodeRecordRestoreFacade
 import com.github.magisk317.smscode.runtime.RuntimeStorageFacade
-import com.github.magisk317.smscode.ui.record.CodeRecordRestoreManager
 import io.github.magisk317.smscode.domain.utils.CodeRecordSimilarityUtils
 import io.github.magisk317.smscode.verification.RecordSmsDedupHelper
 import io.github.magisk317.smscode.verification.RecordSmsActionHelper
@@ -119,7 +119,7 @@ class RecordSmsAction(
     }
 
     private fun exportFallback(smsMsg: SmsMsg): Boolean {
-        return CodeRecordRestoreManager.exportToFile(mPluginContext, smsMsg)
+        return RuntimeCodeRecordRestoreFacade.exportToFile(mPluginContext, smsMsg)
     }
 
     private fun shouldSkipByDedup(smsMsg: SmsMsg, eventLabel: String): Boolean {

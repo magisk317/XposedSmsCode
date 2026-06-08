@@ -7,10 +7,9 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.magisk317.smscode.common.constant.Const
-import io.github.magisk317.smscode.runtime.common.utils.JsonUtils
 import com.github.magisk317.smscode.common.utils.XLog
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
-import com.github.magisk317.smscode.runtime.RuntimeStorageFacade
+import com.github.magisk317.smscode.runtime.RuntimeCodeRecordFacade
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -18,8 +17,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.OutputStreamWriter
-import java.nio.charset.StandardCharsets
 
 @Immutable
 data class CodeRecordUiState(val smsList: ImmutableList<SmsMsg> = persistentListOf(), val isLoading: Boolean = false)
@@ -28,8 +25,8 @@ class CodeRecordViewModel(application: Application) : AndroidViewModel(applicati
 
     private val _loading = MutableStateFlow(false)
 
-    val uiState: StateFlow<CodeRecordUiState> = RuntimeStorageFacade.dbManager(application)
-        .queryAllSmsMsgFlow()
+    val uiState: StateFlow<CodeRecordUiState> = RuntimeCodeRecordFacade
+        .recordsFlow(application)
         .combine(_loading) { smsList, loading ->
             CodeRecordUiState(smsList.toImmutableList(), loading)
         }
@@ -40,7 +37,7 @@ class CodeRecordViewModel(application: Application) : AndroidViewModel(applicati
         )
 
     fun loadData() {
-        // Data is automatically loaded via queryAllSmsMsgFlow() in uiState
+        // Data is automatically loaded via RuntimeCodeRecordFacade.recordsFlow() in uiState.
     }
 
     fun refreshData() {
@@ -48,7 +45,7 @@ class CodeRecordViewModel(application: Application) : AndroidViewModel(applicati
             _loading.value = true
             try {
                 withContext(Dispatchers.IO) {
-                    RuntimeStorageFacade.dbManager(getApplication()).queryAllSmsMsg()
+                    RuntimeCodeRecordFacade.queryRecords(getApplication())
                 }
             } finally {
                 _loading.value = false
@@ -59,8 +56,7 @@ class CodeRecordViewModel(application: Application) : AndroidViewModel(applicati
     fun removeSmsMsg(smsMsgList: List<SmsMsg>) {
         viewModelScope.launch {
             try {
-                RuntimeStorageFacade.dbManager(getApplication())
-                    .removeSmsMsgListSuspend(smsMsgList)
+                RuntimeCodeRecordFacade.removeRecords(getApplication(), smsMsgList)
             } catch (ignored: Throwable) {
                 XLog.e("Error occurs when remove SMS records", ignored)
             }
@@ -70,8 +66,7 @@ class CodeRecordViewModel(application: Application) : AndroidViewModel(applicati
     fun restoreSmsMsgList(smsMsgList: List<SmsMsg>) {
         viewModelScope.launch {
             try {
-                RuntimeStorageFacade.dbManager(getApplication())
-                    .insertSmsMsgListSuspend(smsMsgList)
+                RuntimeCodeRecordFacade.restoreRecords(getApplication(), smsMsgList)
             } catch (ignored: Throwable) {
                 XLog.e("Error occurs when restore SMS records", ignored)
             }
@@ -83,15 +78,8 @@ class CodeRecordViewModel(application: Application) : AndroidViewModel(applicati
             _loading.value = true
             try {
                 val allRecords = uiState.value.smsList.toList()
-                val codeRecords = allRecords.filter {
-                    it.msgType == SmsMsg.MSG_TYPE_SMS && !it.smsCode.isNullOrBlank()
-                }
                 withContext(Dispatchers.IO) {
-                    context.contentResolver.openOutputStream(uri)?.use { os ->
-                        OutputStreamWriter(os, StandardCharsets.UTF_8).use { osw ->
-                            JsonUtils.toJson(codeRecords, osw, true)
-                        }
-                    }
+                    RuntimeCodeRecordFacade.exportCodeRecords(context, uri, allRecords)
                 }
                 // We might want an event for success/failure
             } catch (ignored: Throwable) {

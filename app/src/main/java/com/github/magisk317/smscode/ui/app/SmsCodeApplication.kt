@@ -24,7 +24,7 @@ import io.github.magisk317.smscode.xposed.runtime.CoreRuntimeAccess
 import io.github.magisk317.smscode.xposed.utils.XLog
 import io.github.magisk317.smscode.runtime.contract.logging.DefaultLogSanitizer
 import com.github.magisk317.smscode.di.appModule
-import com.github.magisk317.smscode.ui.record.CodeRecordRestoreManager
+import com.github.magisk317.smscode.runtime.RuntimeCodeRecordRestoreFacade
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -69,7 +69,7 @@ class SmsCodeApplication : Application() {
 
     private fun importPendingCodeRecords() {
         applicationScope.launch {
-            CodeRecordRestoreManager.importToDatabase(this@SmsCodeApplication)
+            RuntimeCodeRecordRestoreFacade.importToDatabase(this@SmsCodeApplication)
         }
     }
 

@@ -121,4 +121,3 @@ exceptions:
       - '**/feature/store/EntityStoreManager.kt'
       - '**/ui/common/AppIconImage.kt'
       - '**/ui/home/MainActivity.kt'
-      - '**/ui/record/CodeRecordRestoreManager.kt'
