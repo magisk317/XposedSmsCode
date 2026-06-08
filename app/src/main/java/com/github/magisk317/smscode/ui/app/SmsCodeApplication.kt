@@ -4,12 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
-import android.content.pm.PackageInfo
-import android.content.pm.PackageManager
-import android.media.AudioManager
-import android.os.Build
 import android.os.Bundle
-import android.telephony.TelephonyManager
 import com.github.tianma8023.xposed.smscode.BuildConfig
 import com.github.magisk317.smscode.common.constant.PrefConst
 import com.github.magisk317.smscode.common.utils.ActivationDiagnosticsStore
@@ -30,8 +25,6 @@ import io.github.magisk317.smscode.xposed.utils.XLog
 import io.github.magisk317.smscode.runtime.contract.logging.DefaultLogSanitizer
 import com.github.magisk317.smscode.di.appModule
 import com.github.magisk317.smscode.ui.record.CodeRecordRestoreManager
-import java.io.File
-import java.util.concurrent.TimeUnit
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -70,7 +63,7 @@ class SmsCodeApplication : Application() {
         initXposedServiceActivationMonitor()
         importPendingCodeRecords()
         syncPreferences()
-        handlePhoneProcessRestartIfNeeded()
+        PhoneProcessRestartCoordinator.requestAfterInstallOrUpdate(this, applicationScope)
         registerLicenseActivityKiller()
     }
 
@@ -196,133 +189,4 @@ class SmsCodeApplication : Application() {
         }
     }
 
-    private fun handlePhoneProcessRestartIfNeeded() {
-        applicationScope.launch {
-            val installToken = buildInstallToken() ?: return@launch
-            val prefs = getSharedPreferences(INSTALL_GUARD_PREFS, MODE_PRIVATE)
-            val lastHandledToken = prefs.getString(KEY_LAST_HANDLED_INSTALL_TOKEN, null)
-            if (lastHandledToken == installToken) {
-                return@launch
-            }
-
-            val now = System.currentTimeMillis()
-            val lastAttemptAt = prefs.getLong(KEY_LAST_RESTART_ATTEMPT_AT, 0L)
-            if (now - lastAttemptAt < RESTART_ATTEMPT_COOLDOWN_MS) {
-                return@launch
-            }
-            prefs.edit().putLong(KEY_LAST_RESTART_ATTEMPT_AT, now).apply()
-
-            if (isPhoneCallActive()) {
-                return@launch
-            }
-
-            val hasRootAccess = canUseRoot()
-            if (hasRootAccess) {
-                restartPhoneProcessViaRoot()
-            }
-
-            // Mark token handled even when root is unavailable to avoid repeated noisy attempts.
-            prefs.edit().putString(KEY_LAST_HANDLED_INSTALL_TOKEN, installToken).apply()
-        }
-    }
-
-    private fun buildInstallToken(): String? {
-        val packageInfo = runCatching { getSelfPackageInfo() }.getOrNull() ?: return null
-        val apkFile = runCatching { File(applicationInfo.sourceDir) }.getOrNull() ?: return null
-        val apkSize = runCatching { apkFile.length() }.getOrDefault(0L)
-        val apkModified = runCatching { apkFile.lastModified() }.getOrDefault(0L)
-        return listOf(
-            packageInfo.firstInstallTime,
-            packageInfo.lastUpdateTime,
-            apkSize,
-            apkModified,
-        ).joinToString(separator = ":")
-    }
-
-    private fun getSelfPackageInfo(): PackageInfo {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            packageManager.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0))
-        } else {
-            @Suppress("DEPRECATION")
-            packageManager.getPackageInfo(packageName, 0)
-        }
-    }
-
-    private fun canUseRoot(): Boolean {
-        val result = runSuCommand("id -u")
-        return result.exitCode == 0 && result.output.trim() == "0"
-    }
-
-    private fun isPhoneCallActive(): Boolean {
-        val telephonyInCall = runCatching {
-            val telephonyManager = getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
-            @Suppress("DEPRECATION")
-            val state = telephonyManager?.callState ?: TelephonyManager.CALL_STATE_IDLE
-            state == TelephonyManager.CALL_STATE_OFFHOOK || state == TelephonyManager.CALL_STATE_RINGING
-        }.getOrDefault(false)
-        if (telephonyInCall) {
-            return true
-        }
-
-        // Fallback without runtime permission dependency.
-        return runCatching {
-            val audioManager = getSystemService(Context.AUDIO_SERVICE) as? AudioManager
-            val mode = audioManager?.mode ?: AudioManager.MODE_NORMAL
-            mode == AudioManager.MODE_IN_CALL || mode == AudioManager.MODE_IN_COMMUNICATION
-        }.getOrDefault(false)
-    }
-
-    private fun restartPhoneProcessViaRoot() {
-        val packages = PHONE_PROCESS_PACKAGES.joinToString(separator = " ")
-        val command =
-            "for PKG in $packages; do " +
-                "PIDS=\$(pidof \"${'$'}PKG\" 2>/dev/null); " +
-                "if [ -n \"${'$'}PIDS\" ]; then kill -9 ${'$'}PIDS; FOUND=1; fi; " +
-                "pkill -f \"${'$'}PKG\" >/dev/null 2>&1 && FOUND=1; " +
-                "done; " +
-                "if [ \"${'$'}FOUND\" = 1 ]; then exit 0; fi; " +
-                "exit 1"
-        val result = runSuCommand(command)
-        if (result.exitCode == 0) {
-            Timber.i("Phone process restart requested after install/update change.")
-        }
-    }
-
-    private fun runSuCommand(command: String): SuCommandResult {
-        return try {
-            val process = ProcessBuilder("su", "-c", command)
-                .redirectErrorStream(true)
-                .start()
-            val completed = process.waitFor(SU_COMMAND_TIMEOUT_SEC, TimeUnit.SECONDS)
-            if (!completed) {
-                process.destroy()
-                if (process.isAlive) {
-                    process.destroyForcibly()
-                }
-                return SuCommandResult(exitCode = -2, output = "")
-            }
-            val output = process.inputStream.bufferedReader().use { it.readText() }
-            val exitCode = process.exitValue()
-            SuCommandResult(exitCode = exitCode, output = output)
-        } catch (_: Throwable) {
-            SuCommandResult(exitCode = -1, output = "")
-        }
-    }
-
-    private data class SuCommandResult(
-        val exitCode: Int,
-        val output: String,
-    )
-
-    companion object {
-        private const val INSTALL_GUARD_PREFS = "install_guard_prefs"
-        private const val KEY_LAST_HANDLED_INSTALL_TOKEN = "last_handled_install_token"
-        private const val KEY_LAST_RESTART_ATTEMPT_AT = "last_restart_attempt_at"
-        private const val RESTART_ATTEMPT_COOLDOWN_MS = 60_000L
-        private const val SU_COMMAND_TIMEOUT_SEC = 10L
-        private val PHONE_PROCESS_PACKAGES = listOf(
-            "com.android.phone",
-            "com.xiaomi.phone",
-        )
-    }
 }
