@@ -16,10 +16,10 @@ bash "${ROOT_DIR}/scripts/with_workspace_gradle_lock.sh" \
   :app:check \
   :app:compileGithubDebugAndroidTestKotlin \
   :app:compilePlayDebugAndroidTestKotlin \
+  :core:compilePlayDebugUnitTestKotlin \
+  :core:generatePlayDebugUnitTestStubRFile \
   :runtime:compileGithubDebugAndroidTestKotlin \
   :runtime:compilePlayDebugAndroidTestKotlin \
   assembleGithubDebug \
-  :app:koverVerifyGithubDebug \
-  :app:koverHtmlReportGithubDebug \
   -PbuildSplits \
   "$@"
