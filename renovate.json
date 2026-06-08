@@ -22,20 +22,21 @@
             "automergeType": "pr",
             "recreateWhen": "always",
             "groupName": "other non-major dependencies",
+            "groupSingleUpdates": false,
             "groupSlug": "all-minor-patch",
             "commitMessageExtra": "",
-            "excludePackagePatterns": [
-                "^androidx\\.",
-                "^org\\.jetbrains\\.kotlin",
-                "^io\\.insert-koin\\.",
-                "^org\\.junit\\.",
-                "^dev\\.chrisbanes\\.haze",
-                "^com\\.squareup\\.okhttp3",
-                "^com\\.squareup\\.retrofit2",
-                "^io\\.ktor\\.",
-                "^io\\.coil-kt",
-                "^io\\.kotest",
-                "^com\\.google\\.firebase"
+            "matchPackageNames": [
+                "!/^androidx\\./",
+                "!/^org\\.jetbrains\\.kotlin/",
+                "!/^io\\.insert-koin\\./",
+                "!/^org\\.junit\\./",
+                "!/^dev\\.chrisbanes\\.haze/",
+                "!/^com\\.squareup\\.okhttp3/",
+                "!/^com\\.squareup\\.retrofit2/",
+                "!/^io\\.ktor\\./",
+                "!/^io\\.coil-kt/",
+                "!/^io\\.kotest/",
+                "!/^com\\.google\\.firebase/"
             ]
         },
         {
