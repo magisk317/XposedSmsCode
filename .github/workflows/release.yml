@@ -1,4 +1,4 @@
-name: Build APK/AAB
+name: Release
 
 on:
   push:
@@ -347,7 +347,7 @@ jobs:
           gem --version
           gem_user_bin="$(ruby -r rubygems -e 'print Gem.user_dir')/bin"
           echo "$gem_user_bin" >> "$GITHUB_PATH"
-          gem install fastlane --no-document --user-install
+          gem install multi_json fastlane --no-document --user-install
           "$gem_user_bin/fastlane" --version
 
       - name: Publish to Google Play
