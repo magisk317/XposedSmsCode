@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.magisk317.smscode.core.R
+import com.github.magisk317.smscode.common.constant.Const
 import com.github.magisk317.smscode.ui.app.base.SystemBarsScrim
 import com.github.magisk317.smscode.ui.app.base.rememberHazeStyle
 import dev.chrisbanes.haze.HazeState
@@ -66,7 +67,8 @@ fun PrivacyPolicyPage(onDismiss: () -> Unit) {
     val scrollState = rememberScrollState()
 
     val topPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 64.dp
-    val bottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val bottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() +
+        Const.BOTTOM_SPACE_HEIGHT.dp
 
     Box(
         modifier = Modifier
