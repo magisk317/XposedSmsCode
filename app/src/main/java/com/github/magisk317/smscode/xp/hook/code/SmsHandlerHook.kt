@@ -18,6 +18,7 @@ import io.github.magisk317.smscode.xposed.utils.XLog
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
 import com.github.magisk317.smscode.xp.helper.ModuleConflictArbiter
 import com.github.magisk317.smscode.xp.helper.RelayConflictNoticeHelper
+import io.github.magisk317.smscode.verification.SmsDispatchChainBlockDeduplicator
 import io.github.magisk317.smscode.verification.SmsIntentHookSupport as VerificationSmsIntentHookSupport
 import io.github.magisk317.smscode.xposed.helper.XposedWrapper
 import io.github.magisk317.smscode.xposed.hook.BaseHook
@@ -680,40 +681,21 @@ class SmsHandlerHook : BaseHook() {
         action: String?,
         reason: String,
     ): Boolean {
-        if (smsMsg == null || action.isNullOrBlank()) return false
-        val now = System.currentTimeMillis()
-        val key = buildString {
-            append(senderHash(smsMsg.sender))
-            append('|')
-            append(smsMsg.body.orEmpty().hashCode())
-            append('|')
-            append(smsMsg.date)
-            append('|')
-            append(action)
-            append('|')
-            append(reason)
+        val result = dispatchChainBlockDeduplicator.shouldSkip(
+            smsMsg = smsMsg?.toVerificationMessage(),
+            action = action,
+            reason = reason,
+        )
+        if (result.shouldSkip) {
+            XLog.d(
+                "Diag dispatch chain block duplicate skip: action=%s reason=%s ageMs=%d",
+                action,
+                reason,
+                result.ageMs ?: 0L,
+            )
+            return true
         }
-        synchronized(DISPATCH_CHAIN_BLOCK_LOCK) {
-            val iterator = dispatchChainBlockHistory.entries.iterator()
-            while (iterator.hasNext()) {
-                val entry = iterator.next()
-                if (now - entry.value > DISPATCH_CHAIN_BLOCK_WINDOW_MS) {
-                    iterator.remove()
-                }
-            }
-            val last = dispatchChainBlockHistory[key]
-            if (last != null && now - last <= DISPATCH_CHAIN_BLOCK_WINDOW_MS) {
-                XLog.d(
-                    "Diag dispatch chain block duplicate skip: action=%s reason=%s ageMs=%d",
-                    action,
-                    reason,
-                    now - last,
-                )
-                return true
-            }
-            dispatchChainBlockHistory[key] = now
-            return false
-        }
+        return false
     }
 
     private fun defaultResultForType(type: Class<*>?): Any? {
@@ -773,10 +755,9 @@ class SmsHandlerHook : BaseHook() {
         private const val DISPATCH_DEDUP_FILE_NAME = "dispatch_dedup"
         private const val DISPATCH_DEDUP_WINDOW_MS = 8_000L
         private const val MAX_DISPATCH_DEDUP_ENTRIES = 256
-        private const val DISPATCH_CHAIN_BLOCK_WINDOW_MS = 8_000L
         private val SMS_OPERATION_EXECUTOR = Executors.newSingleThreadExecutor()
         private val installedHookKeys = Collections.synchronizedSet(mutableSetOf<String>())
-        private val dispatchChainBlockHistory = LinkedHashMap<String, Long>()
+        private val dispatchChainBlockDeduplicator = SmsDispatchChainBlockDeduplicator()
 
         fun isSmsHandlerPackage(packageName: String): Boolean {
             return packageName == ANDROID_PHONE_PACKAGE || packageName == XIAOMI_PHONE_PACKAGE
@@ -825,6 +806,5 @@ class SmsHandlerHook : BaseHook() {
         private const val SHARED_HOOK_INIT_WINDOW_MS = 5 * 60 * 1000L
         private const val SHARED_OBSERVER_WINDOW_MS = 5 * 60 * 1000L
         private val PROCESS_PROPERTY_LOCK = Any()
-        private val DISPATCH_CHAIN_BLOCK_LOCK = Any()
     }
 }
