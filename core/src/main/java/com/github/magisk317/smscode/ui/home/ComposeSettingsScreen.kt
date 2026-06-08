@@ -429,8 +429,14 @@ internal fun ComposeSettingsScreenShared(
     suspend fun toggleAccessibilityServiceViaRoot(context: android.content.Context, enable: Boolean): Boolean {
         return kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             try {
-                val component = android.content.ComponentName(context, "com.github.magisk317.smscode.service.AutoInputAccessibilityService").flattenToString()
-                val currentServices = android.provider.Settings.Secure.getString(context.contentResolver, android.provider.Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES) ?: ""
+                val component = ComponentName(
+                    context,
+                    "com.github.magisk317.smscode.service.AutoInputAccessibilityService",
+                ).flattenToString()
+                val currentServices = Settings.Secure.getString(
+                    context.contentResolver,
+                    Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
+                ).orEmpty()
                 val newServices = if (enable) {
                     if (currentServices.contains(component)) return@withContext true
                     if (currentServices.isEmpty()) component else "$currentServices:$component"
@@ -448,7 +454,15 @@ internal fun ComposeSettingsScreenShared(
                 os.writeBytes("exit\n")
                 os.flush()
                 process.waitFor() == 0
-            } catch (e: Exception) {
+            } catch (e: java.io.IOException) {
+                XLog.w("Root accessibility toggle failed: %s", e.message ?: e.javaClass.simpleName)
+                false
+            } catch (e: SecurityException) {
+                XLog.w("Root accessibility toggle denied: %s", e.message ?: e.javaClass.simpleName)
+                false
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+                XLog.w("Root accessibility toggle interrupted: %s", e.message ?: e.javaClass.simpleName)
                 false
             }
         }
