@@ -52,6 +52,8 @@ import com.github.magisk317.smscode.core.R
 import com.github.magisk317.smscode.common.constant.PrefConst
 import com.github.magisk317.smscode.common.utils.AppPreferencesDataStore
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
+import com.github.magisk317.smscode.runtime.RuntimePrefsFacade
+import io.github.magisk317.smscode.runtime.contract.sim.SimSlotLabelFormatter
 import io.github.magisk317.smscode.rule.utils.CodeRecordSimilarityUtils
 import com.github.magisk317.smscode.ui.common.AppIconImage
 import com.github.magisk317.smscode.ui.common.LoadingIndicatorTokens
@@ -139,6 +141,31 @@ internal fun CodeRecordScreenShared(
     val snackbarHostState = LocalSnackbarHostState.current
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val fallbackSimSlot1Remark = remember(context) {
+        RuntimePrefsFacade.getSimSlotRemark(context, 0)
+    }
+    val fallbackSimSlot2Remark = remember(context) {
+        RuntimePrefsFacade.getSimSlotRemark(context, 1)
+    }
+    val simSlot1Remark by AppPreferencesDataStore.getStringFlow(
+        context,
+        PrefConst.KEY_SIM_SLOT1_REMARK,
+        fallbackSimSlot1Remark,
+    ).collectAsStateWithLifecycle(initialValue = fallbackSimSlot1Remark)
+    val simSlot2Remark by AppPreferencesDataStore.getStringFlow(
+        context,
+        PrefConst.KEY_SIM_SLOT2_REMARK,
+        fallbackSimSlot2Remark,
+    ).collectAsStateWithLifecycle(initialValue = fallbackSimSlot2Remark)
+    val simSlotRemarkResolver: (Int) -> String = remember(simSlot1Remark, simSlot2Remark) {
+        { slot ->
+            when (slot) {
+                0 -> simSlot1Remark
+                1 -> simSlot2Remark
+                else -> ""
+            }
+        }
+    }
 
     LaunchedEffect(isLoading, shouldShowInitialLoading, initialLoadingStarted) {
         if (!shouldShowInitialLoading) return@LaunchedEffect
@@ -481,6 +508,7 @@ internal fun CodeRecordScreenShared(
                             scrollBehavior = scrollBehavior,
                             showHeader = false,
                             listContentPadding = PaddingValues(top = fixedTopHeight, bottom = bottomPadding),
+                            simSlotRemarkResolver = simSlotRemarkResolver,
                         )
                     }
                 }
@@ -580,6 +608,7 @@ internal fun CodeRecordScreenShared(
                 onDelete = {
                     deleteAndUndo(sms)
                 },
+                simSlotRemarkResolver = simSlotRemarkResolver,
             )
         }
         }
@@ -613,12 +642,16 @@ private fun RecordDetailOverlay(
     onDismiss: () -> Unit,
     onCopy: (label: String, value: String, toast: String) -> Unit,
     onDelete: () -> Unit,
+    simSlotRemarkResolver: (Int) -> String,
 ) {
     val context = LocalContext.current
     val detailDateFormatter = remember { SimpleDateFormat("yyyy.MM.dd HH:mm:ss", Locale.getDefault()) }
     val sender = sms.sender ?: sms.company ?: context.getString(R.string.unknown)
     val originalTime = formatDetailTime(detailDateFormatter, sms.date)
     val processedTime = formatDetailTime(detailDateFormatter, sms.processedTime)
+    val receiverSimLabel = remember(sms.simSlot, simSlotRemarkResolver) {
+        SimSlotLabelFormatter.format(sms.simSlot, simSlotRemarkResolver)
+    }
     val content = sms.body.orEmpty()
     val dismissInteraction = remember { MutableInteractionSource() }
     val detailTitleRes = R.string.message_details
@@ -682,6 +715,22 @@ private fun RecordDetailOverlay(
                                 onCopy("sms_sender", sender, message)
                             },
                         )
+                    }
+                    if (receiverSimLabel.isNotBlank()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Text(
+                                text = "${stringResource(R.string.detail_receiver_sim)}:",
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                            Text(
+                                text = receiverSimLabel,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
                     }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -810,6 +859,7 @@ private fun RecordSplitColumn(
     scrollBehavior: TopAppBarScrollBehavior,
     showHeader: Boolean = true,
     listContentPadding: PaddingValues = PaddingValues(0.dp),
+    simSlotRemarkResolver: (Int) -> String,
 ) {
     val listState = rememberLazyListState()
     val isMiuix = currentUiKitStyle() == UiKitStyle.Miuix
@@ -876,6 +926,7 @@ private fun RecordSplitColumn(
                                 onLongClick = {},
                                 onDetailClick = { onShowDetail(smsMsg) },
                                 modifier = Modifier.animateItem(),
+                                simSlotRemarkResolver = simSlotRemarkResolver,
                             )
                         } else {
                             val dismissState = rememberSwipeToDismissBoxState()
@@ -931,6 +982,7 @@ private fun RecordSplitColumn(
                                         onLongClick = { onActivateSelection(smsMsg.id ?: 0) },
                                         onDetailClick = { onShowDetail(smsMsg) },
                                         modifier = Modifier.animateItem(),
+                                        simSlotRemarkResolver = simSlotRemarkResolver,
                                     )
                                 },
                             )
@@ -955,6 +1007,7 @@ fun CodeRecordItem(
     onLongClick: () -> Unit,
     onDetailClick: () -> Unit,
     modifier: Modifier = Modifier,
+    simSlotRemarkResolver: (Int) -> String,
 ) {
     val dateFormatter = remember { SimpleDateFormat("yyyy.MM.dd HH:mm:ss", Locale.getDefault()) }
     val context = LocalContext.current
@@ -989,6 +1042,9 @@ fun CodeRecordItem(
     val codeOrSender = smsMsg.smsCode?.takeIf { it.isNotBlank() }
         ?: smsMsg.sender?.takeIf { it.isNotBlank() }
         ?: fallbackLabel
+    val receiverSimLabel = remember(smsMsg.simSlot, simSlotRemarkResolver) {
+        SimSlotLabelFormatter.format(smsMsg.simSlot, simSlotRemarkResolver)
+    }
 
     WorkspaceListItem(
         modifier = modifier.fillMaxWidth(),
@@ -1062,6 +1118,16 @@ fun CodeRecordItem(
             )
         }
         Spacer(modifier = Modifier.height(4.dp))
+        if (receiverSimLabel.isNotBlank()) {
+            Text(
+                text = stringResource(R.string.detail_receiver_sim_with_value, receiverSimLabel),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+        }
         val body = smsMsg.body
         if (!body.isNullOrEmpty()) {
             Text(

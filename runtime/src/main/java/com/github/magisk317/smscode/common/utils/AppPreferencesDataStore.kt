@@ -250,6 +250,14 @@ object AppPreferencesDataStore {
             PrefConst.KEY_IPC_TOKEN,
             getString(context, PrefConst.KEY_IPC_TOKEN, ""),
         )
+        editor.putString(
+            PrefConst.KEY_SIM_SLOT1_REMARK,
+            getString(context, PrefConst.KEY_SIM_SLOT1_REMARK, ""),
+        )
+        editor.putString(
+            PrefConst.KEY_SIM_SLOT2_REMARK,
+            getString(context, PrefConst.KEY_SIM_SLOT2_REMARK, ""),
+        )
     }
 
     suspend fun isBackupCompatTipShown(context: Context): Boolean = getInstance(context).data

@@ -164,6 +164,8 @@ internal fun ComposeSettingsScreenShared(
     val showCodeNotificationEnabled = remember { mutableStateOf(true) }
     var codeNotificationOwner by remember { mutableStateOf("") }
     var smsCodeKeywords by remember { mutableStateOf(PrefConst.SMSCODE_KEYWORDS_DEFAULT) }
+    var simSlot1Remark by remember { mutableStateOf("") }
+    var simSlot2Remark by remember { mutableStateOf("") }
     var showAutoInputDialog by remember { mutableStateOf(false) }
     var showAutoInputIntervalDialog by remember { mutableStateOf(false) }
     var showRetentionDialog by remember { mutableStateOf(false) }
@@ -179,6 +181,7 @@ internal fun ComposeSettingsScreenShared(
     var showPrivacyPolicyDialog by remember { mutableStateOf(false) }
     var showPrivacyPolicyPage by remember { mutableStateOf(false) }
     var showKeywordsDialog by remember { mutableStateOf(false) }
+    var showSimSlotRemarkDialog by remember { mutableStateOf<Int?>(null) }
     var showLanguageDialog by remember { mutableStateOf(false) }
     var isActivated by remember { mutableStateOf(ActivationDiagnosticsStore.isModuleActivated(context)) }
     val supportsAccessibilityAutoInput = BuildConfig.ENABLE_ACCESSIBILITY_AUTO_INPUT
@@ -239,6 +242,16 @@ internal fun ComposeSettingsScreenShared(
             PrefConst.KEY_SMSCODE_KEYWORDS,
             PrefConst.SMSCODE_KEYWORDS_DEFAULT,
         )
+        simSlot1Remark = AppPreferencesDataStore.getString(
+            context,
+            PrefConst.KEY_SIM_SLOT1_REMARK,
+            "",
+        ).trim()
+        simSlot2Remark = AppPreferencesDataStore.getString(
+            context,
+            PrefConst.KEY_SIM_SLOT2_REMARK,
+            "",
+        ).trim()
         autoInputAccessibilityEnabled =
             supportsAccessibilityAutoInput && isAutoInputAccessibilityServiceEnabled(context)
         val launcherVisible = settingsViewModel.isLauncherIconVisible()
@@ -777,6 +790,14 @@ internal fun ComposeSettingsScreenShared(
                             summary = stringResource(id = R.string.pref_smscode_test_summary),
                         ) { showSmsTestDialog = true }
                         Item(
+                            title = stringResource(id = R.string.pref_sim_slot1_remark_title),
+                            summary = simSlotRemarkSummary(simSlot1Remark),
+                        ) { showSimSlotRemarkDialog = 0 }
+                        Item(
+                            title = stringResource(id = R.string.pref_sim_slot2_remark_title),
+                            summary = simSlotRemarkSummary(simSlot2Remark),
+                        ) { showSimSlotRemarkDialog = 1 }
+                        Item(
                             title = stringResource(id = R.string.pref_code_rules_title),
                             summary = stringResource(id = R.string.pref_code_rules_summary),
                         ) {
@@ -1082,6 +1103,36 @@ internal fun ComposeSettingsScreenShared(
         onSetTheme = { mode, x, y -> settingsViewModel.setThemeMode(mode, x, y) },
         onSetUiKitStyle = { style -> settingsViewModel.setUiKitStyle(style) },
     )
+
+    showSimSlotRemarkDialog?.let { simSlot ->
+        val isFirstSlot = simSlot == 0
+        val key = if (isFirstSlot) PrefConst.KEY_SIM_SLOT1_REMARK else PrefConst.KEY_SIM_SLOT2_REMARK
+        TextInputDialog(
+            title = stringResource(
+                id = if (isFirstSlot) {
+                    R.string.pref_sim_slot1_remark_title
+                } else {
+                    R.string.pref_sim_slot2_remark_title
+                },
+            ),
+            initialValue = if (isFirstSlot) simSlot1Remark else simSlot2Remark,
+            onDismiss = { showSimSlotRemarkDialog = null },
+            supportingText = stringResource(id = R.string.pref_sim_slot_remark_summary),
+        ) { value ->
+            val updated = value.trim()
+            if (isFirstSlot) {
+                simSlot1Remark = updated
+            } else {
+                simSlot2Remark = updated
+            }
+            scope.launch {
+                AppPreferencesDataStore.setString(context, key, updated)
+                HookPreferenceMirror.publish(context)
+                markPrefsSaved()
+            }
+            showSimSlotRemarkDialog = null
+        }
+    }
 
 
     if (showRuntimeLogRetentionDialog) {
@@ -2072,6 +2123,11 @@ private fun parseIntAtLeastInput(raw: String, minValue: Int): Int? {
     return normalizeNumericInput(raw)
         .toIntOrNull()
         ?.takeIf { it >= minValue }
+}
+
+@Composable
+private fun simSlotRemarkSummary(remark: String): String {
+    return remark.takeIf { it.isNotBlank() } ?: stringResource(id = R.string.pref_sim_slot_remark_empty)
 }
 
 @Composable

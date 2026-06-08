@@ -110,6 +110,8 @@
     <string name="some_items_removed">Removed %d record(s)</string>
     <string name="message_details">Message Details</string>
     <string name="detail_sender">Sender</string>
+    <string name="detail_receiver_sim">Received by</string>
+    <string name="detail_receiver_sim_with_value">Received by %1$s</string>
     <string name="detail_original_time">Original time</string>
     <string name="detail_processed_time">Processed time</string>
     <string name="detail_content">Content</string>
@@ -154,6 +156,10 @@
     <string name="reset">Reset</string>
     <string name="pref_smscode_test_title">SMS code test</string>
     <string name="pref_smscode_test_summary">Test whether SMS code can be recognized or not</string>
+    <string name="pref_sim_slot1_remark_title">SIM1 remark</string>
+    <string name="pref_sim_slot2_remark_title">SIM2 remark</string>
+    <string name="pref_sim_slot_remark_summary">Shown in records when this SIM receives a message. Leave empty to show SIM1/SIM2.</string>
+    <string name="pref_sim_slot_remark_empty">No remark, show SIM name</string>
 
 
 

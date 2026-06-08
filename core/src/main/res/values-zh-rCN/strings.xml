@@ -111,6 +111,8 @@
     <string name="some_items_removed">删除了 %d 条记录</string>
     <string name="message_details">短信详情</string>
     <string name="detail_sender">发件人</string>
+    <string name="detail_receiver_sim">接收卡</string>
+    <string name="detail_receiver_sim_with_value">接收卡：%1$s</string>
     <string name="detail_original_time">短信原始时间</string>
     <string name="detail_processed_time">模块处理时间</string>
     <string name="detail_content">内容</string>
@@ -155,6 +157,10 @@
     <string name="reset">重置</string>
     <string name="pref_smscode_test_title">验证码短信测试</string>
     <string name="pref_smscode_test_summary">测试是否能正确识别短信中的验证码</string>
+    <string name="pref_sim_slot1_remark_title">SIM1 备注</string>
+    <string name="pref_sim_slot2_remark_title">SIM2 备注</string>
+    <string name="pref_sim_slot_remark_summary">这张卡收到短信时在记录里显示。留空则显示 SIM1/SIM2。</string>
+    <string name="pref_sim_slot_remark_empty">未设置备注，显示 SIM 名称</string>
 
 
 

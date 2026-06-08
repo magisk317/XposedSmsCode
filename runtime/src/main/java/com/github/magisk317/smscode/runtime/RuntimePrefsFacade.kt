@@ -55,4 +55,6 @@ object RuntimePrefsFacade {
     }
 
     fun getIpcToken(context: Context): String = PrefsReader.getIpcToken(context)
+
+    fun getSimSlotRemark(context: Context, simSlot: Int): String = PrefsReader.getSimSlotRemark(context, simSlot)
 }

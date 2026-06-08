@@ -111,6 +111,8 @@
     <string name="some_items_removed">刪除了 %d 條記錄</string>
     <string name="message_details">簡訊詳情</string>
     <string name="detail_sender">發件人</string>
+    <string name="detail_receiver_sim">接收卡</string>
+    <string name="detail_receiver_sim_with_value">接收卡：%1$s</string>
     <string name="detail_original_time">簡訊原始時間</string>
     <string name="detail_processed_time">模組處理時間</string>
     <string name="detail_content">內容</string>
@@ -153,6 +155,10 @@
     <string name="reset">重置</string>
     <string name="pref_smscode_test_title">驗證碼簡訊測試</string>
     <string name="pref_smscode_test_summary">測試是否能正確讀取簡訊中的驗證碼</string>
+    <string name="pref_sim_slot1_remark_title">SIM1 備註</string>
+    <string name="pref_sim_slot2_remark_title">SIM2 備註</string>
+    <string name="pref_sim_slot_remark_summary">這張卡收到簡訊時在記錄裡顯示。留空則顯示 SIM1/SIM2。</string>
+    <string name="pref_sim_slot_remark_empty">未設定備註，顯示 SIM 名稱</string>
 
 
 
