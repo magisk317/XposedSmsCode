@@ -6,9 +6,11 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.Telephony
 import android.util.Log
+import com.github.magisk317.smscode.common.utils.SmsCodeUtils
 import com.github.magisk317.smscode.runtime.RuntimePrefsFacade as PrefsReader
 import io.github.magisk317.smscode.runtime.contract.logging.LogRoute
 import io.github.magisk317.smscode.runtime.common.utils.StringUtils
+import io.github.magisk317.smscode.verification.ObservedInboxScanner
 import io.github.magisk317.smscode.verification.SmsInboxSeenTracker
 import io.github.magisk317.smscode.verification.SmsRoleStateResolver
 import io.github.magisk317.smscode.xposed.utils.XLog
@@ -124,6 +126,7 @@ internal class SmsInboxObserver(
             pluginContext = pluginContext,
             phoneContext = phoneContext,
             smsIdTracker = SmsInboxSeenTracker(MAX_TRACKED_SMS_IDS),
+            smsCodeParser = SmsCodeUtils::parseSmsCodeIfExists,
         )
     }
 
