@@ -1,6 +1,0 @@
-- Updated to 3.2.4 (108).
-- Auto input now tries the active verification field first, then falls back to simulated key input.
-- Legacy observer dedup was hardened to reduce repeated auto input and repeated handling of the same SMS.
-- Added a sensitive-debug toggle and extra SMS delivery diagnostics.
-- Improved notification owner controls, SMS rule management, and Android 16 SMS interception compatibility.
-- Details: https://github.com/magisk317/XposedSmsCode/releases

@@ -1,6 +1,0 @@
-- Updated to 3.1.9 (102) stable, beta tag removed.
-- Consolidated fixes: conflict dialog, default scope (incl. system), and missing zh-TW strings.
-- Android 16 permission granting path adapted with improved hook diagnostics.
-- HyperOS 3 now uses Provider self-kill for more reliable kills.
-- Settings can export/share log bundles; build outputs enable v1/v2/v3 signing.
-- Details: https://github.com/magisk317/XposedSmsCode/releases

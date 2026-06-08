@@ -1,6 +1,0 @@
-- 升级至 3.2.0（103）正式版。
-- 仅支持 libxposed 新框架 API 101。
-- 激活判定与短信链路优化（observer 兜底、去重、删除/广播/权限/发送 UID 兼容）。
-- 自杀链路与诊断日志增强，排查更明确。
-- 日志包新增 logcat 抓取，排查上下文更完整。
-- 详情与下载：https://github.com/magisk317/XposedSmsCode/releases

@@ -1,6 +1,0 @@
-- Updated to 3.2.4 (109).
-- Play build removes the accessibility service declaration but keeps auto input.
-- GitHub and F-Droid keep the input-box assistant, trying the active code field before simulated key input.
-- Hardened legacy dedup and added sensitive-debug plus SMS delivery diagnostics.
-- Improved notification owner controls, rule management, and Android 16 SMS interception compatibility.
-- Details: https://github.com/magisk317/XposedSmsCode/releases

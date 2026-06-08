@@ -1,6 +1,0 @@
-- Updated to 3.2.6 (111).
-- Home, records, menus, dialogs, and settings now feel more consistent.
-- Activation status refresh is more responsive and reduces stale state on the home screen.
-- Auto-input scheduling and dedup were tightened to reduce duplicate recognition and repeated auto fill.
-- Exported log bundles are easier to distinguish, and shared release inputs stay aligned.
-- Details: https://github.com/magisk317/XposedSmsCode/releases

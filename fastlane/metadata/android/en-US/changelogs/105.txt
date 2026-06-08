@@ -1,5 +1,0 @@
-- Updated to 3.2.2 (105).
-- Added activation diagnostics to the status card for easier troubleshooting.
-- SMS and Provider flows now record activation diagnostics to surface failure clues sooner.
-- Release and upgrade matching logic was refined for better overall stability.
-- Details: https://github.com/magisk317/XposedSmsCode/releases

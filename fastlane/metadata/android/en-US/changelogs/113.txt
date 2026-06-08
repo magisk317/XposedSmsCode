@@ -1,6 +1,0 @@
-- Updated to 3.2.8 (113).
-- Refactored Room DAOs to suspend functions for better database concurrency.
-- Upgraded Kotlin to 2.3.21 and synced Navigation and Compose BOM dependencies.
-- Optimized CI workflows by removing redundant sibling repository checks.
-- Updated submodule pointers to resolve Mokkery reference conflicts.
-- Details: https://github.com/magisk317/XposedSmsCode/releases

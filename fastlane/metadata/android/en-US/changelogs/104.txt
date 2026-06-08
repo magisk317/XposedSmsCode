@@ -1,7 +1,0 @@
-- Updated to 3.2.1 (104).
-- Compatible with the libxposed framework API 101 only; legacy frameworks (API < 100) should stay on 3.2.0 or below.
-- Framework version >= 7607 is required to upgrade to 3.2.1.
-- Settings read path updated: RemotePreferences first, Provider fallback to reduce foreground read failures.
-- Auto-input now uses recent dedup cache to reduce repeated input.
-- Legacy entrypoints and old config migration removed.
-- Details: https://github.com/magisk317/XposedSmsCode/releases

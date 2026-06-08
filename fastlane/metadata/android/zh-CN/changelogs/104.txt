@@ -1,7 +1,0 @@
-- 升级至 3.2.1（104）。
-- 仅支持 libxposed 新框架 API 101；legacy 框架（API < 100）请停留在 3.2.0 或更低版本。
-- 升级到 3.2.1 需要框架版本 >= 7607。
-- 设置读取链路调整：RemotePreferences 优先、Provider 兜底，降低前台读取失败概率。
-- 自动输入增加“近期去重缓存”，减少重复输入。
-- 移除 legacy 兼容入口与旧配置迁移逻辑。
-- 详情与下载：https://github.com/magisk317/XposedSmsCode/releases

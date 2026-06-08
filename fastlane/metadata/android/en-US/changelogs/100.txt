@@ -1,5 +1,0 @@
-- Updated to 3.1.8 (100) with continued focus on the verification-code core flow.
-- Removed legacy forwarding/app-notify/WebUI leftovers and stale configuration entry points.
-- Fixed Xposed input-injector method resolution compatibility (#165), and added relay-conflict arbitration with startup risk acknowledgment.
-- Simplified app-block/record screens and switched recovery to Kill Action.
-- GitHub: https://github.com/magisk317/XposedSmsCode/releases

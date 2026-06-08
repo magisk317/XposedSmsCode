@@ -56,8 +56,8 @@ jobs:
       matrix:
         include:
           - flavor_id: github
-            assemble_task: assembleGithubRelease
-            artifact_name: apks-github
+            assemble_task: :app:assembleGithubRelease
+            artifact_name: apks-github-release
             symbols_artifact_name: native-symbols-github
             symbols_glob: app/build/outputs/native-debug-symbols/githubRelease/native-debug-symbols.zip
     env:
@@ -233,7 +233,27 @@ jobs:
             echo "version_name=v${TAG}" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create Draft Release
+      - name: Extract Release Notes from CHANGELOG
+        id: release_notes
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          set -euo pipefail
+          release_name="${{ steps.extract_version.outputs.version_name }}"
+          notes_file="release-notes.md"
+          awk -v version="$release_name" '
+            $0 == "---" && found { exit }
+            found { print; next }
+            index($0, "## [" version "]") == 1 { found = 1; print; next }
+            END { if (!found) exit 1 }
+          ' docs/CHANGELOG.md > "$notes_file"
+          if [[ ! -s "$notes_file" ]]; then
+            echo "ERROR: empty release notes for $release_name" >&2
+            exit 1
+          fi
+          echo "notes_file=$notes_file" >> "$GITHUB_OUTPUT"
+
+      - name: Publish Release
         if: startsWith(github.ref, 'refs/tags/') && env.HAS_RELEASE_KEYSTORE == 'true'
         shell: bash
         run: |
@@ -241,17 +261,7 @@ jobs:
 
           tag_name="${GITHUB_REF_NAME}"
           release_name="${{ steps.extract_version.outputs.version_name }}"
-          release_notes=$(cat <<'EOF'
-            <div align="center">
-              <a href="https://play.google.com/store/apps/details?id=com.github.tianma8023.xposed.smscode">
-                <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="80"/>
-              </a>
-              <a href="https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}">
-                <img src="https://raw.githubusercontent.com/machiav3lli/oandbackupx/master/badge_github.png" alt="Get it on GitHub" height="80"/>
-              </a>
-            </div>
-          EOF
-          )
+          notes_file="${{ steps.release_notes.outputs.notes_file }}"
 
           mapfile -d '' release_assets < <(
             find artifacts/apks artifacts/bundle -type f \( -name '*.apk' -o -name '*.aab' \) -print0 | sort -z
@@ -264,14 +274,15 @@ jobs:
 
           if gh release view "$tag_name" >/dev/null 2>&1; then
             gh release upload "$tag_name" "${release_assets[@]}" --clobber
-            gh release edit "$tag_name" --title "$release_name"
+            gh release edit "$tag_name" \
+              --title "$release_name" \
+              --draft=false \
+              --notes-file "$notes_file"
           else
             gh release create "$tag_name" "${release_assets[@]}" \
-              --draft \
               --title "$release_name" \
               --verify-tag \
-              --generate-notes \
-              --notes "$release_notes"
+              --notes-file "$notes_file"
           fi
         env:
           GH_TOKEN: ${{ secrets.GH_PAT != '' && secrets.GH_PAT || github.token }}
@@ -386,6 +397,10 @@ jobs:
       HAS_RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE != '' }}
       MODULES_REPO: Xposed-Modules-Repo/com.github.tianma8023.xposed.smscode
     steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
       - name: Download APK Artifacts
         uses: actions/download-artifact@v8
         with:
@@ -403,28 +418,55 @@ jobs:
             echo "version_name=v${TAG}" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create Draft Release in Xposed-Modules-Repo
-        if: env.HAS_MODULES_REPO_TOKEN == 'true' && env.HAS_RELEASE_KEYSTORE == 'true'
+      - name: Extract Release Notes from CHANGELOG
+        id: release_notes
+        shell: bash
         run: |
+          set -euo pipefail
+          release_name="${{ steps.extract_version.outputs.version_name }}"
+          notes_file="release-notes.md"
+          awk -v version="$release_name" '
+            $0 == "---" && found { exit }
+            found { print; next }
+            index($0, "## [" version "]") == 1 { found = 1; print; next }
+            END { if (!found) exit 1 }
+          ' docs/CHANGELOG.md > "$notes_file"
+          if [[ ! -s "$notes_file" ]]; then
+            echo "ERROR: empty release notes for $release_name" >&2
+            exit 1
+          fi
+          echo "notes_file=$notes_file" >> "$GITHUB_OUTPUT"
+
+      - name: Publish Release in Xposed-Modules-Repo
+        if: env.HAS_MODULES_REPO_TOKEN == 'true' && env.HAS_RELEASE_KEYSTORE == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag_name="${{ github.ref_name }}"
+          release_name="${{ steps.extract_version.outputs.version_name }}"
+          notes_file="${{ steps.release_notes.outputs.notes_file }}"
+
           mapfile -d '' apk_files < <(find artifacts/apks -type f -name '*.apk' -print0 | sort -z)
           if [[ ${#apk_files[@]} -eq 0 ]]; then
             echo "ERROR: no APK files found under artifacts/apks" >&2
             find artifacts/apks -maxdepth 6 -type f | sort >&2 || true
             exit 1
           fi
-          gh release create "${{ github.ref_name }}" \
-            "${apk_files[@]}" \
-            --repo "${{ env.MODULES_REPO }}" \
-            --title "${{ steps.extract_version.outputs.version_name }}" \
-            --notes "<div align=\"center\">
-            <a href=\"https://play.google.com/store/apps/details?id=com.github.tianma8023.xposed.smscode\">
-              <img src=\"https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png\" alt=\"Get it on Google Play\" height=\"80\"/>
-            </a>
-            <a href=\"https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}\">
-              <img src=\"https://raw.githubusercontent.com/machiav3lli/oandbackupx/master/badge_github.png\" alt=\"Get it on GitHub\" height=\"80\"/>
-            </a>
-            </div>
-            " \
-            --draft
+          if gh release view "$tag_name" --repo "${{ env.MODULES_REPO }}" >/dev/null 2>&1; then
+            gh release upload "$tag_name" "${apk_files[@]}" \
+              --repo "${{ env.MODULES_REPO }}" \
+              --clobber
+            gh release edit "$tag_name" \
+              --repo "${{ env.MODULES_REPO }}" \
+              --title "$release_name" \
+              --draft=false \
+              --notes-file "$notes_file"
+          else
+            gh release create "$tag_name" \
+              "${apk_files[@]}" \
+              --repo "${{ env.MODULES_REPO }}" \
+              --title "$release_name" \
+              --notes-file "$notes_file"
+          fi
         env:
           GH_TOKEN: ${{ secrets.XPOSED_MODULES_REPO_TOKEN }}

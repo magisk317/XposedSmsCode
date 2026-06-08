@@ -1,6 +1,0 @@
-- 升级至 3.2.4（109）。
-- Play 渠道移除无障碍服务声明，保留现有自动输入链路。
-- GitHub 与 F-Droid 渠道保留“输入框辅助”，优先查找验证码输入框，失败后回退到模拟按键输入。
-- 继续加强 legacy 防重，并补充敏感日志开关与短信投递诊断。
-- 通知 owner、规则管理与 Android 16 短信拦截兼容性进一步改进。
-- 详情与下载：https://github.com/magisk317/XposedSmsCode/releases

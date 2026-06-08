@@ -1,7 +1,0 @@
-- Updated to 3.2.10 (115).
-- Migrated to Java 26 target and Kotlin RC2 build toolchain.
-- Adopted shared logging contracts across modules.
-- Bumped `magisk-ui-kit` and adapted `PlayUpdateDelegate` for `ComponentActivity`.
-- Fixed SMS test input reset and official rule hit label display.
-- Enhanced Renovate automerge flow and Telegram release notification format.
-- Details: https://github.com/magisk317/XposedSmsCode/releases

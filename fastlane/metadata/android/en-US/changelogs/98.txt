@@ -1,3 +1,0 @@
-- Added full call-notify pipeline: dedicated sender toggle, dedicated record tab, export and backup compatibility.
-- Added bidirectional app-notify routing: both `app -> sender` and `sender -> app` rules with clearer conflict handling.
-- GitHub: https://github.com/magisk317/XposedSmsCode/releases

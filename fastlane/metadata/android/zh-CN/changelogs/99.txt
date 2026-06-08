@@ -1,3 +1,0 @@
-- 本版本聚焦验证码主链路能力。
-- 已移除历史转发/通知转发遗留逻辑与过期配置入口。
-- 详情：https://github.com/magisk317/XposedSmsCode/releases

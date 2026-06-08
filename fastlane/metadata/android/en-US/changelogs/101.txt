@@ -1,5 +1,0 @@
-- Updated to 3.1.9-beta (101).
-- Conflict dialog is now exit-only, requiring uninstalling the other module first.
-- Added `system` to default scope to improve system_server injection coverage.
-- Completed missing zh-TW strings for settings groups and backup entries.
-- GitHub: https://github.com/magisk317/XposedSmsCode/releases

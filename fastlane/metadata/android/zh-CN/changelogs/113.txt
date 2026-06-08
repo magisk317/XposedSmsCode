@@ -1,6 +1,0 @@
-- 升级至 3.2.8（113）。
-- 将 Room DAO 重构为 `suspend` 函数，优化数据库访问并发性能。
-- 升级 Kotlin 至 2.3.21，同步更新 Navigation 与 Compose BOM 依赖。
-- 优化 CI 工作流，减少冗余检查，提升构建速度。
-- 同步子模块指针，修复 `mokkery` 引用问题。
-- 详情与下载：https://github.com/magisk317/XposedSmsCode/releases

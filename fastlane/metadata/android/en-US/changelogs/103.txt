@@ -1,6 +1,0 @@
-- Updated to 3.2.0 (103) stable.
-- Compatible with the libxposed framework API 101 only.
-- Activation check and SMS pipeline improvements (observer fallback, dedup, delete/broadcast/permission/sending-UID compatibility).
-- Self-kill flow and diagnostics improved for clearer troubleshooting.
-- Log bundle now captures logcat for richer diagnostics.
-- Details: https://github.com/magisk317/XposedSmsCode/releases

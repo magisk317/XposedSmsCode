@@ -1,6 +1,0 @@
-- Updated to 3.2.9 (114).
-- Added external `smscode-rules` with remote refresh + local cache; matching now follows user > official > built-in fallback.
-- Diagnostics: daily JSONL logs (2-day default) and in-app preview before share/clear.
-- Auto-input: system injection first, accessibility fallback; `KillMe` waits for matched result.
-- Infra: `api101` pref bridge refactor, Netty security updates, and dependency CI/release flow.
-- Details: https://github.com/magisk317/XposedSmsCode/releases

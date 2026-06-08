@@ -1,6 +1,0 @@
-- 升级至 3.2.7（112）。
-- 备份恢复入口与应用配置持久化改经 runtime facade 暴露，继续减少 core 对 runtime 内部实现的直接依赖。
-- 修复使用时长排序的权限门控问题，`UsageStats` 未授权场景不再卡住模块级 `check`。
-- 验证码记录补齐 `processedTime` 贯穿链路，并在启动阶段更早拦截已知不兼容框架。
-- CI、发版工作流与 `release_tag.sh` 现已统一在打包前执行 `:core/:runtime/:app:check`。
-- 详情与下载：https://github.com/magisk317/XposedSmsCode/releases

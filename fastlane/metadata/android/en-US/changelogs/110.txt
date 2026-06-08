@@ -1,6 +1,0 @@
-- Updated to 3.2.5 (110).
-- `api101` and `legacy` now align for Android 17 support.
-- Continued refactoring: shared verification/runtime modules now unify dispatch, observer, notification, auto input, and records.
-- Fixed dropped parsed-result cases that could stop notifications, records, and auto input.
-- Improved accessibility auto-input retry, numeric settings input, and release/CI plumbing.
-- Details: https://github.com/magisk317/XposedSmsCode/releases

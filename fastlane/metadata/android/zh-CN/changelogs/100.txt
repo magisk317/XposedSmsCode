@@ -1,5 +1,0 @@
-- 升级到 3.1.8（100），聚焦验证码主链路能力演进。
-- 清理历史转发/通知转发/WebUI 遗留代码与配置入口。
-- 修复 Xposed 自动输入注入兼容性问题（#165），并新增中继冲突仲裁与启动风险确认。
-- 精简应用黑名单与记录页面，恢复策略切换为 Kill Action。
-- 详情：https://github.com/magisk317/XposedSmsCode/releases

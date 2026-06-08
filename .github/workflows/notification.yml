@@ -161,14 +161,23 @@ jobs:
             RELEASE_TAG="${GITHUB_REF_NAME:-manual}"
           fi
 
-          WHATSNEW_FILE="distribution/whatsnew/whatsnew-zh-CN"
-          if [ -f "$WHATSNEW_FILE" ]; then
-            WHATSNEW_CONTENT="$(cat "$WHATSNEW_FILE")"
+          RELEASE_NOTES_FILE="release-notes.md"
+          release_name="$RELEASE_TAG"
+          if [[ "$release_name" != v* ]]; then
+            release_name="v$release_name"
+          fi
+          if awk -v version="$release_name" '
+            $0 == "---" && found { exit }
+            found { print; next }
+            index($0, "## [" version "]") == 1 { found = 1; print; next }
+            END { if (!found) exit 1 }
+          ' docs/CHANGELOG.md > "$RELEASE_NOTES_FILE"; then
+            RELEASE_NOTES_CONTENT="$(cat "$RELEASE_NOTES_FILE")"
           else
-            WHATSNEW_CONTENT="Release notes file not found: $WHATSNEW_FILE"
+            RELEASE_NOTES_CONTENT="Release notes not found in docs/CHANGELOG.md for $release_name"
           fi
 
-          CAPTION=$(printf '📦 XposedSmsCode：Release %s\n%s\n\n%s' "$RELEASE_TAG" "$PROJECT_TAG" "$WHATSNEW_CONTENT")
+          CAPTION=$(printf '📦 XposedSmsCode：Release %s\n%s\n\n%s' "$RELEASE_TAG" "$PROJECT_TAG" "$RELEASE_NOTES_CONTENT")
 
           RELEASE_THREAD=""
           if [ -n "${TG_THREAD_ID:-}" ]; then

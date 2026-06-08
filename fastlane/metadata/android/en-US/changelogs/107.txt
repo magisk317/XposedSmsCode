@@ -1,5 +1,0 @@
-- Updated to 3.2.3 (107).
-- Refactored shared layers and synced core dependencies to reduce drift and improve maintainability.
-- Fixed incorrect activation status on some devices.
-- Strengthened SMS hook, dispatch, and toast dedup to reduce repeated prompts and duplicate handling.
-- Details: https://github.com/magisk317/XposedSmsCode/releases

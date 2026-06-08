@@ -1,6 +1,0 @@
-- 升级至 3.2.5（110）。
-- `api101` 与 `legacy` 两套 SDK 已对齐 Android 17 适配，请按框架类型选择安装包。
-- 继续重构验证码主链路，抽出共享 verification/runtime 模块，统一 dispatch、observer、通知与自动输入流程。
-- 修复验证码解析结果在部分场景下丢失的问题，恢复通知、记录与自动输入链路；无障碍自动输入重试也进一步改进。
-- 设置页数值输入、无障碍说明文案、共享子模块与 CI 发布流程继续整理。
-- 详情与下载：https://github.com/magisk317/XposedSmsCode/releases

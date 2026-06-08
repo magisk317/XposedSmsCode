@@ -1,6 +1,0 @@
-- Updated to 3.2.7 (112).
-- Backup/restore entry points and app-config persistence now go through runtime facades.
-- Usage Stats permission gating was fixed, and `:core/:runtime/:app:check` passes again.
-- Records now preserve processed time end-to-end, and startup blocks known incompatible frameworks earlier.
-- CI, release workflow, and `release_tag.sh` now share the same pre-package quality gate.
-- Details: https://github.com/magisk317/XposedSmsCode/releases

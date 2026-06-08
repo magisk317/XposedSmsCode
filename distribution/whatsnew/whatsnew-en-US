@@ -1,7 +1,5 @@
-- Updated to 3.2.10 (115).
-- Migrated to Java 26 target and Kotlin RC2 build toolchain.
-- Adopted shared logging contracts across modules.
-- Bumped `magisk-ui-kit` and adapted `PlayUpdateDelegate` for `ComponentActivity`.
-- Fixed SMS test input reset and official rule hit label display.
-- Enhanced Renovate automerge flow and Telegram release notification format.
-- Details: https://github.com/magisk317/XposedSmsCode/releases
+- Updated to 3.2.10 (116).
+- Single libxposed API 101+ release line; legacy builds moved to the legacy branch.
+- Shortened shared smscode module paths and refreshed submodule pointers.
+- Fixed app-owned notification fallback, MIUI Phone SMS coverage, and record empty-state localization.
+- Added Play Billing donation support and release/TG notes from changelog.

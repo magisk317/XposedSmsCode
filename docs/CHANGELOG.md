@@ -4,14 +4,21 @@
 
 ---
 
-## [v3.2.10] - 2026-06-05
-- 版本：`versionCode 115` / `versionName 3.2.10`。
-- `[build]` 全面迁移至 Java 26 目标版本与 Kotlin RC2 构建工具链。
-- `[ui]` 更新 `magisk-ui-kit`，将 `PlayUpdateDelegate` 适配为 `ComponentActivity` 架构。
-- `[core]` 接入并适配统一的共享日志契约（Shared logging contracts）。
-- `[sms]` 修复短信测试输入框重置逻辑，以及验证码“官方”命中标签的展示异常。
-- `[ci/deps]` 增强 Renovate 自动合并流程（支持 Gradle wrapper 的自动刷锁），完善 Telegram 发布通知格式。
-- `[legacy]` 从本版本开始，legacy 构建正式归档到 `legacy` 分支，不再进行功能性修改；后续正式发布只提供 `api101` 版本。仍停留在旧 Xposed 框架的用户请尽快升级框架，或到 Legacy CI 产物中下载 legacy 构建。
+## [v3.2.10] - 2026-06-08
+- 版本：`versionCode 116` / `versionName 3.2.10`。
+- `[release]` 收敛到单一 libxposed API 101+ 发布线；legacy 构建迁到 `legacy` 分支与手动 CI，正式发布不再携带 legacy/api101 flavor。
+- `[architecture]` 将 api101 源集提升为主源集，移除 `xposed-stub` 与 legacy 适配层，简化桥接、偏好读取和启动诊断链路。
+- `[submodule/build]` 同步构建与共享模块指针，将验证码模块目录改为 `domain`、`hook`、`rule`、`runtime`、`contract`、`verification`、`xposed` 等短名。
+- `[runtime/provider]` 增加 `ProviderCallerGuard` 与 Provider/DB 合同测试，修复调用方校验、备份/数据抽取、数据库访问和偏好读取边界。
+- `[hook/sms]` 补齐 MIUI Phone 短信进程与作用域覆盖，放宽 libxposed API 101+ 识别，并增强短信分发、MMS/Telephony hook 与诊断日志。
+- `[notification/input]` 修复 app-owned 验证码通知因 IPC token 缺失被拒收的问题；发送侧补齐 token，接收侧走受信任路径，失败回退 phone-owned 通知。
+- `[notification/input]` 自动输入改为先模拟输入，失败后再无障碍 fallback。
+- `[records/ui]` 修复记录页空状态英文硬编码，并优化滑动删除、撤销、日志清理、无障碍提示、预测返回和 Haze 2 适配。
+- `[billing/ui]` Play 渠道接入 Google Play Billing，捐赠入口迁到首页概览卡片。
+- `[deps/toolchain]` 升级到 Java 26 源兼容、Java 25 字节码、Kotlin 2.4.0、AGP 9.3.0-alpha10、Gradle 9.6.0-rc-1，并刷新 lockfile。
+- `[deps/toolchain]` 清理 Gradle 10 前置废弃警告，并隔离子模块 lockfile。
+- `[ci/release]` Renovate/Dependabot 支持锁文件刷新、依赖图校验和分组规则收敛；GitHub Release 与 Xposed-Modules-Repo 改为直接发布。
+- `[ci/release]` 发布正文和 Telegram 发布通知统一读取本版本 changelog 块。
 
 > Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.2.9...HEAD
 

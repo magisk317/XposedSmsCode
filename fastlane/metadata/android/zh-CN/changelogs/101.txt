@@ -1,5 +1,0 @@
-- 升级到 3.1.9-beta（101）。
-- 冲突检测弹窗收敛为“仅退出”，明确需先卸载另一模块后再使用。
-- 默认作用域补充 `system`，降低 system_server 场景漏注入风险。
-- 补齐繁中（zh-TW）设置分组与备份项文案缺失。
-- 详情：https://github.com/magisk317/XposedSmsCode/releases

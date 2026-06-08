@@ -1,7 +1,5 @@
-- 升级至 3.2.10（115）。
-- 全面迁移至 Java 26 目标版本与 Kotlin RC2 构建工具链。
-- 接入并适配统一的共享日志契约（Shared logging contracts）。
-- 更新 `magisk-ui-kit`，将 `PlayUpdateDelegate` 适配为 `ComponentActivity` 架构。
-- 修复短信测试输入框重置逻辑，以及验证码“官方”命中标签的展示异常。
-- 增强 Renovate 自动合并流程，完善 Telegram 发布通知格式。
-- 详情与下载：https://github.com/magisk317/XposedSmsCode/releases
+- 升级至 3.2.10（116）。
+- 正式收敛为单一 libxposed API 101+ 发布线，legacy 构建迁移到 legacy 分支。
+- 共享 smscode 模块改用短目录，并同步子模块指针。
+- 修复 app-owned 通知兜底、MIUI Phone 短信覆盖与记录页空状态本地化。
+- 新增 Play Billing 捐赠支持，Release/TG 发布说明改读当前 changelog 段落。

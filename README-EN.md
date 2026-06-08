@@ -62,10 +62,9 @@ Welcome any feedbacks.
 - **Settings page fully migrated to Jetpack Compose**
 
 # Release Metadata
-- Fastlane metadata location: `fastlane/metadata/android`
-- Sync Fastlane changelogs/screenshots before release: `scripts/sync_fastlane_metadata.sh`
-- Validate release metadata and tag consistency: `scripts/check_release_guard.sh`
-- Fastlane changelog files `changelogs/{versionCode}.txt` are synchronized from `distribution/whatsnew`.
+- Edit the current version block in `docs/CHANGELOG.md` before release.
+- Validate version, release notes, and tag consistency: `scripts/check_release_guard.sh`.
+- GitHub Release, Xposed-Modules-Repo, and Telegram notification share the current changelog block.
 
 # Documentation
 - [Release Logs](docs/CHANGELOG.md)
