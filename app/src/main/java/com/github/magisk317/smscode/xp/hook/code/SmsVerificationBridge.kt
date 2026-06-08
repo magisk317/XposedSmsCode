@@ -21,6 +21,10 @@ internal data class VerificationSmsMsg(
         get() = raw.smsCode
     override val packageName: String?
         get() = raw.packageName
+    override val simSlot: Int
+        get() = raw.simSlot
+    override val subId: Int
+        get() = raw.subId
 }
 
 internal fun SmsMsg.toVerificationMessage(): VerificationSmsMsg = VerificationSmsMsg(this)

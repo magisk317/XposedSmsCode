@@ -62,6 +62,8 @@ class RecordSmsAction(
                 put("sender", smsMsg.sender)
                 put("sms_code", smsMsg.smsCode)
                 put("package_name", smsMsg.packageName)
+                put("sim_slot", smsMsg.simSlot)
+                put("sub_id", smsMsg.subId)
                 put("msg_type", smsMsg.msgType)
                 put("forward_status", smsMsg.forwardStatus)
                 put("forward_target", smsMsg.forwardTarget)
@@ -69,7 +71,7 @@ class RecordSmsAction(
                 put("forward_time", smsMsg.forwardTime)
             }
 
-            resolver.insert(smsMsgUri, values)
+            val insertedUri = resolver.insert(smsMsgUri, values)
 
             val projections = arrayOf("_id")
             val order = "date ASC"
@@ -77,7 +79,9 @@ class RecordSmsAction(
             val selectionArgs = arrayOf(SmsMsg.MSG_TYPE_SMS.toString())
             val cursor: Cursor? = resolver.query(smsMsgUri, projections, selection, selectionArgs, order)
             if (cursor == null) {
-                return RecordSmsInsertResultHelper.success(detail = "retention_query_null")
+                return RecordSmsInsertResultHelper.success(
+                    detail = "record_uri=$insertedUri,simSlot=${smsMsg.simSlot},subId=${smsMsg.subId},retention_query_null",
+                )
             }
 
             val count = cursor.count
@@ -103,11 +107,14 @@ class RecordSmsAction(
                 resolver.applyBatch(DBProvider.authority(mPluginContext), operations)
                 cursor.close()
                 return RecordSmsInsertResultHelper.success(
-                    detail = "retention_removed=${count - limit},limit=$limit",
+                    detail = "record_uri=$insertedUri,simSlot=${smsMsg.simSlot},subId=${smsMsg.subId}," +
+                        "retention_removed=${count - limit},limit=$limit",
                 )
             }
             cursor.close()
-            RecordSmsInsertResultHelper.success()
+            RecordSmsInsertResultHelper.success(
+                detail = "record_uri=$insertedUri,simSlot=${smsMsg.simSlot},subId=${smsMsg.subId}",
+            )
         }
     }
 

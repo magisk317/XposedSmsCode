@@ -23,6 +23,7 @@ import io.github.magisk317.smscode.xposed.helper.XposedWrapper
 import io.github.magisk317.smscode.xposed.hook.BaseHook
 import io.github.magisk317.smscode.xposed.hook.telephony.InboundSmsBlocker
 import com.github.magisk317.smscode.xp.hook.code.action.impl.OperateSmsAction
+import io.github.magisk317.smscode.runtime.common.sim.SmsRoutingIntentExtras
 import io.github.magisk317.smscode.xposed.hookapi.HookEnv
 import io.github.magisk317.smscode.xposed.hookapi.MethodHook
 import io.github.magisk317.smscode.xposed.hookapi.HookBridge
@@ -213,7 +214,7 @@ class SmsHandlerHook : BaseHook() {
                                 val action = intent?.action ?: extractIntentAction(param.args)
                                 val pluginContext = getPluginContext()
                                 if (isVerboseDiagEnabled(pluginContext)) {
-                                    XLog.w(
+                                    XLog.d(
                                         "Diag SMS dispatch chain: class=%s owner=%s method=%s action=%s args=%d",
                                         className,
                                         param.thisObject?.javaClass?.name ?: className,
@@ -401,7 +402,7 @@ class SmsHandlerHook : BaseHook() {
         }
         val eventId = VerificationSmsIntentHookSupport.ensureEventId(intent)
         if (VerificationSmsIntentHookSupport.markDispatchHandled(intent, action)) {
-            XLog.w(
+            XLog.d(
                 "Diag SMS dispatch duplicate skip: event_id=%s action=%s source=intent_extra",
                 eventId,
                 action,
@@ -418,12 +419,15 @@ class SmsHandlerHook : BaseHook() {
             return
         }
         val pduCount = getPduCount(intent)
-        XLog.w(
-            "Diag SMS intent intercepted: event_id=%s action=%s, pduCount=%d, extras=%s",
+        val routing = SmsRoutingIntentExtras.readFrom(intent)
+        XLog.i(
+            "Diag SMS intent intercepted: event_id=%s action=%s pduCount=%d extras=%s simSlot=%d subId=%d",
             eventId,
             action,
             pduCount,
             intent.extras != null,
+            routing.simSlot ?: -1,
+            routing.subId ?: 0,
         )
         val outcome = dispatchIntentHandler.handle(
             intent = intent,
@@ -489,7 +493,7 @@ class SmsHandlerHook : BaseHook() {
                         }
                         val last = entries[key]
                         if (last != null && now - last <= DISPATCH_DEDUP_WINDOW_MS) {
-                            XLog.w(
+                            XLog.d(
                                 "Diag SMS dispatch duplicate skip: event_id=%s action=%s source=shared_store ageMs=%d",
                                 eventId,
                                 action,
@@ -699,7 +703,7 @@ class SmsHandlerHook : BaseHook() {
             }
             val last = dispatchChainBlockHistory[key]
             if (last != null && now - last <= DISPATCH_CHAIN_BLOCK_WINDOW_MS) {
-                XLog.w(
+                XLog.d(
                     "Diag dispatch chain block duplicate skip: action=%s reason=%s ageMs=%d",
                     action,
                     reason,

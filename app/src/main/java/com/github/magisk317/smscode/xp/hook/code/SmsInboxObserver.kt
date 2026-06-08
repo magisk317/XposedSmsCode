@@ -5,7 +5,9 @@ import android.database.ContentObserver
 import android.os.Handler
 import android.os.Looper
 import android.provider.Telephony
+import android.util.Log
 import com.github.magisk317.smscode.runtime.RuntimePrefsFacade as PrefsReader
+import io.github.magisk317.smscode.runtime.contract.logging.LogRoute
 import io.github.magisk317.smscode.runtime.common.utils.StringUtils
 import io.github.magisk317.smscode.verification.SmsInboxSeenTracker
 import io.github.magisk317.smscode.verification.SmsRoleStateResolver
@@ -18,11 +20,7 @@ internal class SmsInboxObserver(
     private val phoneContext: Context,
 ) {
     private val smsRoleStateResolver = SmsRoleStateResolver()
-    private val smsInboxScanner = ObservedInboxScanner(
-        pluginContext = pluginContext,
-        phoneContext = phoneContext,
-        smsIdTracker = SmsInboxSeenTracker(MAX_TRACKED_SMS_IDS),
-    )
+    private val smsInboxScanner = createInboxScanner()
     private val observedSmsHandler = ObservedSmsHandler(
         pluginContext = pluginContext,
         phoneContext = phoneContext,
@@ -43,9 +41,33 @@ internal class SmsInboxObserver(
         runCatching {
             phoneContext.contentResolver.registerContentObserver(Telephony.Sms.CONTENT_URI, true, observer)
             XLog.i("SmsInboxObserver registered")
+            queryExecutor.execute { repairRecentRouting() }
         }.onFailure {
             XLog.w("SmsInboxObserver register failed: %s", it.message ?: it.javaClass.simpleName)
         }
+    }
+
+    private fun repairRecentRouting() {
+        var scanned = 0
+        var updated = 0
+        createInboxScanner().scanRouting(
+            triggerUri = ROUTING_REPAIR_TRIGGER_URI,
+            recentSmsWindowMs = ROUTING_REPAIR_WINDOW_MS,
+        ).forEach { record ->
+            scanned += 1
+            if (observedSmsHandler.repairRouting(record)) {
+                updated += 1
+            }
+        }
+        XLog.log(
+            Log.INFO,
+            LogRoute.SMS_HOOK,
+            false,
+            false,
+            "Diag SMS routing repair finished: scanned=%d updated=%d",
+            scanned,
+            updated,
+        )
     }
 
     private fun scanRecentInbox(triggerUri: String) {
@@ -54,13 +76,15 @@ internal class SmsInboxObserver(
             recentSmsWindowMs = RECENT_SMS_WINDOW_MS,
         ).forEach { record ->
             val sensitiveDebugLog = PrefsReader.isSensitiveDebugLogMode(pluginContext)
-            XLog.w(
-                "Diag SMS provider observed: sms_id=%d trigger_uri=%s sender_hash=%s date=%d read=%s code=%s body=%s",
+            XLog.i(
+                "Diag SMS provider observed: sms_id=%d trigger_uri=%s sender_hash=%s date=%d read=%s simSlot=%d subId=%d code=%s body=%s",
                 record.smsId,
                 record.triggerUri,
                 senderHash(record.sender),
                 record.date,
                 record.read,
+                record.simSlot,
+                record.subId,
                 if (sensitiveDebugLog) StringUtils.escape(record.code) else StringUtils.summarizeCode(record.code),
                 if (sensitiveDebugLog) StringUtils.escape(record.body) else StringUtils.summarizeBody(record.body),
             )
@@ -71,7 +95,7 @@ internal class SmsInboxObserver(
 
     private fun logSmsRoleState(eventId: String) {
         val roleState = smsRoleStateResolver.resolve(phoneContext)
-        XLog.w(
+        XLog.d(
             "Diag observer sms role: event_id=%s defaultSms=%s roleHolders=%s",
             eventId,
             roleState.defaultSms ?: "<none>",
@@ -81,7 +105,7 @@ internal class SmsInboxObserver(
 
     private fun logSmsRoleStateForSms(smsId: Long, triggerUri: String) {
         val roleState = smsRoleStateResolver.resolve(phoneContext)
-        XLog.w(
+        XLog.d(
             "Diag observer sms role: sms_id=%d trigger_uri=%s defaultSms=%s roleHolders=%s",
             smsId,
             triggerUri.ifBlank { Telephony.Sms.CONTENT_URI.toString() },
@@ -95,8 +119,18 @@ internal class SmsInboxObserver(
         return Integer.toHexString(sender.hashCode())
     }
 
+    private fun createInboxScanner(): ObservedInboxScanner {
+        return ObservedInboxScanner(
+            pluginContext = pluginContext,
+            phoneContext = phoneContext,
+            smsIdTracker = SmsInboxSeenTracker(MAX_TRACKED_SMS_IDS),
+        )
+    }
+
     companion object {
         private const val RECENT_SMS_WINDOW_MS = 10 * 60 * 1000L
+        private const val ROUTING_REPAIR_WINDOW_MS = 24 * 60 * 60 * 1000L
+        private const val ROUTING_REPAIR_TRIGGER_URI = "content://sms"
         private const val MAX_TRACKED_SMS_IDS = 128
         private val queryExecutor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
     }
