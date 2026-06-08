@@ -4,6 +4,12 @@
 
 ---
 
+## [v3.2.11] - Unreleased
+- 版本：`versionCode 117` / `versionName 3.2.11`。
+- 开发中。
+
+---
+
 ## [v3.2.10] - 2026-06-08
 - 版本：`versionCode 116` / `versionName 3.2.10`。
 - `[release]` 收敛到单一 libxposed API 101+ 发布线；legacy 构建迁到 `legacy` 分支与手动 CI，正式发布不再携带 legacy/api101 flavor。
@@ -20,7 +26,7 @@
 - `[ci/release]` Renovate/Dependabot 支持锁文件刷新、依赖图校验和分组规则收敛；GitHub Release 与 Xposed-Modules-Repo 改为直接发布。
 - `[ci/release]` 发布正文和 Telegram 发布通知统一读取本版本 changelog 块。
 
-> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.2.9...HEAD
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.2.9...v3.2.10
 
 ---
 
