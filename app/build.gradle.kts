@@ -171,12 +171,31 @@ val verifyNoLocalVerificationEngine = tasks.register("verifyNoLocalVerificationE
         "src/main/java/com/github/magisk317/smscode/xp/hook/code/InboundSmsMethodInvoker.kt",
         "src/main/java/com/github/magisk317/smscode/xp/hook/code/SmsIntentHookSupport.kt",
     )
+    val hookSourceRoot = layout.projectDirectory.dir("src/main/java/com/github/magisk317/smscode/xp")
+    val bannedHookRegexes = listOf(
+        Regex("""^\s*import\s+com\.github\.magisk317\.smscode\.ui\.record\."""),
+    )
     val projectRoot = layout.projectDirectory.asFile
 
     inputs.files(bannedFiles.map { layout.projectDirectory.file(it) })
+    inputs.dir(hookSourceRoot)
 
     doLast {
-        val violations = bannedFiles.filter { projectRoot.resolve(it).exists() }
+        val bannedFileViolations = bannedFiles.filter { projectRoot.resolve(it).exists() }
+        val hookImportViolations = hookSourceRoot
+            .asFileTree
+            .matching { include("**/*.kt") }
+            .files
+            .flatMap { source ->
+                source.readLines().mapIndexedNotNull { index, line ->
+                    if (bannedHookRegexes.any { regex -> regex.containsMatchIn(line) }) {
+                        "${source.relativeTo(projectRoot)}:${index + 1}: ${line.trim()}"
+                    } else {
+                        null
+                    }
+                }
+            }
+        val violations = bannedFileViolations + hookImportViolations
         if (violations.isNotEmpty()) {
             error(
                 buildString {

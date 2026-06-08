@@ -1,5 +1,6 @@
 import dev.detekt.gradle.extensions.DetektExtension
 import com.adarshr.gradle.testlogger.theme.ThemeType
+import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.tasks.Exec
 import kotlinx.kover.gradle.plugin.dsl.KoverProjectExtension
 
@@ -156,6 +157,78 @@ subprojects {
             // END AUTO FORCED DEPENDENCIES (managed by workflow)
         }
     }
+}
+
+val mainModuleDependencyViolations = objects.listProperty(String::class.java)
+
+val sharedCoreProjectPaths = listOf(
+    ":smscode-core:contract",
+    ":smscode-core:domain",
+    ":smscode-core:hook",
+    ":smscode-core:rule",
+    ":smscode-core:runtime",
+    ":smscode-core:verification",
+    ":smscode-core:xposed",
+)
+val forbiddenMainModuleDependencies = buildMap {
+    put(":runtime", setOf(":app", ":core"))
+    put(":core", setOf(":app"))
+    sharedCoreProjectPaths.forEach { sourcePath ->
+        put(sourcePath, setOf(":app", ":core", ":runtime", ":magisk-ui-kit"))
+    }
+}
+
+gradle.projectsEvaluated {
+    val violations = forbiddenMainModuleDependencies.flatMap { (sourcePath, forbiddenTargets) ->
+        val sourceProject = project(sourcePath)
+        sourceProject.configurations.flatMap { configuration ->
+            configuration.dependencies.withType(ProjectDependency::class.java)
+                .filter { dependency -> dependency.path in forbiddenTargets }
+                .map { dependency ->
+                    "${sourceProject.path}:${configuration.name} -> ${dependency.path}"
+                }
+        }
+    }.distinct().sorted()
+
+    mainModuleDependencyViolations.set(violations)
+}
+
+val verifyMainModuleDependencies = tasks.register("verifyMainModuleDependencies") {
+    group = "verification"
+    description = "Ensure main and shared modules keep the intended Gradle dependency direction."
+
+    val violationsInput = mainModuleDependencyViolations
+    inputs.property("violations", violationsInput)
+
+    doLast {
+        val violations = violationsInput.get()
+        if (violations.isNotEmpty()) {
+            error(
+                buildString {
+                    appendLine("Module dependency boundary violations:")
+                    violations.forEach { appendLine(it) }
+                },
+            )
+        }
+    }
+}
+
+val verifyModuleBoundaries = tasks.register("verifyModuleBoundaries") {
+    group = "verification"
+    description = "Run root module-boundary checks for app/core/runtime and shared smscode-core."
+
+    dependsOn(
+        verifyMainModuleDependencies,
+        ":app:verifyNoLocalVerificationEngine",
+        ":core:verifyNoRuntimeStorageImplLeak",
+        ":runtime:verifyNoComposeUiLeak",
+    )
+}
+
+tasks.register("check") {
+    group = "verification"
+    description = "Run root project verification checks."
+    dependsOn(verifyModuleBoundaries)
 }
 
 tasks.register<Delete>("clean") {

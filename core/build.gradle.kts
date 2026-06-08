@@ -74,6 +74,7 @@ val verifyNoRuntimeStorageImplLeak = tasks.register("verifyNoRuntimeStorageImplL
     description = "Ensure the core module does not directly depend on runtime storage/update implementation types."
 
     val sourceRoot = layout.projectDirectory.dir("src/main/java")
+    val recordSourceRoot = layout.projectDirectory.dir("src/main/java/com/github/magisk317/smscode/ui/record")
     val projectRoot = layout.projectDirectory.asFile
     val bannedRegexes = listOf(
         Regex("""^\s*import\s+com\.github\.magisk317\.smscode\.data\.db\.(AppDatabase|DBManager|DBProvider)\b"""),
@@ -83,8 +84,14 @@ val verifyNoRuntimeStorageImplLeak = tasks.register("verifyNoRuntimeStorageImplL
         Regex("""\bcom\.github\.magisk317\.smscode\.feature\.backup\."""),
         Regex("""\bcom\.github\.magisk317\.smscode\.feature\.store\."""),
     )
+    val recordBannedRegexes = listOf(
+        Regex("""^\s*import\s+com\.github\.magisk317\.smscode\.runtime\.RuntimeStorageFacade\b"""),
+        Regex("""\bRuntimeStorageFacade\.dbManager\("""),
+        Regex("""^\s*import\s+io\.github\.magisk317\.smscode\.runtime\.common\.utils\.JsonUtils\b"""),
+    )
 
     inputs.dir(sourceRoot)
+    inputs.dir(recordSourceRoot)
 
     doLast {
         val violations = sourceRoot
@@ -99,12 +106,25 @@ val verifyNoRuntimeStorageImplLeak = tasks.register("verifyNoRuntimeStorageImplL
                         null
                     }
                 }
+            } + recordSourceRoot
+            .asFileTree
+            .matching { include("**/*.kt") }
+            .files
+            .flatMap { source ->
+                source.readLines().mapIndexedNotNull { index, line ->
+                    if (recordBannedRegexes.any { regex -> regex.containsMatchIn(line) }) {
+                        "${source.relativeTo(projectRoot)}:${index + 1}: ${line.trim()}"
+                    } else {
+                        null
+                    }
+                }
             }
 
         if (violations.isNotEmpty()) {
             error(
                 buildString {
                     appendLine("Core must not directly depend on runtime storage/update implementation types or runtime feature internals:")
+                    appendLine("Record UI must go through RuntimeCodeRecordFacade for storage and export operations:")
                     violations.forEach { appendLine(it) }
                 },
             )
