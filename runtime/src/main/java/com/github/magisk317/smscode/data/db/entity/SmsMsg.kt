@@ -5,8 +5,11 @@ import android.os.Parcelable
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.github.magisk317.smscode.common.utils.XLog
 import io.github.magisk317.smscode.domain.utils.SmsMessageUtils
 import io.github.magisk317.smscode.runtime.common.record.SmsMsgRecord
+import io.github.magisk317.smscode.runtime.common.sim.SmsRoutingIntentExtras
+import io.github.magisk317.smscode.runtime.contract.sim.SmsRoutingMetadata
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -61,6 +64,14 @@ data class SmsMsg(
     @SerialName("notifyChannelId")
     override val notifyChannelId: String = "",
 
+    @ColumnInfo(name = "sim_slot", defaultValue = "-1")
+    @SerialName("simSlot")
+    override val simSlot: Int = SmsRoutingMetadata.UNKNOWN_SIM_SLOT,
+
+    @ColumnInfo(name = "sub_id", defaultValue = "0")
+    @SerialName("subId")
+    override val subId: Int = SmsRoutingMetadata.UNKNOWN_SUB_ID,
+
     @ColumnInfo(name = "forward_status")
     @SerialName("forwardStatus")
     override var forwardStatus: Int = FORWARD_STATUS_NONE,
@@ -109,11 +120,20 @@ data class SmsMsg(
 
             sender = Normalizer.normalize(sender, Normalizer.Form.NFC)
             body = Normalizer.normalize(body, Normalizer.Form.NFC)
+            val routing = SmsRoutingIntentExtras.readFrom(intent)
+            XLog.i(
+                "Diag SMS routing from intent: simSlot=%d subId=%d extras=%s",
+                routing.simSlot ?: SmsRoutingMetadata.UNKNOWN_SIM_SLOT,
+                routing.subId ?: SmsRoutingMetadata.UNKNOWN_SUB_ID,
+                intent.extras != null,
+            )
 
             return SmsMsg(
                 sender = sender,
                 body = body,
                 date = date,
+                simSlot = routing.simSlot ?: SmsRoutingMetadata.UNKNOWN_SIM_SLOT,
+                subId = routing.subId ?: SmsRoutingMetadata.UNKNOWN_SUB_ID,
                 msgType = MSG_TYPE_SMS,
             )
         }

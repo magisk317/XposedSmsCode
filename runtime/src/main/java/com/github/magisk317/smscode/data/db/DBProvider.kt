@@ -319,6 +319,8 @@ class DBProvider : ContentProvider() {
             smsCode = values.getBoundedString("sms_code", MAX_CODE_LENGTH) ?: existing.smsCode,
             packageName = values.getBoundedString("package_name", MAX_PACKAGE_NAME_LENGTH) ?: existing.packageName,
             notifyChannelId = values.getBoundedString("notify_channel_id", MAX_CHANNEL_ID_LENGTH) ?: existing.notifyChannelId,
+            simSlot = values.getIntInRange("sim_slot", -1, 1, existing.simSlot),
+            subId = values.getNonNegativeInt("sub_id", existing.subId),
             msgType = values.getAllowedInt("msg_type", SMS_MSG_TYPES, existing.msgType),
             callType = values.getAllowedInt("call_type", CALL_TYPES, existing.callType),
             forwardStatus = values.getAllowedInt("forward_status", FORWARD_STATUSES, existing.forwardStatus),
@@ -419,6 +421,8 @@ class DBProvider : ContentProvider() {
         smsCode = getBoundedString("sms_code", MAX_CODE_LENGTH),
         packageName = getBoundedString("package_name", MAX_PACKAGE_NAME_LENGTH),
         notifyChannelId = getBoundedString("notify_channel_id", MAX_CHANNEL_ID_LENGTH).orEmpty(),
+        simSlot = getIntInRange("sim_slot", -1, 1, -1),
+        subId = getNonNegativeInt("sub_id", 0),
         msgType = getAllowedInt("msg_type", SMS_MSG_TYPES, SmsMsg.MSG_TYPE_SMS),
         callType = getAllowedInt("call_type", CALL_TYPES, 0),
         forwardStatus = getAllowedInt("forward_status", FORWARD_STATUSES, SmsMsg.FORWARD_STATUS_NONE),
@@ -440,6 +444,16 @@ class DBProvider : ContentProvider() {
     private fun ContentValues?.getAllowedInt(key: String, allowedValues: Set<Int>, defaultValue: Int): Int {
         val value = this?.getAsInteger(key) ?: return defaultValue
         return value.takeIf { it in allowedValues } ?: defaultValue
+    }
+
+    private fun ContentValues?.getNonNegativeInt(key: String, defaultValue: Int): Int {
+        val value = this?.getAsInteger(key) ?: return defaultValue
+        return value.coerceAtLeast(0)
+    }
+
+    private fun ContentValues?.getIntInRange(key: String, minValue: Int, maxValue: Int, defaultValue: Int): Int {
+        val value = this?.getAsInteger(key) ?: return defaultValue
+        return value.takeIf { it in minValue..maxValue } ?: defaultValue
     }
 
     private fun columnsOrDefault(
