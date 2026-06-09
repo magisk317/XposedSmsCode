@@ -86,7 +86,6 @@ jobs:
           git push origin "HEAD:${PR_HEAD_REF}"
 
       - name: Enable auto-merge for dependency PRs
-        if: steps.refresh_lockfiles.outputs.changed != 'true'
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
           GH_TOKEN: ${{ secrets.GH_PAT != '' && secrets.GH_PAT || secrets.GITHUB_TOKEN }}

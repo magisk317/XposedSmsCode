@@ -18,8 +18,6 @@
                 "minor",
                 "patch"
             ],
-            "automerge": true,
-            "automergeType": "pr",
             "recreateWhen": "always",
             "groupName": "other non-major dependencies",
             "groupSingleUpdates": false,
