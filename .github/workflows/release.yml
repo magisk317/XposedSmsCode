@@ -241,12 +241,25 @@ jobs:
           set -euo pipefail
           release_name="${{ steps.extract_version.outputs.version_name }}"
           notes_file="release-notes.md"
+          changelog_file="release-changelog.md"
+          cat > "$notes_file" <<'EOF'
+          <div align="center">
+            <a href="https://play.google.com/store/apps/details?id=com.github.tianma8023.xposed.smscode">
+              <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="80"/>
+            </a>
+            <a href="https://github.com/magisk317/XposedSmsCode/releases/tag/${{ github.ref_name }}">
+              <img src="https://raw.githubusercontent.com/machiav3lli/oandbackupx/master/badge_github.png" alt="Get it on GitHub" height="80"/>
+            </a>
+          </div>
+          EOF
+          printf '\n' >> "$notes_file"
           awk -v version="$release_name" '
             $0 == "---" && found { exit }
             found { print; next }
             index($0, "## [" version "]") == 1 { found = 1; print; next }
             END { if (!found) exit 1 }
-          ' docs/CHANGELOG.md > "$notes_file"
+          ' docs/CHANGELOG.md > "$changelog_file"
+          cat "$changelog_file" >> "$notes_file"
           if [[ ! -s "$notes_file" ]]; then
             echo "ERROR: empty release notes for $release_name" >&2
             exit 1
@@ -425,12 +438,25 @@ jobs:
           set -euo pipefail
           release_name="${{ steps.extract_version.outputs.version_name }}"
           notes_file="release-notes.md"
+          changelog_file="release-changelog.md"
+          cat > "$notes_file" <<'EOF'
+          <div align="center">
+            <a href="https://play.google.com/store/apps/details?id=com.github.tianma8023.xposed.smscode">
+              <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="80"/>
+            </a>
+            <a href="https://github.com/magisk317/XposedSmsCode/releases/tag/${{ github.ref_name }}">
+              <img src="https://raw.githubusercontent.com/machiav3lli/oandbackupx/master/badge_github.png" alt="Get it on GitHub" height="80"/>
+            </a>
+          </div>
+          EOF
+          printf '\n' >> "$notes_file"
           awk -v version="$release_name" '
             $0 == "---" && found { exit }
             found { print; next }
             index($0, "## [" version "]") == 1 { found = 1; print; next }
             END { if (!found) exit 1 }
-          ' docs/CHANGELOG.md > "$notes_file"
+          ' docs/CHANGELOG.md > "$changelog_file"
+          cat "$changelog_file" >> "$notes_file"
           if [[ ! -s "$notes_file" ]]; then
             echo "ERROR: empty release notes for $release_name" >&2
             exit 1
