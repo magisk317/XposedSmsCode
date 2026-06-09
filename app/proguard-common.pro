@@ -2,6 +2,10 @@
     int getModuleVersion();
 }
 
+-keep class com.github.magisk317.smscode.xp.LibXposedEntry {
+    *;
+}
+
 
 # ==========================
 # jsoup proguard start
