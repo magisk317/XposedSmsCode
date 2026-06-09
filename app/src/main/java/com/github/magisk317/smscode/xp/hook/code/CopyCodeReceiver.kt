@@ -6,9 +6,11 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.widget.Toast
 import androidx.core.content.ContextCompat
-import io.github.magisk317.smscode.runtime.common.utils.ClipboardUtils
 import com.github.magisk317.smscode.core.R
 import com.github.tianma8023.xposed.smscode.BuildConfig
+import io.github.magisk317.smscode.runtime.common.utils.ClipboardUtils
+import io.github.magisk317.smscode.verification.CodeNotificationActionHandler
+import io.github.magisk317.smscode.verification.CodeNotificationActionPayload
 
 /**
  * Receiver for copy code when notification clicked
@@ -16,25 +18,15 @@ import com.github.tianma8023.xposed.smscode.BuildConfig
 class CopyCodeReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-        val action = intent.action
-        if (ACTION_COPY_CODE == action) {
-            val smsCode = intent.getStringExtra(EXTRA_KEY_CODE)
-            val notificationId = intent.getIntExtra(EXTRA_NOTIFICATION_ID, -1)
-
-            // cancel notification
-            if (notificationId != -1) {
-                val manager = context.getSystemService(
-                    Context.NOTIFICATION_SERVICE,
-                ) as android.app.NotificationManager?
-                manager?.cancel(notificationId)
-            }
-            // copy to clipboard
-            smsCode?.let {
-                ClipboardUtils.copyToClipboard(context, it)
-                // show toast
-                showToast(context, it)
-            }
-        }
+        CodeNotificationActionHandler.handleCopyCodeReceiverIntent(
+            context = context,
+            intent = intent,
+            expectedAction = ACTION_COPY_CODE,
+            copyCode = { smsCode ->
+                ClipboardUtils.copyToClipboard(context, smsCode)
+                showToast(context, smsCode)
+            },
+        )
     }
 
     private fun showToast(context: Context, smsCode: String) {
@@ -44,18 +36,18 @@ class CopyCodeReceiver : BroadcastReceiver() {
 
     companion object {
         private const val ACTION_COPY_CODE = "${BuildConfig.APPLICATION_ID}.ACTION_COPY_CODE"
-        private const val EXTRA_KEY_CODE = "extra_key_code"
-        private const val EXTRA_NOTIFICATION_ID = "extra_notification_id"
 
         private val instance: CopyCodeReceiver by lazy { CopyCodeReceiver() }
 
         @JvmStatic
         fun createIntent(context: Context, smsCode: String?, notificationId: Int): Intent =
-            Intent(context, CopyCodeReceiver::class.java).apply {
-                action = ACTION_COPY_CODE
-                putExtra(EXTRA_KEY_CODE, smsCode)
-                putExtra(EXTRA_NOTIFICATION_ID, notificationId)
-            }
+            CodeNotificationActionPayload.createCopyCodeIntent(
+                context = context,
+                receiverClass = CopyCodeReceiver::class.java,
+                action = ACTION_COPY_CODE,
+                smsCode = smsCode,
+                notificationId = notificationId,
+            )
 
         @JvmStatic
         fun registerMe(context: Context) {

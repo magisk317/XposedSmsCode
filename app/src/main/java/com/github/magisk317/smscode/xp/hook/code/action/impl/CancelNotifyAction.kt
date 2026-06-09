@@ -3,8 +3,9 @@ package com.github.magisk317.smscode.xp.hook.code.action.impl
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Bundle
-import io.github.magisk317.smscode.xposed.utils.XLog
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
+import io.github.magisk317.smscode.verification.CodeNotificationActionPayload
+import io.github.magisk317.smscode.xposed.utils.XLog
 import com.github.magisk317.smscode.xp.hook.code.action.CallableAction
 
 class CancelNotifyAction(pluginContext: Context, phoneContext: Context, smsMsg: SmsMsg) :
@@ -22,7 +23,7 @@ class CancelNotifyAction(pluginContext: Context, phoneContext: Context, smsMsg: 
     }
 
     private fun cancelNotification() {
-        if (mNotificationId != NOTIFICATION_NONE) {
+        if (CodeNotificationActionPayload.hasNotificationId(mNotificationId, NOTIFICATION_NONE)) {
             val manager = mPhoneContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager?
             manager?.let {
                 it.cancel(mNotificationId)
@@ -32,6 +33,6 @@ class CancelNotifyAction(pluginContext: Context, phoneContext: Context, smsMsg: 
     }
 
     companion object {
-        private const val NOTIFICATION_NONE = -0xff
+        private const val NOTIFICATION_NONE = CodeNotificationActionPayload.AUTO_CANCEL_NOTIFICATION_ID_MISSING
     }
 }

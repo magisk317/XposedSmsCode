@@ -1,10 +1,10 @@
 package com.github.magisk317.smscode.xp.hook.code
 
-import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import io.github.magisk317.smscode.xposed.utils.XLog
+import io.github.magisk317.smscode.verification.CodeNotificationActionHandler
+import io.github.magisk317.smscode.verification.CodeNotificationActionPayload
 
 /**
  * Fallback auto-cancel when the module process is not alive.
@@ -12,21 +12,17 @@ import io.github.magisk317.smscode.xposed.utils.XLog
 class AutoCancelReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-        val notificationId = intent.getIntExtra(EXTRA_NOTIFICATION_ID, NOTIFICATION_NONE)
-        if (notificationId == NOTIFICATION_NONE) return
-
-        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager?
-        manager?.cancel(notificationId)
-        XLog.i("Notification auto cancelled by alarm, id=%d", notificationId)
+        CodeNotificationActionHandler.handleAutoCancelReceiverIntent(context, intent)
     }
 
     companion object {
-        const val EXTRA_NOTIFICATION_ID = "extra_notification_id"
-        private const val NOTIFICATION_NONE = -0xff
+        const val EXTRA_NOTIFICATION_ID = CodeNotificationActionPayload.EXTRA_NOTIFICATION_ID
 
         fun createIntent(context: Context, notificationId: Int): Intent =
-            Intent(context, AutoCancelReceiver::class.java).apply {
-                putExtra(EXTRA_NOTIFICATION_ID, notificationId)
-            }
+            CodeNotificationActionPayload.createAutoCancelIntent(
+                context = context,
+                receiverClass = AutoCancelReceiver::class.java,
+                notificationId = notificationId,
+            )
     }
 }

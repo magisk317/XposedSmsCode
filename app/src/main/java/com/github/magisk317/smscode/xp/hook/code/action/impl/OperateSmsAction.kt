@@ -35,16 +35,14 @@ class OperateSmsAction(pluginContext: Context, phoneContext: Context, smsMsg: Sm
             smsMsg = mSmsMsg.toVerificationMessage(),
             deleteSmsEnabledReader = PrefsReader::deleteSmsEnabled,
             markAsReadEnabledReader = PrefsReader::markAsReadEnabled,
-        ).execute(forcedOp.toOperation())
+        ).execute(
+            OperateSmsActionHelper.resolveForcedOperation(
+                forcedOperation = forcedOp,
+                deleteValue = OP_DELETE,
+                markAsReadValue = OP_MARK_AS_READ,
+            ),
+        )
         return null
-    }
-
-    private fun Int?.toOperation(): OperateSmsActionHelper.Operation? {
-        return when (this) {
-            OP_DELETE -> OperateSmsActionHelper.Operation.DELETE
-            OP_MARK_AS_READ -> OperateSmsActionHelper.Operation.MARK_AS_READ
-            else -> null
-        }
     }
 
     companion object {

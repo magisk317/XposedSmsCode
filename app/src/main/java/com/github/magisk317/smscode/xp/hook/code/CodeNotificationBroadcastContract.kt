@@ -6,7 +6,13 @@ import com.github.tianma8023.xposed.smscode.BuildConfig
 import io.github.magisk317.smscode.verification.CodeNotificationPayload
 
 object CodeNotificationBroadcastContract {
-    const val ACTION_SHOW_CODE_NOTIFICATION = "${BuildConfig.APPLICATION_ID}.ACTION_SHOW_CODE_NOTIFICATION"
+    private val sharedContract = CodeNotificationPayload.BroadcastContract(
+        applicationId = BuildConfig.APPLICATION_ID,
+        receiverClassName = CodeNotificationReceiver::class.java.name,
+    )
+
+    val ACTION_SHOW_CODE_NOTIFICATION: String =
+        sharedContract.actionShowCodeNotification
 
     const val EXTRA_SENDER = CodeNotificationPayload.EXTRA_SENDER
     const val EXTRA_COMPANY = CodeNotificationPayload.EXTRA_COMPANY
@@ -25,18 +31,13 @@ object CodeNotificationBroadcastContract {
         retentionTimeMs: Long,
         token: String?,
     ): Intent =
-        CodeNotificationPayload.fillIntent(
-            Intent(ACTION_SHOW_CODE_NOTIFICATION).apply {
-            setClassName(BuildConfig.APPLICATION_ID, CodeNotificationReceiver::class.java.name)
-            },
-            CodeNotificationPayload.Payload(
-                sender = sender,
-                company = company,
-                smsCode = smsCode,
-                notificationId = notificationId,
-                autoCancelEnabled = autoCancelEnabled,
-                retentionTimeMs = retentionTimeMs,
-                token = token,
-            ),
+        sharedContract.createIntent(
+            sender = sender,
+            company = company,
+            smsCode = smsCode,
+            notificationId = notificationId,
+            autoCancelEnabled = autoCancelEnabled,
+            retentionTimeMs = retentionTimeMs,
+            token = token,
         )
 }

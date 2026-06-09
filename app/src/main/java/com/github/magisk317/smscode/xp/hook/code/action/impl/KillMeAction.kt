@@ -9,6 +9,7 @@ import android.os.Handler
 import android.os.Looper
 import com.github.magisk317.smscode.receiver.KillSelfControlReceiver
 import com.github.magisk317.smscode.runtime.RuntimePrefsFacade as PrefsReader
+import io.github.magisk317.smscode.runtime.contract.autoinput.AutoInputResultBroadcastContract
 import io.github.magisk317.smscode.xposed.hook.system.SystemInputInjectorHook
 import io.github.magisk317.smscode.xposed.utils.XLog
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
@@ -72,11 +73,20 @@ class KillMeAction(
             }
             mResultReceiver = object : BroadcastReceiver() {
                 override fun onReceive(context: Context, intent: Intent) {
-                    if (intent.action != SystemInputInjectorHook.resolveActionAutoInputResult()) return
-                    if (intent.getLongExtra("attemptId", -1L) != resolvedAttemptId) return
+                    val result = when (
+                        val receiverResult = AutoInputResultBroadcastContract.readResult(
+                            intent = intent,
+                            expectedAction = SystemInputInjectorHook.resolveActionAutoInputResult(),
+                        )
+                    ) {
+                        AutoInputResultBroadcastContract.ReceiverResult.Ignored -> return
+                        AutoInputResultBroadcastContract.ReceiverResult.MissingAttemptId -> return
+                        is AutoInputResultBroadcastContract.ReceiverResult.Accepted -> receiverResult.result
+                    }
+                    if (result.attemptId != resolvedAttemptId) return
 
-                    val success = intent.getBooleanExtra("success", false)
-                    val reason = intent.getStringExtra("reason").orEmpty().ifBlank { "n/a" }
+                    val success = result.success
+                    val reason = result.reason.orEmpty().ifBlank { "n/a" }
                     XLog.w(
                         "KillMeAction: auto-input result received: attemptId=%d success=%s reason=%s",
                         resolvedAttemptId,

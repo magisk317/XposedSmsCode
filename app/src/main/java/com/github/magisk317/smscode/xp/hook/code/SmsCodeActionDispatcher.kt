@@ -10,12 +10,11 @@ import com.github.magisk317.smscode.xp.hook.code.action.impl.NotifyAction
 import com.github.magisk317.smscode.xp.hook.code.action.impl.OperateSmsAction
 import com.github.magisk317.smscode.xp.hook.code.action.impl.RecordSmsAction
 import com.github.magisk317.smscode.xp.hook.code.action.impl.ToastAction
+import io.github.magisk317.smscode.verification.AutoInputDispatchGuard
+import io.github.magisk317.smscode.verification.SmsCodeActionScheduler
 import io.github.magisk317.smscode.verification.SmsCodeActionDispatcher as SharedSmsCodeActionDispatcher
 import io.github.magisk317.smscode.verification.SmsCodePostParseCoordinator
-import io.github.magisk317.smscode.verification.SmsMessageDedupKeys
-import io.github.magisk317.smscode.xposed.utils.XLog
 import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.TimeUnit
 
 internal object SmsCodeActionDispatcher {
     fun dispatchParsedSmsActions(
@@ -116,17 +115,21 @@ internal object SmsCodeActionDispatcher {
         deduplicateEnabled: Boolean,
         attemptId: Long? = null,
     ) {
-        if (!claimAutoInputDispatch(pluginContext, smsMsg, delayMs = 0L)) {
-            return
-        }
-        AutoInputAction(
+        SmsCodeActionScheduler.runAutoInputNowIfClaimed(
             pluginContext = pluginContext,
-            phoneContext = phoneContext,
             smsMsg = smsMsg,
-            deduplicateEnabled = deduplicateEnabled,
-            dispatchDelayMs = 0L,
-            attemptId = attemptId,
-        ).call()
+            claimDelayMs = 0L,
+            claimAutoInputDispatch = ::claimAutoInputDispatch,
+        ) {
+            AutoInputAction(
+                pluginContext = pluginContext,
+                phoneContext = phoneContext,
+                smsMsg = smsMsg,
+                deduplicateEnabled = deduplicateEnabled,
+                dispatchDelayMs = 0L,
+                attemptId = attemptId,
+            )
+        }
     }
 
     private fun scheduleAutoInput(
@@ -138,10 +141,13 @@ internal object SmsCodeActionDispatcher {
         deduplicateEnabled: Boolean,
         attemptId: Long? = null,
     ) {
-        if (!claimAutoInputDispatch(pluginContext, smsMsg, delayMs)) {
-            return
-        }
-        executor.schedule(
+        SmsCodeActionScheduler.scheduleAutoInputIfClaimed(
+            executor = executor,
+            pluginContext = pluginContext,
+            smsMsg = smsMsg,
+            delayMs = delayMs,
+            claimAutoInputDispatch = ::claimAutoInputDispatch,
+        ) {
             AutoInputAction(
                 pluginContext = pluginContext,
                 phoneContext = phoneContext,
@@ -149,10 +155,8 @@ internal object SmsCodeActionDispatcher {
                 deduplicateEnabled = deduplicateEnabled,
                 dispatchDelayMs = delayMs,
                 attemptId = attemptId,
-            ),
-            delayMs,
-            TimeUnit.MILLISECONDS,
-        )
+            )
+        }
     }
 
     private fun runRecordNow(
@@ -180,7 +184,7 @@ internal object SmsCodeActionDispatcher {
         eventId: String,
         deduplicateEnabled: Boolean,
     ) {
-        executor.schedule(
+        SmsCodeActionScheduler.scheduleNow(executor) {
             RecordSmsAction(
                 pluginContext = pluginContext,
                 phoneContext = phoneContext,
@@ -188,10 +192,8 @@ internal object SmsCodeActionDispatcher {
                 eventId = eventId,
                 enabled = true,
                 deduplicateEnabled = deduplicateEnabled,
-            ),
-            0,
-            TimeUnit.MILLISECONDS,
-        )
+            )
+        }
     }
 
     private fun scheduleNotification(
@@ -201,7 +203,7 @@ internal object SmsCodeActionDispatcher {
         smsMsg: SmsMsg,
         plan: SmsCodePostParseCoordinator.NotificationPlan,
     ) {
-        executor.schedule(
+        SmsCodeActionScheduler.scheduleNow(executor) {
             NotifyAction(
                 pluginContext = pluginContext,
                 phoneContext = phoneContext,
@@ -209,10 +211,8 @@ internal object SmsCodeActionDispatcher {
                 enabled = true,
                 autoCancelEnabled = plan.autoCancelDelayMs != null,
                 retentionTimeMs = plan.autoCancelDelayMs ?: 0L,
-            ),
-            0,
-            TimeUnit.MILLISECONDS,
-        )
+            )
+        }
     }
 
     private fun scheduleOperateSmsActions(
@@ -222,12 +222,11 @@ internal object SmsCodeActionDispatcher {
         smsMsg: SmsMsg,
         delays: List<Long>,
     ) {
-        delays.forEach { delayMs ->
-            executor.schedule(
-                OperateSmsAction(pluginContext, phoneContext, smsMsg),
-                delayMs,
-                TimeUnit.MILLISECONDS,
-            )
+        SmsCodeActionScheduler.scheduleEachDelay(
+            executor = executor,
+            delays = delays,
+        ) {
+            OperateSmsAction(pluginContext, phoneContext, smsMsg)
         }
     }
 
@@ -236,32 +235,26 @@ internal object SmsCodeActionDispatcher {
         smsMsg: SmsMsg,
         delayMs: Long,
     ): Boolean {
-        val key = SmsMessageDedupKeys.buildMessageKey(smsMsg.toVerificationMessage())
-        if (key.isBlank()) return true
-        val windowMs = (delayMs + AUTO_INPUT_DISPATCH_GUARD_EXTRA_MS)
-            .coerceAtLeast(AUTO_INPUT_DISPATCH_GUARD_MIN_WINDOW_MS)
-        val claim = SharedRuntimeGate.claimWithinWindow(
-            context = pluginContext,
-            fileName = SHARED_AUTO_INPUT_DISPATCH_GUARD_FILE_NAME,
-            key = key,
-            windowMs = windowMs,
-            maxEntries = MAX_AUTO_INPUT_DISPATCH_GUARD_ENTRIES,
-        )
-        if (claim.claimed) {
-            return true
+        return AutoInputDispatchGuard.claim(
+            pluginContext = pluginContext,
+            smsMsg = smsMsg.toVerificationMessage(),
+            delayMs = delayMs,
+        ) { context, fileName, keys, windowMs, maxEntries ->
+            SharedRuntimeGate.claimAllWithinWindow(
+                context = context,
+                fileName = fileName,
+                keys = keys,
+                windowMs = windowMs,
+                maxEntries = maxEntries,
+            ).toAutoInputClaim()
         }
-        XLog.w(
-            "Auto input dispatch skipped: key=%s ageMs=%d delayMs=%d windowMs=%d",
-            key,
-            claim.ageMs ?: -1L,
-            delayMs,
-            windowMs,
-        )
-        return false
     }
 
-    private const val SHARED_AUTO_INPUT_DISPATCH_GUARD_FILE_NAME = "auto_input_dispatch_guard"
-    private const val AUTO_INPUT_DISPATCH_GUARD_EXTRA_MS = 5_000L
-    private const val AUTO_INPUT_DISPATCH_GUARD_MIN_WINDOW_MS = 8_000L
-    private const val MAX_AUTO_INPUT_DISPATCH_GUARD_ENTRIES = 128
+    private fun SharedRuntimeGate.ClaimResult.toAutoInputClaim(): AutoInputDispatchGuard.ClaimResult {
+        return AutoInputDispatchGuard.ClaimResult(
+            claimed = claimed,
+            ageMs = ageMs,
+            key = key,
+        )
+    }
 }
