@@ -2,9 +2,11 @@ package com.github.magisk317.smscode.data.db
 
 import android.content.Context
 import com.github.magisk317.smscode.data.db.dao.AppInfoDao
+import com.github.magisk317.smscode.data.db.dao.AutoInputEventDao
 import com.github.magisk317.smscode.data.db.dao.SmsCodeRuleDao
 import com.github.magisk317.smscode.data.db.dao.SmsMsgDao
 import com.github.magisk317.smscode.data.db.entity.AppInfo
+import com.github.magisk317.smscode.data.db.entity.AutoInputEvent
 import com.github.magisk317.smscode.data.db.entity.SmsCodeRule
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
 import kotlinx.coroutines.Dispatchers
@@ -20,6 +22,7 @@ class DBManager private constructor(context: Context) {
     private val mSmsCodeRuleDao: SmsCodeRuleDao = mDatabase.smsCodeRuleDao()
     private val mSmsMsgDao: SmsMsgDao = mDatabase.smsMsgDao()
     private val mAppInfoDao: AppInfoDao = mDatabase.appInfoDao()
+    private val mAutoInputEventDao: AutoInputEventDao = mDatabase.autoInputEventDao()
 
 
     suspend fun updateSmsCodeRuleSuspend(smsCodeRule: SmsCodeRule) {
@@ -146,6 +149,32 @@ class DBManager private constructor(context: Context) {
         }
         mSmsMsgDao.update(smsMsg)
         1
+    }
+
+    fun insertAutoInputAttempt(
+        id: Long? = null,
+        recordId: Long?,
+        packageName: String?,
+        codeLength: Int,
+        attemptAt: Long = System.currentTimeMillis(),
+    ): Long = runBlocking {
+        mAutoInputEventDao.insert(
+            AutoInputEvent(
+                id = id?.takeIf { it > 0L } ?: 0L,
+                recordId = recordId,
+                packageName = packageName,
+                codeLength = codeLength,
+                attemptAt = attemptAt,
+            ),
+        )
+    }
+
+    fun updateAutoInputResult(
+        attemptId: Long,
+        success: Boolean,
+        reason: String?,
+    ): Int = runBlocking {
+        mAutoInputEventDao.updateResult(attemptId, success, reason)
     }
 
     fun queryAllSmsMsgFlow(): Flow<List<SmsMsg>> = mSmsMsgDao.getAllFlow()

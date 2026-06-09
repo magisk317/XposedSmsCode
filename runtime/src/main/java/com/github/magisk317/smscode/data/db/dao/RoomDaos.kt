@@ -3,6 +3,7 @@ package com.github.magisk317.smscode.data.db.dao
 import androidx.room.*
 import com.github.magisk317.smscode.forwarder.entity.ForwardFilterRule
 import com.github.magisk317.smscode.data.db.entity.AppInfo
+import com.github.magisk317.smscode.data.db.entity.AutoInputEvent
 import com.github.magisk317.smscode.data.db.entity.NotifyRouteRule
 import com.github.magisk317.smscode.data.db.entity.SmsCodeRule
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
@@ -165,6 +166,15 @@ interface SmsMsgDao {
 
     @Delete
     suspend fun deleteInTx(msgs: List<SmsMsg>)
+}
+
+@Dao
+interface AutoInputEventDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(event: AutoInputEvent): Long
+
+    @Query("UPDATE auto_input_event SET success = :success, fail_reason = :reason WHERE id = :id")
+    suspend fun updateResult(id: Long, success: Boolean, reason: String?): Int
 }
 
 @Dao

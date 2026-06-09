@@ -1,9 +1,13 @@
 package com.github.magisk317.smscode.xp.hook.code.helper
 
+import android.os.Handler
+import android.os.Looper
+import android.widget.Toast
 import io.github.magisk317.smscode.verification.AutoInputBroadcastHelper
 import io.github.magisk317.smscode.xposed.utils.XLog
 
 object InputHelper {
+    private val mainHandler = Handler(Looper.getMainLooper())
 
     @JvmStatic
     fun sendText(
@@ -29,17 +33,14 @@ object InputHelper {
     fun sendToast(
         context: android.content.Context,
         text: String?,
-        duration: Int = android.widget.Toast.LENGTH_LONG,
+        duration: Int = Toast.LENGTH_LONG,
     ) {
         if (text.isNullOrEmpty()) return
-        val intent = android.content.Intent(
-            io.github.magisk317.smscode.xposed.hook.system.SystemInputInjectorHook.resolveActionShowToast(),
-        )
-        intent.putExtra("text", text)
-        intent.putExtra("duration", duration)
-        context.sendBroadcast(intent)
+        mainHandler.post {
+            Toast.makeText(context, text, duration).show()
+        }
         XLog.i(
-            "Sent Broadcast ACTION_SHOW_TOAST with textLength: %d, duration: %d",
+            "Show toast locally with textLength: %d, duration: %d",
             text.length,
             duration,
         )

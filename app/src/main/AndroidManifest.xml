@@ -121,6 +121,14 @@
             android:exported="true" />
 
         <receiver
+            android:name="com.github.magisk317.smscode.receiver.AutoInputResultReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.github.magisk317.smscode.ACTION_AUTO_INPUT_RESULT" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
             android:name="com.github.magisk317.smscode.receiver.PackageReplacedReceiver"
             android:exported="false">
             <intent-filter>

@@ -8,6 +8,7 @@ import com.github.magisk317.smscode.runtime.RuntimePrefsFacade as PrefsReader
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.smscode.verification.CodeWorker as SharedCodeWorker
 import io.github.magisk317.smscode.verification.SmsCodePostParseCoordinator
+import io.github.magisk317.smscode.verification.SmsParseActionRunner
 import io.github.magisk317.smscode.xposed.utils.XLog
 import com.github.magisk317.smscode.xp.hook.code.action.impl.KillMeAction
 import com.github.magisk317.smscode.xp.hook.code.action.impl.SmsParseAction
@@ -96,21 +97,22 @@ class CodeWorker(
         val smsParseAction = SmsParseAction(pluginContext, phoneContext, null)
         smsParseAction.setSmsIntent(smsIntent)
         smsParseAction.setDeduplicateEnabled(deduplicateEnabled)
-        val parseBundle = executor.schedule(smsParseAction, 0, TimeUnit.MILLISECONDS).get() ?: return null
-        if (parseBundle.getBoolean(SmsParseAction.SMS_DUPLICATED, false)) {
-            return SharedCodeWorker.ParseOutcome<VerificationSmsMsg>(duplicated = true)
-        }
-        val verificationSmsMsg = BundleCompat.getParcelable(
-            parseBundle,
-            SmsParseAction.SMS_MSG,
-            VerificationSmsMsg::class.java,
-        )
-        val smsMsg = verificationSmsMsg?.raw
-            ?: BundleCompat.getParcelable(parseBundle, SmsParseAction.SMS_MSG, SmsMsg::class.java)
-            ?: return null
-        return SharedCodeWorker.ParseOutcome(
-            smsMsg = smsMsg.toVerificationMessage(),
-            duplicated = false,
+
+        return SmsParseActionRunner.runWithTimeout(
+            executor = executor,
+            runAction = smsParseAction::action,
+            duplicatedReader = { parseBundle -> parseBundle.getBoolean(SmsParseAction.SMS_DUPLICATED, false) },
+            messageReader = { parseBundle ->
+                val verificationSmsMsg = BundleCompat.getParcelable(
+                    parseBundle,
+                    SmsParseAction.SMS_MSG,
+                    VerificationSmsMsg::class.java,
+                )
+                val smsMsg = verificationSmsMsg?.raw
+                    ?: BundleCompat.getParcelable(parseBundle, SmsParseAction.SMS_MSG, SmsMsg::class.java)
+                    ?: return@runWithTimeout null
+                smsMsg.toVerificationMessage()
+            },
         )
     }
 

@@ -14,11 +14,13 @@ import com.github.magisk317.smscode.forwarder.database.ext.ConvertersSenderList
 import com.github.magisk317.smscode.forwarder.entity.Rule
 import com.github.magisk317.smscode.forwarder.entity.Sender
 import com.github.magisk317.smscode.data.db.dao.AppInfoDao
+import com.github.magisk317.smscode.data.db.dao.AutoInputEventDao
 import com.github.magisk317.smscode.data.db.dao.ForwardFilterRuleDao
 import com.github.magisk317.smscode.data.db.dao.NotifyRouteRuleDao
 import com.github.magisk317.smscode.data.db.dao.SmsCodeRuleDao
 import com.github.magisk317.smscode.data.db.dao.SmsMsgDao
 import com.github.magisk317.smscode.data.db.entity.AppInfo
+import com.github.magisk317.smscode.data.db.entity.AutoInputEvent
 import com.github.magisk317.smscode.data.db.entity.NotifyRouteRule
 import com.github.magisk317.smscode.data.db.entity.SmsCodeRule
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
@@ -28,17 +30,19 @@ import io.github.magisk317.smscode.xposed.utils.XLog
     SmsCodeRule::class,
     SmsMsg::class,
     AppInfo::class,
+    AutoInputEvent::class,
     NotifyRouteRule::class,
     ForwardFilterRule::class,
     Sender::class,
     Rule::class
-], version = 20, exportSchema = false)
+], version = 21, exportSchema = false)
 @TypeConverters(ConvertersDate::class, ConvertersSenderList::class)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun smsCodeRuleDao(): SmsCodeRuleDao
     abstract fun smsMsgDao(): SmsMsgDao
     abstract fun appInfoDao(): AppInfoDao
+    abstract fun autoInputEventDao(): AutoInputEventDao
     abstract fun notifyRouteRuleDao(): NotifyRouteRuleDao
     abstract fun forwardFilterRuleDao(): ForwardFilterRuleDao
     abstract fun ruleDao(): RuleDao
@@ -381,6 +385,36 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_20_21 = object : androidx.room.migration.Migration(20, 21) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                execSqlSafely(
+                    db = db,
+                    sql = "CREATE TABLE IF NOT EXISTS auto_input_event (" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "record_id INTEGER, " +
+                        "package_name TEXT, " +
+                        "code_length INTEGER NOT NULL DEFAULT 0, " +
+                        "attempt_at INTEGER NOT NULL, " +
+                        "success INTEGER, " +
+                        "fail_reason TEXT" +
+                        ")",
+                    migration = "20_21",
+                )
+                execSqlSafely(
+                    db = db,
+                    sql = "CREATE INDEX IF NOT EXISTS index_auto_input_attempt_at " +
+                        "ON auto_input_event(attempt_at)",
+                    migration = "20_21",
+                )
+                execSqlSafely(
+                    db = db,
+                    sql = "CREATE INDEX IF NOT EXISTS index_auto_input_record " +
+                        "ON auto_input_event(record_id)",
+                    migration = "20_21",
+                )
+            }
+        }
+
         private fun execSqlSafely(
             db: androidx.sqlite.db.SupportSQLiteDatabase,
             sql: String,
@@ -420,6 +454,7 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_17_18,
                     MIGRATION_18_19,
                     MIGRATION_19_20,
+                    MIGRATION_20_21,
                 )
                 .enableMultiInstanceInvalidation()
                 .build().also { instance = it }

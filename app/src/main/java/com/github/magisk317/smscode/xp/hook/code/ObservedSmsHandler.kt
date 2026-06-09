@@ -14,6 +14,7 @@ import com.github.magisk317.smscode.common.utils.SmsCodeUtils
 import com.github.magisk317.smscode.data.db.DBProvider
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
 import com.github.magisk317.smscode.runtime.RuntimeStorageFacade
+import io.github.magisk317.smscode.domain.utils.SmsCodeParsedMetadataResolver
 import io.github.magisk317.smscode.xposed.utils.XLog
 import io.github.magisk317.smscode.verification.ObservedInboxScanRecord
 import io.github.magisk317.smscode.verification.ObservedSmsHandler as SharedObservedSmsHandler
@@ -325,25 +326,15 @@ internal class ObservedSmsHandler(
             phoneContext: Context,
             body: String,
         ): Pair<String, String?> {
-            val companyCandidates = SmsCodeUtils.parseCompanyCandidates(body)
-                .map { it.trim().trim('【', '】', '[', ']') }
-                .filter { it.isNotBlank() }
-            var company = SmsCodeUtils.parseCompany(body)
-                .trim()
-                .trim('【', '】', '[', ']')
-            var resolvedPackage: String? = null
-            for (candidate in companyCandidates) {
-                val pkg = SmsCodeUtils.findPackageNameByLabel(phoneContext, candidate)
-                if (!pkg.isNullOrBlank()) {
-                    company = candidate
-                    resolvedPackage = pkg
-                    break
-                }
-            }
-            if (resolvedPackage.isNullOrBlank()) {
-                resolvedPackage = SmsCodeUtils.findPackageNameByLabel(phoneContext, company)
-            }
-            return company to resolvedPackage
+            val metadata = SmsCodeParsedMetadataResolver.resolve(
+                body = body,
+                parseCompanyCandidates = SmsCodeUtils::parseCompanyCandidates,
+                parseCompany = SmsCodeUtils::parseCompany,
+                findPackageNameByLabel = { label ->
+                    SmsCodeUtils.findPackageNameByLabel(phoneContext, label)
+                },
+            )
+            return metadata.company to metadata.packageName
         }
     }
 }

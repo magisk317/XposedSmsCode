@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import com.github.magisk317.smscode.runtime.RuntimePrefsFacade as PrefsReader
+import com.github.magisk317.smscode.runtime.RuntimeStorageFacade
 import io.github.magisk317.smscode.runtime.common.utils.SharedRuntimeGate
 import io.github.magisk317.smscode.xposed.utils.XLog
 import com.github.magisk317.smscode.data.db.DBProvider
@@ -51,11 +52,36 @@ class AutoInputAction(
             packageBlockedChecker = ::isPackageBlocked,
             autoEnterReader = PrefsReader::autoEnterCodeEnabled,
             inputIntervalReader = PrefsReader::getAutoInputCodeIntervalMs,
-            inputSender = { context, code, autoEnter, inputIntervalMs, _ ->
-                InputHelper.sendText(context, code, autoEnter, inputIntervalMs, attemptId)
+            attemptRecorder = { smsMsg, foregroundPackage ->
+                recordAutoInputAttempt(smsMsg.raw, foregroundPackage)
             },
+            inputSender = InputHelper::sendText,
         ).run()
         return null
+    }
+
+    private fun recordAutoInputAttempt(smsMsg: SmsMsg, foregroundPackage: String?): Long? {
+        return runCatching {
+            val db = RuntimeStorageFacade.dbManager(mPluginContext)
+            val timestamp = if (smsMsg.date > 0L) smsMsg.date else System.currentTimeMillis()
+            val recordId = db.querySmsMsgByFingerprint(
+                sender = smsMsg.sender,
+                body = smsMsg.body,
+                date = timestamp,
+                msgType = SmsMsg.MSG_TYPE_SMS,
+            )?.id
+            db.insertAutoInputAttempt(
+                id = attemptId,
+                recordId = recordId,
+                packageName = foregroundPackage,
+                codeLength = smsMsg.smsCode?.length ?: 0,
+            )
+        }.onFailure { error ->
+            XLog.w(
+                "Insert auto input attempt failed: %s",
+                error.message ?: error.javaClass.simpleName,
+            )
+        }.getOrNull() ?: attemptId
     }
 
     private fun isPackageBlocked(packageName: String): Boolean {

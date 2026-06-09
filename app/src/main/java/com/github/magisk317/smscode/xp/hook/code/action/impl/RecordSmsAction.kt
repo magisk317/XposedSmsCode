@@ -134,31 +134,23 @@ class RecordSmsAction(
             },
             hasCodeDuplicateInWindow = { code, from, to ->
                 runCatching {
-                    db.querySmsMsgByCodeInRange(code, from, to)
-                        .sortedByDescending { existing ->
+                    val candidates = db.querySmsMsgByCodeInRange(code, from, to)
+                    RecordSmsDedupHelper.hasCrossSourceCodeDuplicate(
+                        incoming = smsMsg,
+                        candidates = candidates,
+                        scorer = { existing, incoming ->
                             CodeRecordSimilarityUtils.crossSourceMatchScore(
                                 existingCode = existing.smsCode,
                                 existingBody = existing.body,
                                 existingCompany = existing.company,
                                 existingSender = existing.sender,
-                                incomingCode = smsMsg.smsCode,
-                                incomingBody = smsMsg.body,
-                                incomingCompany = smsMsg.company,
-                                incomingSender = smsMsg.sender,
+                                incomingCode = incoming.smsCode,
+                                incomingBody = incoming.body,
+                                incomingCompany = incoming.company,
+                                incomingSender = incoming.sender,
                             )
                         }
-                        .any { existing ->
-                            CodeRecordSimilarityUtils.crossSourceMatchScore(
-                                existingCode = existing.smsCode,
-                                existingBody = existing.body,
-                                existingCompany = existing.company,
-                                existingSender = existing.sender,
-                                incomingCode = smsMsg.smsCode,
-                                incomingBody = smsMsg.body,
-                                incomingCompany = smsMsg.company,
-                                incomingSender = smsMsg.sender,
-                            ) > 0
-                        }
+                    )
                 }.getOrDefault(false)
             },
             hasCodeDuplicateByPackage = { code, pkg, from, to ->

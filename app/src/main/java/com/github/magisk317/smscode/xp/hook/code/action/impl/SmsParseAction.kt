@@ -7,6 +7,7 @@ import com.github.magisk317.smscode.common.utils.SmsCodeUtils
 import io.github.magisk317.smscode.runtime.common.utils.StringUtils
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
 import com.github.magisk317.smscode.runtime.RuntimeStorageFacade
+import io.github.magisk317.smscode.domain.utils.SmsCodeParsedMetadataResolver
 import io.github.magisk317.smscode.verification.SmsParseAction as SharedSmsParseAction
 import com.github.magisk317.smscode.xp.hook.code.action.CallableAction
 import com.github.magisk317.smscode.xp.hook.code.VerificationSmsMsg
@@ -57,29 +58,19 @@ class SmsParseAction(pluginContext: Context, phoneContext: Context, smsMsg: SmsM
                 if (smsCode.isBlank()) {
                     return@SharedSmsParseAction null
                 }
-                val companyCandidates = SmsCodeUtils.parseCompanyCandidates(msgBody)
-                    .map { it.trim().trim('【', '】', '[', ']') }
-                    .filter { it.isNotBlank() }
-                var company = SmsCodeUtils.parseCompany(msgBody)
-                    .trim()
-                    .trim('【', '】', '[', ']')
-                var resolvedPackageName: String? = null
-                for (candidate in companyCandidates) {
-                    val pkg = SmsCodeUtils.findPackageNameByLabel(phoneContext, candidate)
-                    if (!pkg.isNullOrBlank()) {
-                        company = candidate
-                        resolvedPackageName = pkg
-                        break
-                    }
-                }
-                if (resolvedPackageName.isNullOrBlank()) {
-                    resolvedPackageName = SmsCodeUtils.findPackageNameByLabel(phoneContext, company)
-                }
+                val metadata = SmsCodeParsedMetadataResolver.resolve(
+                    body = msgBody,
+                    parseCompanyCandidates = SmsCodeUtils::parseCompanyCandidates,
+                    parseCompany = SmsCodeUtils::parseCompany,
+                    findPackageNameByLabel = { label ->
+                        SmsCodeUtils.findPackageNameByLabel(phoneContext, label)
+                    },
+                )
                 smsMsg.raw.copy(
                     smsCode = smsCode,
-                    company = company,
+                    company = metadata.company,
                     date = timestamp,
-                    packageName = resolvedPackageName,
+                    packageName = metadata.packageName,
                 ).toVerificationMessage()
             },
         ).parse() ?: return null
