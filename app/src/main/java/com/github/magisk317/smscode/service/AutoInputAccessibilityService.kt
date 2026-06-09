@@ -140,13 +140,20 @@ class AutoInputAccessibilityService : AccessibilityService() {
             )
             receiverRegistered = true
             XLog.d("Accessibility receiver registered: priority=%d", RECEIVER_PRIORITY_ACCESSIBILITY)
-        } catch (throwable: Throwable) {
-            XLog.d(
-                "Accessibility receiver register failed: %s",
-                throwable.message ?: throwable.javaClass.simpleName,
-            )
-            throw throwable
+        } catch (exception: SecurityException) {
+            logReceiverRegisterFailure(exception)
+            throw exception
+        } catch (exception: IllegalArgumentException) {
+            logReceiverRegisterFailure(exception)
+            throw exception
         }
+    }
+
+    private fun logReceiverRegisterFailure(throwable: Throwable) {
+        XLog.d(
+            "Accessibility receiver register failed: %s",
+            throwable.message ?: throwable.javaClass.simpleName,
+        )
     }
 
     private fun unregisterAutoInputReceiver() {
