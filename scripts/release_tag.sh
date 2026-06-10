@@ -199,7 +199,7 @@ delete_remote_tag_if_exists() {
 delete_local_tag_if_exists
 delete_remote_tag_if_exists
 
-git -C "$ROOT_DIR" tag -a "$TAG_NAME" -m "$TAG_NAME"
+git -C "$ROOT_DIR" tag -s "$TAG_NAME" -m "$TAG_NAME"
 git -C "$ROOT_DIR" push "$REMOTE_NAME" "$current_branch"
 git -C "$ROOT_DIR" push "$REMOTE_NAME" "$TAG_NAME"
 
