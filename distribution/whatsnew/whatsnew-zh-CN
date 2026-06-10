@@ -1,5 +1,7 @@
-- 升级至 3.2.10（116）。
-- 正式收敛为单一 libxposed API 101+ 发布线，legacy 构建迁移到 legacy 分支。
-- 共享 smscode 模块改用短目录，并同步子模块指针。
-- 修复 app-owned 通知兜底、MIUI Phone 短信覆盖与记录页空状态本地化。
-- 新增 Play Billing 捐赠支持，Release/TG 发布说明改读当前 changelog 段落。
+- 升级至 3.2.11（117）。
+- 重构共享模块短信分发并支持多卡 SIM 路由。
+- 修复发版中被错误剥离的 libxposed 并在更新后自动重启 Hook。
+- 对齐通知动作行为，补充自动输入日志，重构记录查询 API。
+- 记录页新增 SIM 卡槽备注；修复底部导航栏 UI 遮挡。
+- 修复获取发送者时的 SDK 版本校验；同步 Netty 安全更新。
+- https://github.com/magisk317/XposedSmsCode/releases

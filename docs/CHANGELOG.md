@@ -4,9 +4,15 @@
 
 ---
 
-## [v3.2.11] - Unreleased
+## [v3.2.11] - 2026-06-10
 - 版本：`versionCode 117` / `versionName 3.2.11`。
-- 开发中。
+- `[hook/sms]` 重构并复用共享模块（`smscode-core`）的短信分发、黑名单去重与操作逻辑，补齐短信 SIM 卡路由透传，增强多卡场景处理。
+- `[xposed]` 修复正式发版（Release build）中错误剥离/混淆 libxposed 入口类的问题；修复应用更新后目标 Hook 进程未能自动重启的问题。
+- `[notification/auto-input]` 对齐验证码通知动作（Action）处理行为；无障碍自动输入链路补充生命周期诊断日志，并优化广播注册异常的捕获逻辑。
+- `[records/ui]` 验证码与短信记录持久化并新增 SIM 卡槽备注展示；记录查询逻辑统一重构至 Runtime 门面；修复 Edge-to-Edge 设计在底部导航栏的遮挡问题。
+- `[architecture/security]` 修复发送者 UID（sendingUid）获取前缺乏 SDK 版本校验导致的兼容性异常；同步安全更新 Netty 基础组件以修复相关漏洞；整理工程模块边界文档并新增架构层级阻断测试。
+
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.2.10...v3.2.11
 
 ---
 

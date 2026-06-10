@@ -69,14 +69,7 @@ fun KoverProjectExtension.configureProjectKoverVerification() {
     }
 }
 
-dependencyLocking {
-    lockAllConfigurations()
-}
-
 subprojects {
-    dependencyLocking {
-        lockAllConfigurations()
-    }
     fun Project.configureDetekt() {
         apply(plugin = "dev.detekt")
         extensions.configure<dev.detekt.gradle.extensions.DetektExtension> {

@@ -1,5 +1,7 @@
-- Updated to 3.2.10 (116).
-- Single libxposed API 101+ release line; legacy builds moved to the legacy branch.
-- Shortened shared smscode module paths and refreshed submodule pointers.
-- Fixed app-owned notification fallback, MIUI Phone SMS coverage, and record empty-state localization.
-- Added Play Billing donation support and release/TG notes from changelog.
+- Updated to 3.2.11 (117).
+- Refactored shared SMS dispatch and added SIM routing for dual-SIM.
+- Fixed libxposed strip in releases and hook restart post-update.
+- Aligned notification actions, added auto-input logs, refactored records API.
+- Added SIM slot remarks to records; fixed bottom nav UI overlap.
+- Fixed UID fetch with SDK version check; synced Netty security updates.
+- https://github.com/magisk317/XposedSmsCode/releases

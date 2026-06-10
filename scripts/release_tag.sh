@@ -139,12 +139,25 @@ sync_branch_with_remote() {
     return 0
   fi
 
-  echo "Local branch diverged from remote; rebasing onto $remote_ref"
-  if ! git -C "$ROOT_DIR" rebase "$remote_ref"; then
-    echo "ERROR: failed to rebase onto $remote_ref. Resolve conflicts or run 'git rebase --abort'." >&2
-    exit 1
+  echo "Local branch diverged from remote!"
+  read -p "Do you want to FORCE PUSH local changes to overwrite remote? (y/n) " -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    echo "Force pushing to $remote_ref..."
+    if ! git -C "$ROOT_DIR" push --force-with-lease "$REMOTE_NAME" "$current_branch"; then
+      echo "ERROR: Force push failed." >&2
+      exit 1
+    fi
+    # Force push syncs remote to local, no re-check needed.
+    return 0
+  else
+    echo "Attempting to rebase onto $remote_ref..."
+    if ! git -C "$ROOT_DIR" rebase "$remote_ref"; then
+      echo "ERROR: failed to rebase onto $remote_ref. Resolve conflicts or run 'git rebase --abort'." >&2
+      exit 1
+    fi
+    BRANCH_SYNC_CHANGED=1
   fi
-  BRANCH_SYNC_CHANGED=1
 }
 
 sync_branch_with_remote
