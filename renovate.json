@@ -9,7 +9,7 @@
     "minimumReleaseAge": "24 hours",
     "internalChecksFilter": "strict",
     "prCreation": "immediate",
-    "baseBranches": [
+    "baseBranchPatterns": [
         "beta"
     ],
     "packageRules": [
