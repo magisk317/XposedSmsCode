@@ -36,7 +36,11 @@ class CodeNotificationReceiver : BroadcastReceiver() {
                 }
             },
             sentFromUidProvider = {
-                getSentFromUid()
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    getSentFromUid()
+                } else {
+                    -1
+                }
             },
             channelName = context.getString(R.string.channel_name_smscode_notification),
             visualConfig = CodeNotificationDeliveryHelper.VisualConfig(
