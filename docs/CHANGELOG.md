@@ -4,6 +4,10 @@
 
 ---
 
+## [v3.2.12] - Unreleased
+- 版本：`versionCode 118` / `versionName 3.2.12`。
+- 开发中。
+
 ## [v3.2.11] - 2026-06-10
 - 版本：`versionCode 117` / `versionName 3.2.11`。
 - `[hook/sms]` 重构并复用共享模块（`smscode-core`）的短信分发、黑名单去重与操作逻辑，补齐短信 SIM 卡路由透传，增强多卡场景处理。
