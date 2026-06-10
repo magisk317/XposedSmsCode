@@ -5,4 +5,5 @@ module.exports = {
   requireConfig: "required",
   allowedUnsafeExecutions: ["gradleWrapper"],
   gitAuthor: "magisk317 <93979778+magisk317@users.noreply.github.com>",
+  allowedPostUpgradeCommands: ["^bash scripts/refresh_gradle_lockfiles\\.sh$"],
 };
