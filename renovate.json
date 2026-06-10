@@ -12,6 +12,15 @@
     "baseBranchPatterns": [
         "beta"
     ],
+    "postUpgradeTasks": {
+        "commands": [
+            "bash scripts/refresh_gradle_lockfiles.sh"
+        ],
+        "fileFilters": [
+            "**/*.lockfile"
+        ],
+        "executionMode": "update"
+    },
     "packageRules": [
         {
             "matchUpdateTypes": [
