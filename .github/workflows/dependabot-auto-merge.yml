@@ -54,37 +54,6 @@ jobs:
           validate-wrappers: false
           allow-snapshot-wrappers: true
 
-      - name: Refresh Gradle lockfiles
-        id: refresh_lockfiles
-        run: |
-          bash scripts/refresh_gradle_lockfiles.sh
-          if git diff --quiet -- \
-            gradle.lockfile \
-            settings-gradle.lockfile \
-            app/gradle.lockfile \
-            core/gradle.lockfile \
-            runtime/gradle.lockfile; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Commit refreshed lockfiles
-        if: steps.refresh_lockfiles.outputs.changed == 'true'
-        env:
-          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add \
-            gradle.lockfile \
-            settings-gradle.lockfile \
-            app/gradle.lockfile \
-            core/gradle.lockfile \
-            runtime/gradle.lockfile
-          git commit -m "chore(deps): refresh Gradle lockfiles"
-          git push origin "HEAD:${PR_HEAD_REF}"
-
       - name: Enable auto-merge for dependency PRs
         env:
           PR_URL: ${{github.event.pull_request.html_url}}

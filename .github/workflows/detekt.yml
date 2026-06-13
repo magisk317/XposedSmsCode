@@ -57,7 +57,7 @@ jobs:
 
       - name: Run Detekt
         continue-on-error: true
-        run: bash scripts/with_workspace_gradle_lock.sh detekt --continue
+        run: ./gradlew detekt --continue
 
       - name: Check reports existence
         id: check

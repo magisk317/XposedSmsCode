@@ -162,10 +162,6 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Refresh Gradle lockfiles
-        if: steps.changes.outputs.changed == 'true'
-        run: bash scripts/refresh_gradle_lockfiles.sh
-
       - name: Create PR with dependency force updates
         id: cpr
         uses: peter-evans/create-pull-request@v8
@@ -184,7 +180,6 @@ jobs:
             Automated dependency security fix run.
             - Removed force rules when natural resolution already matches forced versions.
             - Added or updated force rules for dependencies with open security alerts (Dependabot).
-            - Refreshed committed Gradle dependency lockfiles after dependency graph changes.
 
       - name: Write remediation summary
         if: always()

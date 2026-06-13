@@ -28,17 +28,21 @@ jobs:
         with:
           validate-wrappers: false
           allow-snapshot-wrappers: true
-      - name: Build, Test, and verify dependency lockfiles
+      - name: Build and test project
         run: >
-          bash scripts/refresh_gradle_lockfiles.sh
-      - name: Ensure dependency lockfiles are committed
-        run: |
-          git diff --exit-code -- \
-            gradle.lockfile \
-            settings-gradle.lockfile \
-            app/gradle.lockfile \
-            core/gradle.lockfile \
-            runtime/gradle.lockfile
+          ./gradlew
+          --warning-mode all
+          :core:check
+          :runtime:check
+          :app:check
+          :app:compileGithubDebugAndroidTestKotlin
+          :app:compilePlayDebugAndroidTestKotlin
+          :core:compilePlayDebugUnitTestKotlin
+          :core:generatePlayDebugUnitTestStubRFile
+          :runtime:compileGithubDebugAndroidTestKotlin
+          :runtime:compilePlayDebugAndroidTestKotlin
+          assembleGithubDebug
+          -PbuildSplits
       - name: Write build summary
         if: always()
         run: |
