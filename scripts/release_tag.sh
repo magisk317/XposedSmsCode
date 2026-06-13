@@ -18,7 +18,7 @@ run_pre_push_checks() {
   echo "Running pre-push CI command..."
   (
     cd "$ROOT_DIR"
-    bash scripts/with_workspace_gradle_lock.sh --ignore-submodule-lockfiles --warning-mode all \
+    ./gradlew --warning-mode all \
       :core:check \
       :runtime:check \
       :app:check \
@@ -29,7 +29,7 @@ run_pre_push_checks() {
   echo "Running pre-push Detekt command..."
   (
     cd "$ROOT_DIR"
-    bash scripts/with_workspace_gradle_lock.sh \
+    ./gradlew \
       :app:detekt \
       :core:detekt \
       :runtime:detekt \

@@ -5,8 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 cd "$ROOT_DIR"
 
-bash scripts/with_workspace_gradle_lock.sh \
-  --ignore-submodule-lockfiles \
+./gradlew \
   verifyModuleBoundaries \
   :smscode-core:domain:testDebugUnitTest \
   :smscode-core:verification:detekt \
