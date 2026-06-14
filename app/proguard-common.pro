@@ -6,6 +6,10 @@
     *;
 }
 
+-keep class io.github.magisk317.smscode.xposed.hookapi.LibXposedHookApi102 {
+    *;
+}
+
 
 # ==========================
 # jsoup proguard start
