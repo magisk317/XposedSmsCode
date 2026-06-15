@@ -1,5 +1,5 @@
 [submodule "smscode-core"]
-	path = smscode-core
+	path = smscode/core
 	url = https://github.com/magisk317/smscode-core
 [submodule "magisk-ui-kit"]
 	path = magisk-ui-kit
@@ -8,6 +8,6 @@
 	path = build-logic
 	url = https://github.com/magisk317/magisk-build-logic.git
 [submodule "smscode-rules"]
-	path = smscode-rules
+	path = smscode/rules
 	url = https://github.com/magisk317/smscode-rules.git
 	branch = main

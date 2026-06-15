@@ -21,7 +21,7 @@ val allowConflictBypass = findProperty("allowConflictBypass")
     ?: false
 val generatedSmsCodeRulesAssetsDir = layout.buildDirectory.dir("generated/smscodeRulesAssets")
 val syncSmsCodeRulesAssets = tasks.register<Sync>("syncSmsCodeRulesAssets") {
-    val rulesRoot = rootProject.layout.projectDirectory.dir("smscode-rules")
+    val rulesRoot = rootProject.layout.projectDirectory.dir("smscode/rules")
     from(rulesRoot.dir("_meta")) {
         into("meta")
     }
