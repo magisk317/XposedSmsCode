@@ -79,7 +79,9 @@ subprojects {
             config.setFrom(files("${rootProject.projectDir}/config/detekt/detekt.yml"))
         }
         dependencies {
-            "detektPlugins"(catalog.detekt.rules.ktlint)
+            "detektPlugins"(catalog.detekt.rules.ktlint) {
+                exclude(group = "dev.detekt", module = "ktlint-repackage")
+            }
         }
         tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
             ignoreFailures = true
