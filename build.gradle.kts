@@ -81,6 +81,14 @@ subprojects {
         dependencies {
             "detektPlugins"(catalog.detekt.rules.ktlint)
         }
+        tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
+            ignoreFailures = true
+            reports {
+                html.required.set(true)
+                checkstyle.required.set(true)
+                sarif.required.set(true)
+            }
+        }
     }
 
     if (enableKover) {

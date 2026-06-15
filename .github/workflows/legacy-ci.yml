@@ -34,8 +34,7 @@ jobs:
 
       - name: Build Legacy Debug APK
         run: >
-          bash scripts/with_workspace_gradle_lock.sh
-          --ignore-submodule-lockfiles
+          ./gradlew
           --warning-mode all
           assembleGithubLegacyDebug
 

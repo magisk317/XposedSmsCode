@@ -10,12 +10,13 @@ import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface.ModuleLoadedParam
 import io.github.libxposed.api.XposedModuleInterface.PackageReadyParam
+import io.github.libxposed.api.XposedModuleInterface
 import io.github.libxposed.api.XposedModuleInterface.SystemServerStartingParam
 import io.github.magisk317.smscode.xposed.hook.BaseHook
 import io.github.magisk317.smscode.xposed.hook.permission.PermissionGranterHook
 import io.github.magisk317.smscode.xposed.hook.system.SystemInputInjectorHook
 import io.github.magisk317.smscode.xposed.hookapi.HookEnv
-import io.github.magisk317.smscode.xposed.hookapi.LibXposedHookApiFactory
+import io.github.magisk317.smscode.xposed.hookapi.LibXposedHookApi
 import io.github.magisk317.smscode.xposed.hookapi.LoadParam
 import io.github.magisk317.smscode.xposed.hookapi.ZygoteParam
 import io.github.magisk317.smscode.xposed.runtime.CoreRuntime
@@ -25,8 +26,7 @@ import io.github.magisk317.smscode.xposed.utils.XLog
 class LibXposedEntry : XposedModule {
     private companion object {
         private const val TAG = "XSmsCode"
-        private const val MIN_LIBXPOSED_API_VERSION = 101
-        private const val PREFERRED_LIBXPOSED_API_VERSION = 102
+        private const val MIN_LIBXPOSED_API_VERSION = 102
         private const val REMOTE_PREFS_GROUP = "xposed_prefs"
     }
 
@@ -45,6 +45,7 @@ class LibXposedEntry : XposedModule {
 
     private var processName: String = "unknown"
     private var moduleActive: Boolean = false
+    private val loadedPackages = java.util.concurrent.ConcurrentHashMap<String, ClassLoader>()
 
     override fun onModuleLoaded(param: ModuleLoadedParam) {
         val api = apiVersion
@@ -53,14 +54,9 @@ class LibXposedEntry : XposedModule {
             moduleActive = false
             return
         }
-        if (api < PREFERRED_LIBXPOSED_API_VERSION) {
-            Log.w(TAG, "running API 101 fallback: apiVersion=$api")
-        } else {
-            Log.i(TAG, "running API 102 path: apiVersion=$api")
-        }
 
         installCoreRuntime()
-        HookEnv.init(LibXposedHookApiFactory.create(this, api))
+        HookEnv.init(LibXposedHookApi(this))
         moduleActive = true
         val remotePrefsProvider = { runCatching { getRemotePreferences(REMOTE_PREFS_GROUP) }.getOrNull() }
         PrefsReader.setRemotePrefsProvider(remotePrefsProvider)
@@ -90,8 +86,33 @@ class LibXposedEntry : XposedModule {
 
     override fun onPackageReady(param: PackageReadyParam) {
         if (!moduleActive) return
+        loadedPackages[param.packageName] = param.classLoader
         val loadParam = LoadParam(param.packageName, processName, param.classLoader)
         dispatchLoad(loadParam)
+    }
+
+    override fun onHotReloading(param: XposedModuleInterface.HotReloadingParam): Boolean {
+        if (!moduleActive) return false
+        param.setSavedInstanceState(Pair(processName, HashMap(loadedPackages)))
+        return true
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun onHotReloaded(param: XposedModuleInterface.HotReloadedParam) {
+        installCoreRuntime()
+        val hookApi = HookEnv.api as? LibXposedHookApi ?: return
+        hookApi.beginHotReload(param.oldHookHandles)
+        
+        val state = param.savedInstanceState as? Pair<String, Map<String, ClassLoader>>
+        if (state != null) {
+            processName = state.first
+            state.second.forEach { (pkg, cl) ->
+                dispatchLoad(LoadParam(pkg, processName, cl))
+            }
+        }
+        
+        val removed = hookApi.finishHotReload()
+        Log.i(TAG, "onHotReloaded: replaced hooks, removed $removed stale hooks")
     }
 
     private fun dispatchLoad(loadParam: LoadParam) {
