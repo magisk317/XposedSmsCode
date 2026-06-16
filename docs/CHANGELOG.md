@@ -4,9 +4,12 @@
 
 ---
 
-## [v3.2.12] - Unreleased
-- 版本：`versionCode 118` / `versionName 3.2.12`。
-- 开发中。
+## [v3.3.0] - 2026-06-16
+- 版本：`versionCode 119` / `versionName 3.3.0`。
+- ⚠️ **重要提示**：本版本仅支持 LibXposed API 102，低于此版本的用户请务必升级框架（[点击下载最新框架](https://lsposed.zip)）。
+- `[xposed]` 升级适配 LibXposed API 102，并完整实现模块热重载 (Hot Reload) 能力，不再保留 API 101 支持。
+- `[build]` 优化工程结构，将各共享子模块收敛至 `smscode/` 目录。
+- `[deps]` 升级核心与非主要依赖库，包含自动化 lockfile 清理等。
 
 ## [v3.2.11] - 2026-06-10
 - 版本：`versionCode 117` / `versionName 3.2.11`。

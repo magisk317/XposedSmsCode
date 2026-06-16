@@ -1,7 +1,6 @@
-- 升级至 3.2.11（117）。
-- 重构共享模块短信分发并支持多卡 SIM 路由。
-- 修复发版中被错误剥离的 libxposed 并在更新后自动重启 Hook。
-- 对齐通知动作行为，补充自动输入日志，重构记录查询 API。
-- 记录页新增 SIM 卡槽备注；修复底部导航栏 UI 遮挡。
-- 修复获取发送者时的 SDK 版本校验；同步 Netty 安全更新。
+- 升级至 3.3.0（119）。
+- ⚠️ 提示：仅支持 LibXposed API 102，低于此版本的框架请升级（https://lsposed.zip）。
+- 完整实现 API 102 模块热重载 (Hot Reload)，不再保留 API 101 支持。
+- 优化工程结构，共享子模块收敛至 smscode/ 目录。
+- 升级核心与非主要依赖库，清理 lockfile 等相关工作流。
 - https://github.com/magisk317/XposedSmsCode/releases

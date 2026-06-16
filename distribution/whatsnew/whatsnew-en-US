@@ -1,7 +1,6 @@
-- Updated to 3.2.11 (117).
-- Refactored shared SMS dispatch and added SIM routing for dual-SIM.
-- Fixed libxposed strip in releases and hook restart post-update.
-- Aligned notification actions, added auto-input logs, refactored records API.
-- Added SIM slot remarks to records; fixed bottom nav UI overlap.
-- Fixed UID fetch with SDK version check; synced Netty security updates.
+- Updated to 3.3.0 (119).
+- ⚠️ Note: Only supports LibXposed API 102. If your framework is older, please upgrade (https://lsposed.zip).
+- Implemented API 102 Hot Reload and dropped support for API 101.
+- Optimized project structure, moving shared submodules to the smscode/ directory.
+- Upgraded dependencies and cleaned up lockfile workflows.
 - https://github.com/magisk317/XposedSmsCode/releases
