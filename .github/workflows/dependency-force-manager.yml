@@ -1,19 +1,8 @@
-name: Dependency Security Manager
+name: Dependency Force Manager
 
 on:
   schedule:
     - cron: "30 2 * * *" # Daily 02:30 UTC
-  push:
-    branches:
-      - beta
-  pull_request_target:
-    branches:
-      - beta
-    types:
-      - opened
-      - synchronize
-      - reopened
-      - ready_for_review
   workflow_dispatch:
 
 permissions:
@@ -22,32 +11,16 @@ permissions:
   security-events: read
 
 jobs:
-  dependency-security:
-    name: Attempt dependency security remediation
+  dependency-force:
+    name: Attempt dependency remediation
     runs-on: ubuntu-latest
-    continue-on-error: true
+    continue-on-error: false
     concurrency:
-      group: dependency-security-manager-${{ github.ref }}
+      group: dependency-force-manager-${{ github.ref }}
       cancel-in-progress: false
-    if: |
-      !(
-        github.event_name == 'push' &&
-        github.ref == 'refs/heads/beta' &&
-        startsWith(github.event.head_commit.message, 'Merge pull request #') &&
-        (
-          contains(github.event.head_commit.message, 'from magisk317/chore/dependency-force-update') ||
-          contains(github.event.head_commit.message, 'from magisk317/janitor/security-fixes')
-        )
-      ) &&
-      !(
-        github.event_name == 'pull_request_target' &&
-        (
-          github.event.pull_request.head.ref == 'chore/dependency-force-update' ||
-          github.event.pull_request.head.ref == 'janitor/security-fixes'
-        )
-      )
     env:
-      DEPENDENCY_FORCE_CONFIGS: githubDebugRuntimeClasspath,playDebugRuntimeClasspath
+      DEPENDENCY_FORCE_CONFIGS: debugRuntimeClasspath
+      DEPENDENCY_FORCE_PROJECT: ":app"
       DEPENDENCY_FORCE_HISTORICAL_ALERT_COOLDOWN_HOURS: 168
     steps:
       - name: Checkout
@@ -90,6 +63,7 @@ jobs:
             args+=(--config "$config")
           done
           python3 scripts/manage_dependency_forces.py resolve-natural \
+            --project "$DEPENDENCY_FORCE_PROJECT" \
             --forced-json /tmp/forced.json \
             --output /tmp/natural.json \
             --include-build-environment \
@@ -139,6 +113,7 @@ jobs:
             args+=(--config "$config")
           done
           python3 scripts/manage_dependency_forces.py resolve-alert-natural \
+            --project "$DEPENDENCY_FORCE_PROJECT" \
             --alerts-json /tmp/dependabot-alerts.json \
             --output /tmp/security-natural.json \
             "${args[@]}"
@@ -153,31 +128,21 @@ jobs:
             --alerts-json /tmp/dependabot-alerts.json \
             --natural-json /tmp/security-natural.json
 
-      - name: Check whether dependency inputs changed
-        id: changes
-        run: |
-          if git diff --quiet -- build.gradle.kts gradle/libs.versions.toml; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Create PR with dependency force updates
         id: cpr
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GH_PAT != '' && secrets.GH_PAT || github.token }}
           base: beta
-          branch: janitor/security-fixes
+          branch: chore/dependency-force-update
           delete-branch: true
-          title: "chore(security): apply automated dependency security fixes"
-          commit-message: "chore(security): apply automated dependency security fixes"
+          title: "build: update forced dependencies"
+          commit-message: "build: update forced dependencies"
           labels: |
             dependencies
             java
-            security
           body: |
-            Automated dependency security fix run.
+            Automated dependency force maintenance:
             - Removed force rules when natural resolution already matches forced versions.
             - Added or updated force rules for dependencies with open security alerts (Dependabot).
 
@@ -185,7 +150,7 @@ jobs:
         if: always()
         run: |
           {
-            echo "## Dependency security remediation"
+            echo "## Dependency remediation"
             echo ""
             echo "- Trigger: ${{ github.event_name }}"
             echo "- Base ref: ${{ github.base_ref || github.ref_name }}"

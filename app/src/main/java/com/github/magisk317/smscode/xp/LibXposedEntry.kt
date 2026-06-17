@@ -1,6 +1,7 @@
 package com.github.magisk317.smscode.xp
 
 import android.util.Log
+import com.github.magisk317.smscode.runtime.BuildConfig as RuntimeBuildConfig
 import com.github.tianma8023.xposed.smscode.BuildConfig
 import com.github.magisk317.smscode.common.utils.PrefsReader
 import com.github.magisk317.smscode.xp.hook.code.SmsHandlerHook
@@ -70,7 +71,7 @@ class LibXposedEntry : XposedModule {
         }
 
         try {
-            XLog.setLogLevel(BuildConfig.LOG_LEVEL)
+            XLog.setLogLevel(RuntimeBuildConfig.LOG_LEVEL)
         } catch (t: Throwable) {
             XLog.e("", t)
         }
@@ -144,12 +145,11 @@ class LibXposedEntry : XposedModule {
     private fun installCoreRuntime() {
         CoreRuntime.install(object : CoreRuntimeAccess {
             override val logTag: String = BuildConfig.LOG_TAG
-            override val logLevel: Int = BuildConfig.LOG_LEVEL
-            override val logToXposed: Boolean = BuildConfig.LOG_TO_XPOSED
+            override val logLevel: Int = RuntimeBuildConfig.LOG_LEVEL
+            override val logToXposed: Boolean = RuntimeBuildConfig.LOG_TO_XPOSED
             override val debug: Boolean = BuildConfig.DEBUG
             override val applicationId: String = BuildConfig.APPLICATION_ID
             override val actionNamespace: String = "com.github.magisk317.smscode"
         })
     }
 }
-

@@ -2,7 +2,7 @@ plugins {
     id("magisk.android.library")
     id("magisk.android.compose")
     alias(libs.plugins.kotlin.serialization)
-    id("magisk.android.common")
+    id("smscode.android.common")
 }
 
 val minSdkInt = libs.versions.minSdk.get().toInt()

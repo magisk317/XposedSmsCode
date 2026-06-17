@@ -3,6 +3,7 @@ package com.github.magisk317.smscode.xp.hook.code
 import android.content.Context
 import android.content.Intent
 import androidx.core.os.BundleCompat
+import com.github.magisk317.smscode.runtime.BuildConfig as RuntimeBuildConfig
 import com.github.tianma8023.xposed.smscode.BuildConfig
 import com.github.magisk317.smscode.runtime.RuntimePrefsFacade as PrefsReader
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
@@ -32,7 +33,7 @@ class CodeWorker(
             verboseLogReader = PrefsReader::isVerboseLogMode,
             logLevelSetter = XLog::setLogLevel,
             currentLogLevelReader = XLog::getLogLevel,
-            defaultLogLevel = BuildConfig.LOG_LEVEL,
+            defaultLogLevel = RuntimeBuildConfig.LOG_LEVEL,
             parseRunner = ::runSmsParseAction,
             parsedSmsDispatcher = { uiHandler, executor, pluginContext, phoneContext, smsMsg, eventId, plan ->
                 val attemptId = if (plan.autoInputDelayMs != null) System.currentTimeMillis() else null

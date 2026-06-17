@@ -1,6 +1,6 @@
 plugins {
     id("magisk.android.application")
-    id("magisk.android.common")
+    id("smscode.android.common")
     id("magisk.app.signing")
     id("magisk.app.packaging")
     id(libs.plugins.kotlin.parcelize.get().pluginId)

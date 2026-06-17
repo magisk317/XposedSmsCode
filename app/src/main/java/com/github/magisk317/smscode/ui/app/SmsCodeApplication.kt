@@ -5,6 +5,7 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
+import com.github.magisk317.smscode.runtime.BuildConfig as RuntimeBuildConfig
 import com.github.tianma8023.xposed.smscode.BuildConfig
 import com.github.magisk317.smscode.common.constant.PrefConst
 import com.github.magisk317.smscode.common.utils.ActivationDiagnosticsStore
@@ -92,8 +93,8 @@ class SmsCodeApplication : Application() {
     private fun installCoreRuntime() {
         CoreRuntime.install(object : CoreRuntimeAccess {
             override val logTag: String = BuildConfig.LOG_TAG
-            override val logLevel: Int = BuildConfig.LOG_LEVEL
-            override val logToXposed: Boolean = BuildConfig.LOG_TO_XPOSED
+            override val logLevel: Int = RuntimeBuildConfig.LOG_LEVEL
+            override val logToXposed: Boolean = RuntimeBuildConfig.LOG_TO_XPOSED
             override val debug: Boolean = BuildConfig.DEBUG
             override val applicationId: String = BuildConfig.APPLICATION_ID
             override val actionNamespace: String = "com.github.magisk317.smscode"

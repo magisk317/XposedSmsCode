@@ -1,6 +1,5 @@
 name: Dependency Submission
 
-# Replace "Automatic Dependency Submission" to control triggers (e.g. skip Dependabot branches)
 on:
   push:
     branches:
@@ -13,28 +12,26 @@ jobs:
     permissions:
       contents: write
       security-events: read
-      
-    # Skip if dependabot (redundant if restricted to beta branch, but safe)
-    if: github.actor != 'dependabot[bot]'
 
     steps:
       - uses: actions/checkout@v6
         with:
           submodules: recursive
-          fetch-depth: 0
-      
+
       - name: Setup Java
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 26
-          
+
       - name: Generate Dependency Graph
         id: dependency-graph
         uses: gradle/actions/dependency-submission@v6
         with:
           dependency-graph: generate-and-upload
           dependency-graph-exclude-configurations: "^classpath$"
+          additional-arguments: "--no-configuration-cache --stacktrace"
+          cache-disabled: true
 
       - name: Validate generated dependency graph
         env:
@@ -52,23 +49,7 @@ jobs:
         run: |
           snapshot="${{ steps.dependency-graph.outputs.dependency-graph-file }}"
           test -n "${snapshot}"
-
-          max_retries=3
-          attempt=0
-          while [ $((++attempt)) -le "$max_retries" ]; do
-            if gh api \
-              --method POST \
-              "/repos/${GITHUB_REPOSITORY}/dependency-graph/snapshots" \
-              --input "${snapshot}"; then
-              echo "Dependency graph submitted successfully (attempt $attempt/$max_retries)."
-              exit 0
-            fi
-            if [ "$attempt" -lt "$max_retries" ]; then
-              delay=$((attempt * 10))
-              echo "Submit failed (attempt $attempt/$max_retries). Retrying in ${delay}s..."
-              sleep "$delay"
-            fi
-          done
-
-          echo "Failed to submit dependency graph after $max_retries attempts."
-          exit 1
+          gh api \
+            --method POST \
+            "/repos/${GITHUB_REPOSITORY}/dependency-graph/snapshots" \
+            --input "${snapshot}"
