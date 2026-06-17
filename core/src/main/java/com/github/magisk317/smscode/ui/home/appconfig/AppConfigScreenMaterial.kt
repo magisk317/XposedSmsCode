@@ -12,6 +12,7 @@ internal fun AppConfigScreenMaterial(
     onBack: (() -> Unit)? = null,
     refreshTrigger: Int = 0,
     viewModel: AppConfigViewModel = koinViewModel(),
+    scrollChromeState: io.github.magisk317.uikit.scroll.ScrollChromeState? = null,
 ) {
     AppConfigScreenShared(
         hazeState = hazeState,
@@ -19,5 +20,6 @@ internal fun AppConfigScreenMaterial(
         onBack = onBack,
         refreshTrigger = refreshTrigger,
         viewModel = viewModel,
+        scrollChromeState = scrollChromeState,
     )
 }

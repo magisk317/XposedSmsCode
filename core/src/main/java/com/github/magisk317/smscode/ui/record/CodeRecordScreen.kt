@@ -55,13 +55,13 @@ import com.github.magisk317.smscode.data.db.entity.SmsMsg
 import com.github.magisk317.smscode.runtime.RuntimePrefsFacade
 import io.github.magisk317.smscode.runtime.contract.sim.SimSlotLabelFormatter
 import io.github.magisk317.smscode.rule.utils.CodeRecordSimilarityUtils
-import com.github.magisk317.smscode.ui.common.AppIconImage
-import com.github.magisk317.smscode.ui.common.LoadingIndicatorTokens
+import io.github.magisk317.uikit.surface.AppIconImage
+import io.github.magisk317.uikit.foundation.LoadingIndicatorTokens
 import io.github.magisk317.uikit.foundation.LocalSnackbarHostState
 import io.github.magisk317.uikit.common.showLatestSnackbar
-import com.github.magisk317.smscode.ui.common.PolygonMorphLoadingIndicator
-import com.github.magisk317.smscode.ui.common.SessionLoadingRegistry
-import com.github.magisk317.smscode.ui.common.rememberMinDurationLoading
+import io.github.magisk317.uikit.foundation.PolygonMorphLoadingIndicator
+import io.github.magisk317.uikit.foundation.SessionLoadingRegistry
+import io.github.magisk317.uikit.foundation.rememberMinDurationLoading
 import com.github.magisk317.smscode.ui.home.Item
 import com.github.magisk317.smscode.ui.home.RetentionDialog
 import com.github.magisk317.smscode.ui.home.SectionHeader
@@ -97,6 +97,7 @@ fun CodeRecordScreen(
     onBack: (() -> Unit)? = null,
     refreshTrigger: Int = 0,
     viewModel: CodeRecordViewModel = koinViewModel(),
+    scrollChromeState: io.github.magisk317.uikit.scroll.ScrollChromeState? = null,
 ) {
     when (currentUiKitStyle()) {
         UiKitStyle.Miuix -> CodeRecordScreenMiuix(
@@ -105,6 +106,7 @@ fun CodeRecordScreen(
             onBack = onBack,
             refreshTrigger = refreshTrigger,
             viewModel = viewModel,
+            scrollChromeState = scrollChromeState,
         )
 
         UiKitStyle.Expressive -> CodeRecordScreenMaterial(
@@ -113,6 +115,7 @@ fun CodeRecordScreen(
             onBack = onBack,
             refreshTrigger = refreshTrigger,
             viewModel = viewModel,
+            scrollChromeState = scrollChromeState,
         )
     }
 }
@@ -126,6 +129,7 @@ internal fun CodeRecordScreenShared(
     onBack: (() -> Unit)? = null,
     refreshTrigger: Int = 0,
     viewModel: CodeRecordViewModel = koinViewModel(),
+    scrollChromeState: io.github.magisk317.uikit.scroll.ScrollChromeState? = null,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val smsList = uiState.smsList

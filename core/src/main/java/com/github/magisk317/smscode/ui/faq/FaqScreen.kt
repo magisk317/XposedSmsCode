@@ -26,10 +26,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.github.magisk317.smscode.core.R
-import com.github.magisk317.smscode.ui.common.LoadingIndicatorTokens
-import com.github.magisk317.smscode.ui.common.PolygonMorphLoadingIndicator
-import com.github.magisk317.smscode.ui.common.SessionLoadingRegistry
-import com.github.magisk317.smscode.ui.common.rememberMinDurationLoading
+import io.github.magisk317.uikit.foundation.LoadingIndicatorTokens
+import io.github.magisk317.uikit.foundation.PolygonMorphLoadingIndicator
+import io.github.magisk317.uikit.foundation.SessionLoadingRegistry
+import io.github.magisk317.uikit.foundation.rememberMinDurationLoading
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.blur.HazeBlurStyle
 import dev.chrisbanes.haze.hazeEffect

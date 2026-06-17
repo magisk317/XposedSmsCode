@@ -53,11 +53,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.github.magisk317.smscode.core.R
 import com.github.magisk317.smscode.data.db.entity.AppInfo
-import com.github.magisk317.smscode.ui.common.AppIconImage
-import com.github.magisk317.smscode.ui.common.LoadingIndicatorTokens
-import com.github.magisk317.smscode.ui.common.PolygonMorphLoadingIndicator
-import com.github.magisk317.smscode.ui.common.SessionLoadingRegistry
-import com.github.magisk317.smscode.ui.common.rememberMinDurationLoading
+import io.github.magisk317.uikit.surface.AppIconImage
+import io.github.magisk317.uikit.foundation.LoadingIndicatorTokens
+import io.github.magisk317.uikit.foundation.PolygonMorphLoadingIndicator
+import io.github.magisk317.uikit.foundation.SessionLoadingRegistry
+import io.github.magisk317.uikit.foundation.rememberMinDurationLoading
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.blur.HazeBlurStyle
 import dev.chrisbanes.haze.hazeEffect
@@ -82,6 +82,7 @@ fun AppConfigScreen(
     onBack: (() -> Unit)? = null,
     refreshTrigger: Int = 0,
     viewModel: AppConfigViewModel = koinViewModel(),
+    scrollChromeState: io.github.magisk317.uikit.scroll.ScrollChromeState? = null,
 ) {
     when (currentUiKitStyle()) {
         UiKitStyle.Miuix -> AppConfigScreenMiuix(
@@ -90,6 +91,7 @@ fun AppConfigScreen(
             onBack = onBack,
             refreshTrigger = refreshTrigger,
             viewModel = viewModel,
+            scrollChromeState = scrollChromeState,
         )
 
         UiKitStyle.Expressive -> AppConfigScreenMaterial(
@@ -98,6 +100,7 @@ fun AppConfigScreen(
             onBack = onBack,
             refreshTrigger = refreshTrigger,
             viewModel = viewModel,
+            scrollChromeState = scrollChromeState,
         )
     }
 }
@@ -110,6 +113,7 @@ internal fun AppConfigScreenShared(
     onBack: (() -> Unit)? = null,
     refreshTrigger: Int = 0,
     viewModel: AppConfigViewModel = koinViewModel(),
+    scrollChromeState: io.github.magisk317.uikit.scroll.ScrollChromeState? = null,
 ) {
     val apps by viewModel.appsFlow.collectAsStateWithLifecycle()
     val isLoading by viewModel.loadingFlow.collectAsStateWithLifecycle()
@@ -182,6 +186,7 @@ internal fun AppConfigScreenShared(
     }
 
     val listState = rememberLazyListState()
+    io.github.magisk317.uikit.scroll.ReportLazyListScrollToChrome(listState, scrollChromeState)
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val pullToRefreshState = rememberPullToRefreshState()
     val isMiuix = io.github.magisk317.uikit.theme.currentUiKitStyle() ==
