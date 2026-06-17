@@ -1,8 +1,8 @@
 plugins {
-    alias(libs.plugins.android.application)
-    id("smscode.android.common")
-    id("smscode.app.signing")
-    id("smscode.app.packaging")
+    id("magisk.android.application")
+    id("magisk.android.common")
+    id("magisk.app.signing")
+    id("magisk.app.packaging")
     id(libs.plugins.kotlin.parcelize.get().pluginId)
     alias(libs.plugins.ksp)
     id(libs.plugins.kotlin.compose.get().pluginId)

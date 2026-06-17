@@ -1,9 +1,9 @@
 plugins {
-    alias(libs.plugins.android.library)
+    id("magisk.android.library")
     id(libs.plugins.kotlin.serialization.get().pluginId)
     id(libs.plugins.kotlin.parcelize.get().pluginId)
     alias(libs.plugins.ksp)
-    id("smscode.android.common")
+    id("magisk.android.common")
 }
 val relayDownloadUrl = "https://github.com/magisk317/xinyi-relay"
 

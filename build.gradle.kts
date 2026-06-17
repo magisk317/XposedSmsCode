@@ -12,11 +12,6 @@ buildscript {
     }
     configurations.all {
         resolutionStrategy {
-            force("org.ow2.asm:asm:9.10")
-            force("org.ow2.asm:asm-commons:9.10")
-            force("org.ow2.asm:asm-tree:9.10")
-            force("org.ow2.asm:asm-util:9.10")
-            force("org.ow2.asm:asm-analysis:9.10")
             // BEGIN AUTO FORCED DEPENDENCIES (managed by workflow)
             force("io.netty:netty-codec:4.1.133.Final")
             force("io.netty:netty-codec-http:4.1.135.Final")
@@ -36,17 +31,18 @@ buildscript {
 
 plugins {
     id("nl.littlerobots.version-catalog-update") version "1.1.0"
-    alias(libs.plugins.android.application) apply false
-    alias(libs.plugins.android.library) apply false
+    id("magisk.android.application") apply false
+    id("magisk.android.library") apply false
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.parcelize) apply false
-    alias(libs.plugins.kotlin.compose) apply false
+    id("magisk.android.compose") apply false
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.detekt) apply false
     alias(libs.plugins.kover) apply false
     alias(libs.plugins.test.logger) apply false
     id("magisk.maintenance")
+    id("magisk.dependency-governance")
 }
 
 val catalog = libs
@@ -139,12 +135,6 @@ subprojects {
     configurations.all {
         resolutionStrategy {
             force(catalog.apache.httpclient)
-            force("org.ow2.asm:asm:9.10")
-            force("org.ow2.asm:asm-commons:9.10")
-            force("org.ow2.asm:asm-tree:9.10")
-            force("org.ow2.asm:asm-util:9.10")
-            force("org.ow2.asm:asm-analysis:9.10")
-            force("org.jetbrains.kotlin:kotlin-metadata-jvm:$forcedKotlinVersion")
             // BEGIN AUTO FORCED DEPENDENCIES (managed by workflow)
             force("io.netty:netty-codec:4.1.133.Final")
             force("io.netty:netty-codec-http:4.1.135.Final")
