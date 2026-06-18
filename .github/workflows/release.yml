@@ -48,18 +48,9 @@ jobs:
           :app:check
 
   build-github-apk:
-    name: Build GitHub APK (${{ matrix.flavor_id }})
+    name: Build GitHub APK
     needs: [validate-release]
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - flavor_id: github
-            assemble_task: assembleGithubRelease
-            artifact_name: apks-github-release
-            symbols_artifact_name: native-symbols-github
-            symbols_glob: app/build/outputs/native-debug-symbols/githubRelease/native-debug-symbols.zip
     env:
       HAS_RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE != '' }}
     steps:
@@ -87,7 +78,7 @@ jobs:
       - name: Build GitHub APK with Splits
         run: >
           ./gradlew
-          ${{ matrix.assemble_task }}
+          assembleGithubRelease
           -PbuildSplits
         env:
           KEYSTORE_FILE: release.jks
@@ -98,7 +89,7 @@ jobs:
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.artifact_name }}
+          name: apks-github
           path: app/build/outputs/apk/**/release/*.apk
 
       - name: Detect GitHub Native Symbols
@@ -106,7 +97,7 @@ jobs:
         shell: bash
         run: |
           shopt -s nullglob
-          files=(${{ matrix.symbols_glob }})
+          files=(app/build/outputs/native-debug-symbols/githubRelease/native-debug-symbols.zip)
           if (( ${#files[@]} == 0 )); then
             echo "exists=false" >> "$GITHUB_OUTPUT"
             exit 0
@@ -122,7 +113,7 @@ jobs:
         if: steps.github_symbols.outputs.exists == 'true'
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.symbols_artifact_name }}
+          name: native-symbols-github
           path: ${{ steps.github_symbols.outputs.paths }}
 
   build-aab:
@@ -207,8 +198,7 @@ jobs:
 
       - uses: actions/download-artifact@v8
         with:
-          pattern: apks-github-*
-          merge-multiple: true
+          name: apks-github
           path: artifacts/apks
 
       - uses: actions/download-artifact@v8
@@ -417,8 +407,7 @@ jobs:
       - name: Download APK Artifacts
         uses: actions/download-artifact@v8
         with:
-          pattern: apks-github-*
-          merge-multiple: true
+          name: apks-github
           path: artifacts/apks
 
       - name: Extract Version Name from Tag
