@@ -85,6 +85,7 @@ import io.github.magisk317.uikit.common.DismissibleSnackbarHost
 import io.github.magisk317.uikit.foundation.PolygonMorphLoadingIndicator
 import io.github.magisk317.uikit.foundation.SessionLoadingRegistry
 import io.github.magisk317.uikit.foundation.rememberMinDurationLoading
+import io.github.magisk317.uikit.surface.QRCodeDialog
 import com.github.magisk317.smscode.ui.privacy.PrivacyPolicyPage
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.blur.HazeBlurStyle

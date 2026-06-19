@@ -59,6 +59,9 @@ import org.koin.compose.viewmodel.koinViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import io.github.magisk317.uikit.surface.DonateDialog
+import io.github.magisk317.uikit.surface.QRCodeDialog
+import io.github.magisk317.uikit.R as UiKitR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -182,101 +185,28 @@ internal fun OverviewScreenShared(hazeState: HazeState, hazeStyle: HazeBlurStyle
             }
             item {
                 val rootHint = stringResource(id = R.string.root_permission_hint)
-                OverviewInfoCard(
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    InfoItem(
-                        icon = Icons.AutoMirrored.Filled.Label,
-                        label = stringResource(id = R.string.version_name),
-                        value = appVersionName,
-                    )
-                    InfoItem(
-                        icon = Icons.Default.Numbers,
-                        label = stringResource(id = R.string.version_code),
-                        value = appVersionCode,
-                    )
-                    InfoItem(
-                        icon = Icons.Default.Extension,
-                        label = stringResource(id = R.string.framework_type),
-                        value = frameworkType,
-                        onClick = if (hasRootAccessState) null else { { showMessage(rootHint) } },
-                    )
-                    InfoItem(
-                        icon = Icons.Default.Verified,
-                        label = stringResource(id = R.string.framework_version),
-                        value = frameworkVersion,
-                        onClick = if (hasRootAccessState) null else { { showMessage(rootHint) } },
-                    )
-                }
+                io.github.magisk317.uikit.surface.OverviewAppInfoCard(
+                    appVersionName = appVersionName,
+                    appVersionCode = appVersionCode,
+                    frameworkType = frameworkType,
+                    frameworkVersion = frameworkVersion,
+                    interactive = true,
+                    onRootHint = if (hasRootAccessState) null else { { showMessage(rootHint) } },
+                )
             }
 
             item {
-                OverviewInfoCard(
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    InfoItem(
-                        icon = Icons.Default.Android,
-                        label = stringResource(id = R.string.android_version),
-                        value = Build.VERSION.RELEASE,
-                    )
-                    InfoItem(
-                        icon = Icons.Default.Terminal,
-                        label = stringResource(id = R.string.android_codename),
-                        value = Build.VERSION.CODENAME,
-                    )
-                    InfoItem(
-                        icon = Icons.Default.Code,
-                        label = stringResource(id = R.string.api_level),
-                        value = Build.VERSION.SDK_INT.toString(),
-                    )
-                    InfoItem(
-                        icon = Icons.Default.Business,
-                        label = stringResource(id = R.string.manufacturer),
-                        value = Build.MANUFACTURER,
-                    )
-                    InfoItem(
-                        icon = Icons.Default.Smartphone,
-                        label = stringResource(id = R.string.model),
-                        value = Build.MODEL,
-                    )
-                }
+                io.github.magisk317.uikit.surface.OverviewDeviceInfoCard()
             }
 
             item {
-                OverviewInfoCard(
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    InfoItem(
-                        icon = Icons.Default.Info,
-                        label = stringResource(id = R.string.check_update_title),
-                        value = stringResource(id = R.string.check_update_summary),
-                        onClick = { settingsViewModel.requestPreferredUpdate() },
-                    )
-                    InfoItem(
-                        icon = Icons.AutoMirrored.Filled.Chat,
-                        label = stringResource(id = R.string.pref_join_qq_group_title),
-                        value = stringResource(id = R.string.pref_join_qq_group_summary),
-                        onClick = { PackageUtils.joinQQGroup(context)?.let(::showMessage) },
-                    )
-                    InfoItem(
-                        icon = Icons.AutoMirrored.Filled.Send,
-                        label = stringResource(id = R.string.pref_join_telegram_group_title),
-                        value = stringResource(id = R.string.pref_join_telegram_group_summary),
-                        onClick = { Utils.showWebPage(context, Const.TELEGRAM_GROUP_URL)?.let(::showMessage) },
-                    )
-                    InfoItem(
-                        icon = Icons.Default.Code,
-                        label = stringResource(id = R.string.pref_source_code_title),
-                        value = stringResource(id = R.string.pref_source_code_summary),
-                        onClick = { Utils.showWebPage(context, Const.PROJECT_SOURCE_CODE_URL)?.let(::showMessage) },
-                    )
-                    InfoItem(
-                        icon = Icons.Default.Favorite,
-                        label = stringResource(id = R.string.pref_donate_by_alipay_title),
-                        value = stringResource(id = R.string.dialog_donate_summary),
-                        onClick = { showDonateDialog = true },
-                    )
-                }
+                io.github.magisk317.uikit.surface.OverviewLinksCard(
+                    onCheckUpdate = { settingsViewModel.requestPreferredUpdate() },
+                    onJoinQQ = { PackageUtils.joinQQGroup(context)?.let(::showMessage) },
+                    onJoinTelegram = { Utils.showWebPage(context, Const.TELEGRAM_GROUP_URL)?.let(::showMessage) },
+                    onSourceCode = { Utils.showWebPage(context, Const.PROJECT_SOURCE_CODE_URL)?.let(::showMessage) },
+                    onDonate = { showDonateDialog = true },
+                )
             }
         }
 
@@ -300,11 +230,11 @@ internal fun OverviewScreenShared(hazeState: HazeState, hazeStyle: HazeBlurStyle
             onDismiss = { showDonateDialog = false },
             onAlipay = {
                 showDonateDialog = false
-                showQRCodeDialog = Pair(R.drawable.alipay, "alipay")
+                showQRCodeDialog = Pair(UiKitR.drawable.alipay, "alipay")
             },
             onWechat = {
                 showDonateDialog = false
-                showQRCodeDialog = Pair(R.drawable.wx, "wechat")
+                showQRCodeDialog = Pair(UiKitR.drawable.wx, "wechat")
             },
             showPlayDonations = com.github.magisk317.smscode.core.BuildConfig.HAS_BILLING,
             onDonate099 = { activityOwner?.let { billingProvider.launchDonation(it, "donate_099") } },
@@ -393,140 +323,4 @@ private fun buildStatusDiagnostics(
 private fun formatStatusDiagnosticTime(context: android.content.Context, timestampMs: Long): String {
     if (timestampMs <= 0L) return context.getString(R.string.status_diag_none)
     return SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date(timestampMs))
-}
-
-@Composable
-private fun OverviewInfoCard(
-    modifier: Modifier = Modifier,
-    content: @Composable ColumnScope.() -> Unit,
-) {
-    SummarySectionCard(
-        modifier = modifier,
-        content = content,
-    )
-}
-
-@Composable
-fun InfoItem(icon: ImageVector, label: String, value: String, onClick: (() -> Unit)? = null) {
-    SummaryRow(
-        icon = icon,
-        label = label,
-        value = value,
-        onClick = onClick,
-    )
-}
-
-@Composable
-fun DonateDialog(
-    onDismiss: () -> Unit,
-    onAlipay: () -> Unit,
-    onWechat: () -> Unit,
-    showPlayDonations: Boolean = false,
-    onDonate099: () -> Unit = {},
-    onDonate200: () -> Unit = {},
-    onDonate999: () -> Unit = {},
-    onDonate1999: () -> Unit = {},
-) {
-    io.github.magisk317.uikit.surface.AppAlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(id = com.github.magisk317.smscode.core.R.string.dialog_donate_title)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(stringResource(id = com.github.magisk317.smscode.core.R.string.dialog_donate_content))
-                if (showPlayDonations) {
-                    Text(
-                        text = stringResource(id = com.github.magisk317.smscode.core.R.string.donate_one_time_title),
-                        style = MaterialTheme.typography.titleSmall,
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        io.github.magisk317.uikit.surface.AppPrimaryButton(
-                            text = stringResource(id = com.github.magisk317.smscode.core.R.string.donate_one_time_099),
-                            onClick = onDonate099,
-                            modifier = Modifier.weight(1f),
-                        )
-                        io.github.magisk317.uikit.surface.AppPrimaryButton(
-                            text = stringResource(id = com.github.magisk317.smscode.core.R.string.donate_one_time_200),
-                            onClick = onDonate200,
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        io.github.magisk317.uikit.surface.AppPrimaryButton(
-                            text = stringResource(id = com.github.magisk317.smscode.core.R.string.donate_one_time_999),
-                            onClick = onDonate999,
-                            modifier = Modifier.weight(1f),
-                        )
-                        io.github.magisk317.uikit.surface.AppPrimaryButton(
-                            text = stringResource(id = com.github.magisk317.smscode.core.R.string.donate_one_time_1999),
-                            onClick = onDonate1999,
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                io.github.magisk317.uikit.surface.AppPrimaryButton(
-                    text = stringResource(id = com.github.magisk317.smscode.core.R.string.dialog_donate_alipay),
-                    onClick = onAlipay,
-                )
-                io.github.magisk317.uikit.surface.AppSecondaryButton(
-                    text = stringResource(id = com.github.magisk317.smscode.core.R.string.dialog_donate_wechat),
-                    onClick = onWechat,
-                )
-            }
-        },
-    )
-}
-
-@Composable
-fun QRCodeDialog(resId: Int, type: String, onDismiss: () -> Unit, onSave: () -> Unit) {
-    io.github.magisk317.uikit.surface.AppAlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                if (type == "alipay") {
-                    stringResource(
-                        id = com.github.magisk317.smscode.core.R.string.dialog_donate_alipay,
-                    )
-                } else {
-                    stringResource(id = com.github.magisk317.smscode.core.R.string.dialog_donate_wechat)
-                },
-            )
-        },
-        text = {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                androidx.compose.foundation.Image(
-                    painter = androidx.compose.ui.res.painterResource(id = resId),
-                    contentDescription = if (type == "alipay") {
-                        stringResource(
-                            id = com.github.magisk317.smscode.core.R.string.dialog_donate_alipay,
-                        )
-                    } else {
-                        stringResource(id = com.github.magisk317.smscode.core.R.string.dialog_donate_wechat)
-                    },
-                    modifier = Modifier.size(200.dp),
-                )
-            }
-        },
-        confirmButton = {
-            io.github.magisk317.uikit.surface.AppPrimaryButton(
-                text = stringResource(id = com.github.magisk317.smscode.core.R.string.save_to_gallery),
-                onClick = onSave,
-            )
-        },
-        dismissButton = {
-            io.github.magisk317.uikit.surface.AppSecondaryButton(
-                text = stringResource(id = com.github.magisk317.smscode.core.R.string.cancel),
-                onClick = onDismiss,
-            )
-        },
-    )
 }
