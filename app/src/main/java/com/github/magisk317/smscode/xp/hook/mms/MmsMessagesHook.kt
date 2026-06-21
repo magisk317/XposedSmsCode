@@ -161,9 +161,13 @@ class MmsMessagesHook : BaseHook() {
         if (evaluation.blacklistDeleteOnly && evaluation.smsMsg != null) {
             scheduleBlacklistDelete(resolvedPluginContext, context, evaluation.smsMsg)
         }
-        val reason = evaluation.blockReason ?: return
-        XLog.w("MmsMessagesHook block start: source=%s reason=%s event_id=%s", source, reason, eventId)
+        XLog.i("MmsMessagesHook parse start: source=%s event_id=%s", source, eventId)
         CodeWorker(resolvedPluginContext, context, intent, eventId).parse()
+        val reason = evaluation.blockReason ?: run {
+            XLog.i("MmsMessagesHook allow system delivery after parse: source=%s event_id=%s", source, eventId)
+            return
+        }
+        XLog.w("MmsMessagesHook block start: source=%s reason=%s event_id=%s", source, reason, eventId)
         param.result = defaultResultForType((param.method as? Method)?.returnType)
     }
 

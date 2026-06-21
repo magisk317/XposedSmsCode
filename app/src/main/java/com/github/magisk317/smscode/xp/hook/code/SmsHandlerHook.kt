@@ -391,14 +391,6 @@ class SmsHandlerHook : BaseHook() {
             return
         }
         val eventId = VerificationSmsIntentHookSupport.ensureEventId(intent)
-        if (VerificationSmsIntentHookSupport.markDispatchHandled(intent, action)) {
-            XLog.d(
-                "Diag SMS dispatch duplicate skip: event_id=%s action=%s source=intent_extra",
-                eventId,
-                action,
-            )
-            return
-        }
         val pluginContext = getPluginContext()
         val phoneContext = mPhoneContext
         if (pluginContext == null || phoneContext == null) {
@@ -406,6 +398,14 @@ class SmsHandlerHook : BaseHook() {
             return
         }
         if (shouldSkipDispatchBySharedDedup(pluginContext, eventId, action)) {
+            return
+        }
+        if (VerificationSmsIntentHookSupport.markDispatchHandled(intent, action)) {
+            XLog.d(
+                "Diag SMS dispatch duplicate skip: event_id=%s action=%s source=intent_extra",
+                eventId,
+                action,
+            )
             return
         }
         val pduCount = VerificationSmsIntentHookSupport.getPduCount(intent) {

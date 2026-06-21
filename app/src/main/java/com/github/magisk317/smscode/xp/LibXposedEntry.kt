@@ -6,6 +6,7 @@ import com.github.magisk317.smscode.runtime.BuildConfig as RuntimeBuildConfig
 import com.github.tianma8023.xposed.smscode.BuildConfig
 import com.github.magisk317.smscode.common.utils.PrefsReader
 import com.github.magisk317.smscode.xp.hook.code.SmsHandlerHook
+import com.github.magisk317.smscode.xp.hook.me.ModuleUtilsHook
 import com.github.magisk317.smscode.xp.hook.mms.MmsMessagesHook
 import com.github.magisk317.smscode.xp.hook.telephony.SmsProviderHook
 import io.github.libxposed.api.XposedInterface
@@ -13,9 +14,11 @@ import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface.HotReloadedParam
 import io.github.libxposed.api.XposedModuleInterface.HotReloadingParam
 import io.github.libxposed.api.XposedModuleInterface.ModuleLoadedParam
+import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import io.github.libxposed.api.XposedModuleInterface.PackageReadyParam
 import io.github.libxposed.api.XposedModuleInterface.SystemServerStartingParam
 import io.github.magisk317.smscode.xposed.hook.BaseHook
+import io.github.magisk317.smscode.xposed.hook.notification.NotificationManagerHook
 import io.github.magisk317.smscode.xposed.hook.permission.PermissionGranterHook
 import io.github.magisk317.smscode.xposed.hook.system.SystemInputInjectorHook
 import io.github.magisk317.smscode.xposed.hookapi.HookEnv
@@ -46,26 +49,27 @@ class LibXposedEntry : XposedModule {
     private val hookList: List<BaseHook> = listOf(
         SmsHandlerHook(),
         MmsMessagesHook(),
+        NotificationManagerHook(),
+        ModuleUtilsHook(),
         PermissionGranterHook(),
         SystemInputInjectorHook(),
         SmsProviderHook(),
     )
 
     private var processName: String = "unknown"
-    private var moduleActive: Boolean = false
     private val loadedPackages = ConcurrentHashMap<String, ClassLoader>()
+    private val dispatchedPackages = ConcurrentHashMap<String, String>()
 
     override fun onModuleLoaded(param: ModuleLoadedParam) {
         val api = apiVersion
         if (api < MIN_LIBXPOSED_API_VERSION) {
             Log.w(TAG, "skipped: apiVersion=$api < $MIN_LIBXPOSED_API_VERSION")
-            moduleActive = false
             return
         }
 
         installModuleRuntime(param, LibXposedHookApi(this))
-        moduleActive = true
         installInitZygoteHooks()
+        dispatchCurrentLoadedTargets(param, phase = "moduleLoadedCurrentProcess")
         XLog.i("$TAG: onModuleLoaded api=$apiVersion process=$processName framework=$frameworkName($frameworkVersionCode)")
     }
 
@@ -92,21 +96,25 @@ class LibXposedEntry : XposedModule {
     }
 
     override fun onSystemServerStarting(param: SystemServerStartingParam) {
-        if (!moduleActive) return
         loadedPackages["android"] = param.classLoader
         val loadParam = LoadParam("android", processName, param.classLoader)
-        dispatchLoad(loadParam)
+        dispatchLoad(loadParam, phase = "systemServerStarting")
+    }
+
+    override fun onPackageLoaded(param: PackageLoadedParam) {
+        val classLoader = param.defaultClassLoader
+        loadedPackages.putIfAbsent(param.packageName, classLoader)
+        val loadParam = LoadParam(param.packageName, processName, classLoader)
+        dispatchLoad(loadParam, phase = "packageLoaded")
     }
 
     override fun onPackageReady(param: PackageReadyParam) {
-        if (!moduleActive) return
         loadedPackages[param.packageName] = param.classLoader
         val loadParam = LoadParam(param.packageName, processName, param.classLoader)
-        dispatchLoad(loadParam)
+        dispatchLoad(loadParam, phase = "packageReady")
     }
 
     override fun onHotReloading(param: HotReloadingParam): Boolean {
-        if (!moduleActive) return false
         return runCatching {
             param.setSavedInstanceState(createHotReloadState())
             cleanupForHotReload()
@@ -120,16 +128,16 @@ class LibXposedEntry : XposedModule {
     override fun onHotReloaded(param: HotReloadedParam) {
         val hookApi = LibXposedHookApi(this)
         installModuleRuntime(param, hookApi)
-        moduleActive = true
         hookApi.beginHotReload(param.oldHookHandles)
         val removed = try {
             installInitZygoteHooks()
             restoreHotReloadState(param.savedInstanceState)
+            dispatchCurrentLoadedTargets(param, phase = "hotReloadCurrentProcess")
             resolveCurrentProcessTargets(param).forEach { (pkg, cl) ->
                 loadedPackages.putIfAbsent(pkg, cl)
             }
             loadedPackages.forEach { (pkg, cl) ->
-                dispatchLoad(LoadParam(pkg, processName, cl))
+                dispatchLoad(LoadParam(pkg, processName, cl), phase = "hotReload")
             }
             hookApi.finishHotReload()
         } catch (t: Throwable) {
@@ -140,8 +148,20 @@ class LibXposedEntry : XposedModule {
         Log.i(TAG, "onHotReloaded: replaced hooks, removed $removed stale hooks")
     }
 
-    private fun dispatchLoad(loadParam: LoadParam) {
+    private fun dispatchLoad(loadParam: LoadParam, phase: String) {
         installCoreRuntime()
+        val dispatchKey = buildDispatchKey(loadParam)
+        val previousPhase = dispatchedPackages.putIfAbsent(dispatchKey, phase)
+        if (previousPhase != null) {
+            XLog.d(
+                "LibXposedEntry: skip duplicate package dispatch: pkg=%s process=%s phase=%s previous=%s",
+                loadParam.packageName,
+                loadParam.processName,
+                phase,
+                previousPhase,
+            )
+            return
+        }
         XLog.d("LibXposedEntry: Loaded package: ${loadParam.packageName} process: ${loadParam.processName}")
         if ("android" == loadParam.packageName || "system" == loadParam.packageName) {
             XLog.w(
@@ -151,19 +171,25 @@ class LibXposedEntry : XposedModule {
             )
         }
         for (hook in hookList) {
-            if (!hook.hookOnLoadPackage()) continue
+            val hookName = hook.javaClass.simpleName
+            val shouldLoad = hook.hookOnLoadPackage()
+            if (!shouldLoad) continue
             runCatching {
                 hook.onLoadPackage(loadParam)
             }.onFailure { throwable ->
                 XLog.e(
                     "LibXposedEntry: %s failed for pkg=%s process=%s",
-                    hook.javaClass.simpleName,
+                    hookName,
                     loadParam.packageName,
                     loadParam.processName,
                     throwable,
                 )
             }
         }
+    }
+
+    private fun buildDispatchKey(loadParam: LoadParam): String {
+        return "${loadParam.packageName}|${loadParam.processName.ifBlank { loadParam.packageName }}"
     }
 
     private fun installCoreRuntime() {
@@ -226,6 +252,27 @@ class LibXposedEntry : XposedModule {
             }
             else -> emptyMap()
         }
+    }
+
+    private fun dispatchCurrentLoadedTargets(param: ModuleLoadedParam, phase: String) {
+        resolveCurrentLoadedTargets(param).forEach { (pkg, cl) ->
+            loadedPackages.putIfAbsent(pkg, cl)
+            dispatchLoad(LoadParam(pkg, processName, cl), phase = phase)
+        }
+    }
+
+    private fun resolveCurrentLoadedTargets(param: ModuleLoadedParam): Map<String, ClassLoader> {
+        val process = if (param.isSystemServer) "android" else param.processName
+        if (process == "android" || process == "system" || process == "system_server") {
+            return emptyMap()
+        }
+        val packageName = when (process) {
+            "com.android.phone", "com.xiaomi.phone", "com.android.providers.telephony" -> process
+            "com.android.mms", "com.android.mms:mms_service" -> "com.android.mms"
+            else -> return emptyMap()
+        }
+        val classLoader = resolveLoadedPackageClassLoader(packageName) ?: return emptyMap()
+        return mapOf(packageName to classLoader)
     }
 
     private fun resolveLoadedPackageClassLoader(packageName: String): ClassLoader? {
