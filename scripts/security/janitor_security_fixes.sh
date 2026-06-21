@@ -24,7 +24,7 @@ fi
 echo '[]' > "$REMOVABLE_JSON"
 
 echo "Applying security force updates..."
-python3 scripts/manage_dependency_forces.py apply-updates \
+python3 scripts/security/manage_dependency_forces.py apply-updates \
   --build-file build.gradle.kts \
   --toml-file gradle/libs.versions.toml \
   --removable-json "$REMOVABLE_JSON" \

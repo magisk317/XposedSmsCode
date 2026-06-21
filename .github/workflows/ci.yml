@@ -43,8 +43,7 @@ jobs:
           :app:compilePlayDebugAndroidTestKotlin
           :core:compilePlayDebugUnitTestKotlin
           :core:generatePlayDebugUnitTestStubRFile
-          :runtime:compileGithubDebugAndroidTestKotlin
-          :runtime:compilePlayDebugAndroidTestKotlin
+          :runtime:compileDebugAndroidTestKotlin
           assembleGithubDebug
           -PbuildSplits
       - name: Write build summary
