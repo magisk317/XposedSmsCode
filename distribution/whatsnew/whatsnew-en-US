@@ -1,6 +1,6 @@
-- Updated to 3.3.0 (119).
-- ⚠️ Note: Only supports LibXposed API 102. If your framework is older, please upgrade (https://lsposed.zip).
-- Implemented API 102 Hot Reload and dropped support for API 101.
-- Optimized project structure, moving shared submodules to the smscode/ directory.
-- Upgraded dependencies and cleaned up lockfile workflows.
+- Updated to 3.3.1-beta (120).
+- Fixed SMS/MMS process dispatch, hot-reload routing, and verification-code parsing paths.
+- Fixed app-owned notification failures caused by host UID/package mismatches and added Xiaomi background fallback.
+- Defaulted code notifications back to phone-owned and reused host SMS channels where needed.
+- Refined overview/record UI, dependencies, and release workflows.
 - https://github.com/magisk317/XposedSmsCode/releases

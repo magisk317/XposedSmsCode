@@ -1,6 +1,6 @@
-- 升级至 3.3.0（119）。
-- ⚠️ 提示：仅支持 LibXposed API 102，低于此版本的框架请升级（https://lsposed.zip）。
-- 完整实现 API 102 模块热重载 (Hot Reload)，不再保留 API 101 支持。
-- 优化工程结构，共享子模块收敛至 smscode/ 目录。
-- 升级核心与非主要依赖库，清理 lockfile 等相关工作流。
+- 升级至 3.3.1-beta（120）。
+- 修复短信/MMS 进程注入、热重载派发与验证码解析链路。
+- 修复 app-owned 通知在宿主 UID 下提前失败的问题，并增强小米后台冻结场景回退。
+- 验证码通知默认回到 phone-owned，短信宿主复用系统短信 channel。
+- 优化首页概览、记录页滚动体验，并升级依赖与发布工作流。
 - https://github.com/magisk317/XposedSmsCode/releases
