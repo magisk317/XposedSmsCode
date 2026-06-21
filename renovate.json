@@ -7,6 +7,9 @@
     "pruneStaleBranches": true,
     "pruneBranchAfterAutomerge": true,
     "minimumReleaseAge": "24 hours",
+    "statusCheckNames": {
+        "minimumReleaseAge": null
+    },
     "internalChecksFilter": "strict",
     "prCreation": "immediate",
     "timezone": "Asia/Shanghai",
