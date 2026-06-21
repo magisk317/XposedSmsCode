@@ -73,8 +73,8 @@ jobs:
           configurationFile: .github/renovate-config.js
           token: ${{ secrets.GH_PAT }}
 
-      - name: Cleanup orphan renovate branches on failure
-        if: failure()
+      - name: Cleanup orphan renovate branches
+        if: always()
         env:
           GH_TOKEN: ${{ secrets.GH_PAT != '' && secrets.GH_PAT || github.token }}
         run: |
