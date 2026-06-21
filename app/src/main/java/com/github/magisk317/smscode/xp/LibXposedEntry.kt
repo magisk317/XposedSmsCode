@@ -1,5 +1,6 @@
 package com.github.magisk317.smscode.xp
 
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import com.github.magisk317.smscode.runtime.BuildConfig as RuntimeBuildConfig
@@ -102,7 +103,7 @@ class LibXposedEntry : XposedModule {
     }
 
     override fun onPackageLoaded(param: PackageLoadedParam) {
-        val classLoader = param.defaultClassLoader
+        val classLoader = resolvePackageLoadedClassLoader(param)
         loadedPackages.putIfAbsent(param.packageName, classLoader)
         val loadParam = LoadParam(param.packageName, processName, classLoader)
         dispatchLoad(loadParam, phase = "packageLoaded")
@@ -295,6 +296,14 @@ class LibXposedEntry : XposedModule {
         }.getOrElse { t ->
             Log.w(TAG, "Hot reload classloader resolve failed for $packageName: ${t.message}", t)
             null
+        }
+    }
+
+    private fun resolvePackageLoadedClassLoader(param: PackageLoadedParam): ClassLoader {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            param.defaultClassLoader
+        } else {
+            resolveLoadedPackageClassLoader(param.packageName) ?: resolveContextClassLoader()
         }
     }
 

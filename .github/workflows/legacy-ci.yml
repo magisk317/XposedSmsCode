@@ -40,7 +40,7 @@ jobs:
         run: >
           ./gradlew
           --warning-mode all
-          assembleGithubLegacyDebug
+          :app:assembleGithubLegacyDebug
 
       - name: Write build summary
         if: always()

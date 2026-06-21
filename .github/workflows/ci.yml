@@ -44,7 +44,7 @@ jobs:
           :core:compilePlayDebugUnitTestKotlin
           :core:generatePlayDebugUnitTestStubRFile
           :runtime:compileDebugAndroidTestKotlin
-          assembleGithubDebug
+          :app:assembleGithubDebug
           -PbuildSplits
       - name: Write build summary
         if: always()

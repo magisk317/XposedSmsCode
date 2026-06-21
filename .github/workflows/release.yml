@@ -78,7 +78,7 @@ jobs:
       - name: Build GitHub APK with Splits
         run: >
           ./gradlew
-          assembleGithubRelease
+          :app:assembleGithubRelease
           -PbuildSplits
         env:
           KEYSTORE_FILE: release.jks
@@ -147,7 +147,7 @@ jobs:
         run: echo "${{ secrets.RELEASE_KEYSTORE }}" | base64 --decode > app/release.jks
 
       - name: Build App Bundle
-        run: ./gradlew bundlePlayRelease
+        run: ./gradlew :app:bundlePlayRelease
         env:
           KEYSTORE_FILE: release.jks
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
@@ -159,7 +159,7 @@ jobs:
         with:
           name: bundle-assets
           path: |
-            app/build/outputs/bundle/playRelease/*.aab
+            app/build/outputs/bundle/release/XposedSmsCode_v*.aab
             app/build/outputs/mapping/playRelease/mapping.txt
 
       - name: Detect Play Native Symbols
@@ -319,16 +319,15 @@ jobs:
           fi
 
           mapping_file=$(find artifacts/bundle -type f -name mapping.txt | head -n 1)
-          if [[ -z "$mapping_file" ]]; then
-            echo "ERROR: mapping.txt not found under artifacts/bundle" >&2
-            find artifacts/bundle -maxdepth 4 -type f | sort >&2 || true
-            exit 1
-          fi
-
           symbols_file=$(find artifacts/symbols-play -type f -name native-debug-symbols.zip 2>/dev/null | head -n 1 || true)
 
           echo "aab_file=$aab_file" >> "$GITHUB_OUTPUT"
-          echo "mapping_file=$mapping_file" >> "$GITHUB_OUTPUT"
+          if [[ -n "$mapping_file" ]]; then
+            echo "has_mapping=true" >> "$GITHUB_OUTPUT"
+            echo "mapping_file=$mapping_file" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_mapping=false" >> "$GITHUB_OUTPUT"
+          fi
           if [[ -n "$symbols_file" ]]; then
             echo "has_symbols=true" >> "$GITHUB_OUTPUT"
             echo "symbols_file=$symbols_file" >> "$GITHUB_OUTPUT"
@@ -377,10 +376,12 @@ jobs:
             --skip_upload_screenshots true
           )
 
-          if [[ "${{ steps.resolve_play.outputs.has_symbols }}" == "true" ]]; then
+          if [[ "${{ steps.resolve_play.outputs.has_mapping }}" == "true" && "${{ steps.resolve_play.outputs.has_symbols }}" == "true" ]]; then
             cmd+=(--mapping_paths "${{ steps.resolve_play.outputs.mapping_file }},${{ steps.resolve_play.outputs.symbols_file }}")
-          else
+          elif [[ "${{ steps.resolve_play.outputs.has_mapping }}" == "true" ]]; then
             cmd+=(--mapping "${{ steps.resolve_play.outputs.mapping_file }}")
+          elif [[ "${{ steps.resolve_play.outputs.has_symbols }}" == "true" ]]; then
+            cmd+=(--mapping_paths "${{ steps.resolve_play.outputs.symbols_file }}")
           fi
 
           "${cmd[@]}"
