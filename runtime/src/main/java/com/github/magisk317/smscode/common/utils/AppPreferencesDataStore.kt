@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.github.magisk317.smscode.common.constant.CodeNotificationOwner
 import com.github.magisk317.smscode.common.constant.PrefConst
 import com.github.magisk317.smscode.common.utils.XLog
 import io.github.magisk317.smscode.runtime.common.utils.StorageUtils
@@ -155,7 +156,9 @@ object AppPreferencesDataStore {
         )
         editor.putString(
             PrefConst.KEY_CODE_NOTIFICATION_OWNER,
-            getString(context, PrefConst.KEY_CODE_NOTIFICATION_OWNER, ""),
+            CodeNotificationOwner.normalize(
+                getString(context, PrefConst.KEY_CODE_NOTIFICATION_OWNER, CodeNotificationOwner.DEFAULT),
+            ),
         )
         editor.putBoolean(
             PrefConst.KEY_AUTO_CANCEL_CODE_NOTIFICATION,

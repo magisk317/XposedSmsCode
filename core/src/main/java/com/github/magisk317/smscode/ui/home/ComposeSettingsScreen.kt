@@ -235,7 +235,7 @@ internal fun ComposeSettingsScreenShared(
             AppPreferencesDataStore.getString(
                 context,
                 PrefConst.KEY_CODE_NOTIFICATION_OWNER,
-                "",
+                CodeNotificationOwner.DEFAULT,
             ),
         )
         smsCodeKeywords = AppPreferencesDataStore.getString(
@@ -1928,8 +1928,9 @@ private fun NotificationOwnerDialog(
     onConfirm: (String) -> Unit,
 ) {
     val selectedOwner = when (owner) {
+        CodeNotificationOwner.APP -> CodeNotificationOwner.APP
         CodeNotificationOwner.PHONE -> CodeNotificationOwner.PHONE
-        else -> CodeNotificationOwner.APP
+        else -> CodeNotificationOwner.DEFAULT
     }
     io.github.magisk317.uikit.surface.AppBasicDialog(
         onDismissRequest = onDismiss,
@@ -1977,7 +1978,7 @@ private fun codeNotificationOwnerItemSummary(owner: String): String {
     val ownerLabel = when (owner) {
         CodeNotificationOwner.PHONE -> stringResource(id = R.string.pref_code_notification_owner_phone)
         CodeNotificationOwner.APP -> stringResource(id = R.string.pref_code_notification_owner_app)
-        else -> stringResource(id = R.string.pref_code_notification_owner_unselected)
+        else -> stringResource(id = R.string.pref_code_notification_owner_phone)
     }
     return stringResource(id = R.string.pref_code_notification_owner_summary, ownerLabel)
 }

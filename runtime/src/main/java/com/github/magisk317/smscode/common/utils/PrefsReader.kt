@@ -285,7 +285,7 @@ object PrefsReader {
 
     @JvmStatic
     fun getCodeNotificationOwner(context: Context): String {
-        val value = getStringViaProvider(PrefConst.KEY_CODE_NOTIFICATION_OWNER, "")
+        val value = getStringViaProvider(PrefConst.KEY_CODE_NOTIFICATION_OWNER, CodeNotificationOwner.DEFAULT)
         return CodeNotificationOwner.normalize(value)
     }
 
