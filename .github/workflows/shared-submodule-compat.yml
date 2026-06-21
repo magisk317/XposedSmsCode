@@ -1,6 +1,10 @@
-name: Shared Module Compat
+name: Shared Submodule Compat
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
 
 on:
   pull_request:
@@ -10,26 +14,31 @@ on:
       - "app/**"
       - "runtime/**"
       - "magisk-ui-kit/**"
-      - "smscode-core/**"
-      - "scripts/verify_shared_submodule_compat.sh"
+      - "smscode/**"
+      - ".github/workflows/shared-submodule-compat.yml"
+      - "scripts/**"
   push:
     branches:
       - beta
-      - master
     paths:
       - "build-logic/**"
       - "core/**"
       - "app/**"
       - "runtime/**"
       - "magisk-ui-kit/**"
-      - "smscode-core/**"
-      - "scripts/verify_shared_submodule_compat.sh"
+      - "smscode/**"
+      - ".github/workflows/shared-submodule-compat.yml"
+      - "scripts/**"
+  workflow_dispatch:
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GH_PAT != '' && secrets.GH_PAT || secrets.GITHUB_TOKEN }}
 
 jobs:
   shared-compat:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
           fetch-depth: 0
@@ -42,5 +51,5 @@ jobs:
         with:
           validate-wrappers: false
           allow-snapshot-wrappers: true
-      - name: Verify shared module compatibility
-        run: bash scripts/verify_shared_submodule_compat.sh
+      - name: Verify shared submodule compatibility
+        run: bash scripts/checks/verify_shared_submodule_compat.sh

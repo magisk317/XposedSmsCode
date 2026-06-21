@@ -20,7 +20,7 @@ jobs:
     env:
       GRADLE_OPTS: -Dorg.gradle.warning.mode=all
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
           fetch-depth: 0

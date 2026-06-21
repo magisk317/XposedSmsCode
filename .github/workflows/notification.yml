@@ -4,6 +4,8 @@ on:
   workflow_run:
     types: [completed]
     workflows: [CI, Release]
+  release:
+    types: [published]
   workflow_dispatch:
 
 jobs:
@@ -13,9 +15,9 @@ jobs:
       actions: read
       contents: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
+          submodules: recursive
           fetch-depth: 0
 
       - name: Download artifacts

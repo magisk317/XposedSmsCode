@@ -9,6 +9,14 @@
     "minimumReleaseAge": "24 hours",
     "internalChecksFilter": "strict",
     "prCreation": "immediate",
+    "timezone": "Asia/Shanghai",
+    "schedule": [
+        "every weekend"
+    ],
+    "dependencyDashboard": true,
+    "dependencyDashboardTitle": "Dependency Dashboard",
+    "dependencyDashboardHeader": "This issue lists Renovate updates and detected dependencies. Force an update by checking the boxes.",
+    "dependencyDashboardApproval": false,
     "baseBranchPatterns": [
         "beta"
     ],

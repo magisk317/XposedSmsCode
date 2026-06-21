@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "${ROOT_DIR}"
 
 if ! command -v gh >/dev/null 2>&1; then
@@ -35,11 +35,23 @@ ALERTS_FILE="${TMP_DIR}/alerts.json"
 FORCED_FILE="${TMP_DIR}/forced.json"
 
 echo "Fetching open Dependabot alerts..."
-gh api --paginate "/repos/${REPO}/dependabot/alerts?state=open&per_page=100" \
-  | jq -s 'flatten' > "${ALERTS_FILE}"
+ALERTS_ERR="${TMP_DIR}/alerts.err"
+if gh api --paginate "/repos/${REPO}/dependabot/alerts?state=open&per_page=100" --jq '.[]' > "${ALERTS_FILE}" 2> "${ALERTS_ERR}"; then
+  jq -s '.' "${ALERTS_FILE}" > "${TMP_DIR}/alerts_array.json" && mv "${TMP_DIR}/alerts_array.json" "${ALERTS_FILE}"
+else
+  if grep -qi 'Dependabot alerts are disabled' "${ALERTS_ERR}"; then
+    echo "Dependabot alerts are disabled for ${REPO}; skipping alert cross-check." >&2
+    : > "${ALERTS_FILE}"
+    echo '[]' > "${ALERTS_FILE}"
+  else
+    cat "${ALERTS_ERR}" >&2
+    echo "Failed to list Dependabot alerts for ${REPO}." >&2
+    exit 1
+  fi
+fi
 
 echo "Reading current force rules..."
-python3 scripts/manage_dependency_forces.py read-forces \
+python3 scripts/security/manage_dependency_forces.py read-forces \
   --build-file build.gradle.kts \
   --toml-file gradle/libs.versions.toml \
   --output "${FORCED_FILE}"

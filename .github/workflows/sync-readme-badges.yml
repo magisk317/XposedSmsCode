@@ -2,25 +2,31 @@ name: Sync README Badges
 
 on:
   push:
+    branches:
+      - beta
     paths:
       - gradle/libs.versions.toml
       - gradle/wrapper/gradle-wrapper.properties
-      - scripts/sync_readme_badges.sh
+      - scripts/codegen/sync_readme_badges.sh
       - .github/workflows/sync-readme-badges.yml
   workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
 jobs:
   sync-readme-badges:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Sync badges
-        run: ./scripts/sync_readme_badges.sh
+        run: ./scripts/codegen/sync_readme_badges.sh
 
       - name: Commit and push if changed
         run: |
@@ -29,14 +35,8 @@ jobs:
             exit 0
           fi
 
-          if [[ "${GITHUB_REF_TYPE}" != "branch" ]]; then
-            echo "README badge updates detected on ${GITHUB_REF_TYPE}; skip auto-push from detached HEAD"
-            git diff -- README.md README-EN.md
-            exit 0
-          fi
-
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           git add README.md README-EN.md
           git commit -m "docs(readme): sync version badges"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          git push

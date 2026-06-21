@@ -33,31 +33,10 @@ jobs:
         )
       )
     steps:
-      - name: Checkout PR branch
-        uses: actions/checkout@v6
-        with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.ref }}
-          token: ${{ secrets.GH_PAT != '' && secrets.GH_PAT || github.token }}
-          submodules: recursive
-          fetch-depth: 0
-
-      - name: Set up JDK 26
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: "26"
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6
-        with:
-          validate-wrappers: false
-          allow-snapshot-wrappers: true
-
       - name: Enable auto-merge for dependency PRs
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
-          GH_TOKEN: ${{ secrets.GH_PAT != '' && secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT != '' && secrets.GH_PAT || github.token }}
         run: |
           set -euo pipefail
           test -n "$GH_TOKEN"

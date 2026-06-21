@@ -11,13 +11,17 @@ permissions:
   security-events: read
   checks: read
 
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
 jobs:
   janitor:
     name: Automated Security Dependency Fixes
     runs-on: ubuntu-latest
     if: github.ref_name == github.event.repository.default_branch
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: recursive
@@ -34,16 +38,16 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
         run: |
-          chmod +x scripts/janitor_security_fixes.sh
-          scripts/janitor_security_fixes.sh
+          chmod +x scripts/security/janitor_security_fixes.sh
+          scripts/security/janitor_security_fixes.sh
 
       - name: Report alert coverage (no auto-dismiss)
         env:
           GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
         run: |
-          chmod +x scripts/reconcile_dependabot_alerts.sh
-          scripts/reconcile_dependabot_alerts.sh
+          chmod +x scripts/security/reconcile_dependabot_alerts.sh
+          scripts/security/reconcile_dependabot_alerts.sh
 
       - name: Create janitor PR if changed
         uses: peter-evans/create-pull-request@v8

@@ -57,21 +57,11 @@ jobs:
         github.event_name == 'issues' &&
         github.event.issue.title == 'Dependency Dashboard' &&
         github.event.changes.body != null &&
-        contains(github.event.issue.body, 'This issue lists Renovate updates and detected dependencies.') &&
-        (
-          (
-            contains(github.event.issue.body, '- [x] <!-- rebase-all-open-prs -->') &&
-            !contains(github.event.changes.body.from, '- [x] <!-- rebase-all-open-prs -->')
-          ) ||
-          (
-            contains(github.event.issue.body, '- [x] <!-- rebase-branch=') &&
-            !contains(github.event.changes.body.from, '- [x] <!-- rebase-branch=')
-          )
-        )
+        contains(github.event.issue.body, 'This issue lists Renovate updates and detected dependencies.')
       )
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 

@@ -14,7 +14,7 @@ jobs:
     name: Validate Release Metadata
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
           fetch-depth: 0
@@ -33,11 +33,11 @@ jobs:
 
       - name: Validate release notes and tag/version consistency
         run: |
-          chmod +x scripts/check_release_guard.sh
+          chmod +x scripts/release/check_release_guard.sh
           if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
-            scripts/check_release_guard.sh "${GITHUB_REF_NAME}"
+            scripts/release/check_release_guard.sh "${GITHUB_REF_NAME}"
           else
-            scripts/check_release_guard.sh
+            scripts/release/check_release_guard.sh
           fi
 
       - name: Run quality gate
@@ -54,7 +54,7 @@ jobs:
     env:
       HAS_RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE != '' }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
           fetch-depth: 0
@@ -125,7 +125,7 @@ jobs:
     env:
       HAS_RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE != '' }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
           fetch-depth: 0
@@ -191,7 +191,7 @@ jobs:
       HAS_RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE != '' }}
       HAS_GOOGLE_PLAY_CREDENTIALS: ${{ secrets.ANDROID_PUBLISHER_CREDENTIALS != '' }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
           fetch-depth: 0
@@ -400,7 +400,7 @@ jobs:
       HAS_RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE != '' }}
       MODULES_REPO: Xposed-Modules-Repo/com.github.tianma8023.xposed.smscode
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
