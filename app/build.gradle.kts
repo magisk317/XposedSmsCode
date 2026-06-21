@@ -210,3 +210,7 @@ val verifyNoLocalVerificationEngine = tasks.register("verifyNoLocalVerificationE
 tasks.named("check").configure {
     dependsOn(verifyNoLocalVerificationEngine)
 }
+
+tasks.withType<Test> {
+    useJUnitPlatform()
+}
