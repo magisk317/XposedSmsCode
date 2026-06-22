@@ -11,3 +11,6 @@
 	path = smscode/rules
 	url = https://github.com/magisk317/smscode-rules.git
 	branch = main
+[submodule "scripts/_toolkit"]
+	path = scripts/_toolkit
+	url = https://github.com/magisk317/magisk-ci-toolkit.git
