@@ -66,7 +66,7 @@ jobs:
           fetch-depth: 0
 
       - name: Self-hosted Renovate
-        uses: renovatebot/github-action@v46.1.15
+        uses: renovatebot/github-action@v46.1.16
         env:
           LOG_LEVEL: debug
         with:
