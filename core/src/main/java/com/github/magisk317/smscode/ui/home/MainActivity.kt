@@ -118,6 +118,7 @@ class MainActivity : ComponentActivity() {
     @Suppress("CyclomaticComplexMethod")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        android.util.Log.w("XSmsCode", "MainActivity.onCreate() called pid=${android.os.Process.myPid()}")
         applyEdgeToEdge(this)
         playUpdateDelegate.onCreate(this) {
             PackageUtils.openPlayStoreOrGithub(this)?.let(::enqueueSnackbar)

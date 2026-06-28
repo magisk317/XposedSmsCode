@@ -2,7 +2,7 @@ name: Renovate
 
 on:
   schedule:
-    - cron: "0 0 * * *"
+    - cron: "0 0 * * 1"  # Weekly on Monday at midnight
   push:
     branches:
       - beta
@@ -16,18 +16,13 @@ on:
     branches:
       - beta
 
-permissions:
-  contents: write
-  issues: read
-  pull-requests: read
-
 concurrency:
   group: renovate
   cancel-in-progress: false
 
 jobs:
   renovate:
-    runs-on: ubuntu-latest
+    uses: magisk317/magisk-ci-toolkit/.github/workflows/run-renovate.yml@master
     if: |
       (
         github.event_name != 'pull_request_target' &&
@@ -59,39 +54,8 @@ jobs:
         github.event.changes.body != null &&
         contains(github.event.issue.body, 'This issue lists Renovate updates and detected dependencies.')
       )
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Self-hosted Renovate
-        uses: renovatebot/github-action@v46.1.16
-        env:
-          LOG_LEVEL: debug
-        with:
-          configurationFile: .github/renovate-config.js
-          token: ${{ secrets.GH_PAT }}
-
-      - name: Cleanup orphan renovate branches
-        if: always()
-        env:
-          GH_TOKEN: ${{ secrets.GH_PAT != '' && secrets.GH_PAT || github.token }}
-        run: |
-          echo "Checking for orphan renovate branches..."
-          # Configure git to use the GH_TOKEN for authentication if needed
-          git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
-          
-          # List all remote branches starting with renovate/
-          branches=$(git ls-remote --heads origin | awk '{print $2}' | grep 'refs/heads/renovate/' || true)
-          for branch in $branches; do
-            branch_name=${branch#refs/heads/}
-            echo "Checking branch: $branch_name"
-            # Check if there is an open PR for this branch
-            if ! gh pr list --head "$branch_name" --state open | grep -q "$branch_name"; then
-              echo "Deleting orphan branch: $branch_name"
-              git push origin --delete "$branch_name" || echo "Failed to delete $branch_name"
-            else
-              echo "Branch $branch_name has an open PR, skipping."
-            fi
-          done
+    with:
+      base_branch: beta
+      config_file: .github/renovate-config.js
+    secrets:
+      GH_PAT: ${{ secrets.GH_PAT }}

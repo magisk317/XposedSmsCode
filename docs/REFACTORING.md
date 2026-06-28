@@ -32,11 +32,10 @@
 ### `smscode-core`
 
 - 继续作为验证码主链和跨项目公共能力的唯一共享实现来源。
-- 当前 Gradle 子模块为 `contract`、`domain`、`hook`、`rule`、`runtime`、`verification`、
-  `xposed`。
+- 当前 Gradle 子模块为 `contract`、`domain`、`hook`、`rule`、`runtime`、`verification`。
 - `contract` 放接口、DTO、跨进程/跨模块契约。
 - `domain` 放领域模型和值对象。
-- `hook` / `xposed` 放共享 hook infra、libxposed 适配、系统输入与 fallback policy。
+- `hook` 放共享 hook infra、libxposed 适配、系统输入与 fallback policy。
 - `runtime` 放日志、备份、规则目录、更新、包环境等可复用运行时能力。
 - `verification` 放短信分发、解析、通知、自动输入、去重等共享策略。
 
@@ -48,9 +47,9 @@
 
 ## 依赖方向
 
-- `app -> core, runtime, smscode-core:domain, smscode-core:runtime, smscode-core:verification, smscode-core:xposed`
+- `app -> core, runtime, smscode-core:domain, smscode-core:runtime, smscode-core:verification, smscode-core:hook`
 - `core -> runtime, magisk-ui-kit, smscode-core:domain, smscode-core:runtime`
-- `runtime -> smscode-core:domain, smscode-core:runtime, smscode-core:xposed`
+- `runtime -> smscode-core:domain, smscode-core:runtime, smscode-core:hook`
 - `smscode-rules` 不参与 Kotlin 依赖图，只作为 APK assets 输入。
 
 约束：
@@ -60,7 +59,7 @@
 - `runtime` 不得引入 Compose/UI API。
 - `app` 不得重新放回本地验证码引擎基础设施。
 - `app/xp` 新增可复用短信策略时，应优先考虑下沉到 `smscode-core:verification` 或
-  `smscode-core:xposed`，app 侧只保留 Android/Xposed 宿主适配。
+  `smscode-core:hook`，app 侧只保留 Android/Xposed 宿主适配。
 
 ## 构建治理
 
@@ -69,7 +68,7 @@
   - `play`: Play AAB 发布渠道，禁用 APK assemble。
   - `github`: GitHub APK 发布渠道。
   - `fdroid`: 当前禁用。
-- 正式发布线已收敛到 libxposed API 101+ 主路径。
+- 正式发布线已收敛到 libxposed API 102 热重载主路径。
 - `app/src/main/resources/META-INF/xposed/` 是当前 libxposed 元数据来源，包含
   `module.prop`、`java_init.list`、`scope.list`。
 - `legacy` 仅保留为独立分支和独立 `legacy-ci.yml` 工作流，不再作为当前主线 flavor 维护。
@@ -84,8 +83,8 @@
   `ui/record` 的记录查询、删除、恢复、导出必须通过 `RuntimeCodeRecordFacade`。
 - `app:verifyNoLocalVerificationEngine`: 禁止 app 重新引入已经共享化的验证码引擎基础设施，
   并禁止 `app/xp` hook 代码直接借用 `core.ui.record` UI 实现。
-- `scripts/verify_shared_submodule_compat.sh`: 验证根边界、`smscode-core` domain 单测、
-  verification detekt、hook/runtime/xposed lint、`core` 和 `app:check` 的兼容链路。
+- `scripts/checks/verify_shared_submodule_compat.sh`: 验证根边界、`smscode-core` domain 单测、
+  verification detekt、hook/runtime lint、`core` 和 `app:check` 的兼容链路。
 
 ## 继续优化的方向
 
@@ -93,3 +92,12 @@
 2. 继续把 `app/xp/hook/code` 内可复用的短信策略下沉到 `smscode-core:verification`，app 侧保留宿主适配。
 3. 视风险决定是否把主项目 `core` 重命名为 `ui-core` / `presentation`；当前先通过文档和边界闸门消除歧义。
 4. 继续把测试按模块语义归位，避免 `app` 承载 runtime/core 的测试。
+
+## 平台兼容性：Android 17 (API 37)
+
+| 影响等级 | 问题 | 状态 |
+|---------|------|------|
+| 🔴 严重 | `SMS_RECEIVED_ACTION` 对 OTP 短信施加 3 小时延迟（`SmsIntentHookSupport.kt:16`）。Xposed hook 可能不受限制，需实测确认。 | 待验证 |
+| ⚠️ 高 | 应用内存限制（基于设备 RAM）。需建立内存基准。 | 待验证 |
+| ⚠️ 中 | PendingIntent mutability 显式声明。 | 已合规 |
+| ⚠️ 中 | 内部文件写入权限收紧（`MODE_WORLD_READABLE` 在 targetSdk 37 抛异常）。 | 已合规 |

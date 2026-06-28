@@ -448,13 +448,13 @@
     <!-- relay conflict dialog start -->
     <string name="relay_conflict_dialog_title">Conflicting Module Detected</string>
     <string name="relay_conflict_dialog_prefix">Detected installed module: </string>
-    <string name="relay_conflict_dialog_middle">. Please uninstall this module first, then install and use </string>
-    <string name="relay_conflict_dialog_suffix">.</string>
+    <string name="relay_conflict_dialog_middle">. Current SMS messages will be handled by the xinyi-relay app, so </string>
+    <string name="relay_conflict_dialog_suffix"> notification timeout and records will not apply. Uninstall the conflicting app before using this app.</string>
     <string name="relay_conflict_other_app_name">Xinyi Relay</string>
     <string name="relay_conflict_dialog_exit">Exit</string>
     <string name="channel_name_relay_conflict_notification">Conflict alert</string>
-    <string name="relay_conflict_notification_content">Detected installed module %1$s (%2$s). Please uninstall it first, then install and use %3$s.</string>
-    <string name="relay_conflict_sms_toast">Feature conflict. Check the notification.</string>
+    <string name="relay_conflict_notification_content">Detected %1$s (%2$s). SMS is handled by xinyi-relay, so %3$s timeout and records will not apply.</string>
+    <string name="relay_conflict_sms_toast">Feature conflict: SMS handled by xinyi-relay</string>
     <!-- relay conflict dialog end -->
 
 

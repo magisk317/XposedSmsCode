@@ -448,13 +448,13 @@
     <!-- relay conflict dialog start -->
     <string name="relay_conflict_dialog_title">檢測到衝突模組</string>
     <string name="relay_conflict_dialog_prefix">檢測到你已安裝 </string>
-    <string name="relay_conflict_dialog_middle">。請先解除安裝該模組，再安裝並使用 </string>
-    <string name="relay_conflict_dialog_suffix">。</string>
+    <string name="relay_conflict_dialog_middle">。目前簡訊會由信驛 Relay（xinyi-relay）處理，</string>
+    <string name="relay_conflict_dialog_suffix"> 的通知逾時和記錄設定不會生效。請先解除安裝衝突應用後再使用。</string>
     <string name="relay_conflict_other_app_name">信驛 Relay</string>
     <string name="relay_conflict_dialog_exit">退出</string>
     <string name="channel_name_relay_conflict_notification">衝突提醒</string>
-    <string name="relay_conflict_notification_content">檢測到你已安裝 %1$s (%2$s)。請先解除安裝該模組，再安裝並使用 %3$s。</string>
-    <string name="relay_conflict_sms_toast">功能衝突，檢查狀態列通知</string>
+    <string name="relay_conflict_notification_content">檢測到 %1$s (%2$s)。簡訊由信驛 Relay（xinyi-relay）處理，%3$s 的通知逾時和記錄不會生效。</string>
+    <string name="relay_conflict_sms_toast">功能衝突：簡訊由信驛 Relay 處理</string>
     <!-- relay conflict dialog end -->
 
 

@@ -453,13 +453,13 @@
     <!-- relay conflict dialog start -->
     <string name="relay_conflict_dialog_title">检测到冲突模块</string>
     <string name="relay_conflict_dialog_prefix">检测到你已安装 </string>
-    <string name="relay_conflict_dialog_middle">。请先卸载该模块，再安装并使用 </string>
-    <string name="relay_conflict_dialog_suffix">。</string>
+    <string name="relay_conflict_dialog_middle">。当前短信会由信驿 Relay（xinyi-relay）处理，</string>
+    <string name="relay_conflict_dialog_suffix"> 的通知超时和记录设置不会生效。请先卸载冲突应用后再使用。</string>
     <string name="relay_conflict_other_app_name">信驿 Relay</string>
     <string name="relay_conflict_dialog_exit">退出</string>
     <string name="channel_name_relay_conflict_notification">冲突提醒</string>
-    <string name="relay_conflict_notification_content">检测到你已安装 %1$s (%2$s)。请先卸载该模块，再安装并使用 %3$s。</string>
-    <string name="relay_conflict_sms_toast">功能冲突，检查状态栏通知</string>
+    <string name="relay_conflict_notification_content">检测到 %1$s (%2$s)。短信由信驿 Relay（xinyi-relay）处理，%3$s 的通知超时和记录不会生效。</string>
+    <string name="relay_conflict_sms_toast">功能冲突：短信由信驿 Relay 处理</string>
     <!-- relay conflict dialog end -->
 
 

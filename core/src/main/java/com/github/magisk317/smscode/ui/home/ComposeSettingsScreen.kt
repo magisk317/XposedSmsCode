@@ -62,7 +62,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.github.magisk317.smscode.core.BuildConfig
 import com.github.magisk317.smscode.core.R
-import com.github.magisk317.smscode.common.constant.CodeNotificationOwner
 import com.github.magisk317.smscode.common.constant.Const
 import com.github.magisk317.smscode.common.constant.PrefConst
 import com.github.magisk317.smscode.common.utils.ActivationDiagnosticsStore
@@ -163,17 +162,13 @@ internal fun ComposeSettingsScreenShared(
     var autoInputInterval by remember { mutableStateOf(PrefConst.KEY_AUTO_INPUT_CODE_INTERVAL_DEFAULT) }
     var retentionTime by remember { mutableStateOf(PrefConst.NOTIFICATION_RETENTION_TIME_DEFAULT) }
     val showCodeNotificationEnabled = remember { mutableStateOf(true) }
-    var codeNotificationOwner by remember { mutableStateOf("") }
+    val autoCancelNotificationEnabled = remember { mutableStateOf(false) }
     var smsCodeKeywords by remember { mutableStateOf(PrefConst.SMSCODE_KEYWORDS_DEFAULT) }
     var simSlot1Remark by remember { mutableStateOf("") }
     var simSlot2Remark by remember { mutableStateOf("") }
     var showAutoInputDialog by remember { mutableStateOf(false) }
     var showAutoInputIntervalDialog by remember { mutableStateOf(false) }
     var showRetentionDialog by remember { mutableStateOf(false) }
-    var showNotificationOwnerDialog by remember { mutableStateOf(false) }
-    var pendingEnableNotification by remember { mutableStateOf(false) }
-    var pendingNotificationOwnerPermissionSelection by remember { mutableStateOf<String?>(null) }
-    var pendingNotificationPermissionEnable by remember { mutableStateOf(false) }
     var showSmsTestDialog by remember { mutableStateOf(false) }
     var smsTestInput by remember { mutableStateOf("") }
     var showThemeDialog by remember { mutableStateOf(false) }
@@ -231,12 +226,10 @@ internal fun ComposeSettingsScreenShared(
             PrefConst.KEY_SHOW_CODE_NOTIFICATION,
             true,
         )
-        codeNotificationOwner = CodeNotificationOwner.normalize(
-            AppPreferencesDataStore.getString(
-                context,
-                PrefConst.KEY_CODE_NOTIFICATION_OWNER,
-                CodeNotificationOwner.DEFAULT,
-            ),
+        autoCancelNotificationEnabled.value = AppPreferencesDataStore.getBoolean(
+            context,
+            PrefConst.KEY_AUTO_CANCEL_CODE_NOTIFICATION,
+            false,
         )
         smsCodeKeywords = AppPreferencesDataStore.getString(
             context,
@@ -389,44 +382,11 @@ internal fun ComposeSettingsScreenShared(
         }
     }
 
-    suspend fun persistNotificationOwnerSelection(owner: String, enableNotification: Boolean) {
-        codeNotificationOwner = owner
-        AppPreferencesDataStore.setString(
-            context,
-            PrefConst.KEY_CODE_NOTIFICATION_OWNER,
-            owner,
-        )
-        if (enableNotification) {
-            showCodeNotificationEnabled.value = true
-            AppPreferencesDataStore.setBoolean(
-                context,
-                PrefConst.KEY_SHOW_CODE_NOTIFICATION,
-                true,
-            )
-        }
-        HookPreferenceMirror.publish(context)
-        scope.launch {
-            snackbarHostState.showSnackbar(context.getString(R.string.pref_sync_toast))
-        }
-    }
-
     LaunchedEffect(lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.RESUMED) {
             isActivated = ActivationDiagnosticsStore.isModuleActivated(context)
             autoInputAccessibilityEnabled =
                 supportsAccessibilityAutoInput && isAutoInputAccessibilityServiceEnabled(context)
-            if (
-                pendingNotificationOwnerPermissionSelection == CodeNotificationOwner.APP &&
-                NotificationUtils.hasPostNotificationsPermission(context)
-            ) {
-                val enableNotification = pendingNotificationPermissionEnable
-                pendingNotificationOwnerPermissionSelection = null
-                pendingNotificationPermissionEnable = false
-                persistNotificationOwnerSelection(
-                    owner = CodeNotificationOwner.APP,
-                    enableNotification = enableNotification,
-                )
-            }
             delay(1000L)
             isActivated = ActivationDiagnosticsStore.isModuleActivated(context)
             autoInputAccessibilityEnabled =
@@ -512,97 +472,18 @@ internal fun ComposeSettingsScreenShared(
     val notificationSettingsLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult(),
     ) {
-        scope.launch {
-            if (
-                pendingNotificationOwnerPermissionSelection == CodeNotificationOwner.APP &&
-                NotificationUtils.hasPostNotificationsPermission(context)
-            ) {
-                val enableNotification = pendingNotificationPermissionEnable
-                pendingNotificationOwnerPermissionSelection = null
-                pendingNotificationPermissionEnable = false
-                persistNotificationOwnerSelection(
-                    owner = CodeNotificationOwner.APP,
-                    enableNotification = enableNotification,
-                )
-            } else if (pendingNotificationOwnerPermissionSelection == CodeNotificationOwner.APP) {
-                pendingNotificationOwnerPermissionSelection = null
-                pendingNotificationPermissionEnable = false
-                snackbarHostState.showSnackbar(
-                    context.getString(R.string.pref_code_notification_owner_permission_denied),
-                )
-            }
-        }
-    }
-    fun openNotificationSettings() {
-        val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-            putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-        }
-        val fallbackIntent = Intent(
-            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-            Uri.fromParts("package", context.packageName, null),
-        )
-        if (activityOwner != null) {
-            runCatching {
-                notificationSettingsLauncher.launch(intent)
-            }.recoverCatching {
-                notificationSettingsLauncher.launch(fallbackIntent)
-            }.onFailure {
-                pendingNotificationOwnerPermissionSelection = null
-                pendingNotificationPermissionEnable = false
-                scope.launch {
-                    snackbarHostState.showSnackbar(
-                        context.getString(R.string.pref_code_notification_owner_permission_denied),
-                    )
-                }
-            }
-            return
-        }
-        runCatching {
-            context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-        }.recoverCatching {
-            context.startActivity(fallbackIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-        }.onFailure {
-            pendingNotificationOwnerPermissionSelection = null
-            pendingNotificationPermissionEnable = false
-            scope.launch {
-                snackbarHostState.showSnackbar(
-                    context.getString(R.string.pref_code_notification_owner_permission_denied),
-                )
-            }
-        }
+        // No-op: notification owner selection removed
     }
     val requestNotificationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { granted ->
-        if (granted && pendingNotificationOwnerPermissionSelection == CodeNotificationOwner.APP) {
-            scope.launch {
-                val enableNotification = pendingNotificationPermissionEnable
-                pendingNotificationOwnerPermissionSelection = null
-                pendingNotificationPermissionEnable = false
-                persistNotificationOwnerSelection(
-                    owner = CodeNotificationOwner.APP,
-                    enableNotification = enableNotification,
-                )
-            }
-        } else {
+        if (!granted) {
             scope.launch {
                 snackbarHostState.showSnackbar(
                     context.getString(R.string.pref_code_notification_owner_permission_settings_hint),
                 )
             }
-            openNotificationSettings()
         }
-    }
-    fun requestNotificationPermissionIfNeeded(enableNotification: Boolean): Boolean {
-        val permissionRequired = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            !NotificationUtils.hasPostNotificationsPermission(context)
-        if (!permissionRequired) {
-            return false
-        }
-        pendingNotificationOwnerPermissionSelection = CodeNotificationOwner.APP
-        pendingNotificationPermissionEnable = enableNotification
-        requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-        return true
     }
 
     LaunchedEffect(settingsViewModel, lifecycleOwner) {
@@ -881,20 +762,15 @@ internal fun ComposeSettingsScreenShared(
                             onSaved = markPrefsSaved,
                         )
                         val handleCodeNotificationToggle: (Boolean) -> Unit = { enabled ->
-                            if (!enabled) {
-                                showCodeNotificationEnabled.value = false
-                                scope.launch {
-                                    AppPreferencesDataStore.setBoolean(
-                                        context,
-                                        PrefConst.KEY_SHOW_CODE_NOTIFICATION,
-                                        false,
-                                    )
-                                    HookPreferenceMirror.publish(context)
-                                    markPrefsSaved()
-                                }
-                            } else {
-                                pendingEnableNotification = true
-                                showNotificationOwnerDialog = true
+                            showCodeNotificationEnabled.value = enabled
+                            scope.launch {
+                                AppPreferencesDataStore.setBoolean(
+                                    context,
+                                    PrefConst.KEY_SHOW_CODE_NOTIFICATION,
+                                    enabled,
+                                )
+                                HookPreferenceMirror.publish(context)
+                                markPrefsSaved()
                             }
                         }
                         io.github.magisk317.uikit.preference.ActionSwitchItem(
@@ -906,26 +782,23 @@ internal fun ComposeSettingsScreenShared(
                             },
                             onCheckedChange = handleCodeNotificationToggle,
                         )
-                        Item(
-                            title = stringResource(id = R.string.pref_code_notification_owner_title),
-                            summary = codeNotificationOwnerItemSummary(codeNotificationOwner),
-                        ) {
-                            pendingEnableNotification = false
-                            showNotificationOwnerDialog = true
+                        if (showCodeNotificationEnabled.value) {
+                            SwitchItem(
+                                title = stringResource(id = R.string.pref_auto_cancel_notification_title),
+                                summary = stringResource(id = R.string.pref_auto_cancel_notification_summary),
+                                key = PrefConst.KEY_AUTO_CANCEL_CODE_NOTIFICATION,
+                                defaultValue = false,
+                                stateOverride = autoCancelNotificationEnabled,
+                                onToggle = { autoCancelNotificationEnabled.value = it },
+                                onSaved = markPrefsSaved,
+                            )
+                            if (autoCancelNotificationEnabled.value) {
+                                Item(
+                                    title = stringResource(id = R.string.pref_notification_retention_time_title),
+                                    summary = notificationRetentionEntryLabel(retentionTime),
+                                ) { showRetentionDialog = true }
+                            }
                         }
-                        SwitchItem(
-                            title = stringResource(id = R.string.pref_auto_cancel_notification_title),
-                            summary = stringResource(id = R.string.pref_auto_cancel_notification_summary),
-                            key = PrefConst.KEY_AUTO_CANCEL_CODE_NOTIFICATION,
-                            defaultValue = false,
-                            enabled = showCodeNotificationEnabled.value,
-                            onSaved = markPrefsSaved,
-                        )
-                        Item(
-                            title = stringResource(id = R.string.pref_notification_retention_time_title),
-                            summary = notificationRetentionEntryLabel(retentionTime),
-                            enabled = showCodeNotificationEnabled.value,
-                        ) { showRetentionDialog = true }
                     }
 
                     ExpandableSettingsSection(
@@ -992,15 +865,13 @@ internal fun ComposeSettingsScreenShared(
                             title = stringResource(id = R.string.runtime_log_clear_confirm_title),
                             summary = stringResource(id = R.string.runtime_log_clear_summary),
                         ) { showClearLogConfirmDialog = true }
-                        if (BuildConfig.DEBUG) {
-                            SwitchItem(
-                                title = stringResource(id = R.string.pref_sensitive_debug_log_mode_title),
-                                summary = stringResource(id = R.string.pref_sensitive_debug_log_mode_summary),
-                                key = PrefConst.KEY_SENSITIVE_DEBUG_LOG_MODE,
-                                defaultValue = false,
-                                onSaved = markPrefsSaved,
-                            )
-                        }
+                        SwitchItem(
+                            title = stringResource(id = R.string.pref_sensitive_debug_log_mode_title),
+                            summary = stringResource(id = R.string.pref_sensitive_debug_log_mode_summary),
+                            key = PrefConst.KEY_SENSITIVE_DEBUG_LOG_MODE,
+                            defaultValue = false,
+                            onSaved = markPrefsSaved,
+                        )
                         SwitchItem(
                             title = stringResource(id = R.string.pref_auto_update_on_start_title),
                             summary = stringResource(id = R.string.pref_auto_update_on_start_summary),
@@ -1202,28 +1073,6 @@ internal fun ComposeSettingsScreenShared(
             },
             valueFormatter = { "${it.toInt()}dp" },
         )
-    }
-
-    if (showNotificationOwnerDialog) {
-        NotificationOwnerDialog(
-            owner = codeNotificationOwner,
-            onDismiss = {
-                showNotificationOwnerDialog = false
-                pendingEnableNotification = false
-            },
-        ) { owner ->
-            val enableNotification = pendingEnableNotification
-            showNotificationOwnerDialog = false
-            pendingEnableNotification = false
-            if (owner == CodeNotificationOwner.APP &&
-                requestNotificationPermissionIfNeeded(enableNotification)
-            ) {
-                return@NotificationOwnerDialog
-            }
-            scope.launch {
-                persistNotificationOwnerSelection(owner, enableNotification)
-            }
-        }
     }
 
     if (showTintAlphaDialog) {
@@ -1919,68 +1768,6 @@ fun rememberPrefBoolean(key: String, defaultValue: Boolean): MutableState<Boolea
         state.value = AppPreferencesDataStore.getBoolean(context, key, defaultValue)
     }
     return state
-}
-
-@Composable
-private fun NotificationOwnerDialog(
-    owner: String,
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit,
-) {
-    val selectedOwner = when (owner) {
-        CodeNotificationOwner.APP -> CodeNotificationOwner.APP
-        CodeNotificationOwner.PHONE -> CodeNotificationOwner.PHONE
-        else -> CodeNotificationOwner.DEFAULT
-    }
-    io.github.magisk317.uikit.surface.AppBasicDialog(
-        onDismissRequest = onDismiss,
-    ) {
-        SingleChoiceDialogSurface(title = stringResource(id = R.string.pref_code_notification_owner_title)) {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                NotificationOwnerOption(
-                    selected = selectedOwner == CodeNotificationOwner.APP,
-                    text = stringResource(id = R.string.pref_code_notification_owner_app_option),
-                    onClick = { onConfirm(CodeNotificationOwner.APP) },
-                )
-                NotificationOwnerOption(
-                    selected = selectedOwner == CodeNotificationOwner.PHONE,
-                    text = stringResource(id = R.string.pref_code_notification_owner_phone_option),
-                    onClick = { onConfirm(CodeNotificationOwner.PHONE) },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun NotificationOwnerOption(
-    selected: Boolean,
-    text: String,
-    onClick: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        io.github.magisk317.uikit.preference.AppRadioButton(selected = selected, onClick = onClick)
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyMedium,
-        )
-    }
-}
-
-@Composable
-private fun codeNotificationOwnerItemSummary(owner: String): String {
-    val ownerLabel = when (owner) {
-        CodeNotificationOwner.PHONE -> stringResource(id = R.string.pref_code_notification_owner_phone)
-        CodeNotificationOwner.APP -> stringResource(id = R.string.pref_code_notification_owner_app)
-        else -> stringResource(id = R.string.pref_code_notification_owner_phone)
-    }
-    return stringResource(id = R.string.pref_code_notification_owner_summary, ownerLabel)
 }
 
 @Composable
