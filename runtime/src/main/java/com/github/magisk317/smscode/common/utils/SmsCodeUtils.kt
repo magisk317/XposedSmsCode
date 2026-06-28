@@ -15,6 +15,7 @@ import io.github.magisk317.smscode.runtime.common.sms.RuntimeSmsCodeAdapter
 import io.github.magisk317.smscode.runtime.common.sms.SmsCodeRuleProvider
 import io.github.magisk317.smscode.runtime.common.sms.SmsKeywordProvider
 import io.github.magisk317.smscode.runtime.common.sms.SmsPackageLabelResolver
+import java.util.Locale
 
 object SmsCodeUtils {
     private const val COLUMN_COMPANY = "company"
@@ -68,8 +69,23 @@ object SmsCodeUtils {
         return try {
             val pm = context.packageManager
             val apps = pm.getInstalledApplications(android.content.pm.PackageManager.MATCH_ALL)
+            val targetLabel = label.trim()
             for (app in apps) {
-                if (pm.getApplicationLabel(app).toString().equals(label, ignoreCase = true)) {
+                if (pm.getApplicationLabel(app).toString().trim().equals(targetLabel, ignoreCase = true)) {
+                    return app.packageName
+                }
+            }
+            val normalizedTarget = normalizeLabelForMatching(targetLabel)
+            if (normalizedTarget.isBlank()) return null
+            for (app in apps) {
+                val appLabel = pm.getApplicationLabel(app).toString().trim()
+                val normalizedAppLabel = normalizeLabelForMatching(appLabel)
+                if (normalizedAppLabel.isBlank()) continue
+                if (
+                    normalizedAppLabel == normalizedTarget ||
+                    normalizedAppLabel.contains(normalizedTarget) ||
+                    normalizedTarget.contains(normalizedAppLabel)
+                ) {
                     return app.packageName
                 }
             }
@@ -77,6 +93,13 @@ object SmsCodeUtils {
         } catch (_: Exception) {
             null
         }
+    }
+
+    private fun normalizeLabelForMatching(label: String): String {
+        return label
+            .trim()
+            .lowercase(Locale.ROOT)
+            .replace(Regex("[\\s\\p{Punct}·、，。！（）【】《》「」『』：；]+"), "")
     }
 
     private fun loadRulesFromFile(context: Context): List<SmsCodeRule> =
