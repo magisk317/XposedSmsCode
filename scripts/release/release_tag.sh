@@ -6,6 +6,7 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 TOOLKIT_DIR="${ROOT_DIR}/scripts/_toolkit"
 
 # Source the toolkit's modular release tag
+export MAGISK_RELEASE_GUARD_SCRIPT="${SCRIPT_DIR}/check_release_guard.sh"
 source "${TOOLKIT_DIR}/release/release_tag.sh"
 
 # XposedSmsCode specific: run pre-push CI checks
