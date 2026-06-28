@@ -8,9 +8,20 @@ TOOLKIT_DIR="${ROOT_DIR}/scripts/_toolkit"
 # Source the toolkit's modular release tag
 source "${TOOLKIT_DIR}/release/release_tag.sh"
 
-# XposedSmsCode specific: run detekt SARIF check
+# XposedSmsCode specific: run pre-push CI checks
 run_pre_push_checks() {
-  run_detekt_sarif_check "$ROOT_DIR"
+  run_common_gradle_checks "$ROOT_DIR" \
+    --warning-mode all \
+    :core:check \
+    :runtime:check \
+    :app:check \
+    :app:compileGithubDebugAndroidTestKotlin \
+    :app:compilePlayDebugAndroidTestKotlin \
+    :core:compilePlayDebugUnitTestKotlin \
+    :core:generatePlayDebugUnitTestStubRFile \
+    :runtime:compileDebugAndroidTestKotlin \
+    :app:assembleGithubDebug \
+    -PbuildSplits
 }
 
 # Run the release tag with XposedSmsCode configuration

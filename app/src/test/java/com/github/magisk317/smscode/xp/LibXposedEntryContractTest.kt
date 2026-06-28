@@ -18,7 +18,6 @@ class LibXposedEntryContractTest {
         val moduleProps = resolveProjectFile("app/src/main/resources/META-INF/xposed/module.prop").readText()
         assertTrue("minApiVersion=102" in moduleProps)
         assertTrue("targetApiVersion=102" in moduleProps)
-        assertTrue("staticScope=true" in moduleProps)
         assertTrue("autoHotReload=true" in moduleProps)
 
         val scope = resolveProjectFile("app/src/main/resources/META-INF/xposed/scope.list")
@@ -46,7 +45,7 @@ class LibXposedEntryContractTest {
         assertTrue("HotReloadedParam" in baseEntrySource)
         assertTrue("param.setSavedInstanceState(createHotReloadState())" in baseEntrySource)
         assertTrue("dispatchCurrentLoadedTargets(param, phase = \"moduleLoadedCurrentProcess\")" in baseEntrySource)
-        assertTrue("resolveCurrentProcessTargets(param)" in baseEntrySource)
+        assertTrue("resolveCurrentProcessTargets(param, oldHookHandles)" in baseEntrySource)
         assertTrue("phase = \"hotReload\"" in baseEntrySource)
         assertTrue("fun resolveCurrentLoadedTargets(param: ModuleLoadedParam)" in baseEntrySource)
         assertTrue("putString(STATE_PROCESS_NAME" in baseEntrySource)

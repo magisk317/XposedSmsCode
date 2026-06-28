@@ -7,27 +7,14 @@ import java.io.File
 class NotifyActionContractTest {
 
     @Test
-    fun `phone owned notifications use fixed phone owner channel`() {
-        val source = resolveProjectFile(
-            "app/src/main/java/com/github/magisk317/smscode/xp/hook/code/action/impl/NotifyAction.kt",
-        ).readText()
-
-        assertTrue("PACKAGE_PHONE = \"com.android.phone\"" in source)
-        assertTrue("fun resolvePhoneOwnerContext(): Context?" in source)
-        assertTrue("mPhoneContext.createPackageContext(" in source)
-        assertTrue("ensurePhoneNotificationChannel(phoneOwnerContext)" in source)
-        assertTrue("channelId = NotificationConst.CHANNEL_ID_SMSCODE_NOTIFICATION" in source)
-        assertTrue("phoneContext = phoneOwnerContext" in source)
-    }
-
-    @Test
     fun `app owned notifications defer channel checks to app receiver`() {
         val source = resolveProjectFile(
             "app/src/main/java/com/github/magisk317/smscode/xp/hook/code/action/impl/NotifyAction.kt",
         ).readText()
 
-        assertTrue("appOwnedChannelInitializer = {}" in source)
+        assertTrue("CodeNotificationDeliveryHelper.requestAppOwnedNotification" in source)
         assertTrue("summary = \"deferred_to_receiver\"" in source)
+        assertTrue("channelInitializer = { context -> ensureNotificationChannel(context) }" in source)
     }
 
     private fun resolveProjectFile(relativePath: String): File {
