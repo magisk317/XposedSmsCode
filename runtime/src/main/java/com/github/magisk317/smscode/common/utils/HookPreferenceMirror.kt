@@ -4,6 +4,6 @@ import android.content.Context
 
 object HookPreferenceMirror {
     suspend fun publish(context: Context) {
-        AppPreferencesDataStore.syncToRemotePrefs(context)
+        AppPreferencesDataStore.syncToSharedPrefs(context)
     }
 }

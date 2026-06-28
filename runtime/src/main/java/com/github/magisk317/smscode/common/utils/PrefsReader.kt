@@ -5,7 +5,7 @@ import android.content.SharedPreferences
 import com.github.magisk317.smscode.common.constant.CodeNotificationOwner
 import com.github.magisk317.smscode.common.constant.PrefConst
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
-import com.github.magisk317.smscode.runtime.BuildConfig
+
 import com.github.magisk317.smscode.common.utils.XLog
 import java.util.Collections
 
@@ -13,6 +13,8 @@ object PrefsReader {
     private const val PREFS_NAME = "xposed_prefs"
     @Volatile
     private var remotePrefsProvider: (() -> SharedPreferences?)? = null
+    @Volatile
+    private var hookContext: Context? = null
     @Volatile
     private var remoteProviderLogged = false
     private val remoteTraceLoggedKeys = Collections.synchronizedSet(mutableSetOf<String>())
@@ -22,6 +24,11 @@ object PrefsReader {
     fun setRemotePrefsProvider(provider: (() -> SharedPreferences?)?) {
         remotePrefsProvider = provider
         remoteProviderLogged = false
+    }
+
+    @JvmStatic
+    fun setHookContext(context: Context) {
+        hookContext = context.applicationContext ?: context
     }
 
     private fun getRemotePrefs(): SharedPreferences? {
@@ -35,6 +42,15 @@ object PrefsReader {
         }
     }
 
+    private fun getLocalPrefs(): SharedPreferences? {
+        val ctx = hookContext ?: return null
+        return runCatching { ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }.getOrNull()
+    }
+
+    private fun getAnyPrefs(): SharedPreferences? {
+        return getRemotePrefs() ?: getLocalPrefs()
+    }
+
 
     private fun logRemoteTraceOnce(key: String, state: String) {
         if (remoteTraceLoggedKeys.add(key)) {
@@ -43,29 +59,29 @@ object PrefsReader {
     }
 
     private fun getBooleanViaRemote(key: String, defaultValue: Boolean): Boolean? {
-        val prefs = getRemotePrefs() ?: return null
+        val prefs = getAnyPrefs() ?: return null
         return try {
             if (!prefs.contains(key)) return null
             prefs.getBoolean(key, defaultValue)
         } catch (t: Throwable) {
-            XLog.w("PrefsReader: remote prefs boolean '%s' failed, fallback provider", key, t)
+            XLog.w("PrefsReader: prefs boolean '%s' failed", key, t)
             null
         }
     }
 
     private fun getStringViaRemote(key: String, defaultValue: String): String? {
-        val prefs = getRemotePrefs() ?: return null
+        val prefs = getAnyPrefs() ?: return null
         return try {
             if (!prefs.contains(key)) return null
             prefs.getString(key, defaultValue) ?: defaultValue
         } catch (t: Throwable) {
-            XLog.w("PrefsReader: remote prefs string '%s' failed, fallback provider", key, t)
+            XLog.w("PrefsReader: prefs string '%s' failed", key, t)
             null
         }
     }
 
     private fun getIntViaRemote(key: String, defaultValue: Int): Int? {
-        val prefs = getRemotePrefs() ?: return null
+        val prefs = getAnyPrefs() ?: return null
         return try {
             if (!prefs.contains(key)) return null
             when (val any = prefs.all[key]) {
@@ -75,7 +91,7 @@ object PrefsReader {
                 else -> prefs.getInt(key, defaultValue)
             }
         } catch (t: Throwable) {
-            XLog.w("PrefsReader: remote prefs int '%s' failed, fallback provider", key, t)
+            XLog.w("PrefsReader: prefs int '%s' failed", key, t)
             null
         }
     }
@@ -85,23 +101,23 @@ object PrefsReader {
     }
 
     private fun readBooleanWithTrace(key: String, defaultValue: Boolean): BooleanReadTrace {
-        val remotePrefs = getRemotePrefs()
-        val remoteState = when {
-            remotePrefs == null -> "unavailable"
-            remotePrefs.contains(key) -> "hit"
+        val prefs = getAnyPrefs()
+        val state = when {
+            prefs == null -> "unavailable"
+            prefs.contains(key) -> "hit"
             else -> "miss"
         }
-        logRemoteTraceOnce("bool:$key", remoteState)
-        if (remotePrefs != null) {
+        logRemoteTraceOnce("bool:$key", state)
+        if (prefs != null) {
             try {
-                if (remotePrefs.contains(key)) {
+                if (prefs.contains(key)) {
                     return BooleanReadTrace(
-                        value = remotePrefs.getBoolean(key, defaultValue),
-                        source = "remote",
+                        value = prefs.getBoolean(key, defaultValue),
+                        source = "prefs",
                     )
                 }
             } catch (t: Throwable) {
-                XLog.w("PrefsReader: remote prefs boolean '%s' failed", key, t)
+                XLog.w("PrefsReader: prefs boolean '%s' failed", key, t)
             }
         }
         return BooleanReadTrace(
@@ -115,7 +131,7 @@ object PrefsReader {
     }
 
     private fun readStringWithTrace(key: String, defaultValue: String): StringReadTrace {
-        val remotePrefs = getRemotePrefs()
+        val remotePrefs = getAnyPrefs()
         val remoteState = when {
             remotePrefs == null -> "unavailable"
             remotePrefs.contains(key) -> "hit"
@@ -157,12 +173,14 @@ object PrefsReader {
     }
 
     @JvmStatic
-    fun isSensitiveDebugLogSupported(): Boolean = BuildConfig.DEBUG
+    fun isSensitiveDebugLogSupported(): Boolean = true
 
     @JvmStatic
     fun isSensitiveDebugLogMode(context: Context): Boolean {
         if (!isSensitiveDebugLogSupported()) return false
-        return getBooleanViaProvider(PrefConst.KEY_SENSITIVE_DEBUG_LOG_MODE, false)
+        val result = getBooleanViaProvider(PrefConst.KEY_SENSITIVE_DEBUG_LOG_MODE, false)
+        android.util.Log.w("XSmsCode", "isSensitiveDebugLogMode: result=$result remotePrefsProvider=${remotePrefsProvider != null}")
+        return result
     }
 
     @JvmStatic

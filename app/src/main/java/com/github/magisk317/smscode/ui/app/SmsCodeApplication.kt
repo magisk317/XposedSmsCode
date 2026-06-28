@@ -44,6 +44,7 @@ class SmsCodeApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        android.util.Log.w("XSmsCode", "SmsCodeApplication.onCreate() START")
         ensureIpcToken()
         RuntimeLogStore.initialize(this, enableDetailedLogs = false)
         installCoreRuntime()
@@ -124,6 +125,10 @@ class SmsCodeApplication : Application() {
         frameworkName: String?,
         frameworkVersion: String?,
     ) {
+        android.util.Log.i(
+            "XSmsCode",
+            "handleXposedServiceBound() called: framework=$frameworkName version=$frameworkVersion provider=${remotePrefsProvider != null}",
+        )
         AppPreferencesDataStore.setRemotePrefsProvider(remotePrefsProvider)
         ModuleUtils.setRuntimeActivated(true)
         ModuleActivationStore.markActivated(this)

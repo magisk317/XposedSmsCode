@@ -35,24 +35,29 @@ class LibXposedEntryContractTest {
 
     @Test
     fun `hot reload stores only parcelable process and package state`() {
-        val entrySource = resolveProjectFile(
+        val appEntrySource = resolveProjectFile(
             "app/src/main/java/com/github/magisk317/smscode/xp/LibXposedEntry.kt",
         ).readText()
+        val baseEntrySource = resolveProjectFile(
+            "magisk-xposed-kit/src/main/java/io/github/magisk317/xposed/BaseLibXposedEntry.kt",
+        ).readText()
 
-        assertTrue("HotReloadingParam" in entrySource)
-        assertTrue("HotReloadedParam" in entrySource)
-        assertTrue("param.setSavedInstanceState(createHotReloadState())" in entrySource)
-        assertTrue("dispatchCurrentLoadedTargets(param, phase = \"moduleLoadedCurrentProcess\")" in entrySource)
-        assertTrue("dispatchCurrentLoadedTargets(param, phase = \"hotReloadCurrentProcess\")" in entrySource)
-        assertTrue("fun resolveCurrentLoadedTargets(param: ModuleLoadedParam)" in entrySource)
-        assertTrue("putString(STATE_PROCESS_NAME" in entrySource)
-        assertTrue("putStringArrayList(STATE_LOADED_PACKAGES" in entrySource)
-        assertTrue("hookApi.beginHotReload(param.oldHookHandles)" in entrySource)
-        assertTrue("hookApi.finishHotReload()" in entrySource)
-        assertFalse("setSavedInstanceState(Pair(" in entrySource)
-        assertFalse("HashMap(loadedPackages)" in entrySource)
-        assertFalse("savedInstanceState as? Pair" in entrySource)
-        assertFalse("ClassLoader)" in entrySource.substringAfter("fun createHotReloadState"))
+        assertTrue("HotReloadingParam" in baseEntrySource)
+        assertTrue("HotReloadedParam" in baseEntrySource)
+        assertTrue("param.setSavedInstanceState(createHotReloadState())" in baseEntrySource)
+        assertTrue("dispatchCurrentLoadedTargets(param, phase = \"moduleLoadedCurrentProcess\")" in baseEntrySource)
+        assertTrue("resolveCurrentProcessTargets(param)" in baseEntrySource)
+        assertTrue("phase = \"hotReload\"" in baseEntrySource)
+        assertTrue("fun resolveCurrentLoadedTargets(param: ModuleLoadedParam)" in baseEntrySource)
+        assertTrue("putString(STATE_PROCESS_NAME" in baseEntrySource)
+        assertTrue("putStringArrayList(STATE_LOADED_PACKAGES" in baseEntrySource)
+        assertTrue("hookApi.beginHotReload(oldHookHandles)" in baseEntrySource)
+        assertTrue("hookApi.finishHotReload()" in baseEntrySource)
+        assertFalse("setSavedInstanceState(Pair(" in baseEntrySource)
+        assertFalse("HashMap(loadedPackages)" in baseEntrySource)
+        assertFalse("savedInstanceState as? Pair" in baseEntrySource)
+        val hotReloadFun = baseEntrySource.substringAfter("fun createHotReloadState()").substringBefore("\n    private fun ")
+        assertFalse("ClassLoader)" in hotReloadFun)
     }
 
     private fun resolveProjectFile(relativePath: String): File {

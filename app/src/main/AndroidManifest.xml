@@ -93,6 +93,11 @@
             android:exported="true" />
 
         <provider
+            android:name="com.github.magisk317.smscode.data.log.RuntimeLogProvider"
+            android:authorities="${applicationId}.runtime-log.provider"
+            android:exported="true" />
+
+        <provider
             android:name="io.github.libxposed.service.XposedProvider"
             android:authorities="${applicationId}.XposedService"
             android:exported="true"

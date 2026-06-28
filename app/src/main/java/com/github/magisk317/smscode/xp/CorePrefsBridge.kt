@@ -1,8 +1,6 @@
 package com.github.magisk317.smscode.xp
 
 import android.content.SharedPreferences
-import com.github.magisk317.smscode.common.constant.PrefConst
-import com.github.magisk317.smscode.common.utils.PrefsReader
 import io.github.magisk317.smscode.xposed.prefs.CorePrefs
 import io.github.magisk317.smscode.xposed.prefs.CorePrefsAccess
 
@@ -16,9 +14,6 @@ object CorePrefsBridge {
     ): CorePrefsAccess {
         return object : CorePrefsAccess {
             override fun getBoolean(key: String, defaultValue: Boolean): Boolean {
-                if (key == PrefConst.KEY_SENSITIVE_DEBUG_LOG_MODE && !PrefsReader.isSensitiveDebugLogSupported()) {
-                    return false
-                }
                 remotePrefsProvider?.invoke()?.let { prefs ->
                     if (prefs.contains(key)) {
                         return prefs.getBoolean(key, defaultValue)

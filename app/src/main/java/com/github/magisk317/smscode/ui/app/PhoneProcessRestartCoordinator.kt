@@ -44,12 +44,15 @@ object PhoneProcessRestartCoordinator {
                 return
             }
 
-            if (canUseRoot()) {
-                restartTargetProcessesViaRoot()
+            if (!canUseRoot()) {
+                Timber.w("Target process restart deferred after install/update: root unavailable.")
+                return
             }
 
-            // Mark token handled even when root is unavailable to avoid repeated noisy attempts.
-            prefs.edit().putString(KEY_LAST_HANDLED_INSTALL_TOKEN, installToken).apply()
+            val restartResult = restartTargetProcessesViaRoot()
+            if (restartResult.shouldMarkInstallHandled) {
+                prefs.edit().putString(KEY_LAST_HANDLED_INSTALL_TOKEN, installToken).apply()
+            }
         }
     }
 
@@ -99,21 +102,51 @@ object PhoneProcessRestartCoordinator {
         }.getOrDefault(false)
     }
 
-    private fun restartTargetProcessesViaRoot() {
+    private fun restartTargetProcessesViaRoot(): RestartAttemptResult {
         val targets = TARGET_PROCESSES.joinToString(separator = " ") { shellQuote(it) }
         val command =
-            "FOUND=0; " +
+            "FOUND=0; KILLED=0; FAILED=0; " +
                 "for NAME in $targets; do " +
                 "PIDS=\$(pidof \"${'$'}NAME\" 2>/dev/null); " +
-                "if [ -n \"${'$'}PIDS\" ]; then kill -9 ${'$'}PIDS >/dev/null 2>&1 && FOUND=1; fi; " +
+                "if [ -n \"${'$'}PIDS\" ]; then " +
+                "FOUND=\$((FOUND + 1)); " +
+                "if kill -9 ${'$'}PIDS >/dev/null 2>&1; then " +
+                "KILLED=\$((KILLED + 1)); " +
+                "else FAILED=\$((FAILED + 1)); fi; " +
+                "fi; " +
                 "done; " +
+                "echo found=${'$'}FOUND killed=${'$'}KILLED failed=${'$'}FAILED; " +
+                "if [ \"${'$'}FAILED\" -gt 0 ]; then exit 1; fi; " +
                 "exit 0"
         val result = runSuCommand(command)
-        if (result.exitCode == 0) {
-            Timber.i("Target process restart requested after install/update change.")
+        val restartResult = RestartAttemptResult(
+            exitCode = result.exitCode,
+            summary = parseRestartCommandSummary(result.output),
+            rawOutput = result.output,
+        )
+        if (restartResult.shouldMarkInstallHandled) {
+            Timber.i(
+                "Target process restart completed after install/update change: found=%d killed=%d",
+                restartResult.summary?.found ?: 0,
+                restartResult.summary?.killed ?: 0,
+            )
         } else {
-            Timber.w("Target process restart failed after install/update change: exit=%d", result.exitCode)
+            Timber.w(
+                "Target process restart still pending after install/update change: exit=%d output=%s",
+                result.exitCode,
+                result.output.trim(),
+            )
         }
+        return restartResult
+    }
+
+    internal fun parseRestartCommandSummary(output: String): RestartCommandSummary? {
+        val match = RESTART_SUMMARY_REGEX.find(output) ?: return null
+        return RestartCommandSummary(
+            found = match.groupValues[1].toInt(),
+            killed = match.groupValues[2].toInt(),
+            failed = match.groupValues[3].toInt(),
+        )
     }
 
     private fun shellQuote(value: String): String {
@@ -146,11 +179,27 @@ object PhoneProcessRestartCoordinator {
         val output: String,
     )
 
+    internal data class RestartCommandSummary(
+        val found: Int,
+        val killed: Int,
+        val failed: Int,
+    )
+
+    internal data class RestartAttemptResult(
+        val exitCode: Int,
+        val summary: RestartCommandSummary?,
+        val rawOutput: String,
+    ) {
+        val shouldMarkInstallHandled: Boolean
+            get() = exitCode == 0 && summary != null && summary.failed == 0
+    }
+
     private const val INSTALL_GUARD_PREFS = "install_guard_prefs"
     private const val KEY_LAST_HANDLED_INSTALL_TOKEN = "last_handled_install_token"
     private const val KEY_LAST_RESTART_ATTEMPT_AT = "last_restart_attempt_at"
     private const val RESTART_ATTEMPT_COOLDOWN_MS = 60_000L
     private const val SU_COMMAND_TIMEOUT_SEC = 10L
+    private val RESTART_SUMMARY_REGEX = Regex("""found=(\d+)\s+killed=(\d+)\s+failed=(\d+)""")
     private val restartLock = Any()
     private val TARGET_PROCESSES = listOf(
         "com.android.phone",
