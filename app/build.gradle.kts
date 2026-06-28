@@ -117,7 +117,7 @@ dependencies {
     implementation(project(":smscode-core:domain"))
     implementation(project(":smscode-core:runtime"))
     implementation(project(":smscode-core:verification"))
-    implementation(project(":smscode-core:xposed"))
+    implementation(project(":smscode-core:hook"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.browser)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)

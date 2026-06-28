@@ -11,7 +11,6 @@ include(
     ":app",
     ":runtime",
     ":core",
-    ":smscode-core:xposed",
     ":smscode-core:hook",
     ":smscode-core:domain",
     ":smscode-core:runtime",
@@ -19,9 +18,9 @@ include(
     ":smscode-core:rule",
     ":smscode-core:verification",
     ":magisk-ui-kit",
+    ":magisk-xposed-kit",
 )
 
-project(":smscode-core:xposed").projectDir = file("smscode/core/xposed")
 project(":smscode-core:hook").projectDir = file("smscode/core/hook")
 project(":smscode-core:domain").projectDir = file("smscode/core/domain")
 project(":smscode-core:runtime").projectDir = file("smscode/core/runtime")

@@ -14,3 +14,6 @@
 [submodule "scripts/_toolkit"]
 	path = scripts/_toolkit
 	url = https://github.com/magisk317/magisk-ci-toolkit.git
+[submodule "magisk-xposed-kit"]
+	path = magisk-xposed-kit
+	url = https://github.com/magisk317/magisk-xposed-kit.git

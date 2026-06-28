@@ -11,7 +11,6 @@ cd "$ROOT_DIR"
   :smscode-core:verification:detekt \
   :smscode-core:hook:lintDebug \
   :smscode-core:runtime:lintDebug \
-  :smscode-core:xposed:lintDebug \
   :core:testGithubDebugUnitTest \
   :core:compileGithubDebugKotlin \
   :app:check

@@ -62,7 +62,7 @@ android {
 }
 
 dependencies {
-    implementation(project(":smscode-core:xposed"))
+    implementation(project(":smscode-core:hook"))
     implementation(project(":smscode-core:domain"))
     implementation(project(":smscode-core:runtime"))
     implementation(platform(libs.androidx.compose.bom))
