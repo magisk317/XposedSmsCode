@@ -28,9 +28,22 @@ object NotificationUtils {
 
     @JvmStatic
     fun createNotificationChannel(context: Context, channelId: String, channelName: String, importance: Int) {
-        val channel = NotificationChannel(channelId, channelName, importance)
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager?
-        manager?.createNotificationChannel(channel)
+            ?: return
+        // Android does not restore a deleted channel via createNotificationChannel().
+        // If the channel was previously deleted (getNotificationChannel returns null but
+        // the deleted record persists internally), we must explicitly delete-then-recreate.
+        // Note: getNotificationChannel() may throw SecurityException when called from a
+        // different process (e.g., com.android.mms trying to read channels for SmsCode app).
+        // We catch this and fall back to direct creation.
+        val existing = runCatching { manager.getNotificationChannel(channelId) }.getOrNull()
+        if (existing == null) {
+            // Channel either never existed, was deleted, or we can't read it —
+            // force delete to clear the internal "deleted" marker, then create fresh.
+            runCatching { manager.deleteNotificationChannel(channelId) }
+        }
+        val channel = NotificationChannel(channelId, channelName, importance)
+        manager.createNotificationChannel(channel)
     }
 
     @JvmStatic

@@ -7,17 +7,17 @@ import java.io.File
 class NotifyActionContractTest {
 
     @Test
-    fun `phone owned notifications reuse mms host message channels`() {
+    fun `phone owned notifications use fixed phone owner channel`() {
         val source = resolveProjectFile(
             "app/src/main/java/com/github/magisk317/smscode/xp/hook/code/action/impl/NotifyAction.kt",
         ).readText()
 
-        assertTrue("fun resolvePhoneOwnedChannelId()" in source)
-        assertTrue("PACKAGE_MMS = \"com.android.mms\"" in source)
-        assertTrue("MMS_MESSAGE_CHANNEL_PREFIX = \"Channel_Msg_Default\"" in source)
-        assertTrue("MMS_MESSAGE_CHANNEL_GROUP = \"Channel_Msg_Group\"" in source)
-        assertTrue("MMS_DEFAULT_CHANNEL_ID = \"Mms_Default\"" in source)
-        assertTrue("channelId = resolvePhoneOwnedChannelId()" in source)
+        assertTrue("PACKAGE_PHONE = \"com.android.phone\"" in source)
+        assertTrue("fun resolvePhoneOwnerContext(): Context?" in source)
+        assertTrue("mPhoneContext.createPackageContext(" in source)
+        assertTrue("ensurePhoneNotificationChannel(phoneOwnerContext)" in source)
+        assertTrue("channelId = NotificationConst.CHANNEL_ID_SMSCODE_NOTIFICATION" in source)
+        assertTrue("phoneContext = phoneOwnerContext" in source)
     }
 
     @Test
