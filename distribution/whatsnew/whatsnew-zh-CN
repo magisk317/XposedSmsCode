@@ -1,6 +1,6 @@
-- 升级至 3.3.1-beta（120）。
-- 修复短信/MMS 进程注入、热重载派发与验证码解析链路。
-- 修复 app-owned 通知在宿主 UID 下提前失败的问题，并增强小米后台冻结场景回退。
-- 验证码通知默认回到 phone-owned，短信宿主复用系统短信 channel。
-- 优化首页概览、记录页滚动体验，并升级依赖与发布工作流。
+- 升级至 3.3.1-beta2（121）。
+- 彻底重构验证码通知拦截调度，全面采用 app-owned 模式，并下放鉴权校验给应用层。
+- 优化 Hook 进程生命周期、热重载以及状态恢复同步流程。
+- 迁移底层 Hook 层的日志系统，全面接入原生的 XposedLogClient。
+- 优化短信拦截逻辑，集成 magisk-ci-toolkit 发版组件并更新契约测试。
 - https://github.com/magisk317/XposedSmsCode/releases

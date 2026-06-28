@@ -4,6 +4,20 @@
 
 ---
 
+## [v3.3.1-beta2] - 2026-06-28
+- 版本：`versionCode 121` / `versionName 3.3.1-beta2`。
+- `[xposed/hook]` 优化进程生命周期同步与热重载恢复。
+- `[notification]` 废弃 phone-owned，全面采用 app-owned 模式发送通知。
+- `[log]` 迁移 Hook 层日志至原生 XposedLogClient。
+- `[hook/sms]` 优化短信拦截逻辑并解决潜在的冲突。
+- `[ci/release]` 深度集成并完善本地及云端发版流水线。
+- `[test]` 修复过期契约测试及 Lint 静态检查误报。
+- `[deps/submodules]` 升级周边依赖并同步核心子模块指针。
+
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.3.1-beta...v3.3.1-beta2
+
+---
+
 ## [v3.3.1-beta] - 2026-06-22
 - 版本：`versionCode 120` / `versionName 3.3.1-beta`。
 - `[xposed/hook]` 修复当前进程派发与热重载恢复。

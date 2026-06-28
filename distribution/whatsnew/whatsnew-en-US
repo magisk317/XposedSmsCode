@@ -1,6 +1,6 @@
-- Updated to 3.3.1-beta (120).
-- Fixed SMS/MMS process dispatch, hot-reload routing, and verification-code parsing paths.
-- Fixed app-owned notification failures caused by host UID/package mismatches and added Xiaomi background fallback.
-- Defaulted code notifications back to phone-owned and reused host SMS channels where needed.
-- Refined overview/record UI, dependencies, and release workflows.
+- Updated to 3.3.1-beta2 (121).
+- Completely refactored notification dispatch to fully use app-owned mode and delegated channel validation to the app receiver.
+- Optimized Hook process lifecycle, hot-reload routing, and state restoration.
+- Migrated underlying Hook logging to XposedLogClient.
+- Refined SMS interception logic, integrated magisk-ci-toolkit, and updated contract tests.
 - https://github.com/magisk317/XposedSmsCode/releases
