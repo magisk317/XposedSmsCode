@@ -75,12 +75,34 @@ object AutoInputResultHandler {
         }.getOrDefault(0)
 
         if (updatedRows <= 0) {
-            XLog.w(
-                "Diag AutoInputResultReceiver skipped stale result: attemptId=%d success=%s reason=%s",
-                result.attemptId,
-                result.success,
-                result.reason ?: "<none>",
-            )
+            // UPDATE found no row — the INSERT in the hook process may have failed
+            // or the WAL hasn't propagated yet. Upsert to ensure the result is persisted.
+            val upserted = runCatching {
+                RuntimeStorageFacade.dbManager(context).upsertAutoInputResult(
+                    attemptId = result.attemptId,
+                    success = result.success,
+                    reason = result.reason,
+                )
+            }.onFailure { error ->
+                XLog.w(
+                    "AutoInput result upsert failed: %s",
+                    error.message ?: error.javaClass.simpleName,
+                )
+            }.getOrDefault(0)
+            if (upserted <= 0) {
+                XLog.w(
+                    "Diag AutoInputResultReceiver skipped stale result: attemptId=%d success=%s reason=%s",
+                    result.attemptId,
+                    result.success,
+                    result.reason ?: "<none>",
+                )
+            } else {
+                XLog.i(
+                    "Diag AutoInputResultReceiver recovered stale result via upsert: attemptId=%d success=%s",
+                    result.attemptId,
+                    result.success,
+                )
+            }
         }
     }
 

@@ -14,6 +14,7 @@ import io.github.magisk317.smscode.verification.AutoInputDispatchGuard
 import io.github.magisk317.smscode.verification.SmsCodeActionScheduler
 import io.github.magisk317.smscode.verification.SmsCodeActionDispatcher as SharedSmsCodeActionDispatcher
 import io.github.magisk317.smscode.verification.SmsCodePostParseCoordinator
+import io.github.magisk317.smscode.xposed.utils.XLog
 import java.util.concurrent.ScheduledExecutorService
 
 internal object SmsCodeActionDispatcher {
@@ -203,7 +204,8 @@ internal object SmsCodeActionDispatcher {
         smsMsg: SmsMsg,
         plan: SmsCodePostParseCoordinator.NotificationPlan,
     ) {
-        SmsCodeActionScheduler.scheduleNow(executor) {
+        XLog.i("scheduleNotification() running inline: smsCode=%s", smsMsg.smsCode)
+        runCatching {
             NotifyAction(
                 pluginContext = pluginContext,
                 phoneContext = phoneContext,
@@ -211,7 +213,9 @@ internal object SmsCodeActionDispatcher {
                 enabled = true,
                 autoCancelEnabled = plan.autoCancelDelayMs != null,
                 retentionTimeMs = plan.autoCancelDelayMs ?: 0L,
-            )
+            ).call()
+        }.onFailure { error ->
+            XLog.e("scheduleNotification() failed: %s", error)
         }
     }
 

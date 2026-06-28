@@ -175,6 +175,12 @@ interface AutoInputEventDao {
 
     @Query("UPDATE auto_input_event SET success = :success, fail_reason = :reason WHERE id = :id")
     suspend fun updateResult(id: Long, success: Boolean, reason: String?): Int
+
+    @Query("""
+        INSERT OR REPLACE INTO auto_input_event (id, code_length, success, fail_reason, attempt_at)
+        VALUES (:id, :codeLength, :success, :reason, :attemptAt)
+    """)
+    suspend fun upsertResult(id: Long, codeLength: Int, success: Boolean, reason: String?, attemptAt: Long = System.currentTimeMillis()): Long
 }
 
 @Dao

@@ -7,37 +7,33 @@ import com.github.magisk317.smscode.common.utils.ActivationDiagnosticsStore
 import com.github.magisk317.smscode.runtime.RuntimePrefsFacade as PrefsReader
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
 import com.github.magisk317.smscode.xp.helper.ModuleConflictArbiter
+import com.github.magisk317.smscode.xp.helper.RelayConflictNoticeHelper
+import com.github.magisk317.smscode.xp.XposedRuntimeInstaller
 import com.github.magisk317.smscode.xp.hook.code.CodeWorker
 import com.github.magisk317.smscode.xp.hook.code.SmsBlockEvaluator
 import io.github.magisk317.smscode.verification.SmsIntentHookSupport
 import com.github.magisk317.smscode.xp.hook.code.action.impl.OperateSmsAction
-import io.github.magisk317.smscode.xposed.helper.XposedWrapper
-import io.github.magisk317.smscode.xposed.hook.BaseHook
-import io.github.magisk317.smscode.xposed.hookapi.LoadParam
-import io.github.magisk317.smscode.xposed.hookapi.MethodHook
-import io.github.magisk317.smscode.xposed.hookapi.MethodHookParam
+import io.github.magisk317.xposed.HookHelpers
+import io.github.magisk317.xposed.BaseHook
+import io.github.magisk317.xposed.HookEnv
+import io.github.magisk317.xposed.LoadParam
+import io.github.magisk317.xposed.MethodHook
+import io.github.magisk317.xposed.MethodHookParam
 import io.github.magisk317.smscode.runtime.contract.logging.LogRoute
 import io.github.magisk317.smscode.xposed.utils.XLog
 import java.lang.reflect.Method
 import java.util.concurrent.Executors
 
 class MmsMessagesHook : BaseHook() {
-    override fun onLoadPackage(lpparam: LoadParam) {
+    override fun onLoadPackage(param: LoadParam) {
         XLog.withRoute(LogRoute.SMS_HOOK) {
-            onLoadPackageRouted(lpparam)
+            onLoadPackageRouted(param)
         }
     }
 
-    private fun onLoadPackageRouted(lpparam: LoadParam) {
-        if (lpparam.packageName != MMS_PACKAGE_NAME) return
-        val classLoader = lpparam.classLoader ?: run {
-            XLog.w(
-                "MmsMessagesHook skip: classLoader is null for pkg=%s process=%s",
-                lpparam.packageName,
-                lpparam.processName,
-            )
-            return
-        }
+    private fun onLoadPackageRouted(param: LoadParam) {
+        if (param.packageName != MMS_PACKAGE_NAME) return
+        val classLoader = param.classLoader
         XLog.i("MmsMessagesHook initializing")
         var totalHooks = 0
         RECEIVER_CLASS_NAMES.forEach { totalHooks += hookReceiver(classLoader, it) }
@@ -50,7 +46,7 @@ class MmsMessagesHook : BaseHook() {
     }
 
     private fun hookReceiver(classLoader: ClassLoader, receiverClassName: String): Int {
-        val receiverClass = XposedWrapper.findClass(receiverClassName, classLoader)
+        val receiverClass = runCatching { HookHelpers.findClass(receiverClassName, classLoader) }.getOrNull()
         if (receiverClass == null) {
             XLog.w("MmsMessagesHook receiver class missing: %s", receiverClassName)
             return 0
@@ -75,7 +71,7 @@ class MmsMessagesHook : BaseHook() {
                     Context::class.java.isAssignableFrom(types[0]) &&
                     Intent::class.java.isAssignableFrom(types[1])
                 ) {
-                    XposedWrapper.hookMethod(method, callback)
+                    HookEnv.api.hookMethod(method, callback)
                     hookedCount += 1
                 }
             }
@@ -86,7 +82,7 @@ class MmsMessagesHook : BaseHook() {
     }
 
     private fun hookIntentMethods(classLoader: ClassLoader, className: String): Int {
-        val clazz = XposedWrapper.findClass(className, classLoader)
+        val clazz = runCatching { HookHelpers.findClass(className, classLoader) }.getOrNull()
         if (clazz == null) {
             XLog.w("MmsMessagesHook service class missing: %s", className)
             return 0
@@ -96,7 +92,7 @@ class MmsMessagesHook : BaseHook() {
         clazz.declaredMethods
             .filter { it.name in methodNames && it.parameterTypes.any(Intent::class.java::isAssignableFrom) }
             .forEach { method ->
-                XposedWrapper.hookMethod(
+                HookEnv.api.hookMethod(
                     method,
                     object : MethodHook() {
                         override fun beforeHookedMethod(param: MethodHookParam) {
@@ -126,6 +122,7 @@ class MmsMessagesHook : BaseHook() {
         val pluginContext = runCatching {
             context.createPackageContext(BuildConfig.APPLICATION_ID, Context.CONTEXT_IGNORE_SECURITY)
         }.getOrNull()
+        pluginContext?.let(XposedRuntimeInstaller::ensureHookProcessLogging)
         val verboseDiag = pluginContext != null && PrefsReader.isVerboseLogMode(pluginContext)
         if (verboseDiag) {
             XLog.w(
@@ -147,6 +144,9 @@ class MmsMessagesHook : BaseHook() {
                 ModuleConflictArbiter.SUPPRESSION_REASON,
                 eventId,
             )
+            if (pluginContext != null) {
+                RelayConflictNoticeHelper.notifyConflictOnSms(pluginContext, context, eventId)
+            }
             return
         }
         val resolvedPluginContext = pluginContext ?: return
@@ -168,6 +168,10 @@ class MmsMessagesHook : BaseHook() {
             return
         }
         XLog.w("MmsMessagesHook block start: source=%s reason=%s event_id=%s", source, reason, eventId)
+        // Delete SMS from database so it doesn't appear in the inbox
+        if (evaluation.smsMsg != null) {
+            scheduleBlacklistDelete(resolvedPluginContext, context, evaluation.smsMsg)
+        }
         param.result = defaultResultForType((param.method as? Method)?.returnType)
     }
 

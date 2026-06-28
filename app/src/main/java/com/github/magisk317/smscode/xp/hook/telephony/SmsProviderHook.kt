@@ -8,12 +8,14 @@ import android.os.Binder
 import com.github.tianma8023.xposed.smscode.BuildConfig
 import com.github.magisk317.smscode.common.utils.ActivationDiagnosticsStore
 import com.github.magisk317.smscode.runtime.RuntimePrefsFacade as PrefsReader
+import com.github.magisk317.smscode.xp.XposedRuntimeInstaller
 import io.github.magisk317.smscode.xposed.utils.XLog
-import io.github.magisk317.smscode.xposed.hook.BaseHook
-import io.github.magisk317.smscode.xposed.helper.XposedWrapper
-import io.github.magisk317.smscode.xposed.hookapi.LoadParam
-import io.github.magisk317.smscode.xposed.hookapi.MethodHook
-import io.github.magisk317.smscode.xposed.hookapi.MethodHookParam
+import io.github.magisk317.xposed.BaseHook
+import io.github.magisk317.xposed.HookEnv
+import io.github.magisk317.xposed.HookHelpers
+import io.github.magisk317.xposed.LoadParam
+import io.github.magisk317.xposed.MethodHook
+import io.github.magisk317.xposed.MethodHookParam
 import io.github.magisk317.smscode.runtime.contract.logging.LogRoute
 
 /**
@@ -23,27 +25,19 @@ class SmsProviderHook : BaseHook() {
 
     override fun hookOnLoadPackage(): Boolean = true
 
-    override fun onLoadPackage(lpparam: LoadParam) {
+    override fun onLoadPackage(param: LoadParam) {
         XLog.withRoute(LogRoute.SMS_HOOK) {
-            onLoadPackageRouted(lpparam)
+            onLoadPackageRouted(param)
         }
     }
 
-    private fun onLoadPackageRouted(lpparam: LoadParam) {
-        if (lpparam.packageName != TELEPHONY_PROVIDER_PACKAGE) return
-        val classLoader = lpparam.classLoader ?: run {
-            XLog.w(
-                "SmsProviderHook skip: classLoader is null for pkg=%s process=%s",
-                lpparam.packageName,
-                lpparam.processName,
-            )
-            return
-        }
-        hookProviderMethods(classLoader)
+    private fun onLoadPackageRouted(param: LoadParam) {
+        if (param.packageName != TELEPHONY_PROVIDER_PACKAGE) return
+        hookProviderMethods(param.classLoader)
     }
 
     private fun hookProviderMethods(classLoader: ClassLoader) {
-        val providerClass = XposedWrapper.findClass(TELEPHONY_PROVIDER_CLASS, classLoader) ?: run {
+        val providerClass = runCatching { HookHelpers.findClass(TELEPHONY_PROVIDER_CLASS, classLoader) }.getOrNull() ?: run {
             XLog.w("SmsProviderHook: class not found: %s", TELEPHONY_PROVIDER_CLASS)
             return
         }
@@ -57,7 +51,7 @@ class SmsProviderHook : BaseHook() {
         val methods = clazz.declaredMethods.filter { it.name == methodName }
         if (methods.isEmpty()) return
         methods.forEach { method ->
-            XposedWrapper.hookMethod(
+            HookEnv.api.hookMethod(
                 method,
                 object : MethodHook() {
                     override fun beforeHookedMethod(param: MethodHookParam) {
@@ -72,6 +66,7 @@ class SmsProviderHook : BaseHook() {
                                     Context.CONTEXT_IGNORE_SECURITY,
                                 )
                             }.getOrNull()
+                            pluginContext?.let(XposedRuntimeInstaller::ensureHookProcessLogging)
                             if (pluginContext != null && context != null) {
                                 ActivationDiagnosticsStore.recordHookHeartbeat(
                                     context = pluginContext,

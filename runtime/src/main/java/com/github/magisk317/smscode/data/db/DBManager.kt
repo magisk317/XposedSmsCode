@@ -177,6 +177,14 @@ class DBManager private constructor(context: Context) {
         mAutoInputEventDao.updateResult(attemptId, success, reason)
     }
 
+    fun upsertAutoInputResult(
+        attemptId: Long,
+        success: Boolean,
+        reason: String?,
+    ): Long = runBlocking {
+        mAutoInputEventDao.upsertResult(attemptId, 0, success, reason)
+    }
+
     fun queryAllSmsMsgFlow(): Flow<List<SmsMsg>> = mSmsMsgDao.getAllFlow()
 
     fun queryAllSmsMsgCountFlow(): Flow<Long> = mSmsMsgDao.countFlow()

@@ -18,18 +18,18 @@ import io.github.magisk317.smscode.xposed.utils.XLog
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
 import com.github.magisk317.smscode.xp.helper.ModuleConflictArbiter
 import com.github.magisk317.smscode.xp.helper.RelayConflictNoticeHelper
+import com.github.magisk317.smscode.xp.XposedRuntimeInstaller
 import io.github.magisk317.smscode.verification.SmsDispatchChainBlockDeduplicator
 import io.github.magisk317.smscode.verification.SmsIntentHookSupport as VerificationSmsIntentHookSupport
-import io.github.magisk317.smscode.xposed.helper.XposedWrapper
-import io.github.magisk317.smscode.xposed.hook.BaseHook
+import io.github.magisk317.xposed.HookHelpers
+import io.github.magisk317.xposed.BaseHook
 import io.github.magisk317.smscode.xposed.hook.telephony.InboundSmsBlocker
 import com.github.magisk317.smscode.xp.hook.code.action.impl.OperateSmsAction
 import io.github.magisk317.smscode.runtime.common.sim.SmsRoutingIntentExtras
-import io.github.magisk317.smscode.xposed.hookapi.HookEnv
-import io.github.magisk317.smscode.xposed.hookapi.MethodHook
-import io.github.magisk317.smscode.xposed.hookapi.HookBridge
-import io.github.magisk317.smscode.xposed.hookapi.LoadParam
-import io.github.magisk317.smscode.xposed.hookapi.MethodHookParam
+import io.github.magisk317.xposed.HookEnv
+import io.github.magisk317.xposed.MethodHook
+import io.github.magisk317.xposed.LoadParam
+import io.github.magisk317.xposed.MethodHookParam
 import io.github.magisk317.smscode.runtime.common.utils.StorageUtils
 import io.github.magisk317.smscode.runtime.contract.logging.LogRoute
 import io.github.magisk317.smscode.verification.SmsDispatchIntentDeduplicator
@@ -71,26 +71,19 @@ class SmsHandlerHook : BaseHook() {
     @Volatile
     private var suppressionLogged = false
 
-    override fun onLoadPackage(lpparam: LoadParam) {
+    override fun onLoadPackage(param: LoadParam) {
         XLog.withRoute(LogRoute.SMS_HOOK) {
-            onLoadPackageRouted(lpparam)
+            onLoadPackageRouted(param)
         }
     }
 
-    private fun onLoadPackageRouted(lpparam: LoadParam) {
-        if (isSmsHandlerPackage(lpparam.packageName)) {
-            val classLoader = lpparam.classLoader ?: run {
-                XLog.w(
-                    "SmsHandlerHook skip: classLoader is null for pkg=%s process=%s",
-                    lpparam.packageName,
-                    lpparam.processName,
-                )
-                return
-            }
+    private fun onLoadPackageRouted(param: LoadParam) {
+        if (isSmsHandlerPackage(param.packageName)) {
+            val classLoader = param.classLoader
             val sharedHookKey = buildSharedProcessKey(
                 prefix = "hook_init",
-                packageName = lpparam.packageName,
-                processName = lpparam.processName,
+                packageName = param.packageName,
+                processName = param.processName,
             )
             val sharedHookAge = claimProcessPropertyWithinWindow(
                 key = sharedHookKey,
@@ -99,24 +92,24 @@ class SmsHandlerHook : BaseHook() {
             if (sharedHookAge != null) {
                 XLog.w(
                     "SmsHandlerHook shared init skip: pkg=%s process=%s pid=%d ageMs=%d",
-                    lpparam.packageName,
-                    lpparam.processName,
+                    param.packageName,
+                    param.processName,
                     android.os.Process.myPid(),
                     sharedHookAge,
                 )
                 return
             }
-            val hookKey = buildHookInstallKey(lpparam)
+            val hookKey = buildHookInstallKey(param)
             if (!markHookInstalled(hookKey)) {
                 XLog.w(
                     "SmsHandlerHook already initialized, skip duplicate load: pkg=%s process=%s loader=%s",
-                    lpparam.packageName,
-                    lpparam.processName,
+                    param.packageName,
+                    param.processName,
                     Integer.toHexString(System.identityHashCode(classLoader)),
                 )
                 return
             }
-            XLog.i("SmsCode initializing in %s", lpparam.packageName)
+            XLog.i("SmsCode initializing in %s", param.packageName)
             printDeviceInfo()
             try {
                 hookSmsHandler(classLoader)
@@ -141,7 +134,7 @@ class SmsHandlerHook : BaseHook() {
     }
 
     private fun resolveXposedVersion(): Int? {
-        return HookEnv.api.getXposedBridgeVersion() ?: HookEnv.api.getApiVersion()
+        return HookEnv.api.getFrameworkVersionCode()?.toInt() ?: HookEnv.api.getApiVersion()
     }
 
     private fun hookSmsHandler(classloader: ClassLoader) {
@@ -158,9 +151,9 @@ class SmsHandlerHook : BaseHook() {
     // Android 14+
     private fun hookConstructor34(classLoader: ClassLoader) {
         XLog.i("Hooking InboundSmsHandler constructor for android v34+")
-        val smsHandlerClazz = XposedWrapper.findClass(SMS_HANDLER_CLASS, classLoader)
+        val smsHandlerClazz = runCatching { HookHelpers.findClass(SMS_HANDLER_CLASS, classLoader) }.getOrNull()
         if (smsHandlerClazz != null) {
-            HookBridge.hookAllConstructors(smsHandlerClazz, ConstructorHook())
+            HookEnv.api.hookAllConstructors(smsHandlerClazz, ConstructorHook())
         }
     }
 
@@ -197,12 +190,12 @@ class SmsHandlerHook : BaseHook() {
         className: String,
         methodNames: List<String>,
     ) {
-        val clazz = XposedWrapper.findClass(className, classLoader) ?: return
+        val clazz = runCatching { HookHelpers.findClass(className, classLoader) }.getOrNull() ?: return
         methodNames.forEach { name ->
             val methods = clazz.declaredMethods.filter { it.name == name }
             if (methods.isEmpty()) return@forEach
             methods.forEach { method ->
-                XposedWrapper.hookMethod(
+                HookEnv.api.hookMethod(
                     method,
                     object : MethodHook() {
                         override fun beforeHookedMethod(param: MethodHookParam) {
@@ -237,7 +230,7 @@ class SmsHandlerHook : BaseHook() {
     // Android 10+
     private fun hookDispatchIntent29(classLoader: ClassLoader) {
         XLog.d("Hooking dispatchIntent() for Android v29+")
-        val inboundSmsHandlerClass = XposedWrapper.findClass(SMS_HANDLER_CLASS, classLoader) ?: run {
+        val inboundSmsHandlerClass = runCatching { HookHelpers.findClass(SMS_HANDLER_CLASS, classLoader) }.getOrNull() ?: run {
             XLog.e("Class: %s cannot found", SMS_HANDLER_CLASS)
             return
         }
@@ -255,7 +248,7 @@ class SmsHandlerHook : BaseHook() {
                     receiverIndex = index
                 }
             }
-            XposedWrapper.hookMethod(method, DispatchIntentHook(receiverIndex))
+            HookEnv.api.hookMethod(method, DispatchIntentHook(receiverIndex))
         }
     }
 
@@ -499,11 +492,12 @@ class SmsHandlerHook : BaseHook() {
         if (!VerificationSmsIntentHookSupport.isSmsAction(action)) return
         val pluginContext = getPluginContext() ?: return
         val phoneContext = mPhoneContext ?: return
+        val eventId = VerificationSmsIntentHookSupport.ensureEventId(intent)
         if (ModuleConflictArbiter.shouldSuppressByRelay(phoneContext, "SmsHandlerHook#$methodName")) {
             logSuppressedOnce("dispatchChain:$methodName")
+            RelayConflictNoticeHelper.notifyConflictOnSms(pluginContext, phoneContext, eventId)
             return
         }
-        val eventId = VerificationSmsIntentHookSupport.ensureEventId(intent)
         val evaluation = SmsBlockEvaluator.evaluate(pluginContext, intent, eventId, "dispatch_chain") ?: return
         if (evaluation.blacklistDeleteOnly && evaluation.smsMsg != null) {
             scheduleBlacklistDelete(pluginContext, phoneContext, evaluation.smsMsg)
@@ -597,6 +591,7 @@ class SmsHandlerHook : BaseHook() {
                     SMSCODE_PACKAGE,
                     Context.CONTEXT_IGNORE_SECURITY,
                 )
+                mPluginContext?.let(XposedRuntimeInstaller::ensureHookProcessLogging)
             } catch (e: Exception) {
                 XLog.e("Create plugin context failed: %s", e)
             }
@@ -624,11 +619,11 @@ class SmsHandlerHook : BaseHook() {
             return packageName == ANDROID_PHONE_PACKAGE || packageName == XIAOMI_PHONE_PACKAGE
         }
 
-        private fun buildHookInstallKey(lpparam: LoadParam): String {
+        private fun buildHookInstallKey(param: LoadParam): String {
             return buildString {
-                append(lpparam.packageName)
+                append(param.packageName)
                 append('|')
-                append(lpparam.processName.ifBlank { lpparam.packageName })
+                append(param.processName.ifBlank { param.packageName })
             }
         }
 
