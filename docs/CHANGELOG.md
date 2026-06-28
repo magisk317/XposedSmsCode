@@ -4,6 +4,14 @@
 
 ---
 
+## [v3.3.1-beta3] - WIP
+- 版本：`versionCode 122` / `versionName 3.3.1-beta3`。
+- `[TODO]` 准备下一阶段开发。
+
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.3.1-beta2...v3.3.1-beta3
+
+---
+
 ## [v3.3.1-beta2] - 2026-06-28
 - 版本：`versionCode 121` / `versionName 3.3.1-beta2`。
 - `[xposed/hook]` 优化进程生命周期同步与热重载恢复。
