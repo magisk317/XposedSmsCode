@@ -1,19 +1,19 @@
 [submodule "smscode-core"]
 	path = smscode/core
-	url = https://github.com/magisk317/smscode-core
+	url = https://gitlab.com/magisk731/smscode-core
 [submodule "magisk-ui-kit"]
 	path = magisk-ui-kit
-	url = https://github.com/magisk317/magisk-ui-kit.git
+	url = https://gitlab.com/magisk731/magisk-ui-kit.git
 [submodule "build-logic"]
 	path = build-logic
-	url = https://github.com/magisk317/magisk-build-logic.git
+	url = https://gitlab.com/magisk731/magisk-build-logic.git
 [submodule "smscode-rules"]
 	path = smscode/rules
-	url = https://github.com/magisk317/smscode-rules.git
+	url = https://gitlab.com/magisk731/smscode-rules.git
 	branch = main
 [submodule "scripts/_toolkit"]
 	path = scripts/_toolkit
-	url = https://github.com/magisk317/magisk-ci-toolkit.git
+	url = https://gitlab.com/magisk731/magisk-ci-toolkit.git
 [submodule "magisk-xposed-kit"]
 	path = magisk-xposed-kit
-	url = https://github.com/magisk317/magisk-xposed-kit.git
+	url = https://gitlab.com/magisk731/magisk-xposed-kit.git
