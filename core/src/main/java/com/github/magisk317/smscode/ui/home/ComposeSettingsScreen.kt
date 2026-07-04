@@ -17,6 +17,8 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -221,11 +223,27 @@ internal fun ComposeSettingsScreenShared(
             PrefConst.KEY_RUNTIME_LOG_RETENTION_DAYS,
             PrefConst.RUNTIME_LOG_RETENTION_DAYS_DEFAULT,
         ).coerceAtLeast(PrefConst.RUNTIME_LOG_RETENTION_DAYS_MIN)
-        showCodeNotificationEnabled.value = AppPreferencesDataStore.getBoolean(
+        val storedShowCodeNotification = AppPreferencesDataStore.getBoolean(
             context,
             PrefConst.KEY_SHOW_CODE_NOTIFICATION,
             true,
         )
+        // The switch only shows on when the system can actually deliver notifications.
+        // If the user revoked permission (or the master switch is off) after enabling it,
+        // reflect off and persist false so the runtime does not attempt to post.
+        val canDeliverNotification = NotificationManagerCompat.from(context).areNotificationsEnabled() &&
+            NotificationUtils.hasPostNotificationsPermission(context)
+        if (storedShowCodeNotification && !canDeliverNotification) {
+            AppPreferencesDataStore.setBoolean(
+                context,
+                PrefConst.KEY_SHOW_CODE_NOTIFICATION,
+                false,
+            )
+            HookPreferenceMirror.publish(context)
+            showCodeNotificationEnabled.value = false
+        } else {
+            showCodeNotificationEnabled.value = storedShowCodeNotification
+        }
         autoCancelNotificationEnabled.value = AppPreferencesDataStore.getBoolean(
             context,
             PrefConst.KEY_AUTO_CANCEL_CODE_NOTIFICATION,
@@ -387,6 +405,21 @@ internal fun ComposeSettingsScreenShared(
             isActivated = ActivationDiagnosticsStore.isModuleActivated(context)
             autoInputAccessibilityEnabled =
                 supportsAccessibilityAutoInput && isAutoInputAccessibilityServiceEnabled(context)
+            // Reconcile the notification switch with the real system delivery state:
+            // if the permission (or the master switch) was revoked outside the app,
+            // turn the preference back off.
+            if (showCodeNotificationEnabled.value &&
+                !(NotificationManagerCompat.from(context).areNotificationsEnabled() &&
+                    NotificationUtils.hasPostNotificationsPermission(context))
+            ) {
+                showCodeNotificationEnabled.value = false
+                AppPreferencesDataStore.setBoolean(
+                    context,
+                    PrefConst.KEY_SHOW_CODE_NOTIFICATION,
+                    false,
+                )
+                HookPreferenceMirror.publish(context)
+            }
             delay(1000L)
             isActivated = ActivationDiagnosticsStore.isModuleActivated(context)
             autoInputAccessibilityEnabled =
@@ -469,15 +502,65 @@ internal fun ComposeSettingsScreenShared(
             }
         }
     }
+    // Enables the code-notification preference once the system permission is available.
+    val enableCodeNotificationPref: () -> Unit = {
+        showCodeNotificationEnabled.value = true
+        scope.launch {
+            AppPreferencesDataStore.setBoolean(
+                context,
+                PrefConst.KEY_SHOW_CODE_NOTIFICATION,
+                true,
+            )
+            HookPreferenceMirror.publish(context)
+            markPrefsSaved()
+        }
+    }
     val notificationSettingsLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult(),
     ) {
-        // No-op: notification owner selection removed
+        // Returning from system notification settings: re-check the real delivery state.
+        // Only flip the preference on when notifications can actually be posted now.
+        if (NotificationManagerCompat.from(context).areNotificationsEnabled() &&
+            NotificationUtils.hasPostNotificationsPermission(context)
+        ) {
+            enableCodeNotificationPref()
+        }
+    }
+    // Opens the system notification settings page for this app as a fallback when the
+    // runtime permission dialog can no longer be shown.
+    val openAppNotificationSettings: () -> Unit = {
+        val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+        } else {
+            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                .setData(Uri.fromParts("package", context.packageName, null))
+        }
+        runCatching { notificationSettingsLauncher.launch(intent) }.onFailure {
+            scope.launch {
+                snackbarHostState.showSnackbar(
+                    context.getString(R.string.pref_code_notification_owner_permission_settings_hint),
+                )
+            }
+        }
     }
     val requestNotificationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { granted ->
-        if (!granted) {
+        if (granted) {
+            enableCodeNotificationPref()
+            return@rememberLauncherForActivityResult
+        }
+        // Denied. If the system will no longer show the runtime dialog
+        // (permanently denied or master switch off), fall back to the settings page.
+        val activity = activityOwner ?: (context as? Activity)
+        val canAskAgain = activity != null && ActivityCompat.shouldShowRequestPermissionRationale(
+            activity,
+            Manifest.permission.POST_NOTIFICATIONS,
+        )
+        if (!canAskAgain) {
+            openAppNotificationSettings()
+        } else {
             scope.launch {
                 snackbarHostState.showSnackbar(
                     context.getString(R.string.pref_code_notification_owner_permission_settings_hint),
@@ -762,15 +845,43 @@ internal fun ComposeSettingsScreenShared(
                             onSaved = markPrefsSaved,
                         )
                         val handleCodeNotificationToggle: (Boolean) -> Unit = { enabled ->
-                            showCodeNotificationEnabled.value = enabled
-                            scope.launch {
-                                AppPreferencesDataStore.setBoolean(
-                                    context,
-                                    PrefConst.KEY_SHOW_CODE_NOTIFICATION,
-                                    enabled,
-                                )
-                                HookPreferenceMirror.publish(context)
-                                markPrefsSaved()
+                            if (!enabled) {
+                                // Turning off: no system interaction required.
+                                showCodeNotificationEnabled.value = false
+                                scope.launch {
+                                    AppPreferencesDataStore.setBoolean(
+                                        context,
+                                        PrefConst.KEY_SHOW_CODE_NOTIFICATION,
+                                        false,
+                                    )
+                                    HookPreferenceMirror.publish(context)
+                                    markPrefsSaved()
+                                }
+                            } else {
+                                // Turning on: only commit the preference once the system
+                                // will actually deliver notifications. Otherwise request the
+                                // permission first and let the callback flip it on.
+                                val notificationsEnabled =
+                                    NotificationManagerCompat.from(context).areNotificationsEnabled()
+                                val permissionGranted =
+                                    NotificationUtils.hasPostNotificationsPermission(context)
+                                when {
+                                    notificationsEnabled && permissionGranted -> {
+                                        enableCodeNotificationPref()
+                                    }
+                                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                                        !permissionGranted -> {
+                                        requestNotificationPermissionLauncher.launch(
+                                            Manifest.permission.POST_NOTIFICATIONS,
+                                        )
+                                    }
+                                    else -> {
+                                        // Permission is granted but the master switch is off
+                                        // (or pre-Tiramisu with notifications disabled): the
+                                        // runtime dialog won't help, jump to settings.
+                                        openAppNotificationSettings()
+                                    }
+                                }
                             }
                         }
                         io.github.magisk317.uikit.preference.ActionSwitchItem(
