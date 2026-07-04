@@ -5,6 +5,12 @@ include:
   - project: magisk731/magisk-ci-toolkit
     ref: master
     file: /.gitlab/ci/android-release.yml
+  - project: magisk731/magisk-ci-toolkit
+    ref: master
+    file: /.gitlab/ci/telegram.yml
+  - project: magisk731/magisk-ci-toolkit
+    ref: master
+    file: /.gitlab/ci/renovate.yml
 
 workflow:
   rules:
@@ -20,6 +26,8 @@ stages:
   - release-validate
   - release-build
   - release-publish
+  - notify
+  - maintenance
 
 variables:
   GIT_DEPTH: "0"
@@ -35,9 +43,21 @@ variables:
   MAGISK_ANDROID_RELEASE_MODULES_REPO: "Xposed-Modules-Repo/com.github.tianma8023.xposed.smscode"
   MAGISK_ANDROID_RELEASE_PUBLISH_PLAY: "true"
   MAGISK_ANDROID_RELEASE_PLAY_TRACK: "production"
+  MAGISK_TELEGRAM_PROJECT_TAG: "📌 #XposedSmsCode"
+  MAGISK_TELEGRAM_PROJECT_NAME: "XposedSmsCode"
+  MAGISK_TELEGRAM_CI_BRANCH: "beta"
+  RENOVATE_CONFIG_FILE: ".gitlab/renovate-config.js"
 
 android:build:
   extends: .magisk_android_build
+  rules:
+    - if: '$DEPENDENCY_OWNER == "gitlab" && $CI_PIPELINE_SOURCE == "schedule"'
+      when: never
+    - if: '$DEPENDENCY_OWNER == "gitlab" && $CI_PIPELINE_SOURCE == "web"'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_COMMIT_BRANCH'
   variables:
     MAGISK_ANDROID_BUILD_TASKS: >-
       :core:check
@@ -60,6 +80,14 @@ android:build:
 android:detekt:
   extends: .magisk_android_detekt
   allow_failure: true
+  rules:
+    - if: '$DEPENDENCY_OWNER == "gitlab" && $CI_PIPELINE_SOURCE == "schedule"'
+      when: never
+    - if: '$DEPENDENCY_OWNER == "gitlab" && $CI_PIPELINE_SOURCE == "web"'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_COMMIT_BRANCH'
   artifacts:
     name: "XposedSmsCode-detekt-$CI_COMMIT_REF_SLUG"
     when: always
@@ -124,3 +152,17 @@ android:release:modules-repo:
   needs:
     - job: android:release:github-apk
       artifacts: true
+
+telegram:ci:
+  extends: .magisk_telegram_ci
+  stage: notify
+  allow_failure: true
+  needs:
+    - job: android:build
+      artifacts: true
+    - job: android:detekt
+      artifacts: false
+
+renovate:gitlab:
+  extends: .magisk_renovate_gitlab
+  stage: maintenance

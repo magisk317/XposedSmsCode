@@ -66,6 +66,11 @@ Welcome any feedbacks.
 - Validate version, release notes, and tag consistency: `scripts/check_release_guard.sh`.
 - GitHub Release, Xposed-Modules-Repo, and Telegram notification share the current changelog block.
 
+# Automation Ownership
+- Telegram CI notification: GitHub is handled by `.github/workflows/notification.yml`; GitLab is handled by the `telegram:ci` job in `.gitlab-ci.yml`; tag/release notifications still wait for the release workflow to finish.
+- Renovate: GitHub remains the default runner. To switch dependency update MRs to GitLab, set `DEPENDENCY_OWNER=gitlab` and `RENOVATE_TOKEN` in GitLab CI/CD variables; GitLab then uses `.gitlab/renovate-config.js`.
+- Dependabot: GitHub Dependency Graph / alerts are still GitHub-owned. This migration leaves the existing GitHub dependency workflows unchanged.
+
 # Documentation
 - [Release Logs](docs/CHANGELOG.md)
 - [Privacy Policy](docs/PRIVACY.md)

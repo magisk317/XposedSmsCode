@@ -25,6 +25,10 @@ jobs:
     uses: magisk317/magisk-ci-toolkit/.github/workflows/run-renovate.yml@master
     if: |
       (
+        vars.DEPENDENCY_OWNER == '' ||
+        vars.DEPENDENCY_OWNER == 'github'
+      ) &&
+      (
         github.event_name != 'pull_request_target' &&
         github.event_name != 'issues'
       ) ||
