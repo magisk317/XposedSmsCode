@@ -68,7 +68,7 @@
 
 # 自动化维护边界
 - Telegram CI 通知：GitHub 侧由 `.github/workflows/notification.yml` 处理，GitLab 侧由 `.gitlab-ci.yml` 的 `telegram:ci` 处理；tag/release 通知仍由 release workflow 完成后触发。
-- Renovate：默认仍由 GitHub workflow 运行；如需切到 GitLab，在 GitLab CI/CD 变量中设置 `DEPENDENCY_OWNER=gitlab` 和 `RENOVATE_TOKEN`，GitLab 会使用 `.gitlab/renovate-config.js`。
+- Renovate：GitLab 已配置定时 pipeline，使用 `.gitlab/renovate-config.js` 和隐藏变量 `RENOVATE_TOKEN`；手动 web pipeline 需要设置 `DEPENDENCY_OWNER=gitlab` 才会只跑 Renovate。
 - Dependabot：依赖 GitHub Dependency Graph / alerts，本轮不迁移，现有 GitHub dependency workflow 保持不变。
 
 # 文档

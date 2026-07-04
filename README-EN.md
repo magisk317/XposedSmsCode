@@ -68,7 +68,7 @@ Welcome any feedbacks.
 
 # Automation Ownership
 - Telegram CI notification: GitHub is handled by `.github/workflows/notification.yml`; GitLab is handled by the `telegram:ci` job in `.gitlab-ci.yml`; tag/release notifications still wait for the release workflow to finish.
-- Renovate: GitHub remains the default runner. To switch dependency update MRs to GitLab, set `DEPENDENCY_OWNER=gitlab` and `RENOVATE_TOKEN` in GitLab CI/CD variables; GitLab then uses `.gitlab/renovate-config.js`.
+- Renovate: GitLab has a scheduled pipeline using `.gitlab/renovate-config.js` and the hidden `RENOVATE_TOKEN` variable; manual web pipelines need `DEPENDENCY_OWNER=gitlab` to run only Renovate.
 - Dependabot: GitHub Dependency Graph / alerts are still GitHub-owned. This migration leaves the existing GitHub dependency workflows unchanged.
 
 # Documentation
