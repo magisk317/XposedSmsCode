@@ -1,0 +1,126 @@
+include:
+  - project: magisk731/magisk-ci-toolkit
+    ref: master
+    file: /.gitlab/ci/android.yml
+  - project: magisk731/magisk-ci-toolkit
+    ref: master
+    file: /.gitlab/ci/android-release.yml
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS && $CI_PIPELINE_SOURCE == "push"'
+      when: never
+    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_COMMIT_BRANCH'
+
+stages:
+  - build
+  - quality
+  - release-validate
+  - release-build
+  - release-publish
+
+variables:
+  GIT_DEPTH: "0"
+  GIT_SUBMODULE_STRATEGY: recursive
+  GIT_SUBMODULE_DEPTH: "0"
+  MAGISK_ANDROID_SDKMANAGER_CHANNEL: "3"
+  MAGISK_ANDROID_COMPILE_SDK: "37"
+  MAGISK_ANDROID_COMPILE_SDK_PACKAGE: "platforms;android-37.0"
+  MAGISK_ANDROID_SDK_PACKAGES: "platform-tools build-tools;37.0.0"
+  MAGISK_GRADLE_ARGS: "--warning-mode all"
+  MAGISK_ANDROID_RELEASE_PACKAGE_NAME: "com.github.tianma8023.xposed.smscode"
+  MAGISK_ANDROID_RELEASE_GITHUB_REPOSITORY: "magisk317/XposedSmsCode"
+  MAGISK_ANDROID_RELEASE_MODULES_REPO: "Xposed-Modules-Repo/com.github.tianma8023.xposed.smscode"
+  MAGISK_ANDROID_RELEASE_PUBLISH_PLAY: "true"
+  MAGISK_ANDROID_RELEASE_PLAY_TRACK: "production"
+
+android:build:
+  extends: .magisk_android_build
+  variables:
+    MAGISK_ANDROID_BUILD_TASKS: >-
+      :core:check
+      :runtime:check
+      :app:check
+      :app:compileGithubDebugAndroidTestKotlin
+      :app:compilePlayDebugAndroidTestKotlin
+      :core:compilePlayDebugUnitTestKotlin
+      :core:generatePlayDebugUnitTestStubRFile
+      :runtime:compileDebugAndroidTestKotlin
+      :app:assembleGithubDebug
+      -PbuildSplits
+  artifacts:
+    name: "XposedSmsCode-debug-$CI_COMMIT_REF_SLUG"
+    when: always
+    expire_in: 14 days
+    paths:
+      - app/build/outputs/apk/**/debug/*.apk
+
+android:detekt:
+  extends: .magisk_android_detekt
+  allow_failure: true
+  artifacts:
+    name: "XposedSmsCode-detekt-$CI_COMMIT_REF_SLUG"
+    when: always
+    expire_in: 14 days
+    paths:
+      - merged-sarif/detekt.sarif
+      - "**/build/reports/detekt/**"
+
+android:release:guard:
+  extends: .magisk_android_release_guard
+  stage: release-validate
+
+android:release:github-apk:
+  extends: .magisk_android_release_apk
+  stage: release-build
+  needs:
+    - job: android:release:guard
+      artifacts: false
+  artifacts:
+    name: "XposedSmsCode-release-apks-$CI_COMMIT_TAG"
+    when: always
+    expire_in: 30 days
+    paths:
+      - app/build/outputs/apk/**/release/*.apk
+      - app/build/outputs/native-debug-symbols/**/native-debug-symbols.zip
+
+android:release:play-bundle:
+  extends: .magisk_android_release_aab
+  stage: release-build
+  needs:
+    - job: android:release:guard
+      artifacts: false
+  artifacts:
+    name: "XposedSmsCode-release-bundle-$CI_COMMIT_TAG"
+    when: always
+    expire_in: 30 days
+    paths:
+      - app/build/outputs/bundle/**/*.aab
+      - app/build/outputs/mapping/**/mapping.txt
+      - app/build/outputs/native-debug-symbols/**/native-debug-symbols.zip
+
+android:release:gitlab:
+  extends: .magisk_android_gitlab_release
+  stage: release-publish
+  needs:
+    - job: android:release:github-apk
+      artifacts: true
+    - job: android:release:play-bundle
+      artifacts: true
+      optional: true
+
+android:release:play:
+  extends: .magisk_android_publish_play
+  stage: release-publish
+  needs:
+    - job: android:release:play-bundle
+      artifacts: true
+
+android:release:modules-repo:
+  extends: .magisk_android_publish_modules_repo
+  stage: release-publish
+  needs:
+    - job: android:release:github-apk
+      artifacts: true

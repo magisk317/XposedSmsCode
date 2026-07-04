@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   release-android:
+    if: ${{ vars.RELEASE_OWNER == '' || vars.RELEASE_OWNER == 'github' }}
     uses: magisk317/magisk-ci-toolkit/.github/workflows/release-android.yml@master
     with:
       package_name: 'com.github.tianma8023.xposed.smscode'
