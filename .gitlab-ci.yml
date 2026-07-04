@@ -43,9 +43,6 @@ variables:
   MAGISK_ANDROID_RELEASE_MODULES_REPO: "Xposed-Modules-Repo/com.github.tianma8023.xposed.smscode"
   MAGISK_ANDROID_RELEASE_PUBLISH_PLAY: "true"
   MAGISK_ANDROID_RELEASE_PLAY_TRACK: "production"
-  MAGISK_TELEGRAM_PROJECT_TAG: "📌 #XposedSmsCode"
-  MAGISK_TELEGRAM_PROJECT_NAME: "XposedSmsCode"
-  MAGISK_TELEGRAM_CI_BRANCH: "beta"
   RENOVATE_CONFIG_FILE: ".gitlab/renovate-config.js"
 
 android:build:
@@ -157,6 +154,10 @@ telegram:ci:
   extends: .magisk_telegram_ci
   stage: notify
   allow_failure: true
+  variables:
+    MAGISK_TELEGRAM_PROJECT_TAG: "📌 #XposedSmsCode"
+    MAGISK_TELEGRAM_PROJECT_NAME: "XposedSmsCode"
+    MAGISK_TELEGRAM_CI_BRANCH: "beta"
   needs:
     - job: android:build
       artifacts: true
