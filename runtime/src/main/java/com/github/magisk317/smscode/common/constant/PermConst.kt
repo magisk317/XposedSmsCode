@@ -48,5 +48,6 @@ object PermConst {
 
         PACKAGE_PERMISSIONS["com.android.phone"] = phonePermissions
         PACKAGE_PERMISSIONS["com.xiaomi.phone"] = phonePermissions
+        PACKAGE_PERMISSIONS["com.google.android.apps.messaging"] = phonePermissions
     }
 }

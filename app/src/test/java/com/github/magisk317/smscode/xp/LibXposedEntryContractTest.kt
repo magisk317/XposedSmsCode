@@ -30,6 +30,7 @@ class LibXposedEntryContractTest {
         assertTrue("com.xiaomi.phone" in scope)
         assertTrue("com.android.providers.telephony" in scope)
         assertTrue("com.android.mms" in scope)
+        assertTrue("com.google.android.apps.messaging" in scope)
     }
 
     @Test
@@ -43,6 +44,7 @@ class LibXposedEntryContractTest {
 
         assertTrue("HotReloadingParam" in baseEntrySource)
         assertTrue("HotReloadedParam" in baseEntrySource)
+        assertTrue("com.google.android.apps.messaging" in baseEntrySource)
         assertTrue("param.setSavedInstanceState(createHotReloadState())" in baseEntrySource)
         assertTrue("dispatchCurrentLoadedTargets(param, phase = \"moduleLoadedCurrentProcess\")" in baseEntrySource)
         assertTrue("resolveCurrentProcessTargets(param, oldHookHandles)" in baseEntrySource)

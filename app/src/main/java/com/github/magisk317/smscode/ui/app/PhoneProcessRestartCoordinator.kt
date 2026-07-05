@@ -207,5 +207,6 @@ object PhoneProcessRestartCoordinator {
         "com.android.providers.telephony",
         "com.android.mms",
         "com.android.mms:mms_service",
+        "com.google.android.apps.messaging",
     )
 }
