@@ -15,12 +15,18 @@ class SmsHandlerHookContractTest {
         val method = source.substringAfter("private fun beforeDispatchIntentHandler")
             .substringBefore("private fun scheduleBlacklistDelete")
         val contextGuardIndex = method.indexOf("if (pluginContext == null || phoneContext == null)")
+        val runtimeRecoveryIndex = method.indexOf("ensureRuntimeForDispatch(param, receiverIndex)")
         val sharedDedupIndex = method.indexOf("shouldSkipDispatchBySharedDedup")
         val markHandledIndex = method.indexOf("markDispatchHandled(intent, action)")
 
         assertTrue(contextGuardIndex >= 0, "dispatch hook must guard missing runtime contexts")
+        assertTrue(runtimeRecoveryIndex >= 0, "dispatch hook must recover runtime context before parsing")
         assertTrue(sharedDedupIndex >= 0, "dispatch hook must preserve shared-store deduplication")
         assertTrue(markHandledIndex >= 0, "dispatch hook must mark handled before parsing")
+        assertTrue(
+            runtimeRecoveryIndex < contextGuardIndex,
+            "dispatch hook must try fallback context recovery before declaring runtime contexts missing",
+        )
         assertTrue(
             contextGuardIndex < markHandledIndex,
             "missing runtime contexts must not consume the intent-extra dedup mark",
@@ -28,6 +34,55 @@ class SmsHandlerHookContractTest {
         assertTrue(
             sharedDedupIndex < markHandledIndex,
             "shared-store duplicates should be skipped before mutating intent extras",
+        )
+    }
+
+    @Test
+    fun `dispatch context fallback recovers from inbound handler before scanning args`() {
+        val source = resolveProjectFile(
+            "app/src/main/java/com/github/magisk317/smscode/xp/hook/code/SmsHandlerHook.kt",
+        ).readText()
+
+        val method = source.substringAfter("private fun resolveDispatchPhoneContext")
+            .substringBefore("private fun resolveContextFromObject")
+
+        val handlerIndex = method.indexOf("resolveContextFromObject(param.thisObject, \"handler\")")
+        val receiverIndex = method.indexOf("resolveContextFromObject(param.args.getOrNull(receiverIndex), \"receiver\")")
+        val argsIndex = method.indexOf("param.args.forEachIndexed")
+
+        assertTrue(handlerIndex >= 0, "fallback must inspect the InboundSmsHandler instance")
+        assertTrue(receiverIndex >= 0, "fallback should inspect the receiver argument when available")
+        assertTrue(argsIndex >= 0, "fallback should scan remaining arguments as a last resort")
+        assertTrue(
+            handlerIndex < argsIndex,
+            "InboundSmsHandler instance is the most stable source of the phone Context",
+        )
+    }
+
+    @Test
+    fun `dispatch context fallback logs recovery stages`() {
+        val source = resolveProjectFile(
+            "app/src/main/java/com/github/magisk317/smscode/xp/hook/code/SmsHandlerHook.kt",
+        ).readText()
+
+        val method = source.substringAfter("private fun ensureRuntimeForDispatch")
+            .substringBefore("private fun resolveDispatchPhoneContext")
+
+        assertTrue(
+            "dispatch runtime missing, attempt recovery" in method,
+            "missing runtime should be visible in LSPosed/runtime logs",
+        )
+        assertTrue(
+            "dispatch runtime recovery skipped: no phone context" in method,
+            "fallback failure must log that no phone context was found",
+        )
+        assertTrue(
+            "dispatch runtime recovery context: source=%s" in method,
+            "fallback success must log the source used to recover Context",
+        )
+        assertTrue(
+            "dispatch runtime recovered: source=%s" in method,
+            "initialized fallback runtime must be logged before parsing continues",
         )
     }
 

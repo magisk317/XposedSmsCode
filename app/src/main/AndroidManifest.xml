@@ -126,6 +126,14 @@
             android:exported="true" />
 
         <receiver
+            android:name="io.github.magisk317.relay.platform.ipc.ForwardReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.github.magisk317.smscode.ACTION_FORWARD_SMS" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
             android:name="com.github.magisk317.smscode.receiver.AutoInputResultReceiver"
             android:exported="true">
             <intent-filter>

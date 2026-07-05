@@ -71,6 +71,11 @@ class SmsHandlerHook : BaseHook() {
     @Volatile
     private var suppressionLogged = false
 
+    private data class DispatchContextRecovery(
+        val context: Context,
+        val source: String,
+    )
+
     override fun onLoadPackage(param: LoadParam) {
         XLog.withRoute(LogRoute.SMS_HOOK) {
             onLoadPackageRouted(param)
@@ -384,8 +389,9 @@ class SmsHandlerHook : BaseHook() {
             return
         }
         val eventId = VerificationSmsIntentHookSupport.ensureEventId(intent)
-        val pluginContext = getPluginContext()
-        val phoneContext = mPhoneContext
+        val runtime = ensureRuntimeForDispatch(param, receiverIndex)
+        val pluginContext = runtime?.pluginContext
+        val phoneContext = runtime?.phoneContext
         if (pluginContext == null || phoneContext == null) {
             XLog.e("Context is null, skip parsing. pluginContext: %s, phoneContext: %s", pluginContext, phoneContext)
             return
@@ -445,6 +451,86 @@ class SmsHandlerHook : BaseHook() {
         }
     }
 
+    private fun ensureRuntimeForDispatch(param: MethodHookParam, receiverIndex: Int): SmsHookRuntimeContext? {
+        currentRuntime()?.let { return it }
+        XLog.w(
+            "SmsHandlerHook dispatch runtime missing, attempt recovery: owner=%s receiverIndex=%d argCount=%d",
+            param.thisObject?.javaClass?.name ?: "<none>",
+            receiverIndex,
+            param.args.size,
+        )
+        val recovered = resolveDispatchPhoneContext(param, receiverIndex) ?: run {
+            XLog.e(
+                "SmsHandlerHook dispatch runtime recovery skipped: no phone context owner=%s receiverIndex=%d argCount=%d",
+                param.thisObject?.javaClass?.name ?: "<none>",
+                receiverIndex,
+                param.args.size,
+            )
+            return null
+        }
+        val recoveredPhoneContext = recovered.context
+        XLog.w(
+            "SmsHandlerHook dispatch runtime recovery context: source=%s package=%s process=%s",
+            recovered.source,
+            recoveredPhoneContext.packageName,
+            recoveredPhoneContext.applicationInfo?.processName ?: recoveredPhoneContext.packageName,
+        )
+        val outcome = constructorInitializer.handle(recoveredPhoneContext)
+        if (!outcome.initialized) {
+            XLog.e(
+                "SmsHandlerHook dispatch runtime recovery failed: source=%s reason=%s package=%s",
+                recovered.source,
+                outcome.stopReason ?: "unknown",
+                recoveredPhoneContext.packageName,
+            )
+            return null
+        }
+        return currentRuntime().also { runtime ->
+            if (runtime != null) {
+                XLog.w(
+                    "SmsHandlerHook dispatch runtime recovered: source=%s package=%s process=%s",
+                    recovered.source,
+                    runtime.phoneContext.packageName,
+                    runtime.phoneContext.applicationInfo?.processName ?: runtime.phoneContext.packageName,
+                )
+            }
+        }
+    }
+
+    private fun resolveDispatchPhoneContext(param: MethodHookParam, receiverIndex: Int): DispatchContextRecovery? {
+        resolveContextFromObject(param.thisObject, "handler")?.let { return it }
+        resolveContextFromObject(param.args.getOrNull(receiverIndex), "receiver")?.let { return it }
+        param.args.forEachIndexed { index, arg ->
+            resolveContextFromObject(arg, "arg[$index]")?.let { return it }
+        }
+        return null
+    }
+
+    private fun resolveContextFromObject(source: Any?, sourceLabel: String): DispatchContextRecovery? {
+        if (source == null) return null
+        if (source is Context) return DispatchContextRecovery(source, sourceLabel)
+        readContextField(source, "mContext")?.let { return DispatchContextRecovery(it, "$sourceLabel.mContext") }
+        readContextField(source, "context")?.let { return DispatchContextRecovery(it, "$sourceLabel.context") }
+        readContextField(source, "mPhoneContext")?.let { return DispatchContextRecovery(it, "$sourceLabel.mPhoneContext") }
+        readContextMethod(source, "getContext")?.let { return DispatchContextRecovery(it, "$sourceLabel.getContext") }
+        val phone = readObjectField(source, "mPhone") ?: readObjectField(source, "phone")
+        readContextMethod(phone, "getContext")?.let { return DispatchContextRecovery(it, "$sourceLabel.phone.getContext") }
+        readContextField(phone, "mContext")?.let { return DispatchContextRecovery(it, "$sourceLabel.phone.mContext") }
+        return null
+    }
+
+    private fun readContextField(source: Any?, fieldName: String): Context? {
+        return readObjectField(source, fieldName) as? Context
+    }
+
+    private fun readObjectField(source: Any?, fieldName: String): Any? {
+        return runCatching { HookHelpers.getObjectField(source, fieldName) }.getOrNull()
+    }
+
+    private fun readContextMethod(source: Any?, methodName: String): Context? {
+        return runCatching { HookHelpers.callMethod(source, methodName) as? Context }.getOrNull()
+    }
+
     private fun shouldSkipDispatchBySharedDedup(
         pluginContext: Context,
         eventId: String,
@@ -490,8 +576,9 @@ class SmsHandlerHook : BaseHook() {
         val intent = smsIntent ?: return
         val action = intent.action
         if (!VerificationSmsIntentHookSupport.isSmsAction(action)) return
-        val pluginContext = getPluginContext() ?: return
-        val phoneContext = mPhoneContext ?: return
+        val runtime = ensureRuntimeForDispatch(param, receiverIndex = -1) ?: return
+        val pluginContext = runtime.pluginContext
+        val phoneContext = runtime.phoneContext
         val eventId = VerificationSmsIntentHookSupport.ensureEventId(intent)
         if (ModuleConflictArbiter.shouldSuppressByRelay(phoneContext, "SmsHandlerHook#$methodName")) {
             logSuppressedOnce("dispatchChain:$methodName")
