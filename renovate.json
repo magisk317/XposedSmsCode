@@ -3,6 +3,9 @@
     "extends": [
         "config:recommended"
     ],
+    "ignorePaths": [
+        ".github/**"
+    ],
     "forkProcessing": "enabled",
     "pruneStaleBranches": true,
     "pruneBranchAfterAutomerge": true,
