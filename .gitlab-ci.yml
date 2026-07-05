@@ -1,14 +1,14 @@
 include:
-  - project: magisk731/magisk-ci-toolkit
+  - project: magisk3171/magisk-ci-toolkit
     ref: master
     file: /.gitlab/ci/android.yml
-  - project: magisk731/magisk-ci-toolkit
+  - project: magisk3171/magisk-ci-toolkit
     ref: master
     file: /.gitlab/ci/android-release.yml
-  - project: magisk731/magisk-ci-toolkit
+  - project: magisk3171/magisk-ci-toolkit
     ref: master
     file: /.gitlab/ci/telegram.yml
-  - project: magisk731/magisk-ci-toolkit
+  - project: magisk3171/magisk-ci-toolkit
     ref: master
     file: /.gitlab/ci/renovate.yml
 
