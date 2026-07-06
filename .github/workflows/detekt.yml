@@ -46,7 +46,7 @@ jobs:
 
       - name: Run Detekt
         continue-on-error: true
-        run: ./gradlew detekt --continue
+        run: bash scripts/_toolkit/gradle/run_gradle_with_retry.sh detekt --continue
 
       - name: Merge SARIF files
         id: merge_sarif

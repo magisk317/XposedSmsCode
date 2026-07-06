@@ -34,7 +34,7 @@ jobs:
           allow-snapshot-wrappers: true
       - name: Build and test project
         run: >
-          ./gradlew
+          bash scripts/_toolkit/gradle/run_gradle_with_retry.sh
           --warning-mode all
           :core:check
           :runtime:check
