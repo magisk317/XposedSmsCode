@@ -15,6 +15,7 @@ import io.github.magisk317.smscode.verification.SmsCodePostParseCoordinator
 import io.github.magisk317.smscode.xposed.hook.notification.NotificationHookConst
 import io.github.magisk317.smscode.xposed.utils.XLog
 import java.util.concurrent.Executors
+import java.util.concurrent.RejectedExecutionException
 
 class ForwardReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -172,7 +173,19 @@ class ForwardReceiver : BroadcastReceiver() {
                 plan = plan,
             )
             true
-        } catch (error: RuntimeException) {
+        } catch (error: RejectedExecutionException) {
+            XLog.e("NmsForwardReceiver local action dispatch failed", error)
+            false
+        } catch (error: IllegalArgumentException) {
+            XLog.e("NmsForwardReceiver local action dispatch failed", error)
+            false
+        } catch (error: IllegalStateException) {
+            XLog.e("NmsForwardReceiver local action dispatch failed", error)
+            false
+        } catch (error: SecurityException) {
+            XLog.e("NmsForwardReceiver local action dispatch failed", error)
+            false
+        } catch (error: UnsupportedOperationException) {
             XLog.e("NmsForwardReceiver local action dispatch failed", error)
             false
         } finally {
