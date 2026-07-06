@@ -29,8 +29,8 @@ default:
 
 stages:
   - build
-  - notify
   - quality
+  - notify
   - release-validate
   - release-build
   - release-publish
@@ -50,7 +50,7 @@ variables:
   MAGISK_ANDROID_RELEASE_MODULES_REPO: "Xposed-Modules-Repo/com.github.tianma8023.xposed.smscode"
   MAGISK_ANDROID_RELEASE_PUBLISH_PLAY: "true"
   MAGISK_ANDROID_RELEASE_PLAY_TRACK: "production"
-  RENOVATE_CONFIG_FILE: ".gitlab/renovate-config.js"
+  MAGISK_RENOVATE_REPOSITORY: "magisk3171/XposedSmsCode"
 
 android:build:
   extends: .magisk_android_build
@@ -60,6 +60,8 @@ android:build:
     - if: '$DEPENDENCY_OWNER == "gitlab" && $CI_PIPELINE_SOURCE == "api"'
       when: never
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_COMMIT_TITLE =~ /^Merge branch .renovate\/.+ into /'
       when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_TAG'
@@ -85,13 +87,17 @@ android:build:
 
 android:detekt:
   extends: .magisk_android_detekt
+  stage: quality
   allow_failure: true
+  needs: []
   rules:
     - if: '$DEPENDENCY_OWNER == "gitlab" && $CI_PIPELINE_SOURCE == "web"'
       when: never
     - if: '$DEPENDENCY_OWNER == "gitlab" && $CI_PIPELINE_SOURCE == "api"'
       when: never
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_COMMIT_TITLE =~ /^Merge branch .renovate\/.+ into /'
       when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_TAG'
@@ -161,6 +167,17 @@ android:release:modules-repo:
     - job: android:release:github-apk
       artifacts: true
 
+telegram:release:
+  extends: .magisk_telegram_release
+  stage: release-publish
+  allow_failure: true
+  variables:
+    MAGISK_TELEGRAM_PROJECT_TAG: "📌 #XposedSmsCode"
+    MAGISK_TELEGRAM_PROJECT_NAME: "XposedSmsCode"
+  needs:
+    - job: android:release:github-apk
+      artifacts: true
+
 telegram:ci:
   extends: .magisk_telegram_ci
   stage: notify
@@ -172,6 +189,7 @@ telegram:ci:
   needs:
     - job: android:build
       artifacts: true
+      optional: true
 
 renovate:gitlab:
   extends: .magisk_renovate_gitlab
