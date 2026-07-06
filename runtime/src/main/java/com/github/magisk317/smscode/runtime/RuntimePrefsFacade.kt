@@ -34,6 +34,10 @@ object RuntimePrefsFacade {
 
     fun recordSmsCodeEnabled(context: Context): Boolean = recordCodeSmsEnabled(context)
 
+    fun recordAppNotifyEnabled(context: Context): Boolean = PrefsReader.recordAppNotifyEnabled(context)
+
+    fun recordCallNotifyEnabled(context: Context): Boolean = PrefsReader.recordCallNotifyEnabled(context)
+
     fun blockSmsEnabled(context: Context): Boolean = PrefsReader.blockSmsEnabled(context)
 
     fun killMeEnabled(context: Context): Boolean = PrefsReader.killMeEnabled(context)

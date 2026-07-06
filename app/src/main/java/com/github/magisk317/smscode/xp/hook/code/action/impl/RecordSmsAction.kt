@@ -37,7 +37,7 @@ class RecordSmsAction(
             pluginContext = mPluginContext,
             smsMsg = mSmsMsg.toVerificationMessage(),
             eventId = eventId,
-            enabled = enabled ?: PrefsReader.recordCodeSmsEnabled(mPluginContext),
+            enabled = enabled ?: recordEnabledForMessageType(mSmsMsg),
             deduplicateEnabled = deduplicateEnabled ?: PrefsReader.deduplicateSms(mPluginContext),
             withFileLock = { context, fileName, block ->
                 SharedRuntimeGate.withFileLock(context, fileName) { block() }
@@ -76,7 +76,7 @@ class RecordSmsAction(
             val projections = arrayOf("_id")
             val order = "date ASC"
             val selection = "msg_type = ? AND sms_code IS NOT NULL AND sms_code != ''"
-            val selectionArgs = arrayOf(SmsMsg.MSG_TYPE_SMS.toString())
+            val selectionArgs = arrayOf(smsMsg.msgType.toString())
             val cursor: Cursor? = resolver.query(smsMsgUri, projections, selection, selectionArgs, order)
             if (cursor == null) {
                 return RecordSmsInsertResultHelper.success(
@@ -87,7 +87,7 @@ class RecordSmsAction(
             val count = cursor.count
             val limit = PrefsReader.getHistoryLimit(
                 context = mPluginContext,
-                msgType = SmsMsg.MSG_TYPE_SMS,
+                msgType = smsMsg.msgType,
                 isCodeSms = true,
             )
             if (limit > 0 && count > limit) {
@@ -115,6 +115,14 @@ class RecordSmsAction(
             RecordSmsInsertResultHelper.success(
                 detail = "record_uri=$insertedUri,simSlot=${smsMsg.simSlot},subId=${smsMsg.subId}",
             )
+        }
+    }
+
+    private fun recordEnabledForMessageType(smsMsg: SmsMsg): Boolean {
+        return when (smsMsg.msgType) {
+            SmsMsg.MSG_TYPE_APP_NOTIFY -> PrefsReader.recordAppNotifyEnabled(mPluginContext)
+            SmsMsg.MSG_TYPE_CALL_NOTIFY -> PrefsReader.recordCallNotifyEnabled(mPluginContext)
+            else -> PrefsReader.recordCodeSmsEnabled(mPluginContext)
         }
     }
 

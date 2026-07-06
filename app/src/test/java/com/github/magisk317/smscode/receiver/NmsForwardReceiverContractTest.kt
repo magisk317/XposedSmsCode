@@ -25,20 +25,22 @@ class NmsForwardReceiverContractTest {
         assertTrue("NotificationHookConst.ACTION_FORWARD_SMS" in source)
         assertTrue("EXTRA_SMS_CODE_LEGACY = \"smsCode\"" in source)
         assertTrue("CodeNotificationPayload.EXTRA_SMS_CODE" in source)
-        assertTrue("CodeNotificationBroadcastContract.ACTION_SHOW_CODE_NOTIFICATION" in source)
-        assertTrue("CodeNotificationReceiverHandler.handleBroadcast" in source)
+        assertTrue("SmsCodeActionDispatcher.dispatchParsedSmsActions" in source)
+        assertTrue("MSG_TYPE_APP_NOTIFY" in source)
+        assertTrue("recordAppNotifyEnabled" in source)
+        assertTrue("operateSmsDelays = emptyList()" in source)
     }
 
     @Test
-    fun `nms forward receiver logs entry skip and delegate stages`() {
+    fun `nms forward receiver logs entry skip dispatch and handled stages`() {
         val source = resolveProjectFile(
             "app/src/main/java/io/github/magisk317/relay/platform/ipc/ForwardReceiver.kt",
         ).readText()
 
         assertTrue("NmsForwardReceiver received" in source)
         assertTrue("NmsForwardReceiver skipped: missing smsCode" in source)
-        assertTrue("NmsForwardReceiver skipped: notification preference disabled" in source)
-        assertTrue("NmsForwardReceiver delegate" in source)
+        assertTrue("NmsForwardReceiver skipped: module disabled" in source)
+        assertTrue("NmsForwardReceiver dispatch local actions" in source)
         assertTrue("NmsForwardReceiver handled" in source)
         assertTrue("NmsForwardReceiver finished skip" in source)
         assertTrue("LogRoute.NMS_HOOK" in source)

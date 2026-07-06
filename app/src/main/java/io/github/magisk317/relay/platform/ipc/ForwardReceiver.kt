@@ -3,16 +3,18 @@ package io.github.magisk317.relay.platform.ipc
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.github.magisk317.smscode.common.constant.PrefConst
-import com.github.magisk317.smscode.common.utils.AppPreferencesDataStore
-import com.github.magisk317.smscode.receiver.CodeNotificationReceiverConfig
-import com.github.magisk317.smscode.xp.hook.code.CodeNotificationBroadcastContract
+import android.os.Handler
+import android.os.Looper
+import com.github.magisk317.smscode.data.db.entity.SmsMsg
+import com.github.magisk317.smscode.runtime.RuntimePrefsFacade as PrefsReader
+import com.github.magisk317.smscode.xp.hook.code.SmsCodeActionDispatcher
+import com.github.magisk317.smscode.xp.hook.code.SmsCodeVerificationPrefs
 import io.github.magisk317.smscode.runtime.contract.logging.LogRoute
 import io.github.magisk317.smscode.verification.CodeNotificationPayload
-import io.github.magisk317.smscode.verification.CodeNotificationReceiverHandler
+import io.github.magisk317.smscode.verification.SmsCodePostParseCoordinator
 import io.github.magisk317.smscode.xposed.hook.notification.NotificationHookConst
 import io.github.magisk317.smscode.xposed.utils.XLog
-import kotlinx.coroutines.runBlocking
+import java.util.concurrent.Executors
 
 class ForwardReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -45,18 +47,18 @@ class ForwardReceiver : BroadcastReceiver() {
         }
 
         val appContext = context.applicationContext ?: context
-        if (!showCodeNotification(appContext)) {
+        if (!PrefsReader.isEnabled(appContext)) {
             XLog.w(
-                "NmsForwardReceiver skipped: notification preference disabled event=%s pkg=%s type=%s",
+                "NmsForwardReceiver skipped: module disabled event=%s pkg=%s type=%s",
                 eventId.ifBlank { "<empty>" },
                 sourcePackage.ifBlank { "<empty>" },
                 msgType.ifBlank { "<empty>" },
             )
-            val resultSet = CodeNotificationPayload.finishOrderedResult(this, RESULT_DATA_NOTIFICATION_DISABLED)
+            val resultSet = CodeNotificationPayload.finishOrderedResult(this, RESULT_DATA_MODULE_DISABLED)
             XLog.i(
                 "NmsForwardReceiver finished skip: event=%s reason=%s orderedResult=%s",
                 eventId.ifBlank { "<empty>" },
-                RESULT_DATA_NOTIFICATION_DISABLED,
+                RESULT_DATA_MODULE_DISABLED,
                 resultSet,
             )
             return
@@ -80,68 +82,102 @@ class ForwardReceiver : BroadcastReceiver() {
             return
         }
 
-        val autoCancelEnabled = autoCancelCodeNotification(appContext)
-        val retentionTimeMs = if (autoCancelEnabled) {
-            getNotificationRetentionTime(appContext) * 1000L
-        } else {
-            0L
-        }
-        val translatedIntent = createCodeNotificationIntent(
-            sourceIntent = intent,
-            smsCode = smsCode,
-            autoCancelEnabled = autoCancelEnabled,
-            retentionTimeMs = retentionTimeMs,
-        )
+        val smsMsg = createNotificationSmsMsg(intent, smsCode, msgType)
+        val plan = createNotificationCodePlan(appContext, smsMsg.msgType)
 
         XLog.i(
-            "NmsForwardReceiver delegate: event=%s pkg=%s type=%s codeLen=%d autoCancel=%s retentionMs=%d tokenPresent=%s",
+            "NmsForwardReceiver dispatch local actions: event=%s pkg=%s type=%s codeLen=%d notify=%s copy=%s record=%s autoInputDelay=%s",
             eventId.ifBlank { "<empty>" },
             sourcePackage.ifBlank { "<empty>" },
             msgType.ifBlank { "<empty>" },
             smsCode.length,
-            autoCancelEnabled,
-            retentionTimeMs,
-            !intent.getStringExtra(NotificationHookConst.EXTRA_IPC_TOKEN).isNullOrBlank(),
+            plan.notificationPlan != null,
+            plan.uiPlan.copyToClipboardEnabled,
+            plan.shouldRecord,
+            plan.autoInputDelayMs?.toString() ?: "<disabled>",
         )
         val ordered = isOrderedBroadcast
-        CodeNotificationReceiverHandler.handleBroadcast(
+        val dispatched = dispatchLocalNotificationCodeActions(
+            appContext = appContext,
+            smsMsg = smsMsg,
+            eventId = eventId,
+            plan = plan,
+        )
+        val resultSet = CodeNotificationPayload.finishOrderedResult(
             receiver = this,
-            context = appContext,
-            intent = translatedIntent,
-            config = CodeNotificationReceiverConfig.create(
-                context = appContext,
-                source = "NmsForwardReceiver",
-                sentFromUidProvider = ::getSentFromUidCompat,
-            ),
+            reason = if (dispatched) RESULT_DATA_ACTIONS_DISPATCHED else RESULT_DATA_ACTIONS_FAILED,
+            success = dispatched,
         )
         XLog.i(
-            "NmsForwardReceiver handled: event=%s pkg=%s ordered=%s resultCode=%d resultData=%s",
+            "NmsForwardReceiver handled: event=%s pkg=%s ordered=%s resultCode=%d resultData=%s orderedResult=%s",
             eventId.ifBlank { "<empty>" },
             sourcePackage.ifBlank { "<empty>" },
             ordered,
             if (ordered) resultCode else 0,
             if (ordered) resultData ?: "<null>" else "<not-ordered>",
+            resultSet,
         )
     }
 
-    private fun createCodeNotificationIntent(
-        sourceIntent: Intent,
+    private fun createNotificationSmsMsg(
+        intent: Intent,
         smsCode: String,
-        autoCancelEnabled: Boolean,
-        retentionTimeMs: Long,
-    ): Intent {
-        return CodeNotificationPayload.fillIntent(
-            Intent(CodeNotificationBroadcastContract.ACTION_SHOW_CODE_NOTIFICATION),
-            CodeNotificationPayload.Payload(
-                sender = sourceIntent.getStringExtra(CodeNotificationPayload.EXTRA_SENDER),
-                company = sourceIntent.getStringExtra(CodeNotificationPayload.EXTRA_COMPANY),
-                smsCode = smsCode,
-                notificationId = resolveNotificationId(sourceIntent),
-                autoCancelEnabled = autoCancelEnabled,
-                retentionTimeMs = retentionTimeMs,
-                token = sourceIntent.getStringExtra(NotificationHookConst.EXTRA_IPC_TOKEN),
-            ),
+        msgType: String,
+    ): SmsMsg {
+        val timestamp = intent.getLongExtra(EXTRA_DATE, 0L).takeIf { it > 0L } ?: System.currentTimeMillis()
+        return SmsMsg(
+            sender = intent.getStringExtra(EXTRA_SENDER),
+            body = intent.getStringExtra(EXTRA_BODY),
+            date = timestamp,
+            processedTime = System.currentTimeMillis(),
+            company = intent.getStringExtra(EXTRA_COMPANY),
+            smsCode = smsCode,
+            packageName = intent.getStringExtra(EXTRA_PACKAGE_NAME),
+            notifyChannelId = intent.getStringExtra(EXTRA_NOTIFY_CHANNEL_ID).orEmpty(),
+            msgType = resolveRecordMessageType(msgType),
         )
+    }
+
+    private fun createNotificationCodePlan(
+        context: Context,
+        msgType: Int,
+    ): SmsCodePostParseCoordinator.ParsedSmsPlan {
+        val settings = SmsCodePostParseCoordinator.loadSettings(SmsCodeVerificationPrefs(context)).copy(
+            recordSmsEnabled = recordEnabledForMessageType(context, msgType),
+            blockSmsEnabled = false,
+            markAsReadEnabled = false,
+            deleteSmsEnabled = false,
+        )
+        return SmsCodePostParseCoordinator.createParsedSmsPlan(settings).copy(
+            blockSms = false,
+            operateSmsDelays = emptyList(),
+        )
+    }
+
+    private fun dispatchLocalNotificationCodeActions(
+        appContext: Context,
+        smsMsg: SmsMsg,
+        eventId: String,
+        plan: SmsCodePostParseCoordinator.ParsedSmsPlan,
+    ): Boolean {
+        val executor = Executors.newSingleThreadScheduledExecutor()
+        return try {
+            SmsCodeActionDispatcher.dispatchParsedSmsActions(
+                uiHandler = Handler(Looper.getMainLooper()),
+                executor = executor,
+                pluginContext = appContext,
+                phoneContext = appContext,
+                smsMsg = smsMsg,
+                eventId = eventId,
+                plan = plan,
+            )
+            true
+        } catch (error: RuntimeException) {
+            XLog.e("NmsForwardReceiver local action dispatch failed", error)
+            false
+        } finally {
+            executor.shutdown()
+        }
     }
 
     private fun readSmsCode(intent: Intent): String {
@@ -150,61 +186,36 @@ class ForwardReceiver : BroadcastReceiver() {
             ?: ""
     }
 
-    private fun resolveNotificationId(intent: Intent): Int {
-        if (intent.hasExtra(CodeNotificationPayload.EXTRA_NOTIFICATION_ID)) {
-            return intent.getIntExtra(CodeNotificationPayload.EXTRA_NOTIFICATION_ID, 0)
-        }
-        val eventId = intent.getStringExtra(EXTRA_EVENT_ID).orEmpty()
-        val sourcePackage = intent.getStringExtra(EXTRA_PACKAGE_NAME).orEmpty()
-        val seed = eventId.ifBlank {
-            "${sourcePackage.ifBlank { "nms" }}_${System.currentTimeMillis()}"
-        }
-        return seed.hashCode()
-    }
-
-    private fun showCodeNotification(context: Context): Boolean {
-        return runBlocking {
-            AppPreferencesDataStore.getBoolean(
-                context,
-                PrefConst.KEY_SHOW_CODE_NOTIFICATION,
-                true,
-            )
+    private fun resolveRecordMessageType(msgType: String): Int {
+        return when (msgType) {
+            MSG_TYPE_APP_NOTIFY -> SmsMsg.MSG_TYPE_APP_NOTIFY
+            MSG_TYPE_CALL_NOTIFY -> SmsMsg.MSG_TYPE_CALL_NOTIFY
+            else -> SmsMsg.MSG_TYPE_SMS
         }
     }
 
-    private fun autoCancelCodeNotification(context: Context): Boolean {
-        return runBlocking {
-            AppPreferencesDataStore.getBoolean(
-                context,
-                PrefConst.KEY_AUTO_CANCEL_CODE_NOTIFICATION,
-                false,
-            )
-        }
-    }
-
-    private fun getNotificationRetentionTime(context: Context): Long {
-        return runBlocking {
-            AppPreferencesDataStore.getString(
-                context,
-                PrefConst.KEY_NOTIFICATION_RETENTION_TIME,
-                PrefConst.NOTIFICATION_RETENTION_TIME_DEFAULT,
-            )
-        }.toLongOrNull()?.coerceAtLeast(0L) ?: 0L
-    }
-
-    private fun getSentFromUidCompat(): Int {
-        return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            getSentFromUid()
-        } else {
-            -1
+    private fun recordEnabledForMessageType(context: Context, msgType: Int): Boolean {
+        return when (msgType) {
+            SmsMsg.MSG_TYPE_APP_NOTIFY -> PrefsReader.recordAppNotifyEnabled(context)
+            SmsMsg.MSG_TYPE_CALL_NOTIFY -> PrefsReader.recordCallNotifyEnabled(context)
+            else -> PrefsReader.recordCodeSmsEnabled(context)
         }
     }
 
     private companion object {
         private const val EXTRA_EVENT_ID = "event_id"
+        private const val EXTRA_SENDER = "sender"
+        private const val EXTRA_BODY = "body"
+        private const val EXTRA_DATE = "date"
+        private const val EXTRA_COMPANY = "company"
         private const val EXTRA_PACKAGE_NAME = "packageName"
+        private const val EXTRA_NOTIFY_CHANNEL_ID = "notify_channel_id"
         private const val EXTRA_MSG_TYPE = "msgType"
         private const val EXTRA_SMS_CODE_LEGACY = "smsCode"
-        private const val RESULT_DATA_NOTIFICATION_DISABLED = "notification_disabled"
+        private const val MSG_TYPE_APP_NOTIFY = "app_notify"
+        private const val MSG_TYPE_CALL_NOTIFY = "call_notify"
+        private const val RESULT_DATA_MODULE_DISABLED = "module_disabled"
+        private const val RESULT_DATA_ACTIONS_DISPATCHED = "actions_dispatched"
+        private const val RESULT_DATA_ACTIONS_FAILED = "actions_failed"
     }
 }

@@ -68,7 +68,7 @@ class AutoInputAction(
                 sender = smsMsg.sender,
                 body = smsMsg.body,
                 date = timestamp,
-                msgType = SmsMsg.MSG_TYPE_SMS,
+                msgType = smsMsg.msgType,
             )?.id
             db.insertAutoInputAttempt(
                 id = attemptId,

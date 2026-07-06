@@ -6,6 +6,7 @@ import com.github.magisk317.smscode.data.db.entity.SmsCodeRule
 import com.github.magisk317.smscode.feature.store.EntityStoreManager
 import com.github.magisk317.smscode.feature.store.EntityType
 import io.github.magisk317.smscode.domain.model.SmsCodeParseResult
+import io.github.magisk317.smscode.domain.model.SmsCodeParseSource
 import io.github.magisk317.smscode.domain.model.SmsCodeRuleSpec
 import io.github.magisk317.smscode.runtime.common.rules.SmsCodeRuleCatalogRefreshResult
 import io.github.magisk317.smscode.runtime.common.rules.SmsCodeRuleCatalogRepository
@@ -34,12 +35,20 @@ object SmsCodeUtils {
         },
     )
 
-    suspend fun parseSmsCodeIfExists(context: Context, content: String): String {
-        return adapter.parseSmsCodeIfExists(context, content)
+    suspend fun parseSmsCodeIfExists(
+        context: Context,
+        content: String,
+        source: SmsCodeParseSource? = null,
+    ): String {
+        return adapter.parseSmsCodeIfExists(context, content, source = source)
     }
 
-    suspend fun parseSmsCodeResultIfExists(context: Context, content: String): SmsCodeParseResult {
-        return adapter.parseSmsCodeResultIfExists(context, content)
+    suspend fun parseSmsCodeResultIfExists(
+        context: Context,
+        content: String,
+        source: SmsCodeParseSource? = null,
+    ): SmsCodeParseResult {
+        return adapter.parseSmsCodeResultIfExists(context, content, source = source)
     }
 
     @JvmStatic
