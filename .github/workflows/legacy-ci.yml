@@ -24,23 +24,19 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
-
-      - uses: actions/setup-java@v5
+      - name: Resolve CI toolkit
+        run: bash scripts/resolve_ci_toolkit.sh
+      - name: Setup Android CI
+        uses: ./.magisk-ci-toolkit/.github/actions/setup-android-ci
         with:
-          distribution: temurin
-          java-version: "26"
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6
-        with:
-          validate-wrappers: false
-          allow-snapshot-wrappers: true
+          checkout: 'false'
 
       - name: Build Legacy Debug APK
-        run: >
-          bash scripts/_toolkit/gradle/run_gradle_with_retry.sh
-          --warning-mode all
-          :app:assembleGithubLegacyDebug
+        uses: ./.magisk-ci-toolkit/.github/actions/run-gradle-with-retry
+        with:
+          arguments: >
+            --warning-mode all
+            :app:assembleGithubLegacyDebug
 
       - name: Write build summary
         if: always()

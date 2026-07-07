@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-TOOLKIT_DIR="${ROOT_DIR}/scripts/_toolkit"
+TOOLKIT_DIR="$("$ROOT_DIR/scripts/resolve_ci_toolkit.sh")"
 
 # Source the toolkit's modular release tag
 export MAGISK_RELEASE_GUARD_SCRIPT="${SCRIPT_DIR}/check_release_guard.sh"

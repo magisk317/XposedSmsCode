@@ -10,46 +10,170 @@
     "pruneStaleBranches": true,
     "pruneBranchAfterAutomerge": true,
     "minimumReleaseAge": "24 hours",
-    "statusCheckNames": {
-        "minimumReleaseAge": null
-    },
     "internalChecksFilter": "strict",
     "prCreation": "immediate",
-    "timezone": "Asia/Shanghai",
-    "schedule": [
-        "every weekend"
-    ],
-    "dependencyDashboard": true,
-    "dependencyDashboardTitle": "Dependency Dashboard",
-    "dependencyDashboardHeader": "This issue lists Renovate updates and detected dependencies. Force an update by checking the boxes.",
-    "dependencyDashboardApproval": false,
+    "ignoreTests": true,
+    "platformAutomerge": false,
+    "automergeType": "pr",
     "baseBranchPatterns": [
         "beta"
     ],
+    "ignoreDeps": [
+        "rustls:rustls-platform-verifier",
+        "org.matrix.rustcomponents:sdk-android"
+    ],
     "packageRules": [
         {
+            "matchManagers": [
+                "gradle",
+                "maven"
+            ],
             "matchUpdateTypes": [
-                "minor",
+                "minor"
+            ],
+            "automerge": true,
+            "automergeType": "pr",
+            "groupName": "java minor dependencies",
+            "groupSingleUpdates": false,
+            "groupSlug": "java-minor",
+            "commitMessageExtra": ""
+        },
+        {
+            "matchManagers": [
+                "gradle",
+                "maven"
+            ],
+            "matchUpdateTypes": [
                 "patch"
             ],
-            "recreateWhen": "always",
-            "groupName": "other non-major dependencies",
+            "automerge": true,
+            "automergeType": "pr",
+            "groupName": "java patch dependencies",
             "groupSingleUpdates": false,
-            "groupSlug": "all-minor-patch",
-            "commitMessageExtra": "",
-            "matchPackageNames": [
-                "!/^androidx\\./",
-                "!/^org\\.jetbrains\\.kotlin/",
-                "!/^io\\.insert-koin\\./",
-                "!/^org\\.junit\\./",
-                "!/^dev\\.chrisbanes\\.haze/",
-                "!/^com\\.squareup\\.okhttp3/",
-                "!/^com\\.squareup\\.retrofit2/",
-                "!/^io\\.ktor\\./",
-                "!/^io\\.coil-kt/",
-                "!/^io\\.kotest/",
-                "!/^com\\.google\\.firebase/"
-            ]
+            "groupSlug": "java-patch",
+            "commitMessageExtra": ""
+        },
+        {
+            "matchManagers": [
+                "npm",
+                "pnpm"
+            ],
+            "matchUpdateTypes": [
+                "minor"
+            ],
+            "automerge": true,
+            "automergeType": "pr",
+            "groupName": "javascript minor dependencies",
+            "groupSingleUpdates": false,
+            "groupSlug": "javascript-minor",
+            "commitMessageExtra": ""
+        },
+        {
+            "matchManagers": [
+                "npm",
+                "pnpm"
+            ],
+            "matchUpdateTypes": [
+                "patch"
+            ],
+            "automerge": true,
+            "automergeType": "pr",
+            "groupName": "javascript patch dependencies",
+            "groupSingleUpdates": false,
+            "groupSlug": "javascript-patch",
+            "commitMessageExtra": ""
+        },
+        {
+            "matchManagers": [
+                "cargo"
+            ],
+            "matchUpdateTypes": [
+                "minor"
+            ],
+            "automerge": true,
+            "automergeType": "pr",
+            "groupName": "rust minor dependencies",
+            "groupSingleUpdates": false,
+            "groupSlug": "rust-minor",
+            "commitMessageExtra": ""
+        },
+        {
+            "matchManagers": [
+                "cargo"
+            ],
+            "matchUpdateTypes": [
+                "patch"
+            ],
+            "automerge": true,
+            "automergeType": "pr",
+            "groupName": "rust patch dependencies",
+            "groupSingleUpdates": false,
+            "groupSlug": "rust-patch",
+            "commitMessageExtra": ""
+        },
+        {
+            "matchManagers": [
+                "gomod"
+            ],
+            "matchUpdateTypes": [
+                "minor"
+            ],
+            "automerge": true,
+            "automergeType": "pr",
+            "groupName": "go minor dependencies",
+            "groupSingleUpdates": false,
+            "groupSlug": "go-minor",
+            "commitMessageExtra": ""
+        },
+        {
+            "matchManagers": [
+                "gomod"
+            ],
+            "matchUpdateTypes": [
+                "patch"
+            ],
+            "automerge": true,
+            "automergeType": "pr",
+            "groupName": "go patch dependencies",
+            "groupSingleUpdates": false,
+            "groupSlug": "go-patch",
+            "commitMessageExtra": ""
+        },
+        {
+            "matchManagers": [
+                "docker-compose",
+                "dockerfile",
+                "gitlabci",
+                "gitlabci-include",
+                "gradle-wrapper"
+            ],
+            "matchUpdateTypes": [
+                "minor"
+            ],
+            "automerge": true,
+            "automergeType": "pr",
+            "groupName": "infra minor dependencies",
+            "groupSingleUpdates": false,
+            "groupSlug": "infra-minor",
+            "commitMessageExtra": ""
+        },
+        {
+            "matchManagers": [
+                "docker-compose",
+                "dockerfile",
+                "gitlabci",
+                "gitlabci-include",
+                "gradle-wrapper"
+            ],
+            "matchUpdateTypes": [
+                "patch"
+            ],
+            "automerge": true,
+            "automergeType": "pr",
+            "groupName": "infra patch dependencies",
+            "groupSingleUpdates": false,
+            "groupSlug": "infra-patch",
+            "commitMessageExtra": ""
         },
         {
             "matchManagers": [
@@ -63,7 +187,8 @@
         },
         {
             "matchManagers": [
-                "npm"
+                "npm",
+                "pnpm"
             ],
             "addLabels": [
                 "dependencies",
@@ -111,5 +236,12 @@
     "vulnerabilityAlerts": {
         "enabled": true,
         "labels": ["security"]
+    },
+    "timezone": "Asia/Shanghai",
+    "dependencyDashboard": true,
+    "dependencyDashboardOSVVulnerabilitySummary": "all",
+    "lockFileMaintenance": {
+        "enabled": true,
+        "automerge": true
     }
 }

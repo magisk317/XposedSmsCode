@@ -10,20 +10,314 @@ permissions:
   contents: write
 
 jobs:
-  release-android:
+  validate-release:
+    name: Validate Release Metadata
     if: ${{ vars.RELEASE_OWNER == '' || vars.RELEASE_OWNER == 'github' }}
-    uses: magisk317/magisk-ci-toolkit/.github/workflows/release-android.yml@master
-    with:
-      package_name: 'com.github.tianma8023.xposed.smscode'
-      modules_repo: 'Xposed-Modules-Repo/com.github.tianma8023.xposed.smscode'
-      publish_play: true
-      play_track: 'production'
-      java_version: '26'
-    secrets:
-      RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE }}
-      STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
-      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-      XPOSED_MODULES_REPO_TOKEN: ${{ secrets.XPOSED_MODULES_REPO_TOKEN }}
-      ANDROID_PUBLISHER_CREDENTIALS: ${{ secrets.ANDROID_PUBLISHER_CREDENTIALS }}
-      GH_PAT: ${{ secrets.GH_PAT }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Resolve CI toolkit
+        run: bash scripts/resolve_ci_toolkit.sh
+      - name: Setup Android CI
+        uses: ./.magisk-ci-toolkit/.github/actions/setup-android-ci
+        with:
+          checkout: 'false'
+      - name: Validate release notes and tag/version consistency
+        run: |
+          chmod +x scripts/release/check_release_guard.sh
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            scripts/release/check_release_guard.sh "${GITHUB_REF_NAME}"
+          else
+            scripts/release/check_release_guard.sh
+          fi
+      - name: Run quality gate
+        uses: ./.magisk-ci-toolkit/.github/actions/run-gradle-with-retry
+        with:
+          arguments: >
+            --warning-mode all
+            :core:check
+            :runtime:check
+            :app:check
+
+  build-github-apk:
+    name: Build GitHub APK
+    needs: [validate-release]
+    if: ${{ vars.RELEASE_OWNER == '' || vars.RELEASE_OWNER == 'github' }}
+    runs-on: ubuntu-latest
+    env:
+      HAS_RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE != '' }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Resolve CI toolkit
+        run: bash scripts/resolve_ci_toolkit.sh
+      - name: Setup Android CI
+        uses: ./.magisk-ci-toolkit/.github/actions/setup-android-ci
+        with:
+          checkout: 'false'
+      - name: Decode Keystore
+        if: env.HAS_RELEASE_KEYSTORE == 'true'
+        run: echo "${{ secrets.RELEASE_KEYSTORE }}" | base64 --decode > app/release.jks
+      - name: Build GitHub APK with Splits
+        uses: ./.magisk-ci-toolkit/.github/actions/run-gradle-with-retry
+        with:
+          arguments: :app:assembleGithubRelease -PbuildSplits
+        env:
+          KEYSTORE_FILE: release.jks
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: apks-github
+          path: app/build/outputs/apk/**/release/*.apk
+
+  build-aab:
+    name: Build Bundle
+    needs: [validate-release]
+    if: ${{ vars.RELEASE_OWNER == '' || vars.RELEASE_OWNER == 'github' }}
+    runs-on: ubuntu-latest
+    outputs:
+      has_play_native_symbols: ${{ steps.play_symbols.outputs.exists }}
+    env:
+      HAS_RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE != '' }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Resolve CI toolkit
+        run: bash scripts/resolve_ci_toolkit.sh
+      - name: Setup Android CI
+        uses: ./.magisk-ci-toolkit/.github/actions/setup-android-ci
+        with:
+          checkout: 'false'
+      - name: Decode Keystore
+        if: env.HAS_RELEASE_KEYSTORE == 'true'
+        run: echo "${{ secrets.RELEASE_KEYSTORE }}" | base64 --decode > app/release.jks
+      - name: Build App Bundle
+        uses: ./.magisk-ci-toolkit/.github/actions/run-gradle-with-retry
+        with:
+          arguments: :app:bundlePlayRelease
+        env:
+          KEYSTORE_FILE: release.jks
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      - name: Upload AAB Artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: bundle-assets
+          path: |
+            app/build/outputs/bundle/**/*.aab
+            app/build/outputs/mapping/**/mapping.txt
+      - name: Detect Play Native Symbols
+        id: play_symbols
+        shell: bash
+        run: |
+          file="$(find app/build/outputs/native-debug-symbols -type f -name native-debug-symbols.zip | sort | head -n 1 || true)"
+          if [[ -n "$file" ]]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "path=$file" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Upload Play Native Symbols Artifact
+        if: steps.play_symbols.outputs.exists == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: native-symbols-play
+          path: ${{ steps.play_symbols.outputs.path }}
+
+  release:
+    name: Create Release
+    needs: [validate-release, build-github-apk, build-aab]
+    if: always() && (vars.RELEASE_OWNER == '' || vars.RELEASE_OWNER == 'github') && needs.validate-release.result == 'success' && needs.build-github-apk.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      HAS_RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE != '' }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Resolve CI toolkit
+        run: bash scripts/resolve_ci_toolkit.sh
+      - uses: actions/download-artifact@v8
+        with:
+          name: apks-github
+          path: artifacts/apks
+      - uses: actions/download-artifact@v8
+        if: needs.build-aab.result == 'success'
+        with:
+          name: bundle-assets
+          path: artifacts/bundle
+      - name: Generate Release Notes
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT || github.token }}
+        run: |
+          .magisk-ci-toolkit/release/release_notes.sh \
+            --tag "$GITHUB_REF_NAME" \
+            --package-name "com.github.tianma8023.xposed.smscode" \
+            --source-repo "$GITHUB_REPOSITORY" \
+            --generate-github-notes \
+            --output release-notes.md
+      - name: Publish Release
+        if: startsWith(github.ref, 'refs/tags/') && env.HAS_RELEASE_KEYSTORE == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT || github.token }}
+        run: |
+          set -euo pipefail
+          mapfile -d '' release_assets < <(
+            find artifacts/apks artifacts/bundle -type f \( -name '*.apk' -o -name '*.aab' \) -print0 2>/dev/null | sort -z
+          )
+          if [[ ${#release_assets[@]} -eq 0 ]]; then
+            echo "ERROR: no release assets found under artifacts/apks or artifacts/bundle" >&2
+            exit 1
+          fi
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "${release_assets[@]}" --clobber
+            gh release edit "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --draft=false --notes-file release-notes.md
+          else
+            gh release create "$GITHUB_REF_NAME" "${release_assets[@]}" --title "$GITHUB_REF_NAME" --verify-tag --notes-file release-notes.md
+          fi
+
+  publish-play:
+    name: Publish to Google Play
+    needs: [release, build-aab]
+    if: ${{ (vars.RELEASE_OWNER == '' || vars.RELEASE_OWNER == 'github') && startsWith(github.ref, 'refs/tags/') }}
+    runs-on: ubuntu-latest
+    env:
+      HAS_GOOGLE_PLAY_CREDENTIALS: ${{ secrets.ANDROID_PUBLISHER_CREDENTIALS != '' }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: bundle-assets
+          path: artifacts/bundle
+      - uses: actions/download-artifact@v8
+        if: needs.build-aab.outputs.has_play_native_symbols == 'true'
+        with:
+          name: native-symbols-play
+          path: artifacts/symbols-play
+      - name: Resolve Play Publish Inputs
+        id: resolve_play
+        shell: bash
+        run: |
+          aab_file=$(find artifacts/bundle -type f -name '*.aab' | sort | head -n 1)
+          if [[ -z "$aab_file" ]]; then
+            echo "ERROR: no .aab found under artifacts/bundle" >&2
+            exit 1
+          fi
+          mapping_file=$(find artifacts/bundle -type f -name mapping.txt | sort | head -n 1 || true)
+          symbols_file=$(find artifacts/symbols-play -type f -name native-debug-symbols.zip 2>/dev/null | sort | head -n 1 || true)
+          echo "aab_file=$aab_file" >> "$GITHUB_OUTPUT"
+          if [[ -n "$mapping_file" ]]; then
+            echo "has_mapping=true" >> "$GITHUB_OUTPUT"
+            echo "mapping_file=$mapping_file" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_mapping=false" >> "$GITHUB_OUTPUT"
+          fi
+          if [[ -n "$symbols_file" ]]; then
+            echo "has_symbols=true" >> "$GITHUB_OUTPUT"
+            echo "symbols_file=$symbols_file" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_symbols=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 'ruby'
+      - name: Install fastlane
+        shell: bash
+        run: |
+          gem_user_dir="$(ruby -r rubygems -e 'print Gem.user_dir')"
+          echo "$gem_user_dir/bin" >> "$GITHUB_PATH"
+          gem install --user-install fastlane --no-document
+      - name: Publish to Google Play
+        if: env.HAS_GOOGLE_PLAY_CREDENTIALS == 'true'
+        shell: bash
+        env:
+          ANDROID_PUBLISHER_CREDENTIALS: ${{ secrets.ANDROID_PUBLISHER_CREDENTIALS }}
+          FASTLANE_SKIP_UPDATE_CHECK: '1'
+          FASTLANE_DISABLE_COLORS: '1'
+          CI: 'true'
+        run: |
+          set -euo pipefail
+          gem_user_bin="$(ruby -r rubygems -e 'print Gem.user_dir')/bin"
+          fastlane_bin="$gem_user_bin/fastlane"
+          cmd=(
+            "$fastlane_bin" supply
+            --aab "${{ steps.resolve_play.outputs.aab_file }}"
+            --package_name "com.github.tianma8023.xposed.smscode"
+            --track "production"
+            --release_status "completed"
+            --json_key_data "$ANDROID_PUBLISHER_CREDENTIALS"
+            --skip_upload_metadata true
+            --skip_upload_images true
+            --skip_upload_screenshots true
+          )
+          if [[ "${{ steps.resolve_play.outputs.has_mapping }}" == "true" && "${{ steps.resolve_play.outputs.has_symbols }}" == "true" ]]; then
+            cmd+=(--mapping_paths "${{ steps.resolve_play.outputs.mapping_file }},${{ steps.resolve_play.outputs.symbols_file }}")
+          elif [[ "${{ steps.resolve_play.outputs.has_mapping }}" == "true" ]]; then
+            cmd+=(--mapping "${{ steps.resolve_play.outputs.mapping_file }}")
+          elif [[ "${{ steps.resolve_play.outputs.has_symbols }}" == "true" ]]; then
+            cmd+=(--mapping_paths "${{ steps.resolve_play.outputs.symbols_file }}")
+          fi
+          "${cmd[@]}"
+
+  publish-modules-repo:
+    name: Publish to Xposed-Modules-Repo
+    needs: [release]
+    if: ${{ (vars.RELEASE_OWNER == '' || vars.RELEASE_OWNER == 'github') && startsWith(github.ref, 'refs/tags/') }}
+    runs-on: ubuntu-latest
+    env:
+      HAS_MODULES_REPO_TOKEN: ${{ secrets.XPOSED_MODULES_REPO_TOKEN != '' }}
+      MODULES_REPO: Xposed-Modules-Repo/com.github.tianma8023.xposed.smscode
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Resolve CI toolkit
+        run: bash scripts/resolve_ci_toolkit.sh
+      - uses: actions/download-artifact@v8
+        with:
+          name: apks-github
+          path: artifacts/apks
+      - name: Generate Release Notes
+        env:
+          GH_TOKEN: ${{ secrets.XPOSED_MODULES_REPO_TOKEN }}
+        run: |
+          .magisk-ci-toolkit/release/release_notes.sh \
+            --tag "$GITHUB_REF_NAME" \
+            --package-name "com.github.tianma8023.xposed.smscode" \
+            --source-repo "$GITHUB_REPOSITORY" \
+            --generate-github-notes \
+            --output release-notes.md
+      - name: Publish Release in Xposed-Modules-Repo
+        if: env.HAS_MODULES_REPO_TOKEN == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.XPOSED_MODULES_REPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          mapfile -d '' apk_files < <(find artifacts/apks -type f -name '*.apk' -print0 | sort -z)
+          if [[ ${#apk_files[@]} -eq 0 ]]; then
+            echo "ERROR: no APK files found under artifacts/apks" >&2
+            exit 1
+          fi
+          if gh release view "$GITHUB_REF_NAME" --repo "$MODULES_REPO" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "${apk_files[@]}" --repo "$MODULES_REPO" --clobber
+            gh release edit "$GITHUB_REF_NAME" --repo "$MODULES_REPO" --title "$GITHUB_REF_NAME" --draft=false --notes-file release-notes.md
+          else
+            gh release create "$GITHUB_REF_NAME" "${apk_files[@]}" --repo "$MODULES_REPO" --title "$GITHUB_REF_NAME" --notes-file release-notes.md
+          fi

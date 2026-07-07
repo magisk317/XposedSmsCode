@@ -7,7 +7,12 @@ import sys
 import subprocess
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-TOOLKIT_SCRIPT = os.path.join(SCRIPT_DIR, '..', '_toolkit', 'security', 'manage_dependency_forces.py')
+ROOT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, '..', '..'))
+TOOLKIT_DIR = subprocess.check_output(
+    [os.path.join(ROOT_DIR, 'scripts', 'resolve_ci_toolkit.sh')],
+    text=True,
+).strip()
+TOOLKIT_SCRIPT = os.path.join(TOOLKIT_DIR, 'security', 'manage_dependency_forces.py')
 
 # Set default project for XposedSmsCode
 os.environ.setdefault('MAGISK_DEFAULT_PROJECT', ':app')

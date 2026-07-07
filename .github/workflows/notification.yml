@@ -10,13 +10,46 @@ on:
 
 jobs:
   notification:
-    uses: magisk317/magisk-ci-toolkit/.github/workflows/send-telegram-notification.yml@master
-    with:
-      project_tag: '📌 #XposedSmsCode'
-      ci_branch: 'beta'
-      release_notes_source: 'docs/CHANGELOG.md'
-    secrets:
-      TELEGRAM_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
-      TELEGRAM_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
-      TELEGRAM_THREAD_ID: ${{ secrets.TG_THREAD_ID }}
-      TELEGRAM_CI_THREAD_ID: ${{ secrets.TG_CI_THREAD_ID }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Resolve CI toolkit
+        run: bash scripts/resolve_ci_toolkit.sh
+
+      - name: Download artifacts
+        if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'beta'
+        uses: actions/download-artifact@v8
+        with:
+          run-id: ${{ github.event.workflow_run.id }}
+          path: artifacts
+          github-token: ${{ github.token }}
+
+      - name: Send Notification
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          ASSETS_JSON: ${{ toJson(github.event.release.assets) }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          TG_THREAD_ID: ${{ secrets.TG_THREAD_ID }}
+          TG_CI_THREAD_ID: ${{ secrets.TG_CI_THREAD_ID }}
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          WF_RUN_ID: ${{ github.event.workflow_run.id }}
+          WF_RUN_URL: ${{ github.event.workflow_run.html_url }}
+          WF_RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          WF_RUN_NAME: ${{ github.event.workflow_run.name }}
+          WF_RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+          WF_RUN_REPO: ${{ github.repository }}
+          WF_RUN_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          CI_COMMIT_TITLE: ${{ github.event.workflow_run.display_title }}
+          GH_TOKEN: ${{ github.token }}
+          PROJECT_TAG: '📌 #XposedSmsCode'
+          CI_BRANCH: 'beta'
+          RELEASE_NOTES_SOURCE: 'docs/CHANGELOG.md'
+        run: bash .magisk-ci-toolkit/github/send_telegram_notification.sh
