@@ -12,8 +12,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -24,11 +22,6 @@ import androidx.compose.ui.unit.dp
 import com.github.magisk317.smscode.core.R
 import com.github.magisk317.smscode.common.constant.Const
 import com.github.magisk317.smscode.ui.app.base.SystemBarsScrim
-import com.github.magisk317.smscode.ui.app.base.rememberHazeStyle
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.blur.blurEffect
-import dev.chrisbanes.haze.hazeSource
 import io.github.magisk317.uikit.surface.AppTopBar
 import io.github.magisk317.uikit.surface.SummarySectionCard
 
@@ -37,8 +30,6 @@ import io.github.magisk317.uikit.surface.SummarySectionCard
 fun PrivacyPolicyPage(onDismiss: () -> Unit) {
     BackHandler(onBack = onDismiss)
     val context = LocalContext.current
-    val hazeState = remember { HazeState() }
-    val hazeStyle = rememberHazeStyle()
     val policyText = remember {
         context.resources.openRawResource(R.raw.privacy_policy).bufferedReader().use { it.readText() }
             .lineSequence()
@@ -78,7 +69,6 @@ fun PrivacyPolicyPage(onDismiss: () -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .hazeSource(hazeState)
                 .verticalScroll(scrollState)
                 .padding(horizontal = 16.dp)
                 .padding(top = topPadding + 8.dp, bottom = bottomPadding + 16.dp),
@@ -107,12 +97,9 @@ fun PrivacyPolicyPage(onDismiss: () -> Unit) {
             containerColor = Color.Transparent,
             scrolledContainerColor = Color.Transparent,
             windowInsets = WindowInsets.statusBars,
-            modifier = Modifier.hazeEffect(hazeState) {
-                    blurEffect { style = hazeStyle }
-                forceInvalidateOnPreDraw = true
-            },
+            modifier = Modifier,
         )
 
-        SystemBarsScrim(hazeState = hazeState, hazeStyle = hazeStyle)
+        SystemBarsScrim()
     }
 }

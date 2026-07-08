@@ -46,11 +46,6 @@ import io.github.magisk317.uikit.surface.SummaryRow
 import io.github.magisk317.uikit.surface.SummarySectionCard
 import io.github.magisk317.uikit.theme.UiKitStyle
 import io.github.magisk317.uikit.theme.currentUiKitStyle
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.blur.HazeBlurStyle
-import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.blur.blurEffect
-import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -65,16 +60,16 @@ import io.github.magisk317.uikit.R as UiKitR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OverviewScreen(hazeState: HazeState, hazeStyle: HazeBlurStyle) {
+fun OverviewScreen() {
     when (currentUiKitStyle()) {
-        UiKitStyle.Miuix -> OverviewScreenMiuix(hazeState = hazeState, hazeStyle = hazeStyle)
-        UiKitStyle.Expressive -> OverviewScreenMaterial(hazeState = hazeState, hazeStyle = hazeStyle)
+        UiKitStyle.Miuix -> OverviewScreenMiuix()
+        UiKitStyle.Expressive -> OverviewScreenMaterial()
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun OverviewScreenShared(hazeState: HazeState, hazeStyle: HazeBlurStyle) {
+internal fun OverviewScreenShared() {
     val context = LocalContext.current
     val activityOwner = context as? ComponentActivity
     val settingsViewModel = if (activityOwner != null) {
@@ -144,7 +139,6 @@ internal fun OverviewScreenShared(hazeState: HazeState, hazeStyle: HazeBlurStyle
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .hazeSource(state = hazeState)
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .padding(horizontal = 16.dp),
             state = listState,
@@ -215,11 +209,7 @@ internal fun OverviewScreenShared(hazeState: HazeState, hazeStyle: HazeBlurStyle
             scrollBehavior = scrollBehavior,
             windowInsets = WindowInsets.statusBars,
             modifier = Modifier
-                .align(Alignment.TopCenter)
-                .hazeEffect(hazeState) {
-                    blurEffect { style = hazeStyle }
-                    forceInvalidateOnPreDraw = true
-                },
+                .align(Alignment.TopCenter),
             containerColor = Color.Transparent,
             scrolledContainerColor = Color.Transparent,
         )

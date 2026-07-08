@@ -241,14 +241,6 @@ object AppPreferencesDataStore {
             PrefConst.KEY_ENABLE_AUTO_ENTER_CODE,
             getBoolean(context, PrefConst.KEY_ENABLE_AUTO_ENTER_CODE, false),
         )
-        editor.putInt(
-            PrefConst.KEY_HAZE_BLUR_RADIUS,
-            getInt(context, PrefConst.KEY_HAZE_BLUR_RADIUS, PrefConst.HAZE_BLUR_RADIUS_DEFAULT),
-        )
-        editor.putFloat(
-            PrefConst.KEY_HAZE_TINT_ALPHA,
-            getFloat(context, PrefConst.KEY_HAZE_TINT_ALPHA, PrefConst.HAZE_TINT_ALPHA_DEFAULT),
-        )
         editor.putString(
             PrefConst.KEY_IPC_TOKEN,
             getString(context, PrefConst.KEY_IPC_TOKEN, ""),

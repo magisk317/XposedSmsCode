@@ -30,11 +30,6 @@ import io.github.magisk317.uikit.foundation.LoadingIndicatorTokens
 import io.github.magisk317.uikit.foundation.PolygonMorphLoadingIndicator
 import io.github.magisk317.uikit.foundation.SessionLoadingRegistry
 import io.github.magisk317.uikit.foundation.rememberMinDurationLoading
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.blur.HazeBlurStyle
-import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.blur.blurEffect
-import dev.chrisbanes.haze.hazeSource
 import io.github.magisk317.uikit.surface.AppTopBar
 import io.github.magisk317.uikit.surface.DetailSectionCard
 import kotlinx.coroutines.delay
@@ -42,7 +37,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun FaqScreen(hazeState: HazeState, hazeStyle: HazeBlurStyle, refreshTrigger: Int = 0) {
+fun FaqScreen(refreshTrigger: Int = 0) {
     val questions = stringArrayResource(id = R.array.question_list)
     val answers = stringArrayResource(id = R.array.answer_list)
     val shouldShowInitialLoading = remember { SessionLoadingRegistry.shouldShowInitial("faq") }
@@ -123,7 +118,6 @@ fun FaqScreen(hazeState: HazeState, hazeStyle: HazeBlurStyle, refreshTrigger: In
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .hazeSource(hazeState)
                         .nestedScroll(scrollBehavior.nestedScrollConnection),
                     state = listState,
                     contentPadding = PaddingValues(
@@ -164,11 +158,7 @@ fun FaqScreen(hazeState: HazeState, hazeStyle: HazeBlurStyle, refreshTrigger: In
                 title = stringResource(R.string.action_home_faq_title),
                 scrollBehavior = scrollBehavior,
                 windowInsets = WindowInsets.statusBars,
-                modifier = Modifier
-                    .hazeEffect(hazeState) {
-                    blurEffect { style = hazeStyle }
-                        forceInvalidateOnPreDraw = true
-                    },
+                modifier = Modifier,
                 containerColor = Color.Transparent,
                 scrolledContainerColor = Color.Transparent,
             )

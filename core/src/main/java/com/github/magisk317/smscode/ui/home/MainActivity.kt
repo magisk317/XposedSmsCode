@@ -75,7 +75,6 @@ import com.github.magisk317.smscode.runtime.RuntimeUpdateFacade
 import com.github.magisk317.smscode.runtime.RuntimeUpgradeDownloadProgress
 import com.github.magisk317.smscode.ui.app.base.UpdateSystemBars
 import com.github.magisk317.smscode.ui.app.base.applyEdgeToEdge
-import com.github.magisk317.smscode.ui.app.base.rememberHazeStyle
 import io.github.magisk317.uikit.common.DismissibleSnackbarHost
 import io.github.magisk317.uikit.foundation.LocalSnackbarHostState
 import com.github.magisk317.smscode.ui.home.update.FlavorPlayUpdateDelegate
@@ -83,7 +82,6 @@ import com.github.magisk317.smscode.ui.home.update.PlayUpdateDelegate
 import com.github.magisk317.smscode.ui.nav.SmsCodeNavHost
 import com.github.magisk317.smscode.ui.privacy.PrivacyPolicyPage
 import com.github.magisk317.smscode.ui.theme.AppTheme
-import dev.chrisbanes.haze.HazeState
 import io.github.magisk317.uikit.surface.AppAlertDialog
 import io.github.magisk317.uikit.surface.AppLinearProgressIndicator
 import io.github.magisk317.uikit.surface.AppPrimaryButton
@@ -384,20 +382,6 @@ class MainActivity : ComponentActivity() {
 
                     Box(modifier = Modifier.fillMaxSize()) {
                         val shouldShowRegularUi = startupBlockingCheckComplete && blockingStartupDialog == null
-                        val hazeBlurRadius by AppPreferencesDataStore.getIntFlow(
-                            context,
-                            PrefConst.KEY_HAZE_BLUR_RADIUS,
-                            PrefConst.HAZE_BLUR_RADIUS_DEFAULT,
-                        ).collectAsStateWithLifecycle(initialValue = PrefConst.HAZE_BLUR_RADIUS_DEFAULT)
-
-                        val hazeTintAlpha by AppPreferencesDataStore.getFloatFlow(
-                            context,
-                            PrefConst.KEY_HAZE_TINT_ALPHA,
-                            PrefConst.HAZE_TINT_ALPHA_DEFAULT,
-                        ).collectAsStateWithLifecycle(initialValue = PrefConst.HAZE_TINT_ALPHA_DEFAULT)
-
-                        val hazeState = remember { HazeState() }
-                        val hazeStyle = rememberHazeStyle(blurRadius = hazeBlurRadius.dp, tintAlpha = hazeTintAlpha)
                         if (shouldShowRegularUi) {
                             SmsCodeNavHost(
                                 navController = navController,
@@ -406,8 +390,6 @@ class MainActivity : ComponentActivity() {
                                 onInitialTabConsumed = { requestedTab = null },
                                 onBottomOverlayPaddingChanged = { snackbarBottomOverlayPadding = it },
                                 modifier = Modifier,
-                                hazeState = hazeState,
-                                hazeStyle = hazeStyle,
                             )
                         }
 

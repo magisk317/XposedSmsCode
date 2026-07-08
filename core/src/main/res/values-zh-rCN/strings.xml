@@ -37,8 +37,6 @@
     <string name="language_zh_cn">简体中文</string>
     <string name="language_zh_tw">繁體中文</string>
 
-    <string name="pref_haze_blur_radius_title">背景模糊半径</string>
-    <string name="pref_haze_tint_alpha_title">模糊遮罩透明度</string>
     <!-- preferences general end -->
 
     <!-- preferences sms code -->

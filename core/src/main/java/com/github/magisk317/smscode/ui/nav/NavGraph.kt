@@ -7,8 +7,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.github.magisk317.smscode.ui.home.MainScreen
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.blur.HazeBlurStyle
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -47,8 +45,6 @@ fun SmsCodeNavHost(
     onInitialTabConsumed: (() -> Unit)? = null,
     onBottomOverlayPaddingChanged: (Dp) -> Unit = {},
     modifier: Modifier = Modifier,
-    hazeState: HazeState,
-    hazeStyle: HazeBlurStyle,
 ) {
     NavHost(
         navController = navController,
@@ -60,8 +56,6 @@ fun SmsCodeNavHost(
                 initialTab = initialTab,
                 onInitialTabConsumed = onInitialTabConsumed,
                 onBottomOverlayPaddingChanged = onBottomOverlayPaddingChanged,
-                hazeState = hazeState,
-                hazeStyle = hazeStyle,
             )
         }
     }

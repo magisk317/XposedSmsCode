@@ -35,14 +35,10 @@ class SettingsViewModelRestoreTypeTest {
 
     @Test
     fun coerceRestoreValue_invalidNumberValues_areSkipped() {
-        val invalidInt = SettingsViewModel.coerceRestoreValue(PrefConst.KEY_HAZE_BLUR_RADIUS, "not_int")
-        val invalidFloat = SettingsViewModel.coerceRestoreValue(PrefConst.KEY_HAZE_TINT_ALPHA, "not_float")
+        val invalidInt = SettingsViewModel.coerceRestoreValue(PrefConst.KEY_RUNTIME_LOG_RETENTION_DAYS, "not_int")
 
         assertEquals(PrefValueType.INT, invalidInt.type)
         assertFalse(invalidInt.shouldWrite)
-
-        assertEquals(PrefValueType.FLOAT, invalidFloat.type)
-        assertFalse(invalidFloat.shouldWrite)
     }
 
     @Test

@@ -15,10 +15,6 @@ object PrefConst {
     const val KEY_UI_KIT_STYLE = "pref_ui_kit_style"
     const val KEY_COMPOSE_SETTINGS = "pref_compose_settings"
     const val KEY_SETTINGS_ACCORDION_MODE = "pref_settings_accordion_mode"
-    const val KEY_HAZE_BLUR_RADIUS = "pref_haze_blur_radius"
-    const val HAZE_BLUR_RADIUS_DEFAULT = 25
-    const val KEY_HAZE_TINT_ALPHA = "pref_haze_tint_alpha"
-    const val HAZE_TINT_ALPHA_DEFAULT = 0.2f
 
     // SMS Code
     const val KEY_SHOW_TOAST = "pref_show_toast"

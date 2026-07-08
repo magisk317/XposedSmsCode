@@ -41,14 +41,11 @@ object PrefRestoreTypeRegistry {
     val INT_KEYS: Set<String> = setOf(
         PrefConst.KEY_CHOOSE_THEME,
         PrefConst.KEY_UI_KIT_STYLE,
-        PrefConst.KEY_HAZE_BLUR_RADIUS,
         PrefConst.KEY_RUNTIME_LOG_RETENTION_DAYS,
         "local_version_code",
     )
 
-    val FLOAT_KEYS: Set<String> = setOf(
-        PrefConst.KEY_HAZE_TINT_ALPHA,
-    )
+    val FLOAT_KEYS: Set<String> = emptySet()
 
     fun typeOf(key: String): PrefValueType {
         return when {

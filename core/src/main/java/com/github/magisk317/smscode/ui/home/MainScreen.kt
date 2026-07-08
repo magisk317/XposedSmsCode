@@ -61,10 +61,6 @@ import com.github.magisk317.smscode.ui.nav.SettingsRoute
 import com.github.magisk317.smscode.ui.nav.SmsCodeRuleEditorRoute
 import com.github.magisk317.smscode.ui.nav.SmsCodeRulesRoute
 import com.github.magisk317.smscode.ui.record.CodeRecordScreen
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.blur.HazeBlurStyle
-import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.blur.blurEffect
 import io.github.magisk317.uikit.surface.AppBottomNavigationBar
 import io.github.magisk317.uikit.surface.AppNavigationItemSpec
 import io.github.magisk317.uikit.surface.AppNavigationRail
@@ -137,8 +133,6 @@ fun MainScreen(
     initialTab: Any? = null,
     onInitialTabConsumed: (() -> Unit)? = null,
     onBottomOverlayPaddingChanged: (Dp) -> Unit = {},
-    hazeState: HazeState,
-    hazeStyle: HazeBlurStyle,
 ) {
     val navController = rememberNavController()
     val appConfigViewModel: AppConfigViewModel = koinViewModel()
@@ -262,12 +256,10 @@ fun MainScreen(
                     predictivePopExitTransition = { _ -> tabExitTransition(isPop = true) },
                 ) {
                     composable<OverviewRoute> {
-                        OverviewScreen(hazeState = hazeState, hazeStyle = hazeStyle)
+                        OverviewScreen()
                     }
                     composable<AppBlockRoute> {
                         AppConfigScreen(
-                            hazeState = hazeState,
-                            hazeStyle = hazeStyle,
                             onBack = null,
                             refreshTrigger = appBlockRefreshTrigger,
                             viewModel = appConfigViewModel,
@@ -275,8 +267,6 @@ fun MainScreen(
                     }
                     composable<AppConfigRoute> {
                         AppConfigScreen(
-                            hazeState = hazeState,
-                            hazeStyle = hazeStyle,
                             onBack = { navController.popBackStack() },
                             refreshTrigger = appBlockRefreshTrigger,
                             viewModel = appConfigViewModel,
@@ -302,16 +292,12 @@ fun MainScreen(
                     }
                     composable<RecordsRoute> {
                         CodeRecordScreen(
-                            hazeState = hazeState,
-                            hazeStyle = hazeStyle,
                             onBack = null,
                             refreshTrigger = recordsRefreshTrigger,
                         )
                     }
                     composable<SettingsRoute> {
                         ComposeSettingsScreen(
-                            hazeState = hazeState,
-                            hazeStyle = hazeStyle,
                             onExit = { /* In tab, ignore exit */ },
                             refreshTrigger = settingsRefreshTrigger,
                         )
@@ -326,10 +312,6 @@ fun MainScreen(
                     .align(Alignment.BottomCenter)
                     .onSizeChanged { size ->
                         compactBottomBarHeight = with(density) { size.height.toDp() }
-                    }
-                    .hazeEffect(hazeState) {
-                    blurEffect { style = hazeStyle }
-                        forceInvalidateOnPreDraw = true
                     }
                     .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)),
             ) {

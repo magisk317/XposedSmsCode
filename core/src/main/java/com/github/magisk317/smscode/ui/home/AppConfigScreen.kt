@@ -58,11 +58,6 @@ import io.github.magisk317.uikit.foundation.LoadingIndicatorTokens
 import io.github.magisk317.uikit.foundation.PolygonMorphLoadingIndicator
 import io.github.magisk317.uikit.foundation.SessionLoadingRegistry
 import io.github.magisk317.uikit.foundation.rememberMinDurationLoading
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.blur.HazeBlurStyle
-import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.blur.blurEffect
-import dev.chrisbanes.haze.hazeSource
 import io.github.magisk317.uikit.surface.OverlayHeaderScaffold
 import io.github.magisk317.uikit.surface.WorkspaceTopBarSearchOverlay
 import io.github.magisk317.uikit.surface.WorkspaceListItem
@@ -77,8 +72,6 @@ private const val APP_LIST_PREFETCH_DISTANCE = 12
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AppConfigScreen(
-    hazeState: HazeState,
-    hazeStyle: HazeBlurStyle,
     onBack: (() -> Unit)? = null,
     refreshTrigger: Int = 0,
     viewModel: AppConfigViewModel = koinViewModel(),
@@ -86,8 +79,6 @@ fun AppConfigScreen(
 ) {
     when (currentUiKitStyle()) {
         UiKitStyle.Miuix -> AppConfigScreenMiuix(
-            hazeState = hazeState,
-            hazeStyle = hazeStyle,
             onBack = onBack,
             refreshTrigger = refreshTrigger,
             viewModel = viewModel,
@@ -95,8 +86,6 @@ fun AppConfigScreen(
         )
 
         UiKitStyle.Expressive -> AppConfigScreenMaterial(
-            hazeState = hazeState,
-            hazeStyle = hazeStyle,
             onBack = onBack,
             refreshTrigger = refreshTrigger,
             viewModel = viewModel,
@@ -108,8 +97,6 @@ fun AppConfigScreen(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun AppConfigScreenShared(
-    hazeState: HazeState,
-    hazeStyle: HazeBlurStyle,
     onBack: (() -> Unit)? = null,
     refreshTrigger: Int = 0,
     viewModel: AppConfigViewModel = koinViewModel(),
@@ -212,11 +199,7 @@ internal fun AppConfigScreenShared(
             bottomPadding = bottomPadding,
             overlayModifier = Modifier
                 .align(Alignment.TopCenter)
-                .fillMaxWidth()
-                .hazeEffect(hazeState) {
-                    blurEffect { style = hazeStyle }
-                    forceInvalidateOnPreDraw = true
-                },
+                .fillMaxWidth(),
             overlay = {
                 WorkspaceTopBarSearchOverlay(
                     title = stringResource(R.string.app_config_settings),
@@ -276,7 +259,6 @@ internal fun AppConfigScreenShared(
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .hazeSource(state = hazeState)
                                 .nestedScroll(scrollBehavior.nestedScrollConnection),
                             state = listState,
                             verticalArrangement = Arrangement.spacedBy(if (isMiuix) 12.dp else 0.dp),

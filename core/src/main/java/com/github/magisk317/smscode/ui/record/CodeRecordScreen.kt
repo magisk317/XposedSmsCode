@@ -67,11 +67,6 @@ import com.github.magisk317.smscode.ui.home.RetentionDialog
 import com.github.magisk317.smscode.ui.home.SectionHeader
 import com.github.magisk317.smscode.ui.home.SwitchItem
 import com.github.magisk317.smscode.ui.home.TextInputDialog
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.blur.HazeBlurStyle
-import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.blur.blurEffect
-import dev.chrisbanes.haze.hazeSource
 import io.github.magisk317.uikit.preference.AppCheckbox
 import io.github.magisk317.uikit.surface.AppTopBar
 import io.github.magisk317.uikit.surface.WorkspaceEmptyState
@@ -92,8 +87,6 @@ private const val CODE_RECORD_DEDUP_WINDOW_MS = CodeRecordSimilarityUtils.DEFAUL
 @Suppress("CyclomaticComplexMethod")
 @Composable
 fun CodeRecordScreen(
-    hazeState: HazeState,
-    hazeStyle: HazeBlurStyle,
     onBack: (() -> Unit)? = null,
     refreshTrigger: Int = 0,
     viewModel: CodeRecordViewModel = koinViewModel(),
@@ -101,8 +94,6 @@ fun CodeRecordScreen(
 ) {
     when (currentUiKitStyle()) {
         UiKitStyle.Miuix -> CodeRecordScreenMiuix(
-            hazeState = hazeState,
-            hazeStyle = hazeStyle,
             onBack = onBack,
             refreshTrigger = refreshTrigger,
             viewModel = viewModel,
@@ -110,8 +101,6 @@ fun CodeRecordScreen(
         )
 
         UiKitStyle.Expressive -> CodeRecordScreenMaterial(
-            hazeState = hazeState,
-            hazeStyle = hazeStyle,
             onBack = onBack,
             refreshTrigger = refreshTrigger,
             viewModel = viewModel,
@@ -124,8 +113,6 @@ fun CodeRecordScreen(
 @Suppress("CyclomaticComplexMethod")
 @Composable
 internal fun CodeRecordScreenShared(
-    hazeState: HazeState,
-    hazeStyle: HazeBlurStyle,
     onBack: (() -> Unit)? = null,
     refreshTrigger: Int = 0,
     viewModel: CodeRecordViewModel = koinViewModel(),
@@ -453,8 +440,7 @@ internal fun CodeRecordScreenShared(
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .hazeSource(state = hazeState),
+                    .fillMaxSize(),
             ) {
                 AnimatedContent(
                     targetState = Pair(showLoading, activeSmsList),
@@ -523,11 +509,7 @@ internal fun CodeRecordScreenShared(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.TopCenter)
-                .onSizeChanged { fixedTopHeightPx = it.height }
-                .hazeEffect(hazeState) {
-                    blurEffect { style = hazeStyle }
-                    forceInvalidateOnPreDraw = true
-                },
+                .onSizeChanged { fixedTopHeightPx = it.height },
         ) {
             AppTopBar(
                 title = if (isSelectionMode) {
@@ -602,8 +584,6 @@ internal fun CodeRecordScreenShared(
         val sms = detailSmsMsg
         if (sms != null) {
             RecordDetailOverlay(
-                hazeState = hazeState,
-                hazeStyle = hazeStyle,
                 sms = sms,
                 onDismiss = { detailSmsMsg = null },
                 onCopy = { label, value, toast ->
@@ -640,8 +620,6 @@ private fun deduplicateCodeRecords(records: List<SmsMsg>): List<SmsMsg> {
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun RecordDetailOverlay(
-    hazeState: HazeState,
-    hazeStyle: HazeBlurStyle,
     sms: SmsMsg,
     onDismiss: () -> Unit,
     onCopy: (label: String, value: String, toast: String) -> Unit,
@@ -667,10 +645,6 @@ private fun RecordDetailOverlay(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .hazeEffect(hazeState) {
-                    blurEffect { style = hazeStyle }
-                    forceInvalidateOnPreDraw = true
-            }
             .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.28f))
             .clickable(
                 interactionSource = dismissInteraction,

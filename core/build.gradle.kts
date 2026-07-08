@@ -58,8 +58,6 @@ dependencies {
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
     implementation(libs.koin.compose.viewmodel)
-    implementation(libs.haze.android)
-    implementation(libs.haze.blur.android)
     implementation(libs.timber)
     implementation(libs.kotlinx.collections.immutable)
     add("playImplementation", libs.play.app.update)

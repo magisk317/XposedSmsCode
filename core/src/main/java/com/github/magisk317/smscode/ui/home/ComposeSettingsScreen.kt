@@ -88,11 +88,6 @@ import io.github.magisk317.uikit.foundation.SessionLoadingRegistry
 import io.github.magisk317.uikit.foundation.rememberMinDurationLoading
 import io.github.magisk317.uikit.surface.QRCodeDialog
 import com.github.magisk317.smscode.ui.privacy.PrivacyPolicyPage
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.blur.HazeBlurStyle
-import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.blur.blurEffect
-import dev.chrisbanes.haze.hazeSource
 import io.github.magisk317.uikit.theme.UiKitStyle
 import io.github.magisk317.uikit.theme.currentUiKitStyle
 import kotlinx.coroutines.Dispatchers
@@ -111,24 +106,18 @@ import java.util.Locale
 @Suppress("CyclomaticComplexMethod")
 @Composable
 fun ComposeSettingsScreen(
-    hazeState: HazeState,
-    hazeStyle: HazeBlurStyle,
     viewModel: SettingsViewModel? = null,
     refreshTrigger: Int = 0,
     onExit: () -> Unit = {},
 ) {
     when (currentUiKitStyle()) {
         UiKitStyle.Miuix -> ComposeSettingsScreenMiuix(
-            hazeState = hazeState,
-            hazeStyle = hazeStyle,
             viewModel = viewModel,
             refreshTrigger = refreshTrigger,
             onExit = onExit,
         )
 
         UiKitStyle.Expressive -> ComposeSettingsScreenMaterial(
-            hazeState = hazeState,
-            hazeStyle = hazeStyle,
             viewModel = viewModel,
             refreshTrigger = refreshTrigger,
             onExit = onExit,
@@ -140,8 +129,6 @@ fun ComposeSettingsScreen(
 @Suppress("CyclomaticComplexMethod")
 @Composable
 internal fun ComposeSettingsScreenShared(
-    hazeState: HazeState,
-    hazeStyle: HazeBlurStyle,
     viewModel: SettingsViewModel? = null,
     refreshTrigger: Int = 0,
     onExit: () -> Unit = {},
@@ -599,10 +586,6 @@ internal fun ComposeSettingsScreenShared(
         minDurationMillis = LoadingIndicatorTokens.MIN_VISIBLE_DURATION_MILLIS,
     )
     val pullToRefreshState = rememberPullToRefreshState()
-    val blurRadius = rememberPrefInt(PrefConst.KEY_HAZE_BLUR_RADIUS, 25)
-    val tintAlpha = rememberPrefFloat(PrefConst.KEY_HAZE_TINT_ALPHA, 0.2f)
-    var showBlurRadiusDialog by remember { mutableStateOf(false) }
-    var showTintAlphaDialog by remember { mutableStateOf(false) }
     val autoInputEnabled = rememberPrefBoolean(PrefConst.KEY_ENABLE_AUTO_INPUT_CODE, true)
     val autoUpdateEnabled = rememberPrefBoolean(PrefConst.KEY_AUTO_UPDATE_ON_START, true)
     val moduleEnabled = rememberPrefBoolean(PrefConst.KEY_ENABLE, true)
@@ -659,7 +642,6 @@ internal fun ComposeSettingsScreenShared(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .hazeSource(hazeState)
                         .padding(bottom = bottomPadding)
                         .nestedScroll(scrollBehavior.nestedScrollConnection)
                         .verticalScroll(scrollState),
@@ -723,14 +705,6 @@ internal fun ComposeSettingsScreenShared(
                             title = stringResource(id = R.string.pref_language_title),
                             summary = stringResource(id = R.string.pref_language_summary),
                         ) { showLanguageDialog = true }
-                        Item(
-                            title = stringResource(id = R.string.pref_haze_blur_radius_title),
-                            summary = "${blurRadius.intValue}dp",
-                        ) { showBlurRadiusDialog = true }
-                        Item(
-                            title = stringResource(id = R.string.pref_haze_tint_alpha_title),
-                            summary = "%.2f".format(tintAlpha.floatValue),
-                        ) { showTintAlphaDialog = true }
                     }
 
                     ExpandableSettingsSection(
@@ -1021,11 +995,7 @@ internal fun ComposeSettingsScreenShared(
                 scrolledContainerColor = Color.Transparent,
                 scrollBehavior = scrollBehavior,
                 windowInsets = WindowInsets.statusBars,
-                modifier = Modifier
-                    .hazeEffect(hazeState) {
-                    blurEffect { style = hazeStyle }
-                        forceInvalidateOnPreDraw = true
-                    },
+                modifier = Modifier,
             )
         }
 
@@ -1161,46 +1131,6 @@ internal fun ComposeSettingsScreenShared(
                     }
                 }
                 showLanguageDialog = false
-            },
-        )
-    }
-
-    if (showBlurRadiusDialog) {
-        SliderDialog(
-            title = stringResource(id = R.string.pref_haze_blur_radius_title),
-            value = blurRadius.intValue.toFloat(),
-            valueRange = 0f..100f,
-            steps = 0,
-            onDismiss = { showBlurRadiusDialog = false },
-            onValueChange = {
-                val newVal = it.toInt()
-                blurRadius.intValue = newVal
-                scope.launch {
-                    AppPreferencesDataStore.setInt(context, PrefConst.KEY_HAZE_BLUR_RADIUS, newVal)
-                    HookPreferenceMirror.publish(context)
-                    markPrefsSaved()
-                }
-                showBlurRadiusDialog = false
-            },
-            valueFormatter = { "${it.toInt()}dp" },
-        )
-    }
-
-    if (showTintAlphaDialog) {
-        SliderDialog(
-            title = stringResource(id = R.string.pref_haze_tint_alpha_title),
-            value = tintAlpha.floatValue,
-            valueRange = 0f..1f,
-            steps = 0,
-            onDismiss = { showTintAlphaDialog = false },
-            onValueChange = {
-                tintAlpha.floatValue = it
-                scope.launch {
-                    AppPreferencesDataStore.setFloat(context, PrefConst.KEY_HAZE_TINT_ALPHA, it)
-                    HookPreferenceMirror.publish(context)
-                    markPrefsSaved()
-                }
-                showTintAlphaDialog = false
             },
         )
     }
