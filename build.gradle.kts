@@ -13,12 +13,12 @@ buildscript {
     configurations.all {
         resolutionStrategy {
             // BEGIN AUTO FORCED DEPENDENCIES (managed by workflow)
-            force("io.netty:netty-codec:4.1.133.Final")
-            force("io.netty:netty-codec-http:4.1.135.Final")
-            force("io.netty:netty-codec-http2:4.1.135.Final")
-            force("io.netty:netty-common:4.1.118.Final")
-            force("io.netty:netty-handler:4.1.135.Final")
-            force("io.netty:netty-handler-proxy:4.1.133.Final")
+            force("io.netty:netty-codec:5.0.0.Alpha2")
+            force("io.netty:netty-codec-http:5.0.0.Alpha2")
+            force("io.netty:netty-codec-http2:5.0.0.Alpha2")
+            force("io.netty:netty-common:5.0.0.Alpha2")
+            force("io.netty:netty-handler:5.0.0.Alpha2")
+            force("io.netty:netty-handler-proxy:5.0.0.Alpha2")
             force("org.apache.commons:commons-lang3:3.20.0")
             force("org.bitbucket.b_c:jose4j:0.9.6")
             force("org.bouncycastle:bcpkix-jdk18on:1.84")
@@ -127,12 +127,12 @@ allprojects {
     configurations.configureEach {
         resolutionStrategy {
             // BEGIN AUTO FORCED DEPENDENCIES (managed by workflow)
-            force("io.netty:netty-codec:4.1.133.Final")
-            force("io.netty:netty-codec-http:4.1.135.Final")
-            force("io.netty:netty-codec-http2:4.1.135.Final")
-            force("io.netty:netty-common:4.1.118.Final")
-            force("io.netty:netty-handler:4.1.135.Final")
-            force("io.netty:netty-handler-proxy:4.1.133.Final")
+            force("io.netty:netty-codec:5.0.0.Alpha2")
+            force("io.netty:netty-codec-http:5.0.0.Alpha2")
+            force("io.netty:netty-codec-http2:5.0.0.Alpha2")
+            force("io.netty:netty-common:5.0.0.Alpha2")
+            force("io.netty:netty-handler:5.0.0.Alpha2")
+            force("io.netty:netty-handler-proxy:5.0.0.Alpha2")
             force("org.apache.commons:commons-lang3:3.20.0")
             force("org.bitbucket.b_c:jose4j:0.9.6")
             force("org.bouncycastle:bcpkix-jdk18on:1.84")
@@ -142,11 +142,11 @@ allprojects {
 
             // Custom migration overrides for Java 26 compatibility
             force(catalog.apache.httpclient)
-            force("org.ow2.asm:asm:9.10")
-            force("org.ow2.asm:asm-commons:9.10")
-            force("org.ow2.asm:asm-tree:9.10")
-            force("org.ow2.asm:asm-util:9.10")
-            force("org.ow2.asm:asm-analysis:9.10")
+            force("org.ow2.asm:asm:9.10.1")
+            force("org.ow2.asm:asm-commons:9.10.1")
+            force("org.ow2.asm:asm-tree:9.10.1")
+            force("org.ow2.asm:asm-util:9.10.1")
+            force("org.ow2.asm:asm-analysis:9.10.1")
             force("org.jetbrains.kotlin:kotlin-metadata-jvm:$forcedKotlinVersion")
         }
     }
