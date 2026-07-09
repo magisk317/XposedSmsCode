@@ -73,8 +73,8 @@ import com.github.magisk317.smscode.runtime.RuntimeUpgradeCheckResult
 import com.github.magisk317.smscode.runtime.RuntimeUpgradeInfo
 import com.github.magisk317.smscode.runtime.RuntimeUpdateFacade
 import com.github.magisk317.smscode.runtime.RuntimeUpgradeDownloadProgress
-import com.github.magisk317.smscode.ui.app.base.UpdateSystemBars
-import com.github.magisk317.smscode.ui.app.base.applyEdgeToEdge
+import io.github.magisk317.uikit.theme.UpdateSystemBars
+import io.github.magisk317.uikit.theme.applyEdgeToEdge
 import io.github.magisk317.uikit.common.DismissibleSnackbarHost
 import io.github.magisk317.uikit.foundation.LocalSnackbarHostState
 import com.github.magisk317.smscode.ui.home.update.FlavorPlayUpdateDelegate

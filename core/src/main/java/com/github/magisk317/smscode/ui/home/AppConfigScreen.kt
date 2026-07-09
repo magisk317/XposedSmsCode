@@ -197,6 +197,8 @@ internal fun AppConfigScreenShared(
         OverlayHeaderScaffold(
             fallbackTopPadding = defaultTopPadding,
             bottomPadding = bottomPadding,
+            headerOffsetY = scrollChromeState?.animatedHeaderOffsetY ?: 0f,
+            onHeaderHeightChanged = { scrollChromeState?.headerHeightPx = it.toFloat() },
             overlayModifier = Modifier
                 .align(Alignment.TopCenter)
                 .fillMaxWidth(),

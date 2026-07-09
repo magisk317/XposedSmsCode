@@ -210,8 +210,6 @@ internal fun OverviewScreenShared() {
             windowInsets = WindowInsets.statusBars,
             modifier = Modifier
                 .align(Alignment.TopCenter),
-            containerColor = Color.Transparent,
-            scrolledContainerColor = Color.Transparent,
         )
     }
 

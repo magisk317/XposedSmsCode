@@ -64,7 +64,6 @@ import io.github.magisk317.uikit.foundation.SessionLoadingRegistry
 import io.github.magisk317.uikit.foundation.rememberMinDurationLoading
 import com.github.magisk317.smscode.ui.home.Item
 import com.github.magisk317.smscode.ui.home.RetentionDialog
-import com.github.magisk317.smscode.ui.home.SectionHeader
 import com.github.magisk317.smscode.ui.home.SwitchItem
 import com.github.magisk317.smscode.ui.home.TextInputDialog
 import io.github.magisk317.uikit.preference.AppCheckbox
@@ -402,6 +401,9 @@ internal fun CodeRecordScreenShared(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val pullToRefreshState = rememberPullToRefreshState()
     val density = LocalDensity.current
+    val headerOffset = with(density) {
+        (scrollChromeState?.animatedHeaderOffsetY ?: 0f).coerceAtMost(0f).toDp()
+    }
 
     val codeSmsList = deduplicateCodeRecords(
         smsList.filter { it.msgType == SmsMsg.MSG_TYPE_SMS && !it.smsCode.isNullOrBlank() },
@@ -415,7 +417,8 @@ internal fun CodeRecordScreenShared(
             modifier = Modifier.fillMaxSize(),
         ) {
         val defaultTopPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 120.dp
-        val fixedTopHeight = if (fixedTopHeightPx > 0) with(density) { fixedTopHeightPx.toDp() } else defaultTopPadding
+        val measuredTopHeight = if (fixedTopHeightPx > 0) with(density) { fixedTopHeightPx.toDp() } else defaultTopPadding
+        val fixedTopHeight = (measuredTopHeight + headerOffset).coerceAtLeast(0.dp)
         val bottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 80.dp
 
         PullToRefreshBox(
@@ -499,6 +502,7 @@ internal fun CodeRecordScreenShared(
                             showHeader = false,
                             listContentPadding = PaddingValues(top = fixedTopHeight, bottom = bottomPadding),
                             simSlotRemarkResolver = simSlotRemarkResolver,
+                            scrollChromeState = scrollChromeState,
                         )
                     }
                 }
@@ -509,7 +513,11 @@ internal fun CodeRecordScreenShared(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.TopCenter)
-                .onSizeChanged { fixedTopHeightPx = it.height },
+                .offset(y = headerOffset)
+                .onSizeChanged {
+                    fixedTopHeightPx = it.height
+                    scrollChromeState?.headerHeightPx = it.height.toFloat()
+                },
         ) {
             AppTopBar(
                 title = if (isSelectionMode) {
@@ -574,8 +582,6 @@ internal fun CodeRecordScreenShared(
                         }
                     }
                 },
-                containerColor = Color.Transparent,
-                scrolledContainerColor = Color.Transparent,
                 scrollBehavior = scrollBehavior,
                 windowInsets = WindowInsets.statusBars,
             )
@@ -838,8 +844,10 @@ private fun RecordSplitColumn(
     showHeader: Boolean = true,
     listContentPadding: PaddingValues = PaddingValues(0.dp),
     simSlotRemarkResolver: (Int) -> String,
+    scrollChromeState: io.github.magisk317.uikit.scroll.ScrollChromeState? = null,
 ) {
     val listState = rememberLazyListState()
+    io.github.magisk317.uikit.scroll.ReportLazyListScrollToChrome(listState, scrollChromeState)
     val isMiuix = currentUiKitStyle() == UiKitStyle.Miuix
     Surface(
         modifier = modifier,

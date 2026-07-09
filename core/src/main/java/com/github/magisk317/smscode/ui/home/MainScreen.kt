@@ -4,12 +4,12 @@ import android.os.SystemClock
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -22,9 +22,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Sms
 import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -33,12 +31,6 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -61,13 +53,14 @@ import com.github.magisk317.smscode.ui.nav.SettingsRoute
 import com.github.magisk317.smscode.ui.nav.SmsCodeRuleEditorRoute
 import com.github.magisk317.smscode.ui.nav.SmsCodeRulesRoute
 import com.github.magisk317.smscode.ui.record.CodeRecordScreen
-import io.github.magisk317.uikit.surface.AppBottomNavigationBar
+import io.github.magisk317.uikit.surface.AnimatedSystemBarsScrim
 import io.github.magisk317.uikit.surface.AppNavigationItemSpec
 import io.github.magisk317.uikit.surface.AppNavigationRail
+import io.github.magisk317.uikit.surface.AnimatedCompactBottomNavigationChrome
+import io.github.magisk317.uikit.surface.TabItem
+import io.github.magisk317.uikit.surface.rememberIsCompactWidth
+import io.github.magisk317.uikit.surface.rememberMainChromeController
 import org.koin.compose.viewmodel.koinViewModel
-
-@Immutable
-data class TabItem<T : Any>(val label: String, val icon: ImageVector, val route: T)
 
 private const val TAB_DOUBLE_TAP_REFRESH_WINDOW_MS = 350L
 private const val TAB_NAV_TRANSITION_MS = 300
@@ -148,19 +141,34 @@ fun MainScreen(
 
     val selectedIndex = resolveTabIndex(currentDestination)
 
-    val configuration = LocalConfiguration.current
-    val density = LocalDensity.current
-    val isCompact = configuration.screenWidthDp < 600
+    val isCompact = rememberIsCompactWidth()
     var compactBottomBarHeight by remember { mutableStateOf(0.dp) }
-    val bottomOverlayPadding = if (isCompact && shouldShowCompactBottomBar(currentDestination)) {
-        compactBottomBarHeight
-    } else {
-        0.dp
-    }
     var appBlockRefreshTrigger by remember { mutableIntStateOf(0) }
     var recordsRefreshTrigger by remember { mutableIntStateOf(0) }
     var settingsRefreshTrigger by remember { mutableIntStateOf(0) }
     val tabLastTapAt = remember { mutableStateMapOf<String, Long>() }
+
+    val compactBottomBarRouteAvailable = shouldShowCompactBottomBar(currentDestination)
+    val allowScrollChrome = currentDestination?.let { destination ->
+        destination.hasRoute(AppBlockRoute::class) ||
+            destination.hasRoute(RecordsRoute::class)
+    } ?: false
+    val chromeController = rememberMainChromeController(
+        isCompact = isCompact,
+        compactChromeRouteAvailable = compactBottomBarRouteAvailable,
+        keepVisible = !allowScrollChrome,
+        allowScrollHide = allowScrollChrome,
+        resetKey = currentDestination?.route,
+    )
+    val scrollChromeState = chromeController.scrollChromeState
+    val pageScrollChromeState = chromeController.pageScrollChromeState
+    val compactBottomBarVisible = chromeController.compactBottomBarVisible
+
+    val bottomOverlayPadding = if (compactBottomBarVisible) {
+        compactBottomBarHeight
+    } else {
+        0.dp
+    }
 
     fun triggerRefreshForTab(route: Any) {
         when (route) {
@@ -185,6 +193,7 @@ fun MainScreen(
             return
         }
 
+        scrollChromeState.animateToTop()
         navController.navigate(tab.route) {
             popUpTo(navController.graph.findStartDestination().id) {
                 saveState = true
@@ -263,6 +272,7 @@ fun MainScreen(
                             onBack = null,
                             refreshTrigger = appBlockRefreshTrigger,
                             viewModel = appConfigViewModel,
+                            scrollChromeState = pageScrollChromeState,
                         )
                     }
                     composable<AppConfigRoute> {
@@ -270,6 +280,7 @@ fun MainScreen(
                             onBack = { navController.popBackStack() },
                             refreshTrigger = appBlockRefreshTrigger,
                             viewModel = appConfigViewModel,
+                            scrollChromeState = pageScrollChromeState,
                         )
                     }
                     composable<SmsCodeRulesRoute> {
@@ -294,6 +305,7 @@ fun MainScreen(
                         CodeRecordScreen(
                             onBack = null,
                             refreshTrigger = recordsRefreshTrigger,
+                            scrollChromeState = pageScrollChromeState,
                         )
                     }
                     composable<SettingsRoute> {
@@ -306,21 +318,14 @@ fun MainScreen(
             }
         }
 
-        if (isCompact && shouldShowCompactBottomBar(currentDestination)) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .onSizeChanged { size ->
-                        compactBottomBarHeight = with(density) { size.height.toDp() }
-                    }
-                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)),
-            ) {
-                AppBottomNavigationBar(
-                    items = navigationItems,
-                    containerColor = Color.Transparent,
-                    alwaysShowLabel = false,
-                )
-            }
-        }
+        AnimatedCompactBottomNavigationChrome(
+            visible = compactBottomBarVisible,
+            items = navigationItems,
+            onHeightChanged = { compactBottomBarHeight = it },
+        )
+
+        AnimatedSystemBarsScrim(
+            visible = chromeController.mainChromeVisible,
+        )
     }
 }

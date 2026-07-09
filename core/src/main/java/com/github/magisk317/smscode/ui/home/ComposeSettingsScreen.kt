@@ -87,6 +87,7 @@ import io.github.magisk317.uikit.foundation.PolygonMorphLoadingIndicator
 import io.github.magisk317.uikit.foundation.SessionLoadingRegistry
 import io.github.magisk317.uikit.foundation.rememberMinDurationLoading
 import io.github.magisk317.uikit.surface.QRCodeDialog
+import io.github.magisk317.uikit.surface.chromeTopAppBarColors
 import com.github.magisk317.smscode.ui.privacy.PrivacyPolicyPage
 import io.github.magisk317.uikit.theme.UiKitStyle
 import io.github.magisk317.uikit.theme.currentUiKitStyle
@@ -991,8 +992,6 @@ internal fun ComposeSettingsScreenShared(
         ) {
             io.github.magisk317.uikit.surface.AppTopBar(
                 title = stringResource(id = R.string.pref_general_title),
-                containerColor = Color.Transparent,
-                scrolledContainerColor = Color.Transparent,
                 scrollBehavior = scrollBehavior,
                 windowInsets = WindowInsets.statusBars,
                 modifier = Modifier,
@@ -1292,6 +1291,7 @@ private fun RuntimeLogFullScreenPreviewDialog(
                                 )
                             }
                         },
+                        colors = chromeTopAppBarColors(),
                     )
                 },
             ) { padding ->
@@ -1669,18 +1669,6 @@ private fun SettingsDialogs(
             },
         )
     }
-}
-
-// Helper Composables (extracted and made standalone)
-
-@Composable
-fun SectionHeader(text: String, modifier: Modifier = Modifier) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = modifier.padding(horizontal = Const.PADDING_MEDIUM.dp, vertical = Const.SPACING_SMALL.dp),
-    )
 }
 
 @Composable
