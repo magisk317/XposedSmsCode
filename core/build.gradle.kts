@@ -40,7 +40,7 @@ android {
 
 dependencies {
     implementation(project(":runtime"))
-    implementation(project(":magisk-ui-kit"))
+    api(project(":magisk-ui-kit"))
     implementation(project(":smscode-core:domain"))
     implementation(project(":smscode-core:runtime"))
     implementation(libs.androidx.core.ktx)
