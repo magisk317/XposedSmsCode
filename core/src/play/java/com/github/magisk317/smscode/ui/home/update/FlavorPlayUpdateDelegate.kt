@@ -14,9 +14,11 @@ import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.install.model.UpdateAvailability
 import com.github.magisk317.smscode.runtime.RuntimePlayAction
-import com.github.magisk317.smscode.runtime.RuntimeUpdateFacade
+import com.github.magisk317.smscode.runtime.bridge.UiUpdateAccess
 
-class FlavorPlayUpdateDelegate : PlayUpdateDelegate {
+class FlavorPlayUpdateDelegate(
+    private val updateAccess: UiUpdateAccess,
+) : PlayUpdateDelegate {
 
     private var appUpdateManager: AppUpdateManager? = null
     private var updateLauncher: ActivityResultLauncher<IntentSenderRequest>? = null
@@ -72,7 +74,7 @@ class FlavorPlayUpdateDelegate : PlayUpdateDelegate {
     ) {
         val manager = appUpdateManager ?: return
         manager.appUpdateInfo.addOnSuccessListener { info ->
-            val action = RuntimeUpdateFacade.decidePlayAction(
+            val action = updateAccess.decidePlayAction(
                 updateAvailable = info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE,
                 flexibleAllowed = info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE),
                 inProgress = info.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS,
@@ -84,7 +86,7 @@ class FlavorPlayUpdateDelegate : PlayUpdateDelegate {
                 RuntimePlayAction.NO_OP -> Unit
             }
         }.addOnFailureListener {
-            when (RuntimeUpdateFacade.decidePlayFailureAction(fallbackOnQueryFailure)) {
+            when (updateAccess.decidePlayFailureAction(fallbackOnQueryFailure)) {
                 RuntimePlayAction.OPEN_STORE_OR_GITHUB -> onFallbackToStore()
                 else -> Unit
             }

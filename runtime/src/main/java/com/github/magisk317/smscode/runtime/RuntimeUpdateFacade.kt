@@ -6,18 +6,19 @@ import com.github.magisk317.smscode.data.update.ApkSecurityVerifier
 import com.github.magisk317.smscode.data.update.GithubUpdateChecker
 import com.github.magisk317.smscode.data.update.UpgradeDownloader
 import com.github.magisk317.smscode.data.update.UpgradeInstaller
+import com.github.magisk317.smscode.runtime.bridge.UiUpdateAccess
 import io.github.magisk317.smscode.runtime.common.update.UpdatePolicy
 import io.github.magisk317.smscode.runtime.common.update.UpdateCoordinator
 import java.io.File
 
-object RuntimeUpdateFacade {
-    suspend fun fetchUpgradeInfo(): RuntimeUpgradeCheckResult = GithubUpdateChecker.fetchUpgradeInfo().toRuntime()
+object RuntimeUpdateFacade : UiUpdateAccess {
+    override suspend fun fetchUpgradeInfo(): RuntimeUpgradeCheckResult = GithubUpdateChecker.fetchUpgradeInfo().toRuntime()
 
-    fun isNewer(current: String, latest: String): Boolean = GithubUpdateChecker.isNewer(current, latest)
+    override fun isNewer(current: String, latest: String): Boolean = GithubUpdateChecker.isNewer(current, latest)
 
-    fun isNewer(current: Long, latest: Long): Boolean = GithubUpdateChecker.isNewer(current, latest)
+    override fun isNewer(current: Long, latest: Long): Boolean = GithubUpdateChecker.isNewer(current, latest)
 
-    fun selectBestApkForDevice(
+    override fun selectBestApkForDevice(
         apks: List<RuntimeUpgradeApkAsset>,
     ): RuntimeUpgradeApkAsset? {
         return GithubUpdateChecker.selectBestApkForDevice(
@@ -25,11 +26,11 @@ object RuntimeUpdateFacade {
         )?.toRuntime()
     }
 
-    suspend fun download(
+    override suspend fun download(
         context: Context,
         versionCode: Long,
         asset: RuntimeUpgradeApkAsset,
-        onProgress: (RuntimeUpgradeDownloadProgress) -> Unit = {},
+        onProgress: (RuntimeUpgradeDownloadProgress) -> Unit,
     ): File {
         return UpgradeDownloader.download(
             context = context,
@@ -40,7 +41,7 @@ object RuntimeUpdateFacade {
         }
     }
 
-    fun verifyDownloadedApk(
+    override fun verifyDownloadedApk(
         context: Context,
         apkFile: File,
         expectedSha256: String,
@@ -58,24 +59,25 @@ object RuntimeUpdateFacade {
         )
     }
 
-    fun canRequestPackageInstalls(context: Context): Boolean = UpgradeInstaller.canRequestPackageInstalls(context)
+    override fun canRequestPackageInstalls(context: Context): Boolean = UpgradeInstaller.canRequestPackageInstalls(context)
 
-    fun buildUnknownSourceSettingsIntent(context: Context): Intent = UpgradeInstaller.buildUnknownSourceSettingsIntent(context)
+    override fun buildUnknownSourceSettingsIntent(context: Context): Intent =
+        UpgradeInstaller.buildUnknownSourceSettingsIntent(context)
 
-    fun installApk(context: Context, apkFile: File): Result<Unit> = UpgradeInstaller.installApk(context, apkFile)
+    override fun installApk(context: Context, apkFile: File): Result<Unit> = UpgradeInstaller.installApk(context, apkFile)
 
-    fun shouldRunAutoCheck(enabled: Boolean, wifiOnly: Boolean, onWifi: Boolean): Boolean {
+    override fun shouldRunAutoCheck(enabled: Boolean, wifiOnly: Boolean, onWifi: Boolean): Boolean {
         return UpdatePolicy.shouldRunAutoCheck(enabled, wifiOnly, onWifi)
     }
 
-    fun resolveStartupTarget(installedFromPlay: Boolean): RuntimeStartupTarget {
+    override fun resolveStartupTarget(installedFromPlay: Boolean): RuntimeStartupTarget {
         return when (UpdatePolicy.resolveStartupTarget(installedFromPlay)) {
             UpdatePolicy.StartupTarget.PLAY -> RuntimeStartupTarget.PLAY
             UpdatePolicy.StartupTarget.GITHUB -> RuntimeStartupTarget.GITHUB
         }
     }
 
-    fun shouldSkipGithubCheckOnStartup(
+    override fun shouldSkipGithubCheckOnStartup(
         installedFromPlay: Boolean,
         autoCheckEnabled: Boolean,
         wifiOnly: Boolean,
@@ -89,7 +91,7 @@ object RuntimeUpdateFacade {
         )
     }
 
-    fun shouldSkipIgnoredVersion(
+    override fun shouldSkipIgnoredVersion(
         respectIgnoredVersion: Boolean,
         ignoredVersion: String,
         latestVersion: String,
@@ -101,7 +103,7 @@ object RuntimeUpdateFacade {
         )
     }
 
-    fun decidePlayAction(
+    override fun decidePlayAction(
         updateAvailable: Boolean,
         flexibleAllowed: Boolean,
         inProgress: Boolean,
@@ -121,7 +123,7 @@ object RuntimeUpdateFacade {
         }
     }
 
-    fun decidePlayFailureAction(fallbackOnQueryFailure: Boolean): RuntimePlayAction {
+    override fun decidePlayFailureAction(fallbackOnQueryFailure: Boolean): RuntimePlayAction {
         return when (UpdateCoordinator.decidePlayFailureAction(fallbackOnQueryFailure)) {
             UpdateCoordinator.PlayAction.START_UPDATE_FLOW -> RuntimePlayAction.START_UPDATE_FLOW
             UpdateCoordinator.PlayAction.OPEN_STORE_OR_GITHUB -> RuntimePlayAction.OPEN_STORE_OR_GITHUB

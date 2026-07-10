@@ -4,27 +4,28 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import com.github.magisk317.smscode.feature.backup.BackupManager
+import com.github.magisk317.smscode.runtime.bridge.UiBackupAccess
 
-object RuntimeBackupFacade {
-    fun getExportRuleListSAFIntent(
+object RuntimeBackupFacade : UiBackupAccess {
+    override fun getExportRuleListSAFIntent(
         context: Context,
-        includeDatabase: Boolean = false,
+        includeDatabase: Boolean,
     ): Intent {
         return BackupManager.getExportRuleListSAFIntent(context, includeDatabase)
     }
 
-    fun getImportRuleListSAFIntent(context: Context): Intent {
+    override fun getImportRuleListSAFIntent(context: Context): Intent {
         return BackupManager.getImportRuleListSAFIntent(context)
     }
 
-    fun exportBackup(
+    override fun exportBackup(
         context: Context,
         uri: Uri,
         ruleList: List<RuntimeBackupRule>,
         preferences: Map<String, String?>?,
         records: List<RuntimeBackupSmsRecord>?,
         appVersion: String,
-        includeDatabase: Boolean = false,
+        includeDatabase: Boolean,
     ): RuntimeBackupExportResult {
         return BackupManager.exportBackup(
             context = context,
@@ -37,7 +38,7 @@ object RuntimeBackupFacade {
         ).toRuntime()
     }
 
-    fun importRuleList(
+    override fun importRuleList(
         context: Context,
         uri: Uri,
         currentAppVersion: String,
@@ -45,7 +46,7 @@ object RuntimeBackupFacade {
         return BackupManager.importRuleList(context, uri, currentAppVersion).toRuntime()
     }
 
-    fun restoreDatabaseFromBackup(context: Context, uri: Uri): Boolean {
+    override fun restoreDatabaseFromBackup(context: Context, uri: Uri): Boolean {
         return BackupManager.restoreDatabaseFromBackup(context, uri)
     }
 }

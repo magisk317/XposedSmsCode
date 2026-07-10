@@ -4,8 +4,9 @@ import android.app.NotificationManager
 import android.content.Context
 import com.github.magisk317.smscode.common.utils.NotificationUtils
 import com.github.magisk317.smscode.runtime.bridge.HookNotificationAccess
+import com.github.magisk317.smscode.runtime.bridge.UiNotificationAccess
 
-object RuntimeNotificationFacade : HookNotificationAccess {
+object RuntimeNotificationFacade : HookNotificationAccess, UiNotificationAccess {
     data class DeliveryDiagnostics(
         val notificationsEnabled: Boolean,
         val postNotificationsGranted: Boolean,
@@ -41,7 +42,7 @@ object RuntimeNotificationFacade : HookNotificationAccess {
         )
     }
 
-    fun hasPostNotificationsPermission(context: Context): Boolean {
+    override fun hasPostNotificationsPermission(context: Context): Boolean {
         return NotificationUtils.hasPostNotificationsPermission(context)
     }
 }

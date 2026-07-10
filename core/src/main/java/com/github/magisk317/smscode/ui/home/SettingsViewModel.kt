@@ -20,12 +20,12 @@ import androidx.core.graphics.drawable.IconCompat
 import android.content.Intent
 import com.github.magisk317.smscode.core.R
 import com.github.magisk317.smscode.runtime.RuntimeBackupExportResult
-import com.github.magisk317.smscode.runtime.RuntimeBackupFacade
 import com.github.magisk317.smscode.runtime.RuntimeBackupImportResult
 import com.github.magisk317.smscode.runtime.RuntimeBackupImportStatus
 import com.github.magisk317.smscode.runtime.RuntimeBackupRule
 import com.github.magisk317.smscode.runtime.RuntimeBackupSmsRecord
-import com.github.magisk317.smscode.runtime.RuntimeStorageFacade
+import com.github.magisk317.smscode.runtime.bridge.UiBackupAccess
+import com.github.magisk317.smscode.runtime.bridge.UiStorageAccess
 import com.github.magisk317.smscode.common.utils.XLog
 import io.github.magisk317.smscode.runtime.common.utils.StorageUtils
 import io.github.magisk317.smscode.runtime.common.utils.StringUtils
@@ -67,7 +67,11 @@ sealed class SettingsEvent {
 fun resolvePreferredUpdateEvent(installedFromPlay: Boolean): SettingsEvent =
     if (installedFromPlay) SettingsEvent.StartPlayUpdate else SettingsEvent.StartGithubUpdateCheck
 
-class SettingsViewModel(application: Application) : AndroidViewModel(application) {
+class SettingsViewModel(
+    application: Application,
+    private val storage: UiStorageAccess,
+    private val backup: UiBackupAccess,
+) : AndroidViewModel(application) {
     data class CoercedRestoreValue(
         val type: PrefValueType,
         val booleanValue: Boolean? = null,
@@ -100,7 +104,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     private val _themeState = MutableStateFlow(ThemeState(0, UiKitStyle.Expressive.value))
     val themeState: StateFlow<ThemeState> = _themeState.asStateFlow()
 
-    val smsRecordCount: StateFlow<Long> = RuntimeStorageFacade.dbManager(application)
+    val smsRecordCount: StateFlow<Long> = storage.dbManager(application)
         .queryAllSmsMsgCountFlow()
         .stateIn(
             scope = viewModelScope,
@@ -316,7 +320,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                 )
                 val rules = if (includeRules) {
                     withContext(Dispatchers.IO) {
-                        RuntimeStorageFacade.dbManager(context).queryAllSmsCodeRules()
+                        storage.dbManager(context).queryAllSmsCodeRules()
                             .map { RuntimeBackupRule(it.company, it.codeKeyword, it.codeRegex) }
                     }
                 } else {
@@ -325,7 +329,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
                 val records = if (includeRecords) {
                     withContext(Dispatchers.IO) {
-                        RuntimeStorageFacade.dbManager(context).queryAllSmsMsg()
+                        storage.dbManager(context).queryAllSmsMsg()
                             .map {
                                 RuntimeBackupSmsRecord(
                                     sender = it.sender,
@@ -376,7 +380,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                     prefs?.size ?: 0,
                 )
                 val result = withContext(Dispatchers.IO) {
-                    RuntimeBackupFacade.exportBackup(
+                    backup.exportBackup(
                         context = context,
                         uri = uri,
                         ruleList = rules,
@@ -414,7 +418,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                     restoreDatabase,
                 )
                 val importResult = withContext(Dispatchers.IO) {
-                    RuntimeBackupFacade.importRuleList(context, uri, BuildConfig.VERSION_NAME)
+                    backup.importRuleList(context, uri, BuildConfig.VERSION_NAME)
                 }
                 XLog.i(
                     "Restore import result=%s rules=%d records=%d prefs=%d warning=%s",
@@ -428,7 +432,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                 if (importResult.result == RuntimeBackupImportStatus.SUCCESS) {
                     withContext(Dispatchers.IO) {
                         if (restoreDatabase) {
-                            val restored = RuntimeBackupFacade.restoreDatabaseFromBackup(context, uri)
+                            val restored = backup.restoreDatabaseFromBackup(context, uri)
                             if (!restored) {
                                 throw IllegalStateException("Restore database failed: backup zip has no database files")
                             }
@@ -462,7 +466,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     private suspend fun restoreRules(context: Context, rules: List<RuntimeBackupRule>) {
         if (rules.isEmpty()) return
-        val dbManager = RuntimeStorageFacade.dbManager(context)
+        val dbManager = storage.dbManager(context)
         val entities = rules.map {
             com.github.magisk317.smscode.data.db.entity.SmsCodeRule(it.company, it.codeKeyword, it.codeRegex)
         }
@@ -470,7 +474,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     }
 
     private suspend fun restoreRecords(context: Context, records: List<RuntimeBackupSmsRecord>) {
-        val dbManager = RuntimeStorageFacade.dbManager(context)
+        val dbManager = storage.dbManager(context)
         if (records.isEmpty()) {
             XLog.w("Restore records skipped: empty list")
             return

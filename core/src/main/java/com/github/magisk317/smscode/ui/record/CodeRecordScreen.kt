@@ -52,7 +52,8 @@ import com.github.magisk317.smscode.core.R
 import com.github.magisk317.smscode.common.constant.PrefConst
 import com.github.magisk317.smscode.common.utils.AppPreferencesDataStore
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
-import com.github.magisk317.smscode.runtime.RuntimePrefsFacade
+import com.github.magisk317.smscode.runtime.bridge.UiPrefsAccess
+import org.koin.compose.koinInject
 import io.github.magisk317.smscode.runtime.contract.sim.SimSlotLabelFormatter
 import io.github.magisk317.smscode.rule.utils.CodeRecordSimilarityUtils
 import io.github.magisk317.uikit.surface.AppIconImage
@@ -131,11 +132,12 @@ internal fun CodeRecordScreenShared(
     val snackbarHostState = LocalSnackbarHostState.current
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val prefs = koinInject<UiPrefsAccess>()
     val fallbackSimSlot1Remark = remember(context) {
-        RuntimePrefsFacade.getSimSlotRemark(context, 0)
+        prefs.getSimSlotRemark(context, 0)
     }
     val fallbackSimSlot2Remark = remember(context) {
-        RuntimePrefsFacade.getSimSlotRemark(context, 1)
+        prefs.getSimSlotRemark(context, 1)
     }
     val simSlot1Remark by AppPreferencesDataStore.getStringFlow(
         context,

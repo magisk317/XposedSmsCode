@@ -9,8 +9,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.magisk317.smscode.common.utils.XLog
 import com.github.magisk317.smscode.data.db.entity.AppInfo
-import com.github.magisk317.smscode.runtime.RuntimeStorageFacade
-import com.github.magisk317.smscode.runtime.RuntimeStoreFacade
+import com.github.magisk317.smscode.runtime.bridge.UiStorageAccess
+import com.github.magisk317.smscode.runtime.bridge.UiStoreAccess
 import com.github.magisk317.smscode.ui.block.AppInfoHelper
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -30,7 +30,11 @@ import java.util.Comparator
 
 private const val APP_LIST_PAGE_SIZE = 80
 
-class AppConfigViewModel(application: Application) : AndroidViewModel(application) {
+class AppConfigViewModel(
+    application: Application,
+    private val storage: UiStorageAccess,
+    private val store: UiStoreAccess,
+) : AndroidViewModel(application) {
     private val _appsFlow = MutableStateFlow<ImmutableList<AppInfo>>(persistentListOf())
     val appsFlow: StateFlow<ImmutableList<AppInfo>> = _appsFlow.asStateFlow()
 
@@ -94,8 +98,8 @@ class AppConfigViewModel(application: Application) : AndroidViewModel(applicatio
                     val context = getApplication<Application>()
                     val pm = getApplication<Application>().packageManager
                     // Load app blocked configs from DB.
-                    val configs = RuntimeStorageFacade.dbManager(getApplication()).queryAllAppInfosSuspend()
-                    RuntimeStoreFacade.persistAppConfigs(context, configs.filter(::hasEffectiveConfig))
+                    val configs = storage.dbManager(getApplication()).queryAllAppInfosSuspend()
+                    store.persistAppConfigs(context, configs.filter(::hasEffectiveConfig))
 
                     val installedApps = pm.getInstalledApplications(PackageManager.MATCH_ALL)
                     val configMap = configs.associateBy { it.packageName }
@@ -273,7 +277,7 @@ class AppConfigViewModel(application: Application) : AndroidViewModel(applicatio
             try {
                 withContext(Dispatchers.IO) {
                     persistMutex.withLock {
-                        val dbManager = RuntimeStorageFacade.dbManager(getApplication())
+                        val dbManager = storage.dbManager(getApplication())
                         if (target != null) {
                             if (hasEffectiveConfig(target)) {
                                 dbManager.upsertAppInfo(target)
@@ -281,7 +285,7 @@ class AppConfigViewModel(application: Application) : AndroidViewModel(applicatio
                                 dbManager.removeAppInfosByPackage(listOf(target.packageName))
                             }
                         }
-                        RuntimeStoreFacade.persistAppConfigs(getApplication(), changedConfigs)
+                        store.persistAppConfigs(getApplication(), changedConfigs)
                     }
                 }
             } catch (t: Throwable) {

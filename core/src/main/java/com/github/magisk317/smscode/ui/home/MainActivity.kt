@@ -60,7 +60,8 @@ import com.github.magisk317.smscode.common.constant.PrefConst
 import com.github.magisk317.smscode.common.constant.TransitionConst
 import com.github.magisk317.smscode.common.utils.AppPreferencesDataStore
 import io.github.magisk317.smscode.runtime.common.utils.FrameworkCompatibilityMonitor
-import com.github.magisk317.smscode.runtime.RuntimePrefsFacade as PrefsReader
+import com.github.magisk317.smscode.runtime.bridge.UiPrefsAccess
+import com.github.magisk317.smscode.runtime.bridge.UiUpdateAccess
 import com.github.magisk317.smscode.common.utils.XLog
 import com.github.magisk317.smscode.common.utils.SPUtils
 import com.github.magisk317.smscode.common.utils.PackageUtils
@@ -71,7 +72,6 @@ import com.github.magisk317.smscode.runtime.RuntimeStartupTarget
 import com.github.magisk317.smscode.runtime.RuntimeUpgradeApkAsset
 import com.github.magisk317.smscode.runtime.RuntimeUpgradeCheckResult
 import com.github.magisk317.smscode.runtime.RuntimeUpgradeInfo
-import com.github.magisk317.smscode.runtime.RuntimeUpdateFacade
 import com.github.magisk317.smscode.runtime.RuntimeUpgradeDownloadProgress
 import io.github.magisk317.uikit.theme.UpdateSystemBars
 import io.github.magisk317.uikit.theme.applyEdgeToEdge
@@ -94,13 +94,16 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.lifecycle.lifecycleScope
+import org.koin.android.ext.android.inject
 import org.koin.androidx.compose.koinViewModel
 import java.io.File
 import kotlin.math.hypot
 
 class MainActivity : ComponentActivity() {
 
-    private val playUpdateDelegate: PlayUpdateDelegate = FlavorPlayUpdateDelegate()
+    private val updateAccess: UiUpdateAccess by inject()
+    private val prefsAccess: UiPrefsAccess by inject()
+    private val playUpdateDelegate: PlayUpdateDelegate by lazy { FlavorPlayUpdateDelegate(updateAccess) }
     private var autoUpdateChecked = false
     private val snackbarMessages = MutableSharedFlow<String>(extraBufferCapacity = 8)
 
@@ -145,7 +148,7 @@ class MainActivity : ComponentActivity() {
                 downloadState = UpdateDownloadState.Downloading(progress = 0f, progressText = "0%")
                 downloadJob = scope.launch {
                     try {
-                        val downloadedFile = RuntimeUpdateFacade.download(
+                        val downloadedFile = updateAccess.download(
                             context = this@MainActivity,
                             versionCode = update.info.versionCode,
                             asset = update.asset,
@@ -157,7 +160,7 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
-                        val verifyResult = RuntimeUpdateFacade.verifyDownloadedApk(
+                        val verifyResult = updateAccess.verifyDownloadedApk(
                             context = this@MainActivity,
                             apkFile = downloadedFile,
                             expectedSha256 = update.asset.sha256,
@@ -339,7 +342,7 @@ class MainActivity : ComponentActivity() {
                             }
                             XLog.i(
                                 "Sms code test result delivered in MainActivity: code=%s matchedRule=%s",
-                                if (PrefsReader.isSensitiveDebugLogMode(context)) {
+                                if (prefsAccess.isSensitiveDebugLogMode(context)) {
                                     StringUtils.escape(event.code)
                                 } else {
                                     StringUtils.summarizeCode(event.code)
@@ -609,10 +612,10 @@ class MainActivity : ComponentActivity() {
                                         AppPrimaryButton(
                                             text = getString(R.string.update_install),
                                             onClick = {
-                                                if (!RuntimeUpdateFacade.canRequestPackageInstalls(this@MainActivity)) {
+                                                if (!updateAccess.canRequestPackageInstalls(this@MainActivity)) {
                                                     unknownSourceApk = state.file
                                                 } else {
-                                                    val installResult = RuntimeUpdateFacade.installApk(this@MainActivity, state.file)
+                                                    val installResult = updateAccess.installApk(this@MainActivity, state.file)
                                                     if (installResult.isSuccess) {
                                                         downloadState = UpdateDownloadState.Idle
                                                     } else {
@@ -647,7 +650,7 @@ class MainActivity : ComponentActivity() {
                                     AppPrimaryButton(
                                         text = getString(R.string.update_open_settings),
                                         onClick = {
-                                            startActivity(RuntimeUpdateFacade.buildUnknownSourceSettingsIntent(this@MainActivity))
+                                            startActivity(updateAccess.buildUnknownSourceSettingsIntent(this@MainActivity))
                                             unknownSourceApk = null
                                         },
                                     )
@@ -747,9 +750,9 @@ class MainActivity : ComponentActivity() {
                 false,
             )
             val onWifi = PackageUtils.isOnWifi(this@MainActivity)
-            if (!RuntimeUpdateFacade.shouldRunAutoCheck(enabled, wifiOnly, onWifi)) return@launch
+            if (!updateAccess.shouldRunAutoCheck(enabled, wifiOnly, onWifi)) return@launch
 
-            when (RuntimeUpdateFacade.resolveStartupTarget(PackageUtils.isInstalledFromPlay(this@MainActivity))) {
+            when (updateAccess.resolveStartupTarget(PackageUtils.isInstalledFromPlay(this@MainActivity))) {
                 RuntimeStartupTarget.PLAY -> {
                     requestPlayUpdateInternal(silentIfNoUpdate = true, fallbackOnQueryFailure = false)
                 }
@@ -820,7 +823,7 @@ class MainActivity : ComponentActivity() {
             )
             val onWifi = PackageUtils.isOnWifi(this)
             if (
-                RuntimeUpdateFacade.shouldSkipGithubCheckOnStartup(
+                updateAccess.shouldSkipGithubCheckOnStartup(
                     installedFromPlay = installedFromPlay,
                     autoCheckEnabled = enabled,
                     wifiOnly = wifiOnly,
@@ -833,7 +836,7 @@ class MainActivity : ComponentActivity() {
             return GithubUpdateQueryResult.NoUpdate
         }
 
-        val checkResult = RuntimeUpdateFacade.fetchUpgradeInfo()
+        val checkResult = updateAccess.fetchUpgradeInfo()
         val updateState = when (checkResult) {
             is RuntimeUpgradeCheckResult.CheckFailed -> {
                 return if (isAutoCheck) {
@@ -845,7 +848,7 @@ class MainActivity : ComponentActivity() {
 
             RuntimeUpgradeCheckResult.NoUpdate -> return GithubUpdateQueryResult.NoUpdate
             is RuntimeUpgradeCheckResult.LegacyLink -> {
-                if (!RuntimeUpdateFacade.isNewer(BuildConfig.VERSION_NAME, checkResult.release.versionName)) {
+                if (!updateAccess.isNewer(BuildConfig.VERSION_NAME, checkResult.release.versionName)) {
                     return GithubUpdateQueryResult.NoUpdate
                 }
                 GithubUpdateUiState.Legacy(checkResult.release)
@@ -854,15 +857,15 @@ class MainActivity : ComponentActivity() {
             is RuntimeUpgradeCheckResult.Structured -> {
                 val info = checkResult.info
                 val newer = if (info.versionCode > 0L) {
-                    RuntimeUpdateFacade.isNewer(BuildConfig.VERSION_CODE.toLong(), info.versionCode)
+                    updateAccess.isNewer(BuildConfig.VERSION_CODE.toLong(), info.versionCode)
                 } else {
-                    RuntimeUpdateFacade.isNewer(BuildConfig.VERSION_NAME, info.versionName)
+                    updateAccess.isNewer(BuildConfig.VERSION_NAME, info.versionName)
                 }
                 if (!newer) {
                     return GithubUpdateQueryResult.NoUpdate
                 }
 
-                val selectedApk = RuntimeUpdateFacade.selectBestApkForDevice(
+                val selectedApk = updateAccess.selectBestApkForDevice(
                     apks = info.apks,
                 )
                 if (selectedApk != null && selectedApk.sha256.isNotBlank() && info.signingCertSha256.isNotBlank()) {
@@ -894,7 +897,7 @@ class MainActivity : ComponentActivity() {
                 is GithubUpdateUiState.Structured -> updateState.update.info.versionName
             }
             if (
-                RuntimeUpdateFacade.shouldSkipIgnoredVersion(
+                updateAccess.shouldSkipIgnoredVersion(
                     respectIgnoredVersion = respectIgnoredVersion,
                     ignoredVersion = ignoredVersion,
                     latestVersion = latestVersionName,

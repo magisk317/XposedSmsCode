@@ -70,9 +70,10 @@ import com.github.magisk317.smscode.common.utils.ActivationDiagnosticsStore
 import com.github.magisk317.smscode.common.utils.AppPreferencesDataStore
 import com.github.magisk317.smscode.common.utils.PackageUtils
 import com.github.magisk317.smscode.common.utils.LogBundleExporter
-import com.github.magisk317.smscode.runtime.RuntimeBackupFacade
 import com.github.magisk317.smscode.runtime.RuntimeBackupImportStatus
-import com.github.magisk317.smscode.runtime.RuntimeNotificationFacade as NotificationUtils
+import com.github.magisk317.smscode.runtime.bridge.UiBackupAccess
+import com.github.magisk317.smscode.runtime.bridge.UiNotificationAccess
+import org.koin.compose.koinInject
 import com.github.magisk317.smscode.common.utils.RuntimeLogFileContent
 import com.github.magisk317.smscode.common.utils.RuntimeLogFileInfo
 import com.github.magisk317.smscode.common.utils.RuntimeLogFileSummary
@@ -141,6 +142,8 @@ internal fun ComposeSettingsScreenShared(
     } else {
         koinViewModel()
     }
+    val backupAccess = koinInject<UiBackupAccess>()
+    val notificationAccess = koinInject<UiNotificationAccess>()
     val scope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -220,7 +223,7 @@ internal fun ComposeSettingsScreenShared(
         // If the user revoked permission (or the master switch is off) after enabling it,
         // reflect off and persist false so the runtime does not attempt to post.
         val canDeliverNotification = NotificationManagerCompat.from(context).areNotificationsEnabled() &&
-            NotificationUtils.hasPostNotificationsPermission(context)
+            notificationAccess.hasPostNotificationsPermission(context)
         if (storedShowCodeNotification && !canDeliverNotification) {
             AppPreferencesDataStore.setBoolean(
                 context,
@@ -398,7 +401,7 @@ internal fun ComposeSettingsScreenShared(
             // turn the preference back off.
             if (showCodeNotificationEnabled.value &&
                 !(NotificationManagerCompat.from(context).areNotificationsEnabled() &&
-                    NotificationUtils.hasPostNotificationsPermission(context))
+                    notificationAccess.hasPostNotificationsPermission(context))
             ) {
                 showCodeNotificationEnabled.value = false
                 AppPreferencesDataStore.setBoolean(
@@ -509,7 +512,7 @@ internal fun ComposeSettingsScreenShared(
         // Returning from system notification settings: re-check the real delivery state.
         // Only flip the preference on when notifications can actually be posted now.
         if (NotificationManagerCompat.from(context).areNotificationsEnabled() &&
-            NotificationUtils.hasPostNotificationsPermission(context)
+            notificationAccess.hasPostNotificationsPermission(context)
         ) {
             enableCodeNotificationPref()
         }
@@ -839,7 +842,7 @@ internal fun ComposeSettingsScreenShared(
                                 val notificationsEnabled =
                                     NotificationManagerCompat.from(context).areNotificationsEnabled()
                                 val permissionGranted =
-                                    NotificationUtils.hasPostNotificationsPermission(context)
+                                    notificationAccess.hasPostNotificationsPermission(context)
                                 when {
                                     notificationsEnabled && permissionGranted -> {
                                         enableCodeNotificationPref()
@@ -923,7 +926,7 @@ internal fun ComposeSettingsScreenShared(
                             title = stringResource(id = R.string.pref_restore_title),
                             summary = stringResource(id = R.string.pref_restore_summary),
                         ) {
-                            val intent = RuntimeBackupFacade.getImportRuleListSAFIntent(context)
+                            val intent = backupAccess.getImportRuleListSAFIntent(context)
                             restoreLauncher.launch(intent)
                         }
                         SwitchItem(
@@ -1488,6 +1491,7 @@ private fun SettingsDialogs(
     onSetUiKitStyle: (Int) -> Unit,
 ) {
     val activityOwner = context as? Activity
+    val backupAccess = koinInject<UiBackupAccess>()
     val snackbarHostState = LocalSnackbarHostState.current
     if (showAutoInputDialog) {
         val nonNegativeNumberError = stringResource(id = R.string.pref_number_non_negative_error)
@@ -1645,7 +1649,7 @@ private fun SettingsDialogs(
             onConfirm = { flags ->
                 onBackupFlagsChange(flags)
                 onShowBackupDialogChange(false)
-                val intent = RuntimeBackupFacade.getExportRuleListSAFIntent(
+                val intent = backupAccess.getExportRuleListSAFIntent(
                     context,
                     includeDatabase = flags.includeDatabase,
                 )

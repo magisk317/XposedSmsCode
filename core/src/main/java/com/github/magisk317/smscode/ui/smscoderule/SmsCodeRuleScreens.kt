@@ -54,7 +54,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.github.magisk317.smscode.core.R
 import com.github.magisk317.smscode.common.utils.SmsCodeUtils as AppSmsCodeUtils
 import com.github.magisk317.smscode.data.db.entity.SmsCodeRule
-import com.github.magisk317.smscode.runtime.RuntimeStorageFacade
+import com.github.magisk317.smscode.runtime.bridge.UiStorageAccess
+import org.koin.compose.koinInject
 import io.github.magisk317.smscode.domain.model.BuiltinSmsCodeRuleSpec
 import io.github.magisk317.smscode.domain.model.BuiltinSmsCodeRules
 import io.github.magisk317.smscode.runtime.common.rules.OfficialSmsCodeRule
@@ -123,7 +124,8 @@ internal fun SmsCodeRuleListScreenShared(
     onEditClick: (Long) -> Unit,
 ) {
     val context = LocalContext.current
-    val dbManager = remember(context) { RuntimeStorageFacade.dbManager(context) }
+    val storage = koinInject<UiStorageAccess>()
+    val dbManager = remember(context) { storage.dbManager(context) }
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val removedLabel = stringResource(id = R.string.removed)
@@ -400,7 +402,8 @@ internal fun SmsCodeRuleEditorScreenShared(
 ) {
     val context = LocalContext.current
     val clipboard = LocalClipboard.current
-    val dbManager = remember(context) { RuntimeStorageFacade.dbManager(context) }
+    val storage = koinInject<UiStorageAccess>()
+    val dbManager = remember(context) { storage.dbManager(context) }
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val builtinRule = remember(ruleId) { builtinRuleByEditorId(ruleId) }

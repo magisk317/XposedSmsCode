@@ -3,8 +3,9 @@ package com.github.magisk317.smscode.runtime
 import android.content.Context
 import com.github.magisk317.smscode.common.utils.PrefsReader
 import com.github.magisk317.smscode.runtime.bridge.HookPrefsAccess
+import com.github.magisk317.smscode.runtime.bridge.UiPrefsAccess
 
-object RuntimePrefsFacade : HookPrefsAccess {
+object RuntimePrefsFacade : HookPrefsAccess, UiPrefsAccess {
     override fun isEnabled(context: Context): Boolean = PrefsReader.isEnabled(context)
 
     override fun isVerboseLogMode(context: Context): Boolean = PrefsReader.isVerboseLogMode(context)
@@ -61,5 +62,5 @@ object RuntimePrefsFacade : HookPrefsAccess {
 
     override fun getIpcToken(context: Context): String = PrefsReader.getIpcToken(context)
 
-    fun getSimSlotRemark(context: Context, simSlot: Int): String = PrefsReader.getSimSlotRemark(context, simSlot)
+    override fun getSimSlotRemark(context: Context, simSlot: Int): String = PrefsReader.getSimSlotRemark(context, simSlot)
 }
