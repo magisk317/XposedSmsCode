@@ -1,6 +1,5 @@
 package com.github.magisk317.smscode.common.utils
 
-import io.github.magisk317.smscode.runtime.contract.logging.LogRoute
 import io.github.magisk317.smscode.runtime.contract.logging.XLog as ContractXLog
 
 /**

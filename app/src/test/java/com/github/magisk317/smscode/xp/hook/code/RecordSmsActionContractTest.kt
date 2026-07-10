@@ -9,12 +9,12 @@ class RecordSmsActionContractTest {
     @Test
     fun `record action uses incoming message type for notification code records`() {
         val source = resolveProjectFile(
-            "app/src/main/java/com/github/magisk317/smscode/xp/hook/code/action/impl/RecordSmsAction.kt",
+            "hook/src/main/java/com/github/magisk317/smscode/xp/hook/code/action/impl/RecordSmsAction.kt",
         ).readText()
 
         assertTrue("enabled = enabled ?: recordEnabledForMessageType(mSmsMsg)" in source)
-        assertTrue("SmsMsg.MSG_TYPE_APP_NOTIFY -> PrefsReader.recordAppNotifyEnabled" in source)
-        assertTrue("SmsMsg.MSG_TYPE_CALL_NOTIFY -> PrefsReader.recordCallNotifyEnabled" in source)
+        assertTrue("SmsMsg.MSG_TYPE_APP_NOTIFY -> HookRuntimeBridge.prefsAccess.recordAppNotifyEnabled" in source)
+        assertTrue("SmsMsg.MSG_TYPE_CALL_NOTIFY -> HookRuntimeBridge.prefsAccess.recordCallNotifyEnabled" in source)
         assertTrue("val selectionArgs = arrayOf(smsMsg.msgType.toString())" in source)
         assertTrue("msgType = smsMsg.msgType" in source)
     }

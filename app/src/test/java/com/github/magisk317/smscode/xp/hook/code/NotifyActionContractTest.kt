@@ -9,7 +9,7 @@ class NotifyActionContractTest {
     @Test
     fun `app owned notifications defer channel checks to app receiver`() {
         val source = resolveProjectFile(
-            "app/src/main/java/com/github/magisk317/smscode/xp/hook/code/action/impl/NotifyAction.kt",
+            "hook/src/main/java/com/github/magisk317/smscode/xp/hook/code/action/impl/NotifyAction.kt",
         ).readText()
 
         assertTrue("CodeNotificationDeliveryHelper.requestAppOwnedNotification" in source)

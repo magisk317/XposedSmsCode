@@ -9,6 +9,7 @@ pluginManagement {
 
 include(
     ":app",
+    ":hook",
     ":runtime",
     ":core",
     ":smscode-core:hook",

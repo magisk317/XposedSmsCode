@@ -9,7 +9,7 @@ class MmsMessagesHookContractTest {
     @Test
     fun `conflict suppression notifies when plugin context is available`() {
         val source = resolveProjectFile(
-            "app/src/main/java/com/github/magisk317/smscode/xp/hook/mms/MmsMessagesHook.kt",
+            "hook/src/main/java/com/github/magisk317/smscode/xp/hook/mms/MmsMessagesHook.kt",
         ).readText()
 
         val method = source.substringAfter("private fun maybeBlock")

@@ -113,6 +113,7 @@ tasks.named("preBuild") {
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     implementation(project(":core"))
+    implementation(project(":hook"))
     implementation(project(":runtime"))
     implementation(project(":smscode-core:domain"))
     implementation(project(":smscode-core:runtime"))

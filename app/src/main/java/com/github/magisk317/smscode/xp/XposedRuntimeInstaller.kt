@@ -1,10 +1,18 @@
 package com.github.magisk317.smscode.xp
 
 import android.content.Context
+import android.net.Uri
 import com.github.magisk317.smscode.common.utils.PrefsReader
 import com.github.magisk317.smscode.common.utils.RuntimeLogStore
+import com.github.magisk317.smscode.data.db.DBProvider
 import com.github.magisk317.smscode.data.log.RuntimeLogProvider
 import com.github.magisk317.smscode.runtime.BuildConfig as RuntimeBuildConfig
+import com.github.magisk317.smscode.runtime.RuntimeCodeRecordRestoreFacade
+import com.github.magisk317.smscode.runtime.RuntimeNotificationFacade
+import com.github.magisk317.smscode.runtime.RuntimePrefsFacade
+import com.github.magisk317.smscode.runtime.RuntimeStorageFacade
+import com.github.magisk317.smscode.runtime.bridge.HookContentProviderAccess
+import com.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
 import com.github.magisk317.smscode.xp.helper.ModuleConflictArbiter
 import com.github.tianma8023.xposed.smscode.BuildConfig
 import io.github.magisk317.smscode.runtime.contract.logging.DefaultLogSanitizer
@@ -42,13 +50,39 @@ object XposedRuntimeInstaller {
             authority = RuntimeLogProvider.authority(BuildConfig.APPLICATION_ID),
             source = "SmsCode",
         )
+        installHookBridge()
         installLogSink()
+    }
+
+    /**
+     * Wires the extracted :hook module's [HookRuntimeBridge] to the concrete
+     * runtime Facades. Must run in every hooked process before any hook fires,
+     * otherwise hook code hits `HookRuntimeBridge.*Access` "not installed" errors.
+     */
+    private fun installHookBridge() {
+        HookRuntimeBridge.install(
+            prefs = RuntimePrefsFacade,
+            notification = RuntimeNotificationFacade,
+            storage = RuntimeStorageFacade,
+            codeRecord = RuntimeCodeRecordRestoreFacade,
+            contentProvider = object : HookContentProviderAccess {
+                override fun smsMsgContentUri(context: Context): Uri =
+                    DBProvider.smsMsgContentUri(context)
+
+                override fun appInfoContentUri(context: Context): Uri =
+                    DBProvider.appInfoContentUri(context)
+
+                override fun authority(context: Context): String =
+                    DBProvider.authority(context)
+            },
+        )
+        HookRuntimeBridge.hookProcessInit = { context -> ensureHookProcessLogging(context) }
     }
 
     fun ensureHookProcessLogging(moduleContext: Context) {
         this.moduleContext = moduleContext.applicationContext ?: moduleContext
-        PrefsReader.setHookContext(this.moduleContext!!)
-        RuntimeLogStore.initialize(this.moduleContext ?: moduleContext, enableDetailedLogs = PrefsReader.isVerboseLogMode(moduleContext))
+        com.github.magisk317.smscode.common.utils.PrefsReader.setHookContext(this.moduleContext!!)
+        RuntimeLogStore.initialize(this.moduleContext ?: moduleContext, enableDetailedLogs = com.github.magisk317.smscode.common.utils.PrefsReader.isVerboseLogMode(moduleContext))
         installLogSink()
     }
 
@@ -68,7 +102,7 @@ object XposedRuntimeInstaller {
                     sensitive: Boolean,
                 ) {
                     val sensitiveDebugEnabled = moduleContext?.let {
-                        PrefsReader.isSensitiveDebugLogMode(it)
+                        com.github.magisk317.smscode.common.utils.PrefsReader.isSensitiveDebugLogMode(it)
                     } ?: false
                     val safeMessage = if (sensitive && !sensitiveDebugEnabled) {
                         DefaultLogSanitizer.sanitize(message)

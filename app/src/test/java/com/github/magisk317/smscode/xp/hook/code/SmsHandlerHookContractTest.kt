@@ -9,7 +9,7 @@ class SmsHandlerHookContractTest {
     @Test
     fun `dispatch intent marks handled only after runtime contexts are available`() {
         val source = resolveProjectFile(
-            "app/src/main/java/com/github/magisk317/smscode/xp/hook/code/SmsHandlerHook.kt",
+            "hook/src/main/java/com/github/magisk317/smscode/xp/hook/code/SmsHandlerHook.kt",
         ).readText()
 
         val method = source.substringAfter("private fun beforeDispatchIntentHandler")
@@ -40,7 +40,7 @@ class SmsHandlerHookContractTest {
     @Test
     fun `dispatch context fallback recovers from inbound handler before scanning args`() {
         val source = resolveProjectFile(
-            "app/src/main/java/com/github/magisk317/smscode/xp/hook/code/SmsHandlerHook.kt",
+            "hook/src/main/java/com/github/magisk317/smscode/xp/hook/code/SmsHandlerHook.kt",
         ).readText()
 
         val method = source.substringAfter("private fun resolveDispatchPhoneContext")
@@ -62,7 +62,7 @@ class SmsHandlerHookContractTest {
     @Test
     fun `dispatch context fallback logs recovery stages`() {
         val source = resolveProjectFile(
-            "app/src/main/java/com/github/magisk317/smscode/xp/hook/code/SmsHandlerHook.kt",
+            "hook/src/main/java/com/github/magisk317/smscode/xp/hook/code/SmsHandlerHook.kt",
         ).readText()
 
         val method = source.substringAfter("private fun ensureRuntimeForDispatch")
@@ -89,7 +89,7 @@ class SmsHandlerHookContractTest {
     @Test
     fun `dispatch chain conflict suppression notifies with event id`() {
         val source = resolveProjectFile(
-            "app/src/main/java/com/github/magisk317/smscode/xp/hook/code/SmsHandlerHook.kt",
+            "hook/src/main/java/com/github/magisk317/smscode/xp/hook/code/SmsHandlerHook.kt",
         ).readText()
 
         val method = source.substringAfter("private fun maybeBlockFromDispatchChain")

@@ -40,7 +40,7 @@ class LibXposedEntry : BaseLibXposedEntry {
         installCoreRuntime()
         HookEnv.init(hookApi)
         val remotePrefsProvider = { runCatching { getRemotePreferences(REMOTE_PREFS_GROUP) }.getOrNull() }
-        PrefsReader.setRemotePrefsProvider(remotePrefsProvider)
+        com.github.magisk317.smscode.common.utils.PrefsReader.setRemotePrefsProvider(remotePrefsProvider)
         CorePrefsBridge.installRemote(remotePrefsProvider)
         // Diagnostic: test remote prefs reading
         runCatching {

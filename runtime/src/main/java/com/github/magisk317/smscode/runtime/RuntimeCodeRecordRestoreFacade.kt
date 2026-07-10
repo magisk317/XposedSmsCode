@@ -15,11 +15,11 @@ import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.nio.charset.StandardCharsets
 
-object RuntimeCodeRecordRestoreFacade {
+object RuntimeCodeRecordRestoreFacade : com.github.magisk317.smscode.runtime.bridge.HookCodeRecordAccess {
     private const val RECORD_FILE_PREFIX = "CodeRecord_"
 
     @SuppressLint("SetWorldWritable", "SetWorldReadable")
-    fun exportToFile(context: Context, smsMsg: SmsMsg): Boolean {
+    override fun exportToFile(context: Context, smsMsg: SmsMsg): Boolean {
         return runCatching {
             val filename = RECORD_FILE_PREFIX + smsMsg.date
             val recordFile = File(StorageUtils.getFilesDir(context), filename)

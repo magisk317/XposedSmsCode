@@ -3,8 +3,9 @@ package com.github.magisk317.smscode.runtime
 import android.app.NotificationManager
 import android.content.Context
 import com.github.magisk317.smscode.common.utils.NotificationUtils
+import com.github.magisk317.smscode.runtime.bridge.HookNotificationAccess
 
-object RuntimeNotificationFacade {
+object RuntimeNotificationFacade : HookNotificationAccess {
     data class DeliveryDiagnostics(
         val notificationsEnabled: Boolean,
         val postNotificationsGranted: Boolean,
@@ -22,7 +23,7 @@ object RuntimeNotificationFacade {
         }
     }
 
-    fun createNotificationChannel(
+    override fun createNotificationChannel(
         context: Context,
         channelId: String,
         channelName: String,
