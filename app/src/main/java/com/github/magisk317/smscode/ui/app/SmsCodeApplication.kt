@@ -23,7 +23,7 @@ import io.github.magisk317.smscode.xposed.runtime.CoreLogSinkHolder
 import io.github.magisk317.smscode.xposed.runtime.CoreRuntime
 import io.github.magisk317.smscode.xposed.runtime.CoreRuntimeAccess
 import io.github.magisk317.smscode.xposed.utils.XLog
-import io.github.magisk317.smscode.runtime.contract.logging.DefaultLogSanitizer
+import io.github.magisk317.xposed.logging.DefaultLogSanitizer
 import com.github.magisk317.smscode.di.appModule
 import com.github.magisk317.smscode.runtime.RuntimeCodeRecordRestoreFacade
 import java.util.UUID

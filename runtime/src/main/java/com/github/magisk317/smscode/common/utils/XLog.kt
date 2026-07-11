@@ -1,6 +1,6 @@
 package com.github.magisk317.smscode.common.utils
 
-import io.github.magisk317.smscode.runtime.contract.logging.XLog as ContractXLog
+import io.github.magisk317.xposed.logging.XLog as ContractXLog
 
 /**
  * Thin delegate to the unified XLog in :contract.

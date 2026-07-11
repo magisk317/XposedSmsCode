@@ -15,7 +15,7 @@ import com.github.magisk317.smscode.runtime.bridge.HookContentProviderAccess
 import com.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
 import com.github.magisk317.smscode.xp.helper.ModuleConflictArbiter
 import com.github.tianma8023.xposed.smscode.BuildConfig
-import io.github.magisk317.smscode.runtime.contract.logging.DefaultLogSanitizer
+import io.github.magisk317.xposed.logging.DefaultLogSanitizer
 import io.github.magisk317.smscode.xposed.runtime.CoreHookPolicy
 import io.github.magisk317.smscode.xposed.runtime.CoreHookPolicyHolder
 import io.github.magisk317.smscode.xposed.runtime.CoreLogSink
