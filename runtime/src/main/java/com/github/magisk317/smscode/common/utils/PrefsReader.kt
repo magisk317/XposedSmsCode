@@ -178,9 +178,7 @@ object PrefsReader {
     @JvmStatic
     fun isSensitiveDebugLogMode(context: Context): Boolean {
         if (!isSensitiveDebugLogSupported()) return false
-        val result = getBooleanViaProvider(PrefConst.KEY_SENSITIVE_DEBUG_LOG_MODE, false)
-        android.util.Log.w("XSmsCode", "isSensitiveDebugLogMode: result=$result remotePrefsProvider=${remotePrefsProvider != null}")
-        return result
+        return getBooleanViaProvider(PrefConst.KEY_SENSITIVE_DEBUG_LOG_MODE, false)
     }
 
     @JvmStatic

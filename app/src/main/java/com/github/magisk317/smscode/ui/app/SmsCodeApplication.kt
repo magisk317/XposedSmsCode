@@ -115,7 +115,14 @@ class SmsCodeApplication : Application() {
                 route: String?,
                 sensitive: Boolean,
             ) {
-                val safeMessage = if (sensitive) DefaultLogSanitizer.sanitize(message) else message
+                // sensitive=true means payload may contain secrets; honor shared switch
+                // (default sanitize). Opening pref_sensitive_debug_log_mode disables
+                // LogSanitizerConfig and lets plaintext through for debugging.
+                val safeMessage = if (sensitive) {
+                    DefaultLogSanitizer.sanitizeIfEnabled(message)
+                } else {
+                    message
+                }
                 RuntimeLogStore.append(priority, tag, safeMessage, force, route)
             }
         })

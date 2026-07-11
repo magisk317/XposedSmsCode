@@ -82,7 +82,9 @@ object XposedRuntimeInstaller {
     fun ensureHookProcessLogging(moduleContext: Context) {
         this.moduleContext = moduleContext.applicationContext ?: moduleContext
         com.github.magisk317.smscode.common.utils.PrefsReader.setHookContext(this.moduleContext!!)
-        RuntimeLogStore.initialize(this.moduleContext ?: moduleContext, enableDetailedLogs = com.github.magisk317.smscode.common.utils.PrefsReader.isVerboseLogMode(moduleContext))
+        val verbose = com.github.magisk317.smscode.common.utils.PrefsReader.isVerboseLogMode(moduleContext)
+        RuntimeLogStore.initialize(this.moduleContext ?: moduleContext, enableDetailedLogs = verbose)
+        syncLogSanitizerConfig()
         installLogSink()
     }
 
@@ -92,6 +94,7 @@ object XposedRuntimeInstaller {
             if (logSinkInstalled) return
             XposedLogClient.attachContext(moduleContext ?: return@synchronized)
             android.util.Log.w("XSmsCode", "installLogSink: installing CoreLogSink, moduleContext=${moduleContext != null}")
+            syncLogSanitizerConfig()
             CoreLogSinkHolder.install(object : CoreLogSink {
                 override fun append(
                     priority: Int,
@@ -101,12 +104,8 @@ object XposedRuntimeInstaller {
                     route: String?,
                     sensitive: Boolean,
                 ) {
-                    val sensitiveDebugEnabled = moduleContext?.let {
-                        com.github.magisk317.smscode.common.utils.PrefsReader.isSensitiveDebugLogMode(it)
-                    } ?: false
-                    io.github.magisk317.xposed.logging.LogSanitizerConfig.setEnabled(!sensitiveDebugEnabled)
-                    val safeMessage = if (sensitive && !sensitiveDebugEnabled) {
-                        DefaultLogSanitizer.sanitize(message)
+                    val safeMessage = if (sensitive) {
+                        DefaultLogSanitizer.sanitizeIfEnabled(message)
                     } else {
                         message
                     }
@@ -115,5 +114,17 @@ object XposedRuntimeInstaller {
             })
             logSinkInstalled = true
         }
+    }
+
+    /**
+     * Apply [LogSanitizerConfig] once from prefs. Prefer calling again when prefs
+     * change; do not re-read prefs on every log line (hot path + noisy).
+     */
+    private fun syncLogSanitizerConfig() {
+        val ctx = moduleContext ?: return
+        val sensitiveDebugEnabled = runCatching {
+            com.github.magisk317.smscode.common.utils.PrefsReader.isSensitiveDebugLogMode(ctx)
+        }.getOrDefault(false)
+        io.github.magisk317.xposed.logging.LogSanitizerConfig.setEnabled(!sensitiveDebugEnabled)
     }
 }

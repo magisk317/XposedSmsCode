@@ -959,6 +959,10 @@ internal fun ComposeSettingsScreenShared(
                             summary = stringResource(id = R.string.pref_sensitive_debug_log_mode_summary),
                             key = PrefConst.KEY_SENSITIVE_DEBUG_LOG_MODE,
                             defaultValue = false,
+                            onToggle = { on ->
+                                // pref=true means plaintext debug; shared switch is inverted.
+                                io.github.magisk317.xposed.logging.LogSanitizerConfig.setEnabled(!on)
+                            },
                             onSaved = markPrefsSaved,
                         )
                         SwitchItem(
