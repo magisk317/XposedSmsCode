@@ -32,6 +32,11 @@ object XposedRuntimeInstaller {
     @Volatile
     private var moduleContext: Context? = null
 
+    @Volatile
+    private var lastSanitizerSyncAt = 0L
+
+    private const val SANITIZER_SYNC_TTL_MS = 3_000L
+
     fun installEntryRuntime() {
         CoreRuntime.install(object : CoreRuntimeAccess {
             override val logTag: String = BuildConfig.LOG_TAG
@@ -104,6 +109,10 @@ object XposedRuntimeInstaller {
                     route: String?,
                     sensitive: Boolean,
                 ) {
+                    // Cheap TTL re-sync so a settings-page toggle reaches this hook
+                    // process within SANITIZER_SYNC_TTL_MS without reading prefs on
+                    // every log line (the old per-line read was the noise source).
+                    maybeResyncLogSanitizerConfig()
                     val safeMessage = if (sensitive) {
                         DefaultLogSanitizer.sanitizeIfEnabled(message)
                     } else {
@@ -117,8 +126,9 @@ object XposedRuntimeInstaller {
     }
 
     /**
-     * Apply [LogSanitizerConfig] once from prefs. Prefer calling again when prefs
-     * change; do not re-read prefs on every log line (hot path + noisy).
+     * Apply [LogSanitizerConfig] from prefs. Called at init and on a throttled
+     * schedule from the sink; do not re-read prefs on every log line (hot path
+     * + noisy). See [maybeResyncLogSanitizerConfig].
      */
     private fun syncLogSanitizerConfig() {
         val ctx = moduleContext ?: return
@@ -126,5 +136,17 @@ object XposedRuntimeInstaller {
             com.github.magisk317.smscode.common.utils.PrefsReader.isSensitiveDebugLogMode(ctx)
         }.getOrDefault(false)
         io.github.magisk317.xposed.logging.LogSanitizerConfig.setEnabled(!sensitiveDebugEnabled)
+        lastSanitizerSyncAt = android.os.SystemClock.elapsedRealtime()
+    }
+
+    /**
+     * Re-read the sanitize pref at most once per [SANITIZER_SYNC_TTL_MS] so a
+     * settings-page toggle propagates to hook processes (which have no live pref
+     * listener) within a few seconds, without paying a prefs read per log line.
+     */
+    private fun maybeResyncLogSanitizerConfig() {
+        val now = android.os.SystemClock.elapsedRealtime()
+        if (now - lastSanitizerSyncAt < SANITIZER_SYNC_TTL_MS) return
+        syncLogSanitizerConfig()
     }
 }
