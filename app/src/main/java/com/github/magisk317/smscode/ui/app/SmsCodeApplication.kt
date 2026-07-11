@@ -84,6 +84,12 @@ class SmsCodeApplication : Application() {
                 false,
             )
             RuntimeLogStore.setEnabled(verboseLog)
+            val sensitiveDebugMode = AppPreferencesDataStore.getBoolean(
+                this@SmsCodeApplication,
+                PrefConst.KEY_SENSITIVE_DEBUG_LOG_MODE,
+                false,
+            )
+            io.github.magisk317.xposed.logging.LogSanitizerConfig.setEnabled(!sensitiveDebugMode)
         }
     }
 
@@ -125,8 +131,7 @@ class SmsCodeApplication : Application() {
         frameworkName: String?,
         frameworkVersion: String?,
     ) {
-        android.util.Log.i(
-            "XSmsCode",
+        XLog.i(
             "handleXposedServiceBound() called: framework=$frameworkName version=$frameworkVersion provider=${remotePrefsProvider != null}",
         )
         AppPreferencesDataStore.setRemotePrefsProvider(remotePrefsProvider)

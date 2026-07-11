@@ -47,12 +47,15 @@ class LibXposedEntry : BaseLibXposedEntry {
             val prefs = remotePrefsProvider()
             val sensitiveLog = prefs?.getBoolean("pref_sensitive_debug_log_mode", false)
             val enabled = prefs?.getBoolean("pref_enable", false)
-            android.util.Log.w(
-                "XSmsCode",
-                "Hook remotePrefs: prefs=${prefs != null} sensitiveLog=$sensitiveLog enabled=$enabled keys=${prefs?.all?.keys?.size}",
+            XLog.w(
+                "Hook remotePrefs: prefs=%s sensitiveLog=%s enabled=%s keys=%s",
+                prefs != null,
+                sensitiveLog,
+                enabled,
+                prefs?.all?.keys?.size,
             )
         }.onFailure {
-            android.util.Log.e("XSmsCode", "Hook remotePrefs failed", it)
+            XLog.e("Hook remotePrefs failed", it)
         }
         try {
             XLog.setLogLevel(RuntimeBuildConfig.LOG_LEVEL)

@@ -104,6 +104,7 @@ object XposedRuntimeInstaller {
                     val sensitiveDebugEnabled = moduleContext?.let {
                         com.github.magisk317.smscode.common.utils.PrefsReader.isSensitiveDebugLogMode(it)
                     } ?: false
+                    io.github.magisk317.xposed.logging.LogSanitizerConfig.setEnabled(!sensitiveDebugEnabled)
                     val safeMessage = if (sensitive && !sensitiveDebugEnabled) {
                         DefaultLogSanitizer.sanitize(message)
                     } else {
