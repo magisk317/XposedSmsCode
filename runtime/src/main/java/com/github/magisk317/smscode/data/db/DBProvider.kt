@@ -626,5 +626,64 @@ class DBProvider : ContentProvider() {
 
         fun autoInputEventContentUri(context: Context): Uri =
             Uri.parse("content://${context.packageName}.db.provider/$PATH_AUTO_INPUT_EVENT")
+
+        /**
+         * Notify-only signal URI for hook-side prefs cache invalidation.
+         * Not backed by a table: writers call [notifyPrefsCacheChanged]; the hook process
+         * registers a ContentObserver and clears [com.github.magisk317.smscode.common.utils.PrefsReader].
+         */
+        fun prefsCacheContentUri(context: Context): Uri =
+            Uri.parse(prefsCacheContentUriString(context.packageName))
+
+        /**
+         * Notify-only signal URI for hook-side rule caches (user + official snapshot).
+         * Writers call [notifyRulesCacheChanged] after Room rule mutations or official refresh.
+         */
+        fun rulesCacheContentUri(context: Context): Uri =
+            Uri.parse(rulesCacheContentUriString(context.packageName))
+
+        /** Pure string form of [prefsCacheContentUri] for unit tests (no Android Uri.parse). */
+        fun prefsCacheContentUriString(packageName: String): String =
+            "content://$packageName.db.provider/$PATH_PREFS_CACHE"
+
+        /** Pure string form of [rulesCacheContentUri] for unit tests (no Android Uri.parse). */
+        fun rulesCacheContentUriString(packageName: String): String =
+            "content://$packageName.db.provider/$PATH_RULES_CACHE"
+
+        internal const val PATH_PREFS_CACHE = "prefs_cache"
+        internal const val PATH_RULES_CACHE = "rules_cache"
+
+        /**
+         * Broadcasts a prefs-cache invalidation to any hooked process observing
+         * [prefsCacheContentUri]. Safe to call from the module app after mirroring
+         * settings to xposed_prefs / remote prefs.
+         */
+        fun notifyPrefsCacheChanged(context: Context) {
+            val appContext = context.applicationContext ?: context
+            runCatching {
+                appContext.contentResolver.notifyChange(prefsCacheContentUri(appContext), null)
+            }.onFailure { error ->
+                XLog.w(
+                    "notifyPrefsCacheChanged failed: %s",
+                    error.message ?: error.javaClass.simpleName,
+                )
+            }
+        }
+
+        /**
+         * Broadcasts a rules-cache invalidation to any hooked process observing
+         * [rulesCacheContentUri]. Safe to call after user-rule CRUD or official refresh.
+         */
+        fun notifyRulesCacheChanged(context: Context) {
+            val appContext = context.applicationContext ?: context
+            runCatching {
+                appContext.contentResolver.notifyChange(rulesCacheContentUri(appContext), null)
+            }.onFailure { error ->
+                XLog.w(
+                    "notifyRulesCacheChanged failed: %s",
+                    error.message ?: error.javaClass.simpleName,
+                )
+            }
+        }
     }
 }

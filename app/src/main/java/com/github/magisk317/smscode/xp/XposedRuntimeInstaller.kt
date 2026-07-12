@@ -92,6 +92,8 @@ object XposedRuntimeInstaller {
         com.github.magisk317.smscode.common.utils.PrefsReader.setHookContext(this.moduleContext!!)
         val verbose = com.github.magisk317.smscode.common.utils.PrefsReader.isVerboseLogMode(moduleContext)
         RuntimeLogStore.initialize(this.moduleContext ?: moduleContext, enableDetailedLogs = verbose)
+        // Cross-process cache invalidation: listen for module-app notifyChange signals.
+        com.github.magisk317.smscode.common.utils.HookCacheInvalidator.register(this.moduleContext!!)
         syncLogSanitizerConfig()
         installLogSink()
     }

@@ -18,17 +18,22 @@ import kotlinx.coroutines.runBlocking
  * Database Manager for Room (Migrated from GreenDao)
  */
 class DBManager private constructor(context: Context) {
+    private val appContext: Context = context.applicationContext ?: context
     private val mDatabase: AppDatabase = AppDatabase.getInstance(context)
     private val mSmsCodeRuleDao: SmsCodeRuleDao = mDatabase.smsCodeRuleDao()
     private val mSmsMsgDao: SmsMsgDao = mDatabase.smsMsgDao()
     private val mAppInfoDao: AppInfoDao = mDatabase.appInfoDao()
     private val mAutoInputEventDao: AutoInputEventDao = mDatabase.autoInputEventDao()
 
+    private fun notifyRulesCacheChanged() {
+        DBProvider.notifyRulesCacheChanged(appContext)
+    }
 
     suspend fun updateSmsCodeRuleSuspend(smsCodeRule: SmsCodeRule) {
         withContext(Dispatchers.IO) {
             mSmsCodeRuleDao.update(smsCodeRule)
         }
+        notifyRulesCacheChanged()
     }
 
     suspend fun isExistsSuspend(codeRule: SmsCodeRule): Boolean = withContext(Dispatchers.IO) {
@@ -37,23 +42,24 @@ class DBManager private constructor(context: Context) {
 
     suspend fun addSmsCodeRuleSuspend(smsCodeRule: SmsCodeRule): Long = withContext(Dispatchers.IO) {
         mSmsCodeRuleDao.insert(smsCodeRule)
-    }
+    }.also { notifyRulesCacheChanged() }
 
-    fun addSmsCodeRule(smsCodeRule: SmsCodeRule): Long = runBlocking { mSmsCodeRuleDao.insert(smsCodeRule) }
+    fun addSmsCodeRule(smsCodeRule: SmsCodeRule): Long =
+        runBlocking { mSmsCodeRuleDao.insert(smsCodeRule) }.also { notifyRulesCacheChanged() }
 
     fun addSmsCodeRules(smsCodeRules: List<SmsCodeRule>) = runBlocking {
         mSmsCodeRuleDao.insertAll(smsCodeRules)
-    }
+    }.also { notifyRulesCacheChanged() }
 
     suspend fun addSmsCodeRulesSuspend(smsCodeRules: List<SmsCodeRule>): List<SmsCodeRule> =
         withContext(Dispatchers.IO) {
             mSmsCodeRuleDao.insertAll(smsCodeRules)
             smsCodeRules
-        }
+        }.also { notifyRulesCacheChanged() }
 
     fun updateSmsCodeRule(smsCodeRule: SmsCodeRule) = runBlocking {
         mSmsCodeRuleDao.update(smsCodeRule)
-    }
+    }.also { notifyRulesCacheChanged() }
 
     fun queryAllSmsCodeRules(): List<SmsCodeRule> = runBlocking { mSmsCodeRuleDao.getAll() }
 
@@ -77,21 +83,22 @@ class DBManager private constructor(context: Context) {
 
     fun removeSmsCodeRule(smsCodeRule: SmsCodeRule) = runBlocking {
         mSmsCodeRuleDao.delete(smsCodeRule)
-    }
+    }.also { notifyRulesCacheChanged() }
 
     suspend fun removeSmsCodeRuleSuspend(smsCodeRule: SmsCodeRule): SmsCodeRule = withContext(Dispatchers.IO) {
         mSmsCodeRuleDao.delete(smsCodeRule)
         smsCodeRule
-    }
+    }.also { notifyRulesCacheChanged() }
 
     fun removeAllSmsCodeRules() = runBlocking {
         mSmsCodeRuleDao.clearAll()
-    }
+    }.also { notifyRulesCacheChanged() }
 
     suspend fun removeAllSmsCodeRulesSuspend() {
         withContext(Dispatchers.IO) {
             mSmsCodeRuleDao.clearAll()
         }
+        notifyRulesCacheChanged()
     }
 
     fun addSmsMsg(smsMsg: SmsMsg): Long = runBlocking { mSmsMsgDao.insert(smsMsg) }

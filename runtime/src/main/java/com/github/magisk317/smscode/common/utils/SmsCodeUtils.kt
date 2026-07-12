@@ -156,6 +156,8 @@ object SmsCodeUtils {
                         at = android.os.SystemClock.elapsedRealtime(),
                     ),
                 )
+                // Hook processes keep their own official snapshot; signal them to drop it.
+                DBProvider.notifyRulesCacheChanged(context)
             }
             if (!result.success) {
                 XLog.w("Refresh official SmsCode rules failed: %s", result.errorMessage ?: "unknown")
