@@ -32,6 +32,7 @@ class DBProvider : ContentProvider() {
             addURI(authority, "$PATH_SMS_CODE_RULE/#", SMS_CODE_RULE_ID)
             addURI(authority, PATH_APP_INFO, APP_INFO_DIR)
             addURI(authority, "$PATH_APP_INFO/*", APP_INFO_ITEM)
+            addURI(authority, PATH_AUTO_INPUT_EVENT, AUTO_INPUT_EVENT_DIR)
         }
         return true
     }
@@ -44,6 +45,10 @@ class DBProvider : ContentProvider() {
         val id = when (uriType) {
             SMS_MSG_DIR -> {
                 db.addSmsMsg(values.toSmsMsg())
+            }
+
+            AUTO_INPUT_EVENT_DIR -> {
+                addAutoInputEvent(values)
             }
 
             else -> throw IllegalArgumentException("Unsupported URI: $uri")
@@ -400,6 +405,34 @@ class DBProvider : ContentProvider() {
         return db.removeAppInfosByPackage(listOf(app.packageName))
     }
 
+    /**
+     * Inserts an auto-input attempt row on behalf of a hook process that cannot
+     * open the module's private Room file across UIDs. Field names mirror the
+     * [com.github.magisk317.smscode.data.db.entity.AutoInputEvent] columns.
+     *
+     * `record_id` is optional: the hook side has no provider endpoint to resolve
+     * a fingerprint into a record id (see AutoInputAction), so it is typically
+     * absent and stored as null.
+     */
+    private fun addAutoInputEvent(values: ContentValues?): Long {
+        val normalized = Contract.normalizeAutoInputEvent(
+            id = values?.getAsLong("id"),
+            recordId = values?.getAsLong("record_id"),
+            packageName = values?.getAsString("package_name"),
+            codeLength = values?.getAsInteger("code_length"),
+            attemptAt = values?.getAsLong("attempt_at"),
+            maxPackageNameLength = MAX_PACKAGE_NAME_LENGTH,
+            now = System.currentTimeMillis(),
+        )
+        return db.insertAutoInputAttempt(
+            id = normalized.id,
+            recordId = normalized.recordId,
+            packageName = normalized.packageName,
+            codeLength = normalized.codeLength,
+            attemptAt = normalized.attemptAt,
+        )
+    }
+
     private val db: DBManager
         get() = mDbManager ?: throw IllegalStateException("DBProvider is not initialized")
 
@@ -504,18 +537,56 @@ class DBProvider : ContentProvider() {
         fun isProjectionSupported(projection: Array<String>?, allowedColumns: Set<String>): Boolean {
             return projection == null || projection.all { it in allowedColumns }
         }
+
+        /**
+         * Normalizes raw auto_input_event ContentValues into the arguments passed
+         * to [DBManager.insertAutoInputAttempt]. Pure so it can be unit tested
+         * without an Android runtime.
+         *
+         * - `id` <= 0 (or null) means "auto-generate", surfaced as null.
+         * - `codeLength` is clamped to be non-negative.
+         * - `attemptAt` <= 0 (or null) falls back to [now].
+         * - `packageName` is truncated to [maxPackageNameLength].
+         */
+        fun normalizeAutoInputEvent(
+            id: Long?,
+            recordId: Long?,
+            packageName: String?,
+            codeLength: Int?,
+            attemptAt: Long?,
+            maxPackageNameLength: Int,
+            now: Long,
+        ): AutoInputEventValues {
+            return AutoInputEventValues(
+                id = id?.takeIf { it > 0L },
+                recordId = recordId,
+                packageName = packageName?.take(maxPackageNameLength),
+                codeLength = (codeLength ?: 0).coerceAtLeast(0),
+                attemptAt = attemptAt?.takeIf { it > 0L } ?: now,
+            )
+        }
     }
+
+    internal data class AutoInputEventValues(
+        val id: Long?,
+        val recordId: Long?,
+        val packageName: String?,
+        val codeLength: Int,
+        val attemptAt: Long,
+    )
 
     companion object {
         private const val PATH_SMS_MSG = "sms_msg"
         private const val PATH_SMS_CODE_RULE = "sms_code_rule"
         private const val PATH_APP_INFO = "app_info"
+        private const val PATH_AUTO_INPUT_EVENT = "auto_input_event"
         private const val SMS_MSG_DIR = 0
         private const val SMS_MSG_ID = 1
         private const val SMS_CODE_RULE_DIR = 2
         private const val SMS_CODE_RULE_ID = 3
         private const val APP_INFO_DIR = 4
         private const val APP_INFO_ITEM = 5
+        private const val AUTO_INPUT_EVENT_DIR = 6
         private const val MAX_SENDER_LENGTH = 128
         private const val MAX_BODY_LENGTH = 4096
         private const val MAX_COMPANY_LENGTH = 128
@@ -552,5 +623,8 @@ class DBProvider : ContentProvider() {
 
         fun appInfoContentUri(context: Context): Uri =
             Uri.parse("content://${context.packageName}.db.provider/$PATH_APP_INFO")
+
+        fun autoInputEventContentUri(context: Context): Uri =
+            Uri.parse("content://${context.packageName}.db.provider/$PATH_AUTO_INPUT_EVENT")
     }
 }

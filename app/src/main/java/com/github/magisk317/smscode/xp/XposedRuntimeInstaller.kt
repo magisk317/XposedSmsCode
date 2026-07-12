@@ -77,6 +77,9 @@ object XposedRuntimeInstaller {
                 override fun appInfoContentUri(context: Context): Uri =
                     DBProvider.appInfoContentUri(context)
 
+                override fun autoInputEventContentUri(context: Context): Uri =
+                    DBProvider.autoInputEventContentUri(context)
+
                 override fun authority(context: Context): String =
                     DBProvider.authority(context)
             },

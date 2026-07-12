@@ -11,17 +11,72 @@ import io.github.magisk317.smscode.domain.model.SmsCodeRuleSpec
 import io.github.magisk317.smscode.runtime.common.rules.SmsCodeRuleCatalogRefreshResult
 import io.github.magisk317.smscode.runtime.common.rules.SmsCodeRuleCatalogRepository
 import io.github.magisk317.smscode.runtime.common.rules.SmsCodeRuleCatalogSnapshot
+import io.github.magisk317.smscode.runtime.common.rules.SmsCodeRuleCatalogSourceKind
 import io.github.magisk317.smscode.runtime.common.rules.SmsCodeRuleMerger
 import io.github.magisk317.smscode.runtime.common.sms.RuntimeSmsCodeAdapter
 import io.github.magisk317.smscode.runtime.common.sms.SmsCodeRuleProvider
 import io.github.magisk317.smscode.runtime.common.sms.SmsKeywordProvider
 import io.github.magisk317.smscode.runtime.common.sms.SmsPackageLabelResolver
 import java.util.Locale
+import java.util.concurrent.atomic.AtomicReference
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 object SmsCodeUtils {
     private const val COLUMN_COMPANY = "company"
     private const val COLUMN_KEYWORD = "code_keyword"
     private const val COLUMN_REGEX = "code_regex"
+
+    /**
+     * TTL for the in-process user-rule cache. Each incoming SMS otherwise triggers a
+     * cross-process ContentResolver.query to the module app's DBProvider; when that
+     * process is frozen (NoActive) the Binder call blocks for tens of seconds and the
+     * parse times out. A short cache lets the hook reuse the last rules and keeps the
+     * IPC off the per-SMS hot path, while staying fresh enough to pick up edits made
+     * in the settings UI a few seconds later (no live listener exists in the hook
+     * process, mirroring XposedRuntimeInstaller.SANITIZER_SYNC_TTL_MS).
+     */
+    private const val RULE_CACHE_TTL_MS = 30_000L
+
+    /**
+     * TTL for the in-process official-rule snapshot. [loadOfficialRuleSnapshot] walks
+     * the on-disk catalog (index + SHA checks + JSON parse) on every SMS merge; when
+     * that path is cold or the module files dir is slow it can dominate the 10s parse
+     * timeout. Caching the last good snapshot keeps the hot path off the filesystem
+     * while still picking up a manual refresh within a minute.
+     */
+    private const val OFFICIAL_RULE_CACHE_TTL_MS = 60_000L
+
+    private val ruleCache = TtlValueCache<List<SmsCodeRule>>(RULE_CACHE_TTL_MS)
+
+    private class OfficialSnapshotEntry(
+        val snapshot: SmsCodeRuleCatalogSnapshot,
+        val at: Long,
+    )
+
+    // Suspend-safe official snapshot cache: catalog load is suspend I/O, so we cannot
+    // park it inside the blocking [TtlValueCache] loader without nested runBlocking.
+    private val officialRuleCache = AtomicReference<OfficialSnapshotEntry?>(null)
+    private val officialRuleMutex = Mutex()
+
+    /**
+     * Clears the cached user rules so the next parse re-reads the provider. Intended
+     * to be called from the module process when the user edits rules, so changes
+     * take effect immediately instead of waiting out the TTL.
+     */
+    @JvmStatic
+    fun invalidateRuleCache() {
+        ruleCache.invalidate()
+    }
+
+    /**
+     * Drops the cached official-rule snapshot so the next parse reloads from disk /
+     * bundled assets. Call after a successful [refreshOfficialRules].
+     */
+    @JvmStatic
+    fun invalidateOfficialRuleCache() {
+        officialRuleCache.set(null)
+    }
 
     private val adapter = RuntimeSmsCodeAdapter(
         keywordProvider = SmsKeywordProvider { context, override ->
@@ -62,12 +117,46 @@ object SmsCodeUtils {
     }
 
     suspend fun loadOfficialRuleSnapshot(context: Context): SmsCodeRuleCatalogSnapshot {
-        return catalogRepository(context).loadOfficialRules().also(::logRejectedOfficialRules)
+        val now = android.os.SystemClock.elapsedRealtime()
+        val hit = officialRuleCache.get()
+        if (hit != null && now - hit.at < OFFICIAL_RULE_CACHE_TTL_MS) {
+            return hit.snapshot
+        }
+        return officialRuleMutex.withLock {
+            val now2 = android.os.SystemClock.elapsedRealtime()
+            val again = officialRuleCache.get()
+            if (again != null && now2 - again.at < OFFICIAL_RULE_CACHE_TTL_MS) {
+                return@withLock again.snapshot
+            }
+            val fresh = runCatching {
+                catalogRepository(context).loadOfficialRules().also(::logRejectedOfficialRules)
+            }.getOrNull()
+            if (fresh != null) {
+                officialRuleCache.set(OfficialSnapshotEntry(fresh, now2))
+                fresh
+            } else {
+                // Keep last good snapshot across load failures (slow/missing files).
+                again?.snapshot ?: SmsCodeRuleCatalogSnapshot(
+                    sourceKind = SmsCodeRuleCatalogSourceKind.EMPTY,
+                    index = null,
+                    rules = emptyList(),
+                )
+            }
+        }
     }
 
     suspend fun refreshOfficialRules(context: Context): SmsCodeRuleCatalogRefreshResult {
         return catalogRepository(context).refreshOfficialRules().also { result ->
-            result.snapshot?.let(::logRejectedOfficialRules)
+            result.snapshot?.let { snapshot ->
+                logRejectedOfficialRules(snapshot)
+                // Successful refresh replaces the in-process snapshot immediately.
+                officialRuleCache.set(
+                    OfficialSnapshotEntry(
+                        snapshot = snapshot,
+                        at = android.os.SystemClock.elapsedRealtime(),
+                    ),
+                )
+            }
             if (!result.success) {
                 XLog.w("Refresh official SmsCode rules failed: %s", result.errorMessage ?: "unknown")
             }
@@ -144,8 +233,12 @@ object SmsCodeUtils {
         }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private fun queryAllSmsCodeRules(context: Context): List<SmsCodeRule> {
+        return ruleCache.get { queryAllSmsCodeRulesUncached(context) } ?: emptyList()
+    }
+
+    @Suppress("TooGenericExceptionCaught")
+    private fun queryAllSmsCodeRulesUncached(context: Context): List<SmsCodeRule> {
         var rules: List<SmsCodeRule>
         try {
             val smsCodeRuleUri = DBProvider.smsCodeRuleContentUri(context)

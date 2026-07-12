@@ -74,6 +74,7 @@ interface HookCodeRecordAccess {
 interface HookContentProviderAccess {
     fun smsMsgContentUri(context: Context): Uri
     fun appInfoContentUri(context: Context): Uri
+    fun autoInputEventContentUri(context: Context): Uri
     fun authority(context: Context): String
 }
 

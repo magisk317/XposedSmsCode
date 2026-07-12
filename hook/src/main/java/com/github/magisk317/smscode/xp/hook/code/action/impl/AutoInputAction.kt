@@ -1,5 +1,6 @@
 package com.github.magisk317.smscode.xp.hook.code.action.impl
 
+import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
 import android.os.Bundle
@@ -61,20 +62,26 @@ class AutoInputAction(
 
     private fun recordAutoInputAttempt(smsMsg: SmsMsg, foregroundPackage: String?): Long? {
         return runCatching {
-            val db = HookRuntimeBridge.storageAccess.dbManager(mPluginContext)
-            val timestamp = if (smsMsg.date > 0L) smsMsg.date else System.currentTimeMillis()
-            val recordId = db.querySmsMsgByFingerprint(
-                sender = smsMsg.sender,
-                body = smsMsg.body,
-                date = timestamp,
-                msgType = smsMsg.msgType,
-            )?.id
-            db.insertAutoInputAttempt(
-                id = attemptId,
-                recordId = recordId,
-                packageName = foregroundPackage,
-                codeLength = smsMsg.smsCode?.length ?: 0,
-            )
+            // Cross-uid access to the module's private Room DB file is unreliable
+            // (permission/frozen/SELinux), so write through the DBProvider instead.
+            // record_id is intentionally left null: the provider's sms_msg query
+            // whitelist does not support a sender+body+date fingerprint lookup, and
+            // auto_input_event.record_id is nullable. Recording the attempt reliably
+            // takes priority over the (secondary) record association.
+            val uri = HookRuntimeBridge.contentProviderAccess.autoInputEventContentUri(mPluginContext)
+            val values = ContentValues().apply {
+                if (attemptId != null && attemptId > 0L) {
+                    put("id", attemptId)
+                }
+                put("package_name", foregroundPackage)
+                put("code_length", smsMsg.smsCode?.length ?: 0)
+                // Attempt wall-clock time (not smsMsg.date): date is the SMS receive
+                // timestamp and is only useful for record association, which we no
+                // longer resolve across UIDs.
+                put("attempt_at", System.currentTimeMillis())
+            }
+            val insertedUri = mPluginContext.contentResolver.insert(uri, values)
+            insertedUri?.lastPathSegment?.toLongOrNull()
         }.onFailure { error ->
             XLog.w(
                 "Insert auto input attempt failed: %s",
