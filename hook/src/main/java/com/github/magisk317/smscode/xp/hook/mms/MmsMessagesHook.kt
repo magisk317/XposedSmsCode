@@ -3,7 +3,7 @@ package com.github.magisk317.smscode.xp.hook.mms
 import android.content.Context
 import android.content.Intent
 import com.github.magisk317.smscode.hook.BuildConfig
-import com.github.magisk317.smscode.common.utils.ActivationDiagnosticsStore
+import io.github.magisk317.smscode.runtime.common.diagnostics.ActivationDiagnosticsStore
 import com.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
 import com.github.magisk317.smscode.xp.helper.ModuleConflictArbiter

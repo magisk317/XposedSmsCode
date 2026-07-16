@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hook_app_name">XposedSmsCode</string>
+    <string name="hook_conflict_channel">衝突提醒</string>
+    <string name="hook_conflict_content">檢測到 %1$s (%2$s)。簡訊由信驛 Relay（xinyi-relay）處理，%3$s 的通知逾時和記錄不會生效。</string>
+    <string name="hook_conflict_other_app">信驛 Relay</string>
+    <string name="hook_conflict_title">檢測到衝突模組</string>
+    <string name="hook_conflict_toast">功能衝突：簡訊由信驛 Relay 處理</string>
+    <string name="hook_current_sms_code">當前驗證碼為 %s</string>
+    <string name="hook_sms_code_copied">驗證碼已複製: %s</string>
+    <string name="hook_smscode_channel">驗證碼通知</string>
+</resources>

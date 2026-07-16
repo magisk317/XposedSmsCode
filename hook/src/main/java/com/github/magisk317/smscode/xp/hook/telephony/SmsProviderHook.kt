@@ -6,7 +6,7 @@ import android.content.Context
 import android.net.Uri
 import android.os.Binder
 import com.github.magisk317.smscode.hook.BuildConfig
-import com.github.magisk317.smscode.common.utils.ActivationDiagnosticsStore
+import io.github.magisk317.smscode.runtime.common.diagnostics.ActivationDiagnosticsStore
 import com.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
 import io.github.magisk317.smscode.xposed.utils.XLog
 import io.github.magisk317.xposed.BaseHook

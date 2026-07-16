@@ -5,7 +5,7 @@ import android.content.Context
 import android.os.Build
 import android.widget.Toast
 import com.github.magisk317.smscode.hook.BuildConfig
-import com.github.magisk317.smscode.core.R
+import com.github.magisk317.smscode.hook.R
 import com.github.magisk317.smscode.common.constant.NotificationConst
 import com.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
 import com.github.magisk317.smscode.xp.hook.code.helper.InputHelper
@@ -21,7 +21,7 @@ object RelayConflictNoticeHelper {
         HookRuntimeBridge.notificationAccess.createNotificationChannel(
             phoneContext,
             NotificationConst.CHANNEL_ID_RELAY_CONFLICT,
-            pluginContext.getString(R.string.channel_name_relay_conflict_notification),
+            pluginContext.getString(R.string.hook_conflict_channel),
             NotificationManager.IMPORTANCE_HIGH,
         )
     }
@@ -45,10 +45,10 @@ object RelayConflictNoticeHelper {
 
     private fun showConflictNotification(pluginContext: Context, phoneContext: Context) {
         val content = pluginContext.getString(
-            R.string.relay_conflict_notification_content,
-            pluginContext.getString(R.string.relay_conflict_other_app_name),
+            R.string.hook_conflict_content,
+            pluginContext.getString(R.string.hook_conflict_other_app),
             ModuleConflictArbiter.TARGET_RELAY_PACKAGE,
-            pluginContext.getString(R.string.app_name),
+            pluginContext.getString(R.string.hook_app_name),
         )
         ConflictNotificationHelper.showConflictNotification(
             ConflictNotificationHelper.Request(
@@ -58,11 +58,11 @@ object RelayConflictNoticeHelper {
                 visualConfig = ConflictNotificationHelper.VisualConfig(
                     channelId = NotificationConst.CHANNEL_ID_RELAY_CONFLICT,
                     notificationId = NotificationConst.NOTIFICATION_ID_RELAY_CONFLICT,
-                    smallIconResId = R.drawable.ic_app_icon,
-                    largeIconResId = R.drawable.ic_app_icon,
-                    accentColorResId = R.color.ic_launcher_background,
+                    smallIconResId = R.drawable.ic_hook_app_icon,
+                    largeIconResId = R.drawable.ic_hook_app_icon,
+                    accentColorResId = R.color.hook_notification_accent,
                 ),
-                title = pluginContext.getString(R.string.relay_conflict_dialog_title),
+                title = pluginContext.getString(R.string.hook_conflict_title),
                 content = content,
                 activityPendingIntentImmutableMinSdk = Build.VERSION_CODES.S,
             ),
@@ -72,7 +72,7 @@ object RelayConflictNoticeHelper {
     private fun showConflictToast(pluginContext: Context, phoneContext: Context) {
         InputHelper.sendToast(
             phoneContext,
-            pluginContext.getString(R.string.relay_conflict_sms_toast),
+            pluginContext.getString(R.string.hook_conflict_toast),
             Toast.LENGTH_SHORT,
         )
     }

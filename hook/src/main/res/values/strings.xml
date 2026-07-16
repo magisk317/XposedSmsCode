@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hook_app_name">XposedSmsCode</string>
+    <string name="hook_conflict_channel">Conflict alert</string>
+    <string name="hook_conflict_content">Detected %1$s (%2$s). SMS is handled by xinyi-relay, so %3$s timeout and records will not apply.</string>
+    <string name="hook_conflict_other_app">Xinyi Relay</string>
+    <string name="hook_conflict_title">Conflicting Module Detected</string>
+    <string name="hook_conflict_toast">Feature conflict: SMS handled by xinyi-relay</string>
+    <string name="hook_current_sms_code">Current SMS code is %s</string>
+    <string name="hook_sms_code_copied">SMS Code copied: %s</string>
+    <string name="hook_smscode_channel">SMS code notification</string>
+</resources>

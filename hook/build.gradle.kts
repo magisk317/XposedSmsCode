@@ -3,6 +3,9 @@ plugins {
     id("kotlin-parcelize")
 }
 
+val appVersionName = libs.versions.versionName.get()
+val appVersionCode = libs.versions.versionCode.get().toInt()
+
 android {
     namespace = "com.github.magisk317.smscode.hook"
     buildFeatures.buildConfig = true
@@ -10,19 +13,17 @@ android {
     defaultConfig {
         missingDimensionStrategy("distribution", "github")
 
-        // These mirror :app's build config values needed by hook code.
-        // They are set here so the :hook module compiles independently.
+        // Keep hook diagnostics and module compatibility checks on the app's catalog version.
         buildConfigField("String", "APPLICATION_ID", "\"com.github.tianma8023.xposed.smscode\"")
-        buildConfigField("String", "VERSION_NAME", "\"${findProperty("appVersionName") ?: "dev"}\"")
-        buildConfigField("int", "VERSION_CODE", "${findProperty("appVersionCode") ?: 1}")
-        buildConfigField("int", "MODULE_VERSION", "${findProperty("moduleVersion") ?: 1}")
+        buildConfigField("String", "VERSION_NAME", "\"$appVersionName\"")
+        buildConfigField("int", "VERSION_CODE", "$appVersionCode")
+        buildConfigField("int", "MODULE_VERSION", "$appVersionCode")
         buildConfigField("boolean", "ALLOW_CONFLICT_BYPASS", "${findProperty("allowConflictBypass") ?: false}")
     }
 }
 
 dependencies {
     implementation(project(":runtime"))
-    implementation(project(":core"))
     implementation(project(":smscode-core:hook"))
     implementation(project(":smscode-core:domain"))
     implementation(project(":smscode-core:contract"))

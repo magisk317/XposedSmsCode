@@ -7,9 +7,8 @@ import android.content.Intent
 import android.os.Build
 import android.provider.Telephony
 import com.github.magisk317.smscode.hook.BuildConfig
-import com.github.magisk317.smscode.core.R
 import com.github.magisk317.smscode.common.constant.NotificationConst
-import com.github.magisk317.smscode.common.utils.ActivationDiagnosticsStore
+import io.github.magisk317.smscode.runtime.common.diagnostics.ActivationDiagnosticsStore
 import io.github.magisk317.smscode.xposed.utils.ModuleActivationStore
 import com.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
 import com.github.magisk317.smscode.common.utils.SmsBlacklistUtils
@@ -17,6 +16,7 @@ import io.github.magisk317.smscode.xposed.utils.XLog
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
 import com.github.magisk317.smscode.xp.helper.ModuleConflictArbiter
 import com.github.magisk317.smscode.xp.helper.RelayConflictNoticeHelper
+import com.github.magisk317.smscode.hook.R
 import io.github.magisk317.smscode.verification.SmsDispatchChainBlockDeduplicator
 import io.github.magisk317.smscode.verification.SmsIntentHookSupport as VerificationSmsIntentHookSupport
 import io.github.magisk317.xposed.HookHelpers
@@ -276,7 +276,7 @@ class SmsHandlerHook : BaseHook() {
 
     private fun initNotificationChannel() {
         val channelId = NotificationConst.CHANNEL_ID_SMSCODE_NOTIFICATION
-        val channelName = getPluginContext()?.getString(R.string.channel_name_smscode_notification) ?: ""
+        val channelName = getPluginContext()?.getString(R.string.hook_smscode_channel) ?: ""
         mPhoneContext?.let {
             HookRuntimeBridge.notificationAccess.createNotificationChannel(
                 it,

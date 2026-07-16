@@ -6,8 +6,8 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.widget.Toast
 import androidx.core.content.ContextCompat
-import com.github.magisk317.smscode.core.R
 import com.github.magisk317.smscode.hook.BuildConfig
+import com.github.magisk317.smscode.hook.R
 import io.github.magisk317.smscode.runtime.common.utils.ClipboardUtils
 import io.github.magisk317.smscode.verification.CodeNotificationActionHandler
 import io.github.magisk317.smscode.verification.CodeNotificationActionPayload
@@ -30,7 +30,7 @@ class CopyCodeReceiver : BroadcastReceiver() {
     }
 
     private fun showToast(context: Context, smsCode: String) {
-        val text = context.getString(R.string.prompt_sms_code_copied, smsCode)
+        val text = context.getString(R.string.hook_sms_code_copied, smsCode)
         Toast.makeText(context, text, Toast.LENGTH_LONG).show()
     }
 

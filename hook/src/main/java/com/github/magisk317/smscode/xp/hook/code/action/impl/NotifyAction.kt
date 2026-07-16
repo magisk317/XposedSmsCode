@@ -3,8 +3,8 @@ package com.github.magisk317.smscode.xp.hook.code.action.impl
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Bundle
-import com.github.magisk317.smscode.core.R
 import com.github.magisk317.smscode.common.constant.NotificationConst
+import com.github.magisk317.smscode.hook.R
 import com.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
 import com.github.magisk317.smscode.xp.hook.code.CodeNotificationBroadcastContract
 import io.github.magisk317.smscode.verification.CodeNotificationDeliveryHelper
@@ -78,7 +78,7 @@ class NotifyAction(
             HookRuntimeBridge.notificationAccess.createNotificationChannel(
                 mPhoneContext,
                 NotificationConst.CHANNEL_ID_SMSCODE_NOTIFICATION,
-                mPluginContext.getString(R.string.channel_name_smscode_notification),
+                mPluginContext.getString(R.string.hook_smscode_channel),
                 NotificationManager.IMPORTANCE_HIGH,
             )
         }
