@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
@@ -14,6 +15,8 @@ import com.github.magisk317.smscode.common.constant.CodeNotificationOwner
 import com.github.magisk317.smscode.common.constant.PrefConst
 import com.github.magisk317.smscode.common.utils.XLog
 import io.github.magisk317.smscode.runtime.common.utils.StorageUtils
+import io.github.magisk317.smscode.runtime.common.prefs.PreferenceChange
+import io.github.magisk317.smscode.runtime.common.prefs.PreferenceChangeSet
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -323,6 +326,86 @@ object AppPreferencesDataStore {
         getInstance(context).edit { prefs ->
             prefs[prefKey] = value
         }
+    }
+
+    /** Applies one shared change set in a single DataStore transaction. */
+    suspend fun persistChanges(context: Context, changes: PreferenceChangeSet): Boolean {
+        if (changes.isEmpty) return true
+        getInstance(context).edit { prefs ->
+            applyPreferenceChanges(prefs, changes)
+        }
+        return true
+    }
+
+    internal fun applyPreferenceChanges(
+        prefs: MutablePreferences,
+        changes: PreferenceChangeSet,
+    ) {
+        changes.changes.forEach { change ->
+            when (change) {
+                is PreferenceChange.PutBoolean -> {
+                    prefs[booleanPreferencesKey(change.key)] = coerceBooleanValue(change.key, change.value)
+                }
+                is PreferenceChange.PutString -> prefs[stringPreferencesKey(change.key)] = change.value
+                is PreferenceChange.PutInt -> prefs[intPreferencesKey(change.key)] = change.value
+                is PreferenceChange.PutFloat -> prefs[floatPreferencesKey(change.key)] = change.value
+                is PreferenceChange.Remove -> {
+                    prefs.remove(booleanPreferencesKey(change.key))
+                    prefs.remove(stringPreferencesKey(change.key))
+                    prefs.remove(intPreferencesKey(change.key))
+                    prefs.remove(floatPreferencesKey(change.key))
+                }
+            }
+        }
+    }
+
+    /** Execute multiple writes atomically in a single DataStore transaction. */
+    suspend fun batchEdit(
+        context: Context,
+        block: suspend BatchEditScope.() -> Unit,
+    ) {
+        val scope = BatchEditScope()
+        scope.block()
+        getInstance(context).edit { prefs ->
+            scope.operations.forEach { operation ->
+                when (operation) {
+                    is BatchOp.SetBool -> {
+                        prefs[booleanPreferencesKey(operation.key)] =
+                            coerceBooleanValue(operation.key, operation.value)
+                    }
+                    is BatchOp.SetStr -> prefs[stringPreferencesKey(operation.key)] = operation.value
+                    is BatchOp.SetInt -> prefs[intPreferencesKey(operation.key)] = operation.value
+                    is BatchOp.SetFlt -> prefs[floatPreferencesKey(operation.key)] = operation.value
+                }
+            }
+        }
+    }
+
+    class BatchEditScope {
+        internal val operations = mutableListOf<BatchOp>()
+
+        suspend fun setBoolean(key: String, value: Boolean) {
+            operations += BatchOp.SetBool(key, value)
+        }
+
+        suspend fun setString(key: String, value: String) {
+            operations += BatchOp.SetStr(key, value)
+        }
+
+        suspend fun setInt(key: String, value: Int) {
+            operations += BatchOp.SetInt(key, value)
+        }
+
+        suspend fun setFloat(key: String, value: Float) {
+            operations += BatchOp.SetFlt(key, value)
+        }
+    }
+
+    internal sealed interface BatchOp {
+        data class SetBool(val key: String, val value: Boolean) : BatchOp
+        data class SetStr(val key: String, val value: String) : BatchOp
+        data class SetInt(val key: String, val value: Int) : BatchOp
+        data class SetFlt(val key: String, val value: Float) : BatchOp
     }
 
     suspend fun getBooleanCompat(context: Context, key: String, defaultValue: Boolean): Boolean {

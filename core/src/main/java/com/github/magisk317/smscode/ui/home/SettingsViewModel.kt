@@ -32,6 +32,8 @@ import io.github.magisk317.smscode.runtime.common.utils.StringUtils
 import io.github.magisk317.smscode.runtime.common.utils.BrowserUtils
 import io.github.magisk317.smscode.domain.model.SmsCodeMatchedRule
 import io.github.magisk317.smscode.domain.model.SmsCodeMatchedRuleSource
+import io.github.magisk317.smscode.runtime.common.prefs.PreferenceCommitResult
+import io.github.magisk317.smscode.runtime.common.prefs.PreferenceSpec
 import io.github.magisk317.uikit.theme.UiKitStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -513,44 +515,75 @@ class SettingsViewModel(
 
     private suspend fun restorePreferences(context: Context, prefsMap: Map<String, String?>) {
         if (prefsMap.isEmpty()) return
-        for ((k, v) in prefsMap) {
-            if (v == null) continue
-            val strV = v
-            val coerced = coerceRestoreValue(k, strV)
-            if (!coerced.shouldWrite) {
-                XLog.w(
-                    "Restore preference skipped: key=%s raw=%s expectedType=%s",
-                    k,
-                    strV,
-                    coerced.type.name,
-                )
-                continue
-            }
-            when (coerced.type) {
-                PrefValueType.BOOLEAN -> {
-                    val boolValue = coerced.booleanValue ?: continue
-                    AppPreferencesDataStore.setBoolean(context, k, boolValue)
-                    if (k == PrefConst.KEY_SHOW_LAUNCHER_ICON) {
-                        setLauncherIconVisible(boolValue)
+        var launcherVisible: Boolean? = null
+        val result = AppPreferenceTransactions.commit(context) {
+            for ((key, rawValue) in prefsMap) {
+                if (rawValue == null) continue
+                val coerced = coerceRestoreValue(key, rawValue)
+                if (!coerced.shouldWrite) {
+                    XLog.w(
+                        "Restore preference skipped: key=%s raw=%s expectedType=%s",
+                        key,
+                        rawValue,
+                        coerced.type.name,
+                    )
+                    continue
+                }
+                when (coerced.type) {
+                    PrefValueType.BOOLEAN -> {
+                        val value = coerced.booleanValue ?: continue
+                        set(resolveBooleanRestoreSpec(key, value), value)
+                        if (key == PrefConst.KEY_SHOW_LAUNCHER_ICON) launcherVisible = value
                     }
-                }
 
-                PrefValueType.INT -> {
-                    val intValue = coerced.intValue ?: continue
-                    AppPreferencesDataStore.setInt(context, k, intValue)
-                }
+                    PrefValueType.INT -> {
+                        val value = coerced.intValue ?: continue
+                        set(PreferenceSpec.int(key, value), value)
+                    }
 
-                PrefValueType.FLOAT -> {
-                    val floatValue = coerced.floatValue ?: continue
-                    AppPreferencesDataStore.setFloat(context, k, floatValue)
-                }
+                    PrefValueType.FLOAT -> {
+                        val value = coerced.floatValue ?: continue
+                        set(PreferenceSpec.float(key, value), value)
+                    }
 
-                PrefValueType.STRING -> {
-                    AppPreferencesDataStore.setString(context, k, coerced.stringValue ?: strV)
+                    PrefValueType.STRING -> {
+                        val value = coerced.stringValue ?: rawValue
+                        set(resolveStringRestoreSpec(key, value), value)
+                    }
                 }
             }
         }
+        when (result) {
+            is PreferenceCommitResult.Persisted -> {
+                result.postCommitFailures.forEach { failure ->
+                    XLog.e(
+                        "Restore preference post-commit hook failed: hook=%s error=%s",
+                        failure.hookName,
+                        failure.error.message ?: failure.error.javaClass.simpleName,
+                    )
+                }
+                launcherVisible?.let(::setLauncherIconVisible)
+            }
+            is PreferenceCommitResult.NoChanges -> Unit
+            is PreferenceCommitResult.NotPersisted -> {
+                throw IllegalStateException("Restored preferences were not persisted", result.error)
+            }
+        }
     }
+
+    private fun resolveBooleanRestoreSpec(key: String, restoredValue: Boolean): PreferenceSpec<Boolean> =
+        when (key) {
+            PrefConst.KEY_ENABLE_AUTO_INPUT_CODE -> HookPreferenceSpecs.autoInputEnabled
+            PrefConst.KEY_ENABLE_AUTO_ENTER_CODE -> HookPreferenceSpecs.autoEnterEnabled
+            else -> PreferenceSpec.boolean(key, restoredValue)
+        }
+
+    private fun resolveStringRestoreSpec(key: String, restoredValue: String): PreferenceSpec<String> =
+        when (key) {
+            PrefConst.KEY_AUTO_INPUT_CODE_DELAY -> HookPreferenceSpecs.autoInputDelay
+            PrefConst.KEY_AUTO_INPUT_CODE_INTERVAL -> HookPreferenceSpecs.autoInputInterval
+            else -> PreferenceSpec.string(key, restoredValue)
+        }
 
     private suspend fun ensureDataStoreLoaded(_context: android.content.Context) {
         // Trigger read to ensure in-memory cache if needed; keep no-op for now.
