@@ -1,19 +1,5 @@
 package com.github.magisk317.smscode.ui.home
 
-import android.os.SystemClock
-import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
@@ -26,8 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -38,7 +22,6 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavBackStackEntry
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -53,17 +36,14 @@ import com.github.magisk317.smscode.ui.nav.SettingsRoute
 import com.github.magisk317.smscode.ui.nav.SmsCodeRuleEditorRoute
 import com.github.magisk317.smscode.ui.nav.SmsCodeRulesRoute
 import com.github.magisk317.smscode.ui.record.CodeRecordScreen
-import io.github.magisk317.uikit.surface.AnimatedSystemBarsScrim
-import io.github.magisk317.uikit.surface.AppNavigationItemSpec
-import io.github.magisk317.uikit.surface.AppNavigationRail
-import io.github.magisk317.uikit.surface.AnimatedCompactBottomNavigationChrome
-import io.github.magisk317.uikit.surface.TabItem
+import io.github.magisk317.uikit.surface.MainTabScaffold
+import io.github.magisk317.uikit.surface.MainTabSpec
+import io.github.magisk317.uikit.surface.tabEnterTransition
+import io.github.magisk317.uikit.surface.tabExitTransition
+import io.github.magisk317.uikit.surface.tabTransitionDirection
 import io.github.magisk317.uikit.surface.rememberIsCompactWidth
 import io.github.magisk317.uikit.surface.rememberMainChromeController
 import org.koin.compose.viewmodel.koinViewModel
-
-private const val TAB_DOUBLE_TAP_REFRESH_WINDOW_MS = 350L
-private const val TAB_NAV_TRANSITION_MS = 300
 
 private fun resolveTabIndex(destination: NavDestination?): Int {
     if (destination == null) return 0
@@ -89,37 +69,6 @@ private fun shouldShowCompactBottomBar(destination: NavDestination?): Boolean {
         hierarchy.any { it.hasRoute(SettingsRoute::class) }
 }
 
-private fun AnimatedContentTransitionScope<NavBackStackEntry>.tabTransitionDirection(isPop: Boolean): Int {
-    val initialIndex = resolveTabIndex(initialState.destination)
-    val targetIndex = resolveTabIndex(targetState.destination)
-    return when {
-        targetIndex > initialIndex -> 1
-        targetIndex < initialIndex -> -1
-        isPop -> -1
-        else -> 1
-    }
-}
-
-private fun AnimatedContentTransitionScope<NavBackStackEntry>.tabEnterTransition(
-    isPop: Boolean = false,
-): EnterTransition {
-    val direction = tabTransitionDirection(isPop)
-    return slideInHorizontally(
-        animationSpec = tween(TAB_NAV_TRANSITION_MS),
-        initialOffsetX = { fullWidth -> direction * fullWidth },
-    ) + fadeIn(animationSpec = tween(TAB_NAV_TRANSITION_MS))
-}
-
-private fun AnimatedContentTransitionScope<NavBackStackEntry>.tabExitTransition(
-    isPop: Boolean = false,
-): ExitTransition {
-    val direction = tabTransitionDirection(isPop)
-    return slideOutHorizontally(
-        animationSpec = tween(TAB_NAV_TRANSITION_MS),
-        targetOffsetX = { fullWidth -> -direction * fullWidth },
-    ) + fadeOut(animationSpec = tween(TAB_NAV_TRANSITION_MS))
-}
-
 @Composable
 @Suppress("CyclomaticComplexMethod")
 fun MainScreen(
@@ -133,20 +82,18 @@ fun MainScreen(
     val currentDestination = navBackStackEntry?.destination
 
     val tabs = listOf(
-        TabItem(stringResource(R.string.tab_overview), Icons.Default.Home, OverviewRoute),
-        TabItem(stringResource(R.string.tab_blacklist), Icons.Default.Widgets, AppBlockRoute),
-        TabItem(stringResource(R.string.tab_records), Icons.Default.History, RecordsRoute),
-        TabItem(stringResource(R.string.tab_settings), Icons.Default.Settings, SettingsRoute),
+        MainTabSpec(stringResource(R.string.tab_overview), Icons.Default.Home),
+        MainTabSpec(stringResource(R.string.tab_blacklist), Icons.Default.Widgets),
+        MainTabSpec(stringResource(R.string.tab_records), Icons.Default.History),
+        MainTabSpec(stringResource(R.string.tab_settings), Icons.Default.Settings),
     )
+    val tabRoutes = listOf(OverviewRoute, AppBlockRoute, RecordsRoute, SettingsRoute)
 
     val selectedIndex = resolveTabIndex(currentDestination)
-
     val isCompact = rememberIsCompactWidth()
-    var compactBottomBarHeight by remember { mutableStateOf(0.dp) }
     var appBlockRefreshTrigger by remember { mutableIntStateOf(0) }
     var recordsRefreshTrigger by remember { mutableIntStateOf(0) }
     var settingsRefreshTrigger by remember { mutableIntStateOf(0) }
-    val tabLastTapAt = remember { mutableStateMapOf<String, Long>() }
 
     val compactBottomBarRouteAvailable = shouldShowCompactBottomBar(currentDestination)
     val allowScrollChrome = currentDestination?.let { destination ->
@@ -160,56 +107,25 @@ fun MainScreen(
         allowScrollHide = allowScrollChrome,
         resetKey = currentDestination?.route,
     )
-    val scrollChromeState = chromeController.scrollChromeState
     val pageScrollChromeState = chromeController.pageScrollChromeState
-    val compactBottomBarVisible = chromeController.compactBottomBarVisible
 
-    val bottomOverlayPadding = if (compactBottomBarVisible) {
-        compactBottomBarHeight
-    } else {
-        0.dp
-    }
-
-    fun triggerRefreshForTab(route: Any) {
-        when (route) {
-            is AppBlockRoute -> appBlockRefreshTrigger++
-            is RecordsRoute -> recordsRefreshTrigger++
-            is AppConfigRoute -> appBlockRefreshTrigger++
-            is SettingsRoute -> settingsRefreshTrigger++
-            else -> Unit
+    fun triggerRefreshForIndex(index: Int) {
+        when (index) {
+            1 -> appBlockRefreshTrigger++
+            2 -> recordsRefreshTrigger++
+            3 -> settingsRefreshTrigger++
         }
     }
 
-    fun handleTabClick(tab: TabItem<*>, selected: Boolean) {
-        val key = tab.route::class.qualifiedName ?: tab.label
-        val now = SystemClock.elapsedRealtime()
-        val last = tabLastTapAt[key] ?: 0L
-        tabLastTapAt[key] = now
-
-        if (selected) {
-            if (now - last <= TAB_DOUBLE_TAP_REFRESH_WINDOW_MS) {
-                triggerRefreshForTab(tab.route)
-            }
-            return
-        }
-
-        scrollChromeState.animateToTop()
-        navController.navigate(tab.route) {
+    fun navigateToTab(index: Int) {
+        val route = tabRoutes.getOrNull(index) ?: return
+        navController.navigate(route) {
             popUpTo(navController.graph.findStartDestination().id) {
                 saveState = true
             }
             launchSingleTop = true
             restoreState = true
         }
-    }
-
-    val navigationItems = tabs.mapIndexed { index, tab ->
-        AppNavigationItemSpec(
-            label = tab.label,
-            icon = tab.icon,
-            selected = index == selectedIndex,
-            onClick = { handleTabClick(tab, index == selectedIndex) },
-        )
     }
 
     LaunchedEffect(initialTab) {
@@ -228,104 +144,128 @@ fun MainScreen(
         }
     }
 
-    LaunchedEffect(bottomOverlayPadding) {
-        onBottomOverlayPaddingChanged(bottomOverlayPadding)
-    }
-
-    Box(
-        modifier = Modifier.fillMaxSize(),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxSize(),
+    MainTabScaffold(
+        tabs = tabs,
+        selectedIndex = selectedIndex,
+        isCompact = isCompact,
+        chromeController = chromeController,
+        onTabSelected = { index -> navigateToTab(index) },
+        onTabReselected = { index -> triggerRefreshForIndex(index) },
+        railHeader = {
+            Icon(
+                imageVector = Icons.Default.Sms,
+                contentDescription = null,
+                modifier = Modifier.padding(vertical = 12.dp),
+            )
+        },
+        onContentBottomPaddingChanged = onBottomOverlayPaddingChanged,
+    ) { _ ->
+        NavHost(
+            navController = navController,
+            startDestination = OverviewRoute,
+            enterTransition = {
+                tabEnterTransition(
+                    tabTransitionDirection(
+                        initialIndex = resolveTabIndex(initialState.destination),
+                        targetIndex = resolveTabIndex(targetState.destination),
+                    ),
+                )
+            },
+            exitTransition = {
+                tabExitTransition(
+                    tabTransitionDirection(
+                        initialIndex = resolveTabIndex(initialState.destination),
+                        targetIndex = resolveTabIndex(targetState.destination),
+                    ),
+                )
+            },
+            popEnterTransition = {
+                tabEnterTransition(
+                    tabTransitionDirection(
+                        initialIndex = resolveTabIndex(initialState.destination),
+                        targetIndex = resolveTabIndex(targetState.destination),
+                        isPop = true,
+                    ),
+                )
+            },
+            popExitTransition = {
+                tabExitTransition(
+                    tabTransitionDirection(
+                        initialIndex = resolveTabIndex(initialState.destination),
+                        targetIndex = resolveTabIndex(targetState.destination),
+                        isPop = true,
+                    ),
+                )
+            },
+            predictivePopEnterTransition = { _ ->
+                tabEnterTransition(
+                    tabTransitionDirection(
+                        initialIndex = resolveTabIndex(initialState.destination),
+                        targetIndex = resolveTabIndex(targetState.destination),
+                        isPop = true,
+                    ),
+                )
+            },
+            predictivePopExitTransition = { _ ->
+                tabExitTransition(
+                    tabTransitionDirection(
+                        initialIndex = resolveTabIndex(initialState.destination),
+                        targetIndex = resolveTabIndex(targetState.destination),
+                        isPop = true,
+                    ),
+                )
+            },
         ) {
-            if (!isCompact) {
-                AppNavigationRail(
-                    items = navigationItems,
-                    modifier = Modifier.fillMaxHeight(),
-                    header = {
-                        Icon(
-                            imageVector = Icons.Default.Sms,
-                            contentDescription = null,
-                            modifier = Modifier.padding(vertical = 12.dp),
-                        )
-                    },
-                    alwaysShowLabel = false,
+            composable<OverviewRoute> {
+                OverviewScreen()
+            }
+            composable<AppBlockRoute> {
+                AppConfigScreen(
+                    onBack = null,
+                    refreshTrigger = appBlockRefreshTrigger,
+                    viewModel = appConfigViewModel,
+                    scrollChromeState = pageScrollChromeState,
                 )
             }
-
-            Box(modifier = Modifier.weight(1f)) {
-                NavHost(
-                    navController = navController,
-                    startDestination = OverviewRoute,
-                    enterTransition = { tabEnterTransition() },
-                    exitTransition = { tabExitTransition() },
-                    popEnterTransition = { tabEnterTransition(isPop = true) },
-                    popExitTransition = { tabExitTransition(isPop = true) },
-                    predictivePopEnterTransition = { _ -> tabEnterTransition(isPop = true) },
-                    predictivePopExitTransition = { _ -> tabExitTransition(isPop = true) },
-                ) {
-                    composable<OverviewRoute> {
-                        OverviewScreen()
-                    }
-                    composable<AppBlockRoute> {
-                        AppConfigScreen(
-                            onBack = null,
-                            refreshTrigger = appBlockRefreshTrigger,
-                            viewModel = appConfigViewModel,
-                            scrollChromeState = pageScrollChromeState,
-                        )
-                    }
-                    composable<AppConfigRoute> {
-                        AppConfigScreen(
-                            onBack = { navController.popBackStack() },
-                            refreshTrigger = appBlockRefreshTrigger,
-                            viewModel = appConfigViewModel,
-                            scrollChromeState = pageScrollChromeState,
-                        )
-                    }
-                    composable<SmsCodeRulesRoute> {
-                        com.github.magisk317.smscode.ui.smscoderule.SmsCodeRuleListScreen(
-                            onBack = { navController.popBackStack() },
-                            onAddClick = {
-                                navController.navigate(SmsCodeRuleEditorRoute())
-                            },
-                            onEditClick = { id ->
-                                navController.navigate(SmsCodeRuleEditorRoute(id = id))
-                            },
-                        )
-                    }
-                    composable<SmsCodeRuleEditorRoute> { backStackEntry ->
-                        val route = backStackEntry.toRoute<SmsCodeRuleEditorRoute>()
-                        com.github.magisk317.smscode.ui.smscoderule.SmsCodeRuleEditorScreen(
-                            ruleId = route.id,
-                            onBack = { navController.popBackStack() },
-                        )
-                    }
-                    composable<RecordsRoute> {
-                        CodeRecordScreen(
-                            onBack = null,
-                            refreshTrigger = recordsRefreshTrigger,
-                            scrollChromeState = pageScrollChromeState,
-                        )
-                    }
-                    composable<SettingsRoute> {
-                        ComposeSettingsScreen(
-                            onExit = { /* In tab, ignore exit */ },
-                            refreshTrigger = settingsRefreshTrigger,
-                        )
-                    }
-                }
+            composable<AppConfigRoute> {
+                AppConfigScreen(
+                    onBack = { navController.popBackStack() },
+                    refreshTrigger = appBlockRefreshTrigger,
+                    viewModel = appConfigViewModel,
+                    scrollChromeState = pageScrollChromeState,
+                )
+            }
+            composable<SmsCodeRulesRoute> {
+                com.github.magisk317.smscode.ui.smscoderule.SmsCodeRuleListScreen(
+                    onBack = { navController.popBackStack() },
+                    onAddClick = {
+                        navController.navigate(SmsCodeRuleEditorRoute())
+                    },
+                    onEditClick = { id ->
+                        navController.navigate(SmsCodeRuleEditorRoute(id = id))
+                    },
+                )
+            }
+            composable<SmsCodeRuleEditorRoute> { backStackEntry ->
+                val route = backStackEntry.toRoute<SmsCodeRuleEditorRoute>()
+                com.github.magisk317.smscode.ui.smscoderule.SmsCodeRuleEditorScreen(
+                    ruleId = route.id,
+                    onBack = { navController.popBackStack() },
+                )
+            }
+            composable<RecordsRoute> {
+                CodeRecordScreen(
+                    onBack = null,
+                    refreshTrigger = recordsRefreshTrigger,
+                    scrollChromeState = pageScrollChromeState,
+                )
+            }
+            composable<SettingsRoute> {
+                ComposeSettingsScreen(
+                    onExit = { /* In tab, ignore exit */ },
+                    refreshTrigger = settingsRefreshTrigger,
+                )
             }
         }
-
-        AnimatedCompactBottomNavigationChrome(
-            visible = compactBottomBarVisible,
-            items = navigationItems,
-            onHeightChanged = { compactBottomBarHeight = it },
-        )
-
-        AnimatedSystemBarsScrim(
-            visible = chromeController.mainChromeVisible,
-        )
     }
 }
