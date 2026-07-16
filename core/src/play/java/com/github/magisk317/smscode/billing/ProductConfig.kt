@@ -14,4 +14,13 @@ object ProductConfig {
         "donate_999",   // $9.99
         "donate_1999",  // $19.99
     )
+
+    // Donations are intentionally repeatable. Never infer consumption from INAPP alone: any
+    // future entitlement remains non-consumable until it is explicitly added here.
+    private val CONSUMABLE_PRODUCT_IDS = DONATION_IDS.toSet()
+
+    internal val PURCHASE_POLICY = BillingProductPolicy(
+        subscriptionProductIds = SUBSCRIPTION_IDS.toSet(),
+        consumableProductIds = CONSUMABLE_PRODUCT_IDS,
+    )
 }

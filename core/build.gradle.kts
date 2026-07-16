@@ -64,6 +64,7 @@ dependencies {
     add("playImplementation", libs.billing.ktx)
 
     testImplementation(libs.junit.jupiter)
+    testImplementation(libs.mockk)
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 

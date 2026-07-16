@@ -16,6 +16,7 @@ class BillingInitializer(
             CoroutineScope(Dispatchers.IO).launch {
                 billingManager.querySubscriptions()
                 billingManager.queryDonations()
+                billingManager.queryActivePurchases()
             }
         }
     }
