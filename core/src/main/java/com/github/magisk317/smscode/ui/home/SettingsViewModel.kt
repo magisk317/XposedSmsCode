@@ -29,6 +29,7 @@ import com.github.magisk317.smscode.runtime.bridge.UiStorageAccess
 import com.github.magisk317.smscode.common.utils.XLog
 import io.github.magisk317.smscode.runtime.common.utils.StorageUtils
 import io.github.magisk317.smscode.runtime.common.utils.StringUtils
+import io.github.magisk317.smscode.runtime.common.utils.BrowserUtils
 import io.github.magisk317.smscode.domain.model.SmsCodeMatchedRule
 import io.github.magisk317.smscode.domain.model.SmsCodeMatchedRuleSource
 import io.github.magisk317.uikit.theme.UiKitStyle
@@ -135,10 +136,6 @@ class SettingsViewModel(
             SPUtils.setUiKitStyle(getApplication(), style)
             _themeState.value = _themeState.value.copy(uiKitStyle = style)
         }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
     }
 
     fun handleArguments(args: Bundle?) {
@@ -276,7 +273,11 @@ class SettingsViewModel(
     }
 
     fun showSourceProject() {
-        Utils.showWebPage(getApplication(), Const.PROJECT_SOURCE_CODE_URL)
+        BrowserUtils.openWebPage(
+            getApplication(),
+            Const.PROJECT_SOURCE_CODE_URL,
+            R.string.browser_install_or_enable_prompt,
+        )
     }
 
     fun setInternalFilesWritable() {

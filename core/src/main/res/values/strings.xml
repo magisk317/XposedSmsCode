@@ -199,7 +199,6 @@
     <string name="pref_runtime_log_retention_days_summary">Daily rotation, keep the last %1$d days</string>
     <string name="pref_runtime_log_retention_days_hint">Retention in days, minimum 1. Default is 2.</string>
     <string name="pref_runtime_log_retention_days_error">Please enter an integer greater than or equal to 1.</string>
-    <string name="runtime_log_viewer_title">Detailed log</string>
     <string name="runtime_log_export_failed">Export failed: %1$s</string>
     <string name="runtime_log_share_failed">Share failed: %1$s</string>
     <string name="runtime_log_cleared">Logs and crash files cleared</string>
@@ -207,13 +206,6 @@
     <string name="runtime_log_clear_confirm_title">Clear logs</string>
     <string name="runtime_log_clear_confirm_message">Are you sure you want to clear all logs and crash files?</string>
     <string name="runtime_log_clear_summary">Clear all runtime logs and crash files</string>
-    <string name="runtime_log_info_loading">Loading logs...</string>
-    <string name="runtime_log_info_empty">No runtime logs yet</string>
-    <string name="runtime_log_info_summary">Files: %1$d, size: %2$s, entries: %3$d</string>
-    <string name="runtime_log_info_range">Range: %1$s - %2$s</string>
-    <string name="runtime_log_info_preview_title">Recent logs</string>
-    <string name="runtime_log_action_wrap">Wrap</string>
-    <string name="runtime_log_action_no_wrap">No wrap</string>
     <string name="pref_sensitive_debug_log_mode_title">Sensitive debug log</string>
     <string name="pref_sensitive_debug_log_mode_summary">Debug builds only. Allows plaintext sender, body, and code in logs.</string>
     <string name="pref_auto_update_on_start_title">Auto update on launch</string>
@@ -324,7 +316,6 @@
     <string name="remove">Remove</string>
     <string name="edit">Edit</string>
     <string name="action_copy">Copy</string>
-    <string name="action_share">Share</string>
     <string name="action_clear">Clear</string>
     <string name="list_empty_prompt">No items yet!</string>
     <string name="record_empty_summary">Wait for a new message to arrive, or trigger one of your configured test flows.</string>

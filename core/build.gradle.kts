@@ -41,10 +41,10 @@ android {
 dependencies {
     implementation(project(":runtime"))
     api(project(":magisk-ui-kit"))
+    implementation(project(":magisk-xposed-kit:logging"))
     implementation(project(":smscode-core:domain"))
     implementation(project(":smscode-core:runtime"))
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.browser)
     implementation(libs.kotlinx.serialization.json)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)

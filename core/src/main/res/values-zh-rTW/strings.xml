@@ -198,7 +198,6 @@
     <string name="pref_runtime_log_retention_days_summary">按天輪轉，保留最近 %1$d 天日誌</string>
     <string name="pref_runtime_log_retention_days_hint">單位：天，最小值 1，預設 2。</string>
     <string name="pref_runtime_log_retention_days_error">請輸入大於等於 1 的整數。</string>
-    <string name="runtime_log_viewer_title">詳細日誌</string>
     <string name="runtime_log_export_failed">導出失敗：%1$s</string>
     <string name="runtime_log_share_failed">分享失敗：%1$s</string>
     <string name="runtime_log_cleared">日誌與崩潰檔案已清空</string>
@@ -206,13 +205,6 @@
     <string name="runtime_log_clear_confirm_title">清空日誌</string>
     <string name="runtime_log_clear_confirm_message">確認要清空所有日誌和崩潰檔案嗎？</string>
     <string name="runtime_log_clear_summary">清空所有運行日誌和崩潰檔案</string>
-    <string name="runtime_log_info_loading">正在載入日誌...</string>
-    <string name="runtime_log_info_empty">暫無執行日誌</string>
-    <string name="runtime_log_info_summary">檔案：%1$d 個，大小：%2$s，條目：%3$d</string>
-    <string name="runtime_log_info_range">範圍：%1$s - %2$s</string>
-    <string name="runtime_log_info_preview_title">最近日誌</string>
-    <string name="runtime_log_action_wrap">換行</string>
-    <string name="runtime_log_action_no_wrap">不換行</string>
     <string name="pref_sensitive_debug_log_mode_title">敏感除錯日誌</string>
     <string name="pref_sensitive_debug_log_mode_summary">僅 Debug 版本提供。開啟後日誌可輸出手機號、簡訊正文與驗證碼明文。</string>
     <string name="pref_auto_update_on_start_title">啟動時自動更新</string>
@@ -323,7 +315,6 @@
     <string name="remove">刪除</string>
     <string name="edit">編輯</string>
     <string name="action_copy">複製</string>
-    <string name="action_share">分享</string>
     <string name="action_clear">清空</string>
     <string name="list_empty_prompt">空空如也~</string>
     <string name="record_empty_summary">等待新簡訊到達，或觸發一個已設定的測試流程。</string>

@@ -66,7 +66,7 @@ import com.github.magisk317.smscode.common.utils.XLog
 import com.github.magisk317.smscode.common.utils.SPUtils
 import com.github.magisk317.smscode.common.utils.PackageUtils
 import io.github.magisk317.smscode.runtime.common.utils.StringUtils
-import com.github.magisk317.smscode.common.utils.Utils
+import io.github.magisk317.smscode.runtime.common.utils.BrowserUtils
 import com.github.magisk317.smscode.runtime.RuntimeGithubReleaseInfo
 import com.github.magisk317.smscode.runtime.RuntimeStartupTarget
 import com.github.magisk317.smscode.runtime.RuntimeUpgradeApkAsset
@@ -507,9 +507,10 @@ class MainActivity : ComponentActivity() {
                                         onClick = {
                                             when (updateState) {
                                                 is GithubUpdateUiState.Legacy -> {
-                                                    Utils.showWebPage(
+                                                    BrowserUtils.openWebPage(
                                                         this@MainActivity,
                                                         updateState.release.htmlUrl,
+                                                        R.string.browser_install_or_enable_prompt,
                                                     )?.let(::enqueueSnackbar)
                                                     githubUpdateUiState = null
                                                 }

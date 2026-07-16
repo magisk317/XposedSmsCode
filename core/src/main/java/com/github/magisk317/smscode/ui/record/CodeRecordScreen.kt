@@ -66,8 +66,8 @@ import io.github.magisk317.uikit.foundation.rememberMinDurationLoading
 import com.github.magisk317.smscode.ui.home.Item
 import com.github.magisk317.smscode.ui.home.RetentionDialog
 import com.github.magisk317.smscode.ui.home.SwitchItem
-import com.github.magisk317.smscode.ui.home.TextInputDialog
 import io.github.magisk317.uikit.preference.AppCheckbox
+import io.github.magisk317.uikit.preference.TextInputDialog
 import io.github.magisk317.uikit.surface.AppTopBar
 import io.github.magisk317.uikit.surface.WorkspaceEmptyState
 import io.github.magisk317.uikit.surface.WorkspaceListItem
@@ -357,6 +357,7 @@ internal fun CodeRecordScreenShared(
                 currentHistoryLimit
             },
             onDismiss = { showHistoryLimitInput = false },
+            showClearButton = true,
         ) { value ->
             if (value.all { it.isDigit() } && value.isNotEmpty()) {
                 historyLimitCode = value

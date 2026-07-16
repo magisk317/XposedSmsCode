@@ -33,12 +33,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.github.magisk317.smscode.core.R
-import com.github.magisk317.smscode.common.utils.ActivationStatusState
+import io.github.magisk317.smscode.runtime.common.diagnostics.ActivationStatusState
 import com.github.magisk317.smscode.common.constant.Const
-import com.github.magisk317.smscode.common.utils.ActivationDiagnosticsSnapshot
-import com.github.magisk317.smscode.common.utils.ActivationDiagnosticsStore
+import io.github.magisk317.smscode.runtime.common.diagnostics.ActivationDiagnosticsSnapshot
+import io.github.magisk317.smscode.runtime.common.diagnostics.ActivationDiagnosticsStore
 import com.github.magisk317.smscode.common.utils.PackageUtils
-import com.github.magisk317.smscode.common.utils.Utils
+import io.github.magisk317.smscode.runtime.common.utils.BrowserUtils
+import io.github.magisk317.uikit.common.showLatestSnackbar
 import io.github.magisk317.uikit.foundation.LocalSnackbarHostState
 import io.github.magisk317.uikit.surface.AppTopBar
 import io.github.magisk317.uikit.surface.StatusHeroCard
@@ -56,6 +57,7 @@ import java.util.Date
 import java.util.Locale
 import io.github.magisk317.uikit.surface.DonateDialog
 import io.github.magisk317.uikit.surface.QRCodeDialog
+import io.github.magisk317.uikit.surface.saveImageToGalleryAsync
 import io.github.magisk317.uikit.R as UiKitR
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -88,7 +90,7 @@ internal fun OverviewScreenShared() {
 
     fun showMessage(message: String) {
         scope.launch {
-            snackbarHostState.showSnackbar(message)
+            snackbarHostState.showLatestSnackbar(message)
         }
     }
 
@@ -197,8 +199,20 @@ internal fun OverviewScreenShared() {
                 io.github.magisk317.uikit.surface.OverviewLinksCard(
                     onCheckUpdate = { settingsViewModel.requestPreferredUpdate() },
                     onJoinQQ = { PackageUtils.joinQQGroup(context)?.let(::showMessage) },
-                    onJoinTelegram = { Utils.showWebPage(context, Const.TELEGRAM_GROUP_URL)?.let(::showMessage) },
-                    onSourceCode = { Utils.showWebPage(context, Const.PROJECT_SOURCE_CODE_URL)?.let(::showMessage) },
+                    onJoinTelegram = {
+                        BrowserUtils.openWebPage(
+                            context,
+                            Const.TELEGRAM_GROUP_URL,
+                            R.string.browser_install_or_enable_prompt,
+                        )?.let(::showMessage)
+                    },
+                    onSourceCode = {
+                        BrowserUtils.openWebPage(
+                            context,
+                            Const.PROJECT_SOURCE_CODE_URL,
+                            R.string.browser_install_or_enable_prompt,
+                        )?.let(::showMessage)
+                    },
                     onDonate = { showDonateDialog = true },
                 )
             }
@@ -238,8 +252,10 @@ internal fun OverviewScreenShared() {
             type = pair.second,
             onDismiss = { showQRCodeDialog = null },
             onSave = {
-                Utils.saveImageToGallery(context, pair.first, "${pair.second}_qrcode")
-                    .forEach(::showMessage)
+                scope.launch {
+                    saveImageToGalleryAsync(context, pair.first, "${pair.second}_qrcode")
+                        .forEach(::showMessage)
+                }
             },
         )
     }
