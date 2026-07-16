@@ -4,35 +4,7 @@ import android.content.Context
 import com.github.magisk317.smscode.common.constant.PrefConst
 
 object SPUtils {
-
-    // 本地的版本号
-    private const val LOCAL_VERSION_CODE = "local_version_code"
-    private const val LOCAL_VERSION_CODE_DEFAULT = 16
     private const val UI_KIT_STYLE_MATERIAL = 0
-
-    /**
-     * 获取本地记录的版本号
-     */
-    suspend fun getLocalVersionCode(context: Context): Int {
-        // 如果不存在,则默认返回16,即v1.4.5版本
-        return AppPreferencesDataStore.getInt(context, LOCAL_VERSION_CODE, LOCAL_VERSION_CODE_DEFAULT)
-    }
-
-    /**
-     * 设置当前版本号
-     */
-    suspend fun setLocalVersionCode(context: Context, versionCode: Int) {
-        AppPreferencesDataStore.setInt(context, LOCAL_VERSION_CODE, versionCode)
-    }
-
-    /**
-     * 获取短信验证码关键字
-     */
-    suspend fun getSMSCodeKeywords(context: Context): String? = AppPreferencesDataStore.getString(
-        context,
-        PrefConst.KEY_SMSCODE_KEYWORDS,
-        PrefConst.SMSCODE_KEYWORDS_DEFAULT,
-    )
 
     /**
      * 是否同意隐私协议
@@ -61,7 +33,8 @@ object SPUtils {
         AppPreferencesDataStore.setInt(context, PrefConst.KEY_CHOOSE_THEME, mode)
     }
 
-    suspend fun getUiKitStyle(context: Context): Int = UI_KIT_STYLE_MATERIAL
+    suspend fun getUiKitStyle(context: Context): Int =
+        AppPreferencesDataStore.getInt(context, PrefConst.KEY_UI_KIT_STYLE, UI_KIT_STYLE_MATERIAL)
 
     suspend fun setUiKitStyle(context: Context, style: Int) {
         AppPreferencesDataStore.setInt(context, PrefConst.KEY_UI_KIT_STYLE, style)

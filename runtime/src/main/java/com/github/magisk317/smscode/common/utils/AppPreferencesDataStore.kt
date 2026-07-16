@@ -373,30 +373,39 @@ object AppPreferencesDataStore {
         }
     }
 
-    suspend fun syncToSharedPrefs(context: Context) {
+    suspend fun syncToSharedPrefs(context: Context): Boolean {
         val editor = getSharedPrefs(context).edit()
         populateEditor(context, editor)
-        editor.apply()
+        if (!editor.commit()) {
+            XLog.w("SharedPreferences sync commit failed")
+            return false
+        }
         ensureSharedPrefsReadable(context)
-        syncToRemotePrefs(context)
+        return syncToRemotePrefs(context) != false
     }
 
     @Suppress("TooGenericExceptionCaught")
-    suspend fun syncToRemotePrefs(context: Context) {
-        val prefs = getRemotePrefs() ?: return
-        try {
+    suspend fun syncToRemotePrefs(context: Context): Boolean? {
+        if (remotePrefsProvider == null) return null
+        val prefs = getRemotePrefs() ?: return false
+        return try {
             val editor = prefs.edit()
             populateEditor(context, editor)
-            editor.apply()
+            editor.commit().also { committed ->
+                if (!committed) XLog.w("RemotePrefs sync commit failed")
+            }
         } catch (e: Exception) {
             XLog.w("RemotePrefs sync failed: %s", e.message ?: e.javaClass.simpleName)
+            false
         }
     }
 
     fun getBooleanFlow(context: Context, key: String, defaultValue: Boolean): Flow<Boolean> {
         val prefKey = booleanPreferencesKey(key)
         return getInstance(context).data
-            .map { prefs: Preferences -> safeRead(prefs, prefKey, defaultValue) }
+            .map { prefs: Preferences ->
+                coerceBooleanValue(key, safeRead(prefs, prefKey, defaultValue))
+            }
     }
 
     fun getStringFlow(context: Context, key: String, defaultValue: String): Flow<String> {

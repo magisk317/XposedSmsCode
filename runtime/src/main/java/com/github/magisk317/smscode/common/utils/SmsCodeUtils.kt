@@ -245,8 +245,7 @@ object SmsCodeUtils {
         try {
             val smsCodeRuleUri = DBProvider.smsCodeRuleContentUri(context)
             val projection = arrayOf(COLUMN_COMPANY, COLUMN_KEYWORD, COLUMN_REGEX)
-            val cursor = context.contentResolver.query(smsCodeRuleUri, projection, null, null, null)
-            if (cursor != null) {
+            context.contentResolver.query(smsCodeRuleUri, projection, null, null, null)?.use { cursor ->
                 val resultRules = mutableListOf<SmsCodeRule>()
                 while (cursor.moveToNext()) {
                     resultRules.add(
@@ -257,16 +256,15 @@ object SmsCodeUtils {
                         ),
                     )
                 }
-                cursor.close()
                 rules = if (resultRules.isNotEmpty()) {
                     XLog.d("Load SmsCode rules succeed by content provider")
                     resultRules
                 } else {
                     loadRulesFromFile(context).also(::logProviderEmptyFallback)
                 }
-            } else {
-                throw IllegalStateException("Cursor is null for URI: $smsCodeRuleUri")
+                return rules
             }
+            throw IllegalStateException("Cursor is null for URI: $smsCodeRuleUri")
         } catch (throwable: Exception) {
             rules = loadRulesFromFile(context)
             logProviderFailureFallback(rules, throwable)

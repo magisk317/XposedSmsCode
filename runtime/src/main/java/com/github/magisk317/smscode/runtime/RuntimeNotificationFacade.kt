@@ -1,28 +1,13 @@
 package com.github.magisk317.smscode.runtime
 
-import android.app.NotificationManager
 import android.content.Context
-import com.github.magisk317.smscode.common.utils.NotificationUtils
 import com.github.magisk317.smscode.runtime.bridge.HookNotificationAccess
 import com.github.magisk317.smscode.runtime.bridge.UiNotificationAccess
+import io.github.magisk317.smscode.runtime.common.notification.AndroidNotificationPlatformBridge
+import io.github.magisk317.smscode.runtime.contract.notification.NotificationDeliveryDiagnostics
 
 object RuntimeNotificationFacade : HookNotificationAccess, UiNotificationAccess {
-    data class DeliveryDiagnostics(
-        val notificationsEnabled: Boolean,
-        val postNotificationsGranted: Boolean,
-        val channelImportance: Int?,
-    ) {
-        val canPost: Boolean
-            get() = notificationsEnabled &&
-                postNotificationsGranted &&
-                channelImportance != NotificationManager.IMPORTANCE_NONE
-
-        fun summary(): String {
-            return "enabled=$notificationsEnabled permission=$postNotificationsGranted channel=${
-                NotificationUtils.importanceLabel(channelImportance)
-            }"
-        }
-    }
+    private val platform = AndroidNotificationPlatformBridge(recoverDeletedChannels = true)
 
     override fun createNotificationChannel(
         context: Context,
@@ -30,19 +15,13 @@ object RuntimeNotificationFacade : HookNotificationAccess, UiNotificationAccess 
         channelName: String,
         importance: Int,
     ) {
-        NotificationUtils.createNotificationChannel(context, channelId, channelName, importance)
+        platform.createNotificationChannel(context, channelId, channelName, importance)
     }
 
-    fun inspectDelivery(context: Context, channelId: String): DeliveryDiagnostics {
-        val diagnostics = NotificationUtils.inspectDelivery(context, channelId)
-        return DeliveryDiagnostics(
-            notificationsEnabled = diagnostics.notificationsEnabled,
-            postNotificationsGranted = diagnostics.postNotificationsGranted,
-            channelImportance = diagnostics.channelImportance,
-        )
-    }
+    fun inspectDelivery(context: Context, channelId: String): NotificationDeliveryDiagnostics =
+        platform.inspectDelivery(context, channelId)
 
     override fun hasPostNotificationsPermission(context: Context): Boolean {
-        return NotificationUtils.hasPostNotificationsPermission(context)
+        return platform.hasPostNotificationsPermission(context)
     }
 }

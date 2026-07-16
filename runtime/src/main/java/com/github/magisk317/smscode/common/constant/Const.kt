@@ -7,15 +7,6 @@ import com.github.magisk317.smscode.runtime.BuildConfig
  */
 object Const {
 
-    /* Alipay begin */
-    const val ALIPAY_PACKAGE_NAME = "com.eg.android.AlipayGphone"
-    const val ALIPAY_QRCODE_URI_PREFIX = "alipayqr://platformapi/startapp?saId=10000007&qrcode="
-
-    // 收款码 URL
-    const val ALIPAY_QRCODE_URL = "HTTPS://QR.ALIPAY.COM/FKX074142EKXD0OIMV8B60"
-
-    /* Alipay end */
-
     /* QQ begin */
     const val QQ_GROUP_URL = "https://qm.qq.com/q/4mMpX3vk4U"
     const val TELEGRAM_GROUP_URL = "https://t.me/+NR2QaQ4dlEgxYmNl"
@@ -44,9 +35,6 @@ object Const {
     const val KEY_CODE_RULE = "key_code_rule"
     const val KEY_RULE_ID = "key_rule_id"
     const val EXTRA_IMPORT_URI = "extra_import_uri"
-
-    /* Wechat */
-    const val WECHAT_PACKAGE_NAME = "com.tencent.mm"
 
     /* UI Dimensions (dp) */
     const val PADDING_SMALL = 8

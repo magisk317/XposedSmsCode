@@ -9,10 +9,14 @@ import com.github.magisk317.smscode.data.db.DBProvider
  * prefs cache so the next SMS parse reloads fresh values.
  */
 object HookPreferenceMirror {
-    suspend fun publish(context: Context) {
-        AppPreferencesDataStore.syncToSharedPrefs(context)
+    suspend fun publish(context: Context): Boolean {
+        if (!AppPreferencesDataStore.syncToSharedPrefs(context)) {
+            XLog.w("Hook preference publish failed; cache invalidation skipped")
+            return false
+        }
         // Clear local (app-process) prefs cache too — PrefsReader may be used outside hook.
         PrefsReader.invalidateCache()
         DBProvider.notifyPrefsCacheChanged(context)
+        return true
     }
 }

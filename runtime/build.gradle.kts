@@ -62,6 +62,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":magisk-xposed-kit"))
     implementation(project(":smscode-core:contract"))
     implementation(project(":smscode-core:hook"))
     implementation(project(":smscode-core:domain"))

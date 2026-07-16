@@ -4,14 +4,18 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.github.magisk317.smscode.common.constant.CodeNotificationOwner
 import com.github.magisk317.smscode.common.constant.PrefConst
-import com.github.magisk317.smscode.data.db.entity.SmsMsg
-
-import com.github.magisk317.smscode.common.utils.XLog
 import java.util.Collections
-import java.util.concurrent.ConcurrentHashMap
+import com.github.magisk317.smscode.data.db.entity.SmsMsg
+import io.github.magisk317.smscode.runtime.common.prefs.PrefsResolver
+import io.github.magisk317.smscode.runtime.common.prefs.SharedPrefsSource
+import io.github.magisk317.smscode.runtime.contract.prefs.PrefReadResult
+import io.github.magisk317.smscode.runtime.contract.prefs.PrefSources
+import io.github.magisk317.smscode.runtime.contract.prefs.PrefsSource
 
 object PrefsReader {
     private const val PREFS_NAME = "xposed_prefs"
+    private const val SOURCE_REMOTE_PROVIDER = "provider"
+    private const val SOURCE_LOCAL_HOOK_PREFS = "local_hook_prefs"
 
     /**
      * TTL for the in-process resolved-pref cache.
@@ -28,24 +32,11 @@ object PrefsReader {
      * config changes to apply promptly.
      */
     private const val PREFS_CACHE_TTL_MS = 5_000L
-
-    private class CachedValue(val value: Any, val at: Long)
-
-    /**
-     * Outcome of one remote/local pref read, separated so the cache can tell a confirmed
-     * miss (cache the default) from an unavailable/frozen peer (do not poison the cache).
-     */
-    private sealed class PrefRead<out T> {
-        data class Hit<T>(val value: T) : PrefRead<T>()
-        class Miss : PrefRead<Nothing>()
-        class Unavailable : PrefRead<Nothing>()
-    }
-
-    /** Resolved-value cache keyed by "<type>:<prefKey>"; safe for concurrent binder threads. */
-    private val prefsValueCache = ConcurrentHashMap<String, CachedValue>()
-
-    /** Per-key locks so concurrent parse threads single-flight a cache miss. */
-    private val prefsKeyLocks = ConcurrentHashMap<String, Any>()
+    private val prefsResolver = PrefsResolver(
+        cacheTtlMs = PREFS_CACHE_TTL_MS,
+        clock = { android.os.SystemClock.elapsedRealtime() },
+        missFallsThrough = false,
+    )
 
     @Volatile
     private var remotePrefsProvider: (() -> SharedPreferences?)? = null
@@ -56,12 +47,22 @@ object PrefsReader {
     private val remoteTraceLoggedKeys = Collections.synchronizedSet(mutableSetOf<String>())
     private data class BooleanReadTrace(val value: Boolean, val source: String)
     private data class StringReadTrace(val value: String, val source: String)
+    private val remotePrefsSource = SharedPrefsSource(
+        sourceName = SOURCE_REMOTE_PROVIDER,
+        provider = ::getRemotePrefs,
+        onError = ::logPrefsSourceError,
+    )
+    private val localPrefsSource = SharedPrefsSource(
+        sourceName = SOURCE_LOCAL_HOOK_PREFS,
+        provider = ::getLocalPrefs,
+        onError = ::logPrefsSourceError,
+    )
+
     @JvmStatic
     fun setRemotePrefsProvider(provider: (() -> SharedPreferences?)?) {
         remotePrefsProvider = provider
         remoteProviderLogged = false
-        prefsValueCache.clear()
-        prefsKeyLocks.clear()
+        prefsResolver.invalidate()
     }
 
     @JvmStatic
@@ -76,56 +77,7 @@ object PrefsReader {
      */
     @JvmStatic
     fun invalidateCache() {
-        prefsValueCache.clear()
-        prefsKeyLocks.clear()
-    }
-
-    /**
-     * Serves [key]'s resolved value from cache when younger than [PREFS_CACHE_TTL_MS],
-     * otherwise runs [load] once under a per-key lock (single-flight).
-     *
-     * - [PrefRead.Hit]: store and return the real value.
-     * - [PrefRead.Miss]: key is confirmed absent; store/return [defaultValue] for the TTL.
-     * - [PrefRead.Unavailable]: peer frozen/error; keep any previous value and **do not**
-     *   cache [defaultValue] (poisoning the cache with "module disabled" would silence
-     *   recognition for the whole window).
-     */
-    @Suppress("UNCHECKED_CAST")
-    private fun <T : Any> cachedPref(key: String, defaultValue: T, load: () -> PrefRead<T>): T {
-        val now = android.os.SystemClock.elapsedRealtime()
-        val hit = prefsValueCache[key]
-        if (hit != null && now - hit.at < PREFS_CACHE_TTL_MS) {
-            return hit.value as T
-        }
-        val lock = prefsKeyLocks.computeIfAbsent(key) { Any() }
-        synchronized(lock) {
-            val now2 = android.os.SystemClock.elapsedRealtime()
-            val again = prefsValueCache[key]
-            if (again != null && now2 - again.at < PREFS_CACHE_TTL_MS) {
-                return again.value as T
-            }
-            return when (val read = load()) {
-                is PrefRead.Hit -> {
-                    prefsValueCache[key] = CachedValue(read.value as Any, now2)
-                    read.value
-                }
-                is PrefRead.Miss -> {
-                    prefsValueCache[key] = CachedValue(defaultValue, now2)
-                    defaultValue
-                }
-                is PrefRead.Unavailable -> {
-                    val stale = again?.value as T?
-                    if (stale != null) {
-                        // Push TTL forward on the last good value so a frozen peer is not
-                        // re-probed on every subsequent read within the window.
-                        prefsValueCache[key] = CachedValue(stale as Any, now2)
-                        stale
-                    } else {
-                        defaultValue
-                    }
-                }
-            }
-        }
+        prefsResolver.invalidate()
     }
 
     private fun getRemotePrefs(): SharedPreferences? {
@@ -144,10 +96,7 @@ object PrefsReader {
         return runCatching { ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }.getOrNull()
     }
 
-    private fun getAnyPrefs(): SharedPreferences? {
-        return getRemotePrefs() ?: getLocalPrefs()
-    }
-
+    private fun prefSources(): List<PrefsSource> = listOf(remotePrefsSource, localPrefsSource)
 
     private fun logRemoteTraceOnce(key: String, state: String) {
         if (remoteTraceLoggedKeys.add(key)) {
@@ -155,117 +104,63 @@ object PrefsReader {
         }
     }
 
-    private fun readBooleanPref(key: String, defaultValue: Boolean): PrefRead<Boolean> {
-        val prefs = getAnyPrefs() ?: return PrefRead.Unavailable()
-        return try {
-            if (!prefs.contains(key)) {
-                PrefRead.Miss()
-            } else {
-                PrefRead.Hit(prefs.getBoolean(key, defaultValue))
-            }
-        } catch (t: Throwable) {
-            XLog.w("PrefsReader: prefs boolean '%s' failed", key, t)
-            PrefRead.Unavailable()
-        }
+    private fun logPrefsSourceError(message: String, error: Throwable) {
+        XLog.w("PrefsReader: %s", message, error)
     }
 
-    private fun readStringPref(key: String, defaultValue: String): PrefRead<String> {
-        val prefs = getAnyPrefs() ?: return PrefRead.Unavailable()
-        return try {
-            if (!prefs.contains(key)) {
-                PrefRead.Miss()
-            } else {
-                PrefRead.Hit(prefs.getString(key, defaultValue) ?: defaultValue)
-            }
-        } catch (t: Throwable) {
-            XLog.w("PrefsReader: prefs string '%s' failed", key, t)
-            PrefRead.Unavailable()
-        }
-    }
+    private fun resolveBooleanPref(key: String, defaultValue: Boolean): PrefReadResult<Boolean> =
+        prefsResolver.resolveBoolean(key, defaultValue, prefSources())
 
-    private fun readIntPref(key: String, defaultValue: Int): PrefRead<Int> {
-        val prefs = getAnyPrefs() ?: return PrefRead.Unavailable()
-        return try {
-            if (!prefs.contains(key)) {
-                PrefRead.Miss()
-            } else {
-                val value = when (val any = prefs.all[key]) {
-                    is Int -> any
-                    is Long -> any.toInt()
-                    is String -> any.toIntOrNull() ?: defaultValue
-                    else -> prefs.getInt(key, defaultValue)
-                }
-                PrefRead.Hit(value)
-            }
-        } catch (t: Throwable) {
-            XLog.w("PrefsReader: prefs int '%s' failed", key, t)
-            PrefRead.Unavailable()
-        }
-    }
+    private fun resolveStringPref(key: String, defaultValue: String): PrefReadResult<String> =
+        prefsResolver.resolveString(key, defaultValue, prefSources())
+
+    private fun resolveIntPref(key: String, defaultValue: Int): PrefReadResult<Int> =
+        prefsResolver.resolveInt(key, defaultValue, prefSources())
+
+    private fun traceState(result: PrefReadResult<*>): String =
+        if (result.source == PrefSources.SOURCE_DEFAULT) "default" else "hit"
 
     private fun getBooleanViaProvider(key: String, defaultValue: Boolean): Boolean {
-        return cachedPref("bool:$key", defaultValue) { readBooleanPref(key, defaultValue) }
+        return resolveBooleanPref(key, defaultValue).value
     }
 
     private fun readBooleanWithTrace(key: String, defaultValue: Boolean): BooleanReadTrace {
-        val prefs = getAnyPrefs()
-        val state = when {
-            prefs == null -> "unavailable"
-            prefs.contains(key) -> "hit"
-            else -> "miss"
-        }
-        logRemoteTraceOnce("bool:$key", state)
-        if (prefs != null) {
-            try {
-                if (prefs.contains(key)) {
-                    return BooleanReadTrace(
-                        value = prefs.getBoolean(key, defaultValue),
-                        source = "prefs",
-                    )
-                }
-            } catch (t: Throwable) {
-                XLog.w("PrefsReader: prefs boolean '%s' failed", key, t)
-            }
-        }
+        val result = resolveBooleanPref(key, defaultValue)
+        logRemoteTraceOnce("bool:$key", traceState(result))
         return BooleanReadTrace(
-            value = defaultValue,
-            source = "default",
+            value = result.value,
+            source = result.source,
         )
     }
 
     private fun getStringViaProvider(key: String, defaultValue: String): String {
-        return cachedPref("string:$key", defaultValue) { readStringPref(key, defaultValue) }
+        return resolveStringPref(key, defaultValue).value
     }
 
     private fun readStringWithTrace(key: String, defaultValue: String): StringReadTrace {
-        val remotePrefs = getAnyPrefs()
-        val remoteState = when {
-            remotePrefs == null -> "unavailable"
-            remotePrefs.contains(key) -> "hit"
-            else -> "miss"
-        }
-        logRemoteTraceOnce("string:$key", remoteState)
-        if (remotePrefs != null) {
-            try {
-                if (remotePrefs.contains(key)) {
-                    return StringReadTrace(
-                        value = remotePrefs.getString(key, defaultValue) ?: defaultValue,
-                        source = "remote",
-                    )
-                }
-            } catch (t: Throwable) {
-                XLog.w("PrefsReader: remote prefs string '%s' failed", key, t)
-            }
-        }
+        val result = resolveStringPref(key, defaultValue)
+        logRemoteTraceOnce("string:$key", traceState(result))
         return StringReadTrace(
-            value = defaultValue,
-            source = "default",
+            value = result.value,
+            source = result.source,
         )
     }
 
     private fun getIntViaProvider(key: String, defaultValue: Int): Int {
-        return cachedPref("int:$key", defaultValue) { readIntPref(key, defaultValue) }
+        return resolveIntPref(key, defaultValue).value
     }
+
+    @JvmStatic
+    fun getBooleanPreference(key: String, defaultValue: Boolean): Boolean =
+        getBooleanViaProvider(key, defaultValue)
+
+    @JvmStatic
+    fun getStringPreference(key: String, defaultValue: String): String =
+        getStringViaProvider(key, defaultValue)
+
+    @JvmStatic
+    fun getIntPreference(key: String, defaultValue: Int): Int =
+        getIntViaProvider(key, defaultValue)
 
     @JvmStatic
     fun isEnabled(context: Context): Boolean {

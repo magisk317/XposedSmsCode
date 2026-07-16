@@ -2,13 +2,13 @@ package com.github.magisk317.smscode.runtime
 
 import android.content.Context
 import android.content.Intent
-import com.github.magisk317.smscode.data.update.ApkSecurityVerifier
 import com.github.magisk317.smscode.data.update.GithubUpdateChecker
 import com.github.magisk317.smscode.data.update.UpgradeDownloader
 import com.github.magisk317.smscode.data.update.UpgradeInstaller
 import com.github.magisk317.smscode.runtime.bridge.UiUpdateAccess
-import io.github.magisk317.smscode.runtime.common.update.UpdatePolicy
+import io.github.magisk317.smscode.runtime.common.update.ApkSecurityVerifier
 import io.github.magisk317.smscode.runtime.common.update.UpdateCoordinator
+import io.github.magisk317.smscode.runtime.common.update.UpdatePolicy
 import java.io.File
 
 object RuntimeUpdateFacade : UiUpdateAccess {
