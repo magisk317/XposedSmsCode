@@ -20,6 +20,8 @@ include(
     ":smscode-core:verification",
     ":magisk-ui-kit",
     ":magisk-xposed-kit",
+    ":magisk-xposed-kit:logging",
+    ":magisk-xposed-kit:diagnostics",
 )
 
 project(":smscode-core:hook").projectDir = file("smscode/core/hook")
@@ -29,3 +31,5 @@ project(":smscode-core:contract").projectDir = file("smscode/core/contract")
 project(":smscode-core:rule").projectDir = file("smscode/core/rule")
 project(":smscode-core:verification").projectDir = file("smscode/core/verification")
 project(":smscode-core").projectDir = file("smscode/core")
+project(":magisk-xposed-kit:logging").projectDir = file("magisk-xposed-kit/logging")
+project(":magisk-xposed-kit:diagnostics").projectDir = file("magisk-xposed-kit/diagnostics")

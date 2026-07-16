@@ -37,12 +37,24 @@ jobs:
             :core:check
             :runtime:check
             :app:check
+            :smscode-core:contract:testDebugUnitTest
+            :smscode-core:domain:testDebugUnitTest
+            :smscode-core:hook:testDebugUnitTest
+            :smscode-core:runtime:testDebugUnitTest
+            :smscode-core:verification:detekt
+            :smscode-core:verification:testDebugUnitTest
+            :magisk-xposed-kit:testDebugUnitTest
+            :magisk-xposed-kit:logging:testDebugUnitTest
+            :magisk-xposed-kit:diagnostics:testDebugUnitTest
             :app:compileGithubDebugAndroidTestKotlin
             :app:compilePlayDebugAndroidTestKotlin
             :core:compilePlayDebugUnitTestKotlin
             :core:generatePlayDebugUnitTestStubRFile
             :runtime:compileDebugAndroidTestKotlin
+            :app:koverVerifyGithubDebug
+            :app:koverHtmlReportGithubDebug
             :app:assembleGithubDebug
+            -PenableKover=true
             -PbuildSplits
       - name: Write build summary
         if: always()

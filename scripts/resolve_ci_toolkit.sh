@@ -4,15 +4,28 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TOOLKIT_DIR="${MAGISK_CI_TOOLKIT_DIR:-${ROOT_DIR}/.magisk-ci-toolkit}"
 TOOLKIT_REPOSITORY="${MAGISK_CI_TOOLKIT_REPOSITORY:-https://gitlab.com/magisk3171/magisk-ci-toolkit.git}"
-TOOLKIT_REF="${MAGISK_CI_TOOLKIT_REF:-main}"
+TOOLKIT_REF="${MAGISK_CI_TOOLKIT_REF:-80c97bce4285efac8d6cfea21c0078498c400e28}"
 
 if [[ ! -d "$TOOLKIT_DIR/.git" ]]; then
-  rm -rf "$TOOLKIT_DIR"
-  git clone --depth 1 --branch "$TOOLKIT_REF" "$TOOLKIT_REPOSITORY" "$TOOLKIT_DIR" >&2
-else
+  rm -rf -- "$TOOLKIT_DIR"
+  git init --quiet "$TOOLKIT_DIR" >&2
+  git -C "$TOOLKIT_DIR" remote add origin "$TOOLKIT_REPOSITORY" >&2
+elif git -C "$TOOLKIT_DIR" remote get-url origin >/dev/null 2>&1; then
   git -C "$TOOLKIT_DIR" remote set-url origin "$TOOLKIT_REPOSITORY" >&2
-  git -C "$TOOLKIT_DIR" fetch --depth 1 origin "$TOOLKIT_REF" >&2
-  git -C "$TOOLKIT_DIR" checkout --detach FETCH_HEAD >&2
+else
+  git -C "$TOOLKIT_DIR" remote add origin "$TOOLKIT_REPOSITORY" >&2
+fi
+
+git -C "$TOOLKIT_DIR" fetch --depth 1 origin "$TOOLKIT_REF" >&2
+git -C "$TOOLKIT_DIR" checkout --detach --force FETCH_HEAD >&2
+
+if [[ "$TOOLKIT_REF" =~ ^[0-9a-fA-F]{40}$ ]]; then
+  resolved_ref="$(git -C "$TOOLKIT_DIR" rev-parse HEAD)"
+  normalized_ref="$(printf '%s' "$TOOLKIT_REF" | tr '[:upper:]' '[:lower:]')"
+  if [[ "$resolved_ref" != "$normalized_ref" ]]; then
+    echo "resolved toolkit commit $resolved_ref does not match pinned ref $TOOLKIT_REF" >&2
+    exit 1
+  fi
 fi
 
 printf '%s\n' "$TOOLKIT_DIR"

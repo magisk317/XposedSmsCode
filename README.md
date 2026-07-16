@@ -71,6 +71,9 @@
 - GitHub Release、Xposed-Modules-Repo 与 Telegram 通知共用当前版本 changelog 块。
 
 # 自动化维护边界
+- CI 公共逻辑固定到 `magisk-ci-toolkit` 的不可变提交；GitLab `include.ref`、作业变量和
+  本地/GitHub resolver 必须保持同一 SHA。resolver 使用 exact fetch，因此仍可由维护者
+  显式覆盖为 branch/tag，但仓库默认值不得回退到浮动 `main`。
 - Telegram CI 通知：GitHub 侧由 `.github/workflows/notification.yml` 处理，GitLab 侧由 `.gitlab-ci.yml` 的 `telegram:ci` 处理；tag/release 通知仍由 release workflow 完成后触发。
 - Renovate：GitLab 已配置定时 pipeline，使用 `.gitlab/renovate-config.js` 和隐藏变量 `RENOVATE_TOKEN`；手动 web/API pipeline 需要设置 `DEPENDENCY_OWNER=gitlab` 才会只跑 Renovate；GitLab MR 使用 Renovate 原生 automerge。
 - Dependabot：依赖 GitHub Dependency Graph / alerts，本轮不迁移，现有 GitHub dependency workflow 保持不变。

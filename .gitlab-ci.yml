@@ -1,15 +1,15 @@
 include:
   - project: magisk3171/magisk-ci-toolkit
-    ref: main
+    ref: 80c97bce4285efac8d6cfea21c0078498c400e28
     file: /.gitlab/ci/android.yml
   - project: magisk3171/magisk-ci-toolkit
-    ref: main
+    ref: 80c97bce4285efac8d6cfea21c0078498c400e28
     file: /.gitlab/ci/android-release.yml
   - project: magisk3171/magisk-ci-toolkit
-    ref: main
+    ref: 80c97bce4285efac8d6cfea21c0078498c400e28
     file: /.gitlab/ci/telegram.yml
   - project: magisk3171/magisk-ci-toolkit
-    ref: main
+    ref: 80c97bce4285efac8d6cfea21c0078498c400e28
     file: /.gitlab/ci/renovate.yml
 
 workflow:
@@ -37,6 +37,7 @@ stages:
   - maintenance
 
 variables:
+  MAGISK_CI_TOOLKIT_REF: "80c97bce4285efac8d6cfea21c0078498c400e28"
   GIT_DEPTH: "0"
   GIT_SUBMODULE_STRATEGY: recursive
   GIT_SUBMODULE_DEPTH: "0"
@@ -71,12 +72,24 @@ android:build:
       :core:check
       :runtime:check
       :app:check
+      :smscode-core:contract:testDebugUnitTest
+      :smscode-core:domain:testDebugUnitTest
+      :smscode-core:hook:testDebugUnitTest
+      :smscode-core:runtime:testDebugUnitTest
+      :smscode-core:verification:detekt
+      :smscode-core:verification:testDebugUnitTest
+      :magisk-xposed-kit:testDebugUnitTest
+      :magisk-xposed-kit:logging:testDebugUnitTest
+      :magisk-xposed-kit:diagnostics:testDebugUnitTest
       :app:compileGithubDebugAndroidTestKotlin
       :app:compilePlayDebugAndroidTestKotlin
       :core:compilePlayDebugUnitTestKotlin
       :core:generatePlayDebugUnitTestStubRFile
       :runtime:compileDebugAndroidTestKotlin
+      :app:koverVerifyGithubDebug
+      :app:koverHtmlReportGithubDebug
       :app:assembleGithubDebug
+      -PenableKover=true
       -PbuildSplits
   artifacts:
     name: "XposedSmsCode-debug-$CI_COMMIT_REF_SLUG"

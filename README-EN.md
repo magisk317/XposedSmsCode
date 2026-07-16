@@ -71,6 +71,10 @@ Welcome any feedbacks.
 - GitHub Release, Xposed-Modules-Repo, and Telegram notification share the current changelog block.
 
 # Automation Ownership
+- Shared CI logic is pinned to an immutable `magisk-ci-toolkit` commit. GitLab `include.ref`, the
+  job variable, and the local/GitHub resolver must stay on the same SHA. The resolver uses an exact
+  fetch, so maintainers may explicitly override it with a branch or tag, but the repository default
+  must not fall back to a floating `main`.
 - Telegram CI notification: GitHub is handled by `.github/workflows/notification.yml`; GitLab is handled by the `telegram:ci` job in `.gitlab-ci.yml`; tag/release notifications still wait for the release workflow to finish.
 - Renovate: GitLab has a scheduled pipeline using `.gitlab/renovate-config.js` and the hidden `RENOVATE_TOKEN` variable; manual web/API pipelines need `DEPENDENCY_OWNER=gitlab` to run only Renovate; GitLab MRs use Renovate-native automerge.
 - Dependabot: GitHub Dependency Graph / alerts are still GitHub-owned. This migration leaves the existing GitHub dependency workflows unchanged.

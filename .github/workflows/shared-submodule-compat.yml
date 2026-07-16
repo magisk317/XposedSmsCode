@@ -11,24 +11,34 @@ on:
     paths:
       - "build-logic/**"
       - "core/**"
+      - "hook/**"
       - "app/**"
       - "runtime/**"
       - "magisk-ui-kit/**"
+      - "magisk-xposed-kit/**"
       - "smscode/**"
       - ".github/workflows/shared-submodule-compat.yml"
       - "scripts/**"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle/**"
   push:
     branches:
       - beta
     paths:
       - "build-logic/**"
       - "core/**"
+      - "hook/**"
       - "app/**"
       - "runtime/**"
       - "magisk-ui-kit/**"
+      - "magisk-xposed-kit/**"
       - "smscode/**"
       - ".github/workflows/shared-submodule-compat.yml"
       - "scripts/**"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle/**"
   workflow_dispatch:
 
 env:

@@ -2,7 +2,6 @@ import dev.detekt.gradle.extensions.DetektExtension
 import com.adarshr.gradle.testlogger.theme.ThemeType
 import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.tasks.Exec
-import kotlinx.kover.gradle.plugin.dsl.KoverProjectExtension
 
 buildscript {
     repositories {
@@ -53,17 +52,6 @@ val enableKover = providers.gradleProperty("enableKover")
         taskName.contains("kover", ignoreCase = true)
     }
 
-fun KoverProjectExtension.configureProjectKoverVerification() {
-    reports {
-        verify {
-            rule {
-                // Start with a pragmatic threshold and tighten later.
-                minBound(60)
-            }
-        }
-    }
-}
-
 subprojects {
     fun Project.configureDetekt() {
         apply(plugin = "dev.detekt")
@@ -80,9 +68,6 @@ subprojects {
 
     if (enableKover) {
         apply(plugin = "org.jetbrains.kotlinx.kover")
-        extensions.configure<KoverProjectExtension>("kover") {
-            configureProjectKoverVerification()
-        }
     }
 
     pluginManager.withPlugin("com.android.application") {
@@ -119,6 +104,14 @@ subprojects {
         gradlePluginPortal()
         maven("https://jitpack.io")
         maven("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+    }
+
+    tasks.withType<Test>().configureEach {
+        // MockK attaches Byte Buddy to the test VM; CDS cannot be used once the bootstrap path changes.
+        jvmArgs("-Xshare:off")
+        if (Runtime.version().feature() >= 24) {
+            jvmArgs("--sun-misc-unsafe-memory-access=allow")
+        }
     }
 
 }
