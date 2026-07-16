@@ -15,6 +15,4 @@ object TransitionConst {
     } catch (_: PackageManager.NameNotFoundException) {
         false
     }
-
-    fun isRestrictedBuild(): Boolean = BuildConfig.IS_LITE_BUILD
 }

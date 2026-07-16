@@ -48,6 +48,8 @@ Welcome any feedbacks.
 - **Supports LSPosed / Xposed API 82+ (depends on ROM and framework implementation).**
 - **Tech Stack: 100% Kotlin + Jetpack Compose + Room + Coroutines**
 - **Please read the FAQ in the app first if you encounter any problems.**
+- Play, GitHub, and the reserved F-Droid configuration identify distribution channels only; the
+  project no longer ships a separate Lite APK or uses build variants as feature tiers.
 
 # Features
 - Copy verification code to clipboard when a new message arrives.

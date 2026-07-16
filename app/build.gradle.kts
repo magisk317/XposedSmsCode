@@ -64,7 +64,6 @@ android {
 
         buildConfigField("String", "LOG_TAG", "\"XSmsCode\"")
         buildConfigField("int", "MODULE_VERSION", "$versionCodeInt")
-        buildConfigField("boolean", "IS_LITE_BUILD", "true")
         buildConfigField("boolean", "ALLOW_CONFLICT_BYPASS", allowConflictBypass.toString())
         buildConfigField("String", "B_DOWNLOAD_URL", "\"$relayDownloadUrl\"")
     }

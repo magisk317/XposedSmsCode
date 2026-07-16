@@ -49,6 +49,7 @@
 - **支持 LSPosed / Xposed API 82+（具体取决于系统与框架实现）。**
 - **代码库：100% Kotlin + Jetpack Compose + Room + Coroutines**
 - **遇到问题请先阅读模块中的"常见问题"**
+- Play、GitHub 与预留的 F-Droid 配置仅表示发行渠道差异；项目不再提供独立 Lite APK 或用构建变体划分功能层级。
 
 # 功能
 - 收到验证码短信后将验证码提取并复制到系统剪贴板
