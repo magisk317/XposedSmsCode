@@ -8,13 +8,14 @@ import android.os.Bundle
 import com.github.magisk317.smscode.runtime.BuildConfig as RuntimeBuildConfig
 import com.github.tianma8023.xposed.smscode.BuildConfig
 import com.github.magisk317.smscode.common.constant.PrefConst
-import com.github.magisk317.smscode.common.utils.ActivationDiagnosticsStore
+import io.github.magisk317.smscode.runtime.common.diagnostics.ActivationDiagnosticsStore
 import com.github.magisk317.smscode.common.utils.AppPreferencesDataStore
 import com.github.magisk317.smscode.common.utils.HookPreferenceMirror
 import com.github.magisk317.smscode.runtime.RuntimePrefsFacade as PrefsReader
 import io.github.magisk317.smscode.xposed.utils.ModuleActivationStore
 import io.github.magisk317.smscode.xposed.utils.ModuleUtils
-import com.github.magisk317.smscode.common.utils.RuntimeLogStore
+import com.github.magisk317.smscode.common.utils.RuntimeDiagnosticsBridge
+import io.github.magisk317.smscode.runtime.common.diagnostics.RuntimeLogStore
 import com.github.magisk317.smscode.xp.helper.ModuleConflictArbiter
 import io.github.magisk317.smscode.xposed.runtime.CoreHookPolicy
 import io.github.magisk317.smscode.xposed.runtime.CoreHookPolicyHolder
@@ -46,6 +47,7 @@ class SmsCodeApplication : Application() {
         super.onCreate()
         android.util.Log.w("XSmsCode", "SmsCodeApplication.onCreate() START")
         ensureIpcToken()
+        RuntimeDiagnosticsBridge.ensureInstalled()
         RuntimeLogStore.initialize(this, enableDetailedLogs = false)
         installCoreRuntime()
         if (BuildConfig.DEBUG) {
@@ -65,7 +67,6 @@ class SmsCodeApplication : Application() {
         initXposedServiceActivationMonitor()
         importPendingCodeRecords()
         syncPreferences()
-        PhoneProcessRestartCoordinator.requestAfterInstallOrUpdate(this, applicationScope)
         registerLicenseActivityKiller()
     }
 
@@ -83,13 +84,15 @@ class SmsCodeApplication : Application() {
                 PrefConst.KEY_VERBOSE_LOG_MODE,
                 false,
             )
+            RuntimeDiagnosticsBridge.ensureInstalled()
             RuntimeLogStore.setEnabled(verboseLog)
             val sensitiveDebugMode = AppPreferencesDataStore.getBoolean(
                 this@SmsCodeApplication,
                 PrefConst.KEY_SENSITIVE_DEBUG_LOG_MODE,
                 false,
             )
-            io.github.magisk317.xposed.logging.LogSanitizerConfig.setEnabled(!sensitiveDebugMode)
+            io.github.magisk317.xposed.logging.LogSanitizerConfig
+                .syncSensitiveDebugMode(sensitiveDebugMode)
         }
     }
 
@@ -123,6 +126,7 @@ class SmsCodeApplication : Application() {
                 } else {
                     message
                 }
+                RuntimeDiagnosticsBridge.ensureInstalled()
                 RuntimeLogStore.append(priority, tag, safeMessage, force, route)
             }
         })
@@ -131,6 +135,7 @@ class SmsCodeApplication : Application() {
                 return ModuleConflictArbiter.shouldSuppressByRelay(context, source)
             }
         })
+        AppShellRuntimeBridge.install(this)
     }
 
     internal fun handleXposedServiceBound(
@@ -197,12 +202,20 @@ class SmsCodeApplication : Application() {
 
     private fun ensureIpcToken() {
         runBlocking(Dispatchers.IO) {
-            val token = AppPreferencesDataStore.getString(this@SmsCodeApplication, PrefConst.KEY_IPC_TOKEN, "")
-            if (token.isEmpty()) {
-                val newToken = UUID.randomUUID().toString()
-                AppPreferencesDataStore.setString(this@SmsCodeApplication, PrefConst.KEY_IPC_TOKEN, newToken)
-                Timber.i("Generated new IPC Security Token via DataStore")
-            }
+            AppIpcTokenStore.ensurePublished(
+                existingToken = {
+                    AppPreferencesDataStore.getString(this@SmsCodeApplication, PrefConst.KEY_IPC_TOKEN, "")
+                },
+                generateToken = { UUID.randomUUID().toString() },
+                persistToken = { generated ->
+                    AppPreferencesDataStore.setString(
+                        this@SmsCodeApplication,
+                        PrefConst.KEY_IPC_TOKEN,
+                        generated,
+                    )
+                    Timber.i("Generated new IPC Security Token via DataStore")
+                },
+            )
             HookPreferenceMirror.publish(this@SmsCodeApplication)
         }
     }

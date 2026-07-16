@@ -5,8 +5,7 @@ import android.content.Intent
 import com.github.magisk317.smscode.common.constant.PrefConst
 import com.github.magisk317.smscode.common.utils.AppPreferencesDataStore
 import com.github.magisk317.smscode.runtime.RuntimeStorageFacade
-import io.github.magisk317.smscode.runtime.contract.autoinput.AutoInputBroadcastContract
-import io.github.magisk317.smscode.runtime.contract.autoinput.AutoInputResultBroadcastContract
+import io.github.magisk317.smscode.runtime.common.autoinput.AutoInputResultProcessor
 import io.github.magisk317.smscode.xposed.hook.system.SystemInputInjectorHook
 import io.github.magisk317.smscode.xposed.utils.XLog
 import kotlinx.coroutines.runBlocking
@@ -36,67 +35,73 @@ object AutoInputResultHandler {
         }
     }
 
-    private fun handleOnWorker(context: Context, intent: Intent) {
+    private fun handleOnWorker(context: Context, intent: Intent) = runBlocking {
         val result = when (
-            val receiverResult = AutoInputResultBroadcastContract.readResult(
+            val validation = AutoInputResultProcessor.validate(
                 intent = intent,
                 expectedAction = action,
+                expectedTokenProvider = {
+                    AppPreferencesDataStore.getString(context, PrefConst.KEY_IPC_TOKEN, "")
+                },
             )
         ) {
-            AutoInputResultBroadcastContract.ReceiverResult.Ignored -> return
-            AutoInputResultBroadcastContract.ReceiverResult.MissingAttemptId -> return
-            is AutoInputResultBroadcastContract.ReceiverResult.Accepted -> receiverResult.result
-        }
-        val expectedToken = runBlocking {
-            AppPreferencesDataStore.getString(context, PrefConst.KEY_IPC_TOKEN, "")
-        }
-        val receivedToken = intent.getStringExtra(AutoInputBroadcastContract.EXTRA_IPC_TOKEN).orEmpty()
-        if (expectedToken.isBlank() || receivedToken.isBlank() || receivedToken != expectedToken) {
-            XLog.w(
-                "Diag AutoInputResultReceiver rejected token: attemptId=%d expectedEmpty=%s receivedEmpty=%s",
-                result.attemptId,
-                expectedToken.isBlank(),
-                receivedToken.isBlank(),
-            )
-            return
+            AutoInputResultProcessor.ValidationResult.Ignored -> return@runBlocking
+            AutoInputResultProcessor.ValidationResult.MissingAttemptId -> return@runBlocking
+            is AutoInputResultProcessor.ValidationResult.RejectedToken -> {
+                XLog.w(
+                    "Diag AutoInputResultReceiver rejected token: attemptId=%d expectedEmpty=%s receivedEmpty=%s",
+                    validation.result.attemptId,
+                    validation.expectedTokenEmpty,
+                    validation.receivedTokenEmpty,
+                )
+                return@runBlocking
+            }
+            is AutoInputResultProcessor.ValidationResult.Accepted -> validation.result
         }
 
-        val updatedRows = runCatching {
-            RuntimeStorageFacade.dbManager(context).updateAutoInputResult(
-                attemptId = result.attemptId,
-                success = result.success,
-                reason = result.reason,
+        val outcome = runCatching {
+            AutoInputResultProcessor.persist(
+                result = result,
+                update = {
+                    RuntimeStorageFacade.dbManager(context).updateAutoInputResult(
+                        attemptId = it.attemptId,
+                        success = it.success,
+                        reason = it.reason,
+                    ).toLong()
+                },
+                upsert = {
+                    runCatching {
+                        RuntimeStorageFacade.dbManager(context).upsertAutoInputResult(
+                            attemptId = it.attemptId,
+                            success = it.success,
+                            reason = it.reason,
+                        )
+                    }.onFailure { error ->
+                        XLog.w(
+                            "AutoInput result upsert failed: %s",
+                            error.message ?: error.javaClass.simpleName,
+                        )
+                    }.getOrDefault(0L)
+                },
             )
         }.onFailure { error ->
             XLog.w(
                 "AutoInput result persist failed: %s",
                 error.message ?: error.javaClass.simpleName,
             )
-        }.getOrDefault(0)
+        }.getOrNull() ?: return@runBlocking
 
-        if (updatedRows <= 0) {
-            // UPDATE found no row — the INSERT in the hook process may have failed
-            // or the WAL hasn't propagated yet. Upsert to ensure the result is persisted.
-            val upserted = runCatching {
-                RuntimeStorageFacade.dbManager(context).upsertAutoInputResult(
-                    attemptId = result.attemptId,
-                    success = result.success,
-                    reason = result.reason,
-                )
-            }.onFailure { error ->
-                XLog.w(
-                    "AutoInput result upsert failed: %s",
-                    error.message ?: error.javaClass.simpleName,
-                )
-            }.getOrDefault(0)
-            if (upserted <= 0) {
+        when (outcome) {
+            AutoInputResultProcessor.PersistenceOutcome.UPDATED -> Unit
+            AutoInputResultProcessor.PersistenceOutcome.STALE -> {
                 XLog.w(
                     "Diag AutoInputResultReceiver skipped stale result: attemptId=%d success=%s reason=%s",
                     result.attemptId,
                     result.success,
                     result.reason ?: "<none>",
                 )
-            } else {
+            }
+            AutoInputResultProcessor.PersistenceOutcome.UPSERTED -> {
                 XLog.i(
                     "Diag AutoInputResultReceiver recovered stale result via upsert: attemptId=%d success=%s",
                     result.attemptId,

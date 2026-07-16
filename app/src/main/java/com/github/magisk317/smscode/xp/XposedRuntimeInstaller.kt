@@ -3,7 +3,8 @@ package com.github.magisk317.smscode.xp
 import android.content.Context
 import android.net.Uri
 import com.github.magisk317.smscode.common.utils.PrefsReader
-import com.github.magisk317.smscode.common.utils.RuntimeLogStore
+import com.github.magisk317.smscode.common.utils.RuntimeDiagnosticsBridge
+import io.github.magisk317.smscode.runtime.common.diagnostics.RuntimeLogStore
 import com.github.magisk317.smscode.data.db.DBProvider
 import com.github.magisk317.smscode.data.log.RuntimeLogProvider
 import com.github.magisk317.smscode.runtime.BuildConfig as RuntimeBuildConfig
@@ -91,6 +92,7 @@ object XposedRuntimeInstaller {
         this.moduleContext = moduleContext.applicationContext ?: moduleContext
         com.github.magisk317.smscode.common.utils.PrefsReader.setHookContext(this.moduleContext!!)
         val verbose = com.github.magisk317.smscode.common.utils.PrefsReader.isVerboseLogMode(moduleContext)
+        RuntimeDiagnosticsBridge.ensureInstalled()
         RuntimeLogStore.initialize(this.moduleContext ?: moduleContext, enableDetailedLogs = verbose)
         // Cross-process cache invalidation: listen for module-app notifyChange signals.
         com.github.magisk317.smscode.common.utils.HookCacheInvalidator.register(this.moduleContext!!)
@@ -139,8 +141,9 @@ object XposedRuntimeInstaller {
         val ctx = moduleContext ?: return
         val sensitiveDebugEnabled = runCatching {
             com.github.magisk317.smscode.common.utils.PrefsReader.isSensitiveDebugLogMode(ctx)
-        }.getOrDefault(false)
-        io.github.magisk317.xposed.logging.LogSanitizerConfig.setEnabled(!sensitiveDebugEnabled)
+        }.getOrNull()
+        io.github.magisk317.xposed.logging.LogSanitizerConfig
+            .syncSensitiveDebugMode(sensitiveDebugEnabled)
         lastSanitizerSyncAt = android.os.SystemClock.elapsedRealtime()
     }
 

@@ -7,8 +7,8 @@ import android.os.Handler
 import android.os.Looper
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
 import com.github.magisk317.smscode.runtime.RuntimePrefsFacade as PrefsReader
+import com.github.magisk317.smscode.ui.app.AppIpcTokenStore
 import com.github.magisk317.smscode.xp.hook.code.SmsCodeActionDispatcher
-import com.github.magisk317.smscode.xp.hook.code.SmsCodeVerificationPrefs
 import io.github.magisk317.smscode.runtime.contract.logging.LogRoute
 import io.github.magisk317.smscode.verification.CodeNotificationPayload
 import io.github.magisk317.smscode.verification.SmsCodePostParseCoordinator
@@ -18,13 +18,17 @@ import java.util.concurrent.Executors
 import java.util.concurrent.RejectedExecutionException
 
 class ForwardReceiver : BroadcastReceiver() {
+    internal var actionDispatcher = ForwardActionDispatcher(::dispatchLocalNotificationCodeActions)
+    internal var orderedBroadcastProvider: () -> Boolean = { isOrderedBroadcast }
+    internal var orderedResultFinisher = ForwardOrderedResultFinisher(CodeNotificationPayload::finishOrderedResult)
+
     override fun onReceive(context: Context, intent: Intent) {
         XLog.withRoute(LogRoute.NMS_HOOK) {
             handleForward(context, intent)
         }
     }
 
-    private fun handleForward(context: Context, intent: Intent) {
+    internal fun handleForward(context: Context, intent: Intent) {
         val action = intent.action.orEmpty()
         val eventId = intent.getStringExtra(EXTRA_EVENT_ID).orEmpty()
         val sourcePackage = intent.getStringExtra(EXTRA_PACKAGE_NAME).orEmpty()
@@ -48,6 +52,17 @@ class ForwardReceiver : BroadcastReceiver() {
         }
 
         val appContext = context.applicationContext ?: context
+        val receivedToken = intent.getStringExtra(NotificationHookConst.EXTRA_IPC_TOKEN).orEmpty()
+        if (!AppIpcTokenStore.matches(receivedToken)) {
+            XLog.w(
+                "NmsForwardReceiver rejected invalid token: event=%s expectedEmpty=%s receivedEmpty=%s",
+                eventId.ifBlank { "<empty>" },
+                AppIpcTokenStore.current().isBlank(),
+                receivedToken.isBlank(),
+            )
+            orderedResultFinisher.finish(this, RESULT_DATA_INVALID_TOKEN, false)
+            return
+        }
         if (!PrefsReader.isEnabled(appContext)) {
             XLog.w(
                 "NmsForwardReceiver skipped: module disabled event=%s pkg=%s type=%s",
@@ -55,7 +70,7 @@ class ForwardReceiver : BroadcastReceiver() {
                 sourcePackage.ifBlank { "<empty>" },
                 msgType.ifBlank { "<empty>" },
             )
-            val resultSet = CodeNotificationPayload.finishOrderedResult(this, RESULT_DATA_MODULE_DISABLED)
+            val resultSet = orderedResultFinisher.finish(this, RESULT_DATA_MODULE_DISABLED, false)
             XLog.i(
                 "NmsForwardReceiver finished skip: event=%s reason=%s orderedResult=%s",
                 eventId.ifBlank { "<empty>" },
@@ -73,7 +88,11 @@ class ForwardReceiver : BroadcastReceiver() {
                 sourcePackage.ifBlank { "<empty>" },
                 msgType.ifBlank { "<empty>" },
             )
-            val resultSet = CodeNotificationPayload.finishOrderedResult(this, CodeNotificationPayload.RESULT_DATA_BLANK_CODE)
+            val resultSet = orderedResultFinisher.finish(
+                this,
+                CodeNotificationPayload.RESULT_DATA_BLANK_CODE,
+                false,
+            )
             XLog.i(
                 "NmsForwardReceiver finished skip: event=%s reason=%s orderedResult=%s",
                 eventId.ifBlank { "<empty>" },
@@ -97,14 +116,14 @@ class ForwardReceiver : BroadcastReceiver() {
             plan.shouldRecord,
             plan.autoInputDelayMs?.toString() ?: "<disabled>",
         )
-        val ordered = isOrderedBroadcast
-        val dispatched = dispatchLocalNotificationCodeActions(
+        val ordered = orderedBroadcastProvider()
+        val dispatched = actionDispatcher.dispatch(
             appContext = appContext,
             smsMsg = smsMsg,
             eventId = eventId,
             plan = plan,
         )
-        val resultSet = CodeNotificationPayload.finishOrderedResult(
+        val resultSet = orderedResultFinisher.finish(
             receiver = this,
             reason = if (dispatched) RESULT_DATA_ACTIONS_DISPATCHED else RESULT_DATA_ACTIONS_FAILED,
             success = dispatched,
@@ -139,11 +158,11 @@ class ForwardReceiver : BroadcastReceiver() {
         )
     }
 
-    private fun createNotificationCodePlan(
+    internal fun createNotificationCodePlan(
         context: Context,
         msgType: Int,
     ): SmsCodePostParseCoordinator.ParsedSmsPlan {
-        val settings = SmsCodePostParseCoordinator.loadSettings(SmsCodeVerificationPrefs(context)).copy(
+        val settings = SmsCodePostParseCoordinator.loadSettings(AppSmsCodeVerificationPrefs(context)).copy(
             recordSmsEnabled = recordEnabledForMessageType(context, msgType),
             blockSmsEnabled = false,
             markAsReadEnabled = false,
@@ -215,7 +234,7 @@ class ForwardReceiver : BroadcastReceiver() {
         }
     }
 
-    private companion object {
+    internal companion object {
         private const val EXTRA_EVENT_ID = "event_id"
         private const val EXTRA_SENDER = "sender"
         private const val EXTRA_BODY = "body"
@@ -228,7 +247,25 @@ class ForwardReceiver : BroadcastReceiver() {
         private const val MSG_TYPE_APP_NOTIFY = "app_notify"
         private const val MSG_TYPE_CALL_NOTIFY = "call_notify"
         private const val RESULT_DATA_MODULE_DISABLED = "module_disabled"
+        private const val RESULT_DATA_INVALID_TOKEN = "invalid_token"
         private const val RESULT_DATA_ACTIONS_DISPATCHED = "actions_dispatched"
         private const val RESULT_DATA_ACTIONS_FAILED = "actions_failed"
     }
+}
+
+internal fun interface ForwardActionDispatcher {
+    fun dispatch(
+        appContext: Context,
+        smsMsg: SmsMsg,
+        eventId: String,
+        plan: SmsCodePostParseCoordinator.ParsedSmsPlan,
+    ): Boolean
+}
+
+internal fun interface ForwardOrderedResultFinisher {
+    fun finish(
+        receiver: BroadcastReceiver,
+        reason: String,
+        success: Boolean,
+    ): Boolean
 }

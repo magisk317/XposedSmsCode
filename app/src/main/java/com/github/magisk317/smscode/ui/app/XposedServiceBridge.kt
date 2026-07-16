@@ -25,6 +25,10 @@ internal object XposedServiceBridge {
                             frameworkName = service.frameworkName,
                             frameworkVersion = service.frameworkVersion,
                         )
+                        PhoneProcessRestartCoordinator.requestAfterXposedServiceBind(
+                            application,
+                            applicationScope,
+                        )
                         applicationScope.launch {
                             HookPreferenceMirror.publish(application)
                         }
