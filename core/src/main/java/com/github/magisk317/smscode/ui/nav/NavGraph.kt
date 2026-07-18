@@ -37,6 +37,9 @@ data class SmsCodeRuleEditorRoute(
     val id: Long = 0,
 )
 
+@Serializable
+object SmsCodeRuleSourceRoute
+
 @Composable
 fun SmsCodeNavHost(
     navController: NavHostController,

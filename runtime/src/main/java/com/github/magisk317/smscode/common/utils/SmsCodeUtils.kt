@@ -1,6 +1,7 @@
 package com.github.magisk317.smscode.common.utils
 
 import android.content.Context
+import com.github.magisk317.smscode.common.constant.PrefConst
 import com.github.magisk317.smscode.data.db.DBProvider
 import com.github.magisk317.smscode.data.db.entity.SmsCodeRule
 import com.github.magisk317.smscode.feature.store.EntityStoreManager
@@ -13,12 +14,14 @@ import io.github.magisk317.smscode.runtime.common.rules.SmsCodeRuleCatalogReposi
 import io.github.magisk317.smscode.runtime.common.rules.SmsCodeRuleCatalogSnapshot
 import io.github.magisk317.smscode.runtime.common.rules.SmsCodeRuleCatalogSourceKind
 import io.github.magisk317.smscode.runtime.common.rules.SmsCodeRuleMerger
+import io.github.magisk317.smscode.runtime.common.rules.SmsCodeRuleRemoteSource
 import io.github.magisk317.smscode.runtime.common.sms.RuntimeSmsCodeAdapter
 import io.github.magisk317.smscode.runtime.common.sms.SmsCodeRuleProvider
 import io.github.magisk317.smscode.runtime.common.sms.SmsKeywordProvider
 import io.github.magisk317.smscode.runtime.common.sms.SmsPackageLabelResolver
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicReference
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -165,6 +168,24 @@ object SmsCodeUtils {
         }
     }
 
+    fun observeOfficialRuleSourceUrl(context: Context): Flow<String> =
+        AppPreferencesDataStore.getStringFlow(
+            context,
+            PrefConst.KEY_SMS_CODE_RULE_SOURCE_URL,
+            "",
+        )
+
+    suspend fun saveOfficialRuleSourceUrl(context: Context, value: String): String {
+        val normalized = SmsCodeRuleRemoteSource.normalizeCustomBaseUrl(value).orEmpty()
+        AppPreferencesDataStore.setString(
+            context,
+            PrefConst.KEY_SMS_CODE_RULE_SOURCE_URL,
+            normalized,
+        )
+        invalidateOfficialRuleCache()
+        return normalized
+    }
+
     private fun resolvePackageNameByLabel(context: Context, label: String): String? {
         return try {
             val pm = context.packageManager
@@ -288,10 +309,16 @@ object SmsCodeUtils {
         )
     }
 
-    private fun catalogRepository(context: Context): SmsCodeRuleCatalogRepository {
+    private suspend fun catalogRepository(context: Context): SmsCodeRuleCatalogRepository {
         val appContext = context.applicationContext ?: context
+        val customBaseUrl = AppPreferencesDataStore.getString(
+            appContext,
+            PrefConst.KEY_SMS_CODE_RULE_SOURCE_URL,
+            "",
+        )
         return SmsCodeRuleCatalogRepository(
             context = appContext,
+            remote = SmsCodeRuleRemoteSource(customBaseUrl = customBaseUrl),
             userAgent = "XposedSmsCode/SmsCodeRules",
         )
     }

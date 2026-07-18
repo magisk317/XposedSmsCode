@@ -22,6 +22,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -70,6 +71,7 @@ import io.github.magisk317.uikit.surface.DetailSectionCard
 import io.github.magisk317.uikit.surface.SectionHeading
 import io.github.magisk317.uikit.theme.UiKitStyle
 import io.github.magisk317.uikit.theme.currentUiKitStyle
+import io.github.magisk317.uikit.preference.UrlSourceSettingsScreen
 import java.util.regex.Pattern
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -100,18 +102,21 @@ fun SmsCodeRuleListScreen(
     onBack: () -> Unit,
     onAddClick: () -> Unit,
     onEditClick: (Long) -> Unit,
+    onSourceSettingsClick: () -> Unit,
 ) {
     when (currentUiKitStyle()) {
         UiKitStyle.Miuix -> SmsCodeRuleListScreenMiuix(
             onBack = onBack,
             onAddClick = onAddClick,
             onEditClick = onEditClick,
+            onSourceSettingsClick = onSourceSettingsClick,
         )
 
         UiKitStyle.Expressive -> SmsCodeRuleListScreenMaterial(
             onBack = onBack,
             onAddClick = onAddClick,
             onEditClick = onEditClick,
+            onSourceSettingsClick = onSourceSettingsClick,
         )
     }
 }
@@ -122,6 +127,7 @@ internal fun SmsCodeRuleListScreenShared(
     onBack: () -> Unit,
     onAddClick: () -> Unit,
     onEditClick: (Long) -> Unit,
+    onSourceSettingsClick: () -> Unit,
 ) {
     val context = LocalContext.current
     val storage = koinInject<UiStorageAccess>()
@@ -183,6 +189,12 @@ internal fun SmsCodeRuleListScreenShared(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onSourceSettingsClick) {
+                        Icon(
+                            Icons.Filled.Settings,
+                            contentDescription = stringResource(id = R.string.action_rule_source_settings),
+                        )
+                    }
                     IconButton(
                         enabled = !officialLoading,
                         onClick = { loadOfficialRules(refresh = true) },
@@ -288,6 +300,23 @@ internal fun SmsCodeRuleListScreenShared(
             }
         }
     }
+}
+
+@Composable
+fun SmsCodeRuleSourceSettingsScreen(onBack: () -> Unit) {
+    val context = LocalContext.current
+    UrlSourceSettingsScreen(
+        title = stringResource(id = R.string.rule_source_settings_title),
+        fieldLabel = stringResource(id = R.string.rule_source_url_label),
+        supportingText = stringResource(id = R.string.rule_source_url_summary),
+        invalidUrlMessage = stringResource(id = R.string.rule_source_url_invalid),
+        savedMessage = stringResource(id = R.string.rule_source_saved),
+        saveFailedMessage = stringResource(id = R.string.rule_source_save_failed),
+        saveContentDescription = stringResource(id = R.string.action_save),
+        valueFlow = remember(context) { AppSmsCodeUtils.observeOfficialRuleSourceUrl(context) },
+        onSaveValue = { value -> AppSmsCodeUtils.saveOfficialRuleSourceUrl(context, value) },
+        onBack = onBack,
+    )
 }
 
 @Composable

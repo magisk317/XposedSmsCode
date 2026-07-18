@@ -60,6 +60,7 @@ object PrefConst {
     val SMSCODE_KEYWORDS_DEFAULT = SmsCodeConst.VERIFICATION_KEYWORDS_REGEX
     const val KEY_SMSCODE_TEST = "pref_smscode_test"
     const val KEY_CODE_RULES = "pref_code_rules"
+    const val KEY_SMS_CODE_RULE_SOURCE_URL = "pref_sms_code_rule_source_url"
 
     // Experimental
     const val KEY_MARK_AS_READ = "pref_mark_as_read"

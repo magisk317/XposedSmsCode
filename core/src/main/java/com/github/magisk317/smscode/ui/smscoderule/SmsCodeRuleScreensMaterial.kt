@@ -7,11 +7,13 @@ internal fun SmsCodeRuleListScreenMaterial(
     onBack: () -> Unit,
     onAddClick: () -> Unit,
     onEditClick: (Long) -> Unit,
+    onSourceSettingsClick: () -> Unit,
 ) {
     SmsCodeRuleListScreenShared(
         onBack = onBack,
         onAddClick = onAddClick,
         onEditClick = onEditClick,
+        onSourceSettingsClick = onSourceSettingsClick,
     )
 }
 

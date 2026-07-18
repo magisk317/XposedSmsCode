@@ -290,6 +290,14 @@
     <string name="official_code_rules_empty_prompt">暂未加载官方规则，点击刷新拉取规则目录。</string>
     <string name="official_code_rules_refresh_success">官方规则已刷新。</string>
     <string name="official_code_rules_refresh_failed">刷新失败，继续使用缓存或内置规则。</string>
+    <string name="action_rule_source_settings">配置规则源</string>
+    <string name="rule_source_settings_title">规则源</string>
+    <string name="rule_source_url_label">自定义规则源链接</string>
+    <string name="rule_source_url_summary">留空使用默认规则源；可填写目录基址或完整的 rules-index.json 链接。</string>
+    <string name="rule_source_url_invalid">请输入有效的 HTTP 或 HTTPS 链接。</string>
+    <string name="rule_source_saved">规则源已保存。</string>
+    <string name="rule_source_save_failed">保存规则源失败。</string>
+    <string name="action_save">保存</string>
     <string name="official_rule_badge_format">官方规则%1$d</string>
     <string name="rule_company_placeholder">例如: 验证码</string>
     <string name="builtin_code_rules_title">内置规则（只读）</string>

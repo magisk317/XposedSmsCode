@@ -34,6 +34,7 @@ import com.github.magisk317.smscode.ui.nav.OverviewRoute
 import com.github.magisk317.smscode.ui.nav.RecordsRoute
 import com.github.magisk317.smscode.ui.nav.SettingsRoute
 import com.github.magisk317.smscode.ui.nav.SmsCodeRuleEditorRoute
+import com.github.magisk317.smscode.ui.nav.SmsCodeRuleSourceRoute
 import com.github.magisk317.smscode.ui.nav.SmsCodeRulesRoute
 import com.github.magisk317.smscode.ui.record.CodeRecordScreen
 import io.github.magisk317.uikit.surface.MainTabScaffold
@@ -55,7 +56,8 @@ private fun resolveTabIndex(destination: NavDestination?): Int {
         hierarchy.any { it.hasRoute(RecordsRoute::class) } -> 2
         hierarchy.any { it.hasRoute(SettingsRoute::class) } ||
             hierarchy.any { it.hasRoute(SmsCodeRulesRoute::class) } ||
-            hierarchy.any { it.hasRoute(SmsCodeRuleEditorRoute::class) } -> 3
+            hierarchy.any { it.hasRoute(SmsCodeRuleEditorRoute::class) } ||
+            hierarchy.any { it.hasRoute(SmsCodeRuleSourceRoute::class) } -> 3
         else -> 0
     }
 }
@@ -244,12 +246,20 @@ fun MainScreen(
                     onEditClick = { id ->
                         navController.navigate(SmsCodeRuleEditorRoute(id = id))
                     },
+                    onSourceSettingsClick = {
+                        navController.navigate(SmsCodeRuleSourceRoute)
+                    },
                 )
             }
             composable<SmsCodeRuleEditorRoute> { backStackEntry ->
                 val route = backStackEntry.toRoute<SmsCodeRuleEditorRoute>()
                 com.github.magisk317.smscode.ui.smscoderule.SmsCodeRuleEditorScreen(
                     ruleId = route.id,
+                    onBack = { navController.popBackStack() },
+                )
+            }
+            composable<SmsCodeRuleSourceRoute> {
+                com.github.magisk317.smscode.ui.smscoderule.SmsCodeRuleSourceSettingsScreen(
                     onBack = { navController.popBackStack() },
                 )
             }

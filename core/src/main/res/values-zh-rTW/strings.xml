@@ -287,6 +287,14 @@
     <string name="official_code_rules_empty_prompt">暫未載入官方規則，點擊刷新拉取規則目錄。</string>
     <string name="official_code_rules_refresh_success">官方規則已刷新。</string>
     <string name="official_code_rules_refresh_failed">刷新失敗，繼續使用快取或內建規則。</string>
+    <string name="action_rule_source_settings">設定規則來源</string>
+    <string name="rule_source_settings_title">規則來源</string>
+    <string name="rule_source_url_label">自訂規則來源連結</string>
+    <string name="rule_source_url_summary">留空使用預設規則來源；可填寫目錄基址或完整的 rules-index.json 連結。</string>
+    <string name="rule_source_url_invalid">請輸入有效的 HTTP 或 HTTPS 連結。</string>
+    <string name="rule_source_saved">規則來源已儲存。</string>
+    <string name="rule_source_save_failed">儲存規則來源失敗。</string>
+    <string name="action_save">儲存</string>
     <string name="official_rule_badge_format">官方規則%1$d</string>
     <string name="rule_company_placeholder">例如: 驗證碼</string>
     <string name="builtin_code_rules_title">內建規則（唯讀）</string>

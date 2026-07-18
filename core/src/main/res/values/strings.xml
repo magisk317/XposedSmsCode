@@ -288,6 +288,14 @@
     <string name="official_code_rules_empty_prompt">No official rules loaded yet. Tap refresh to pull the catalog.</string>
     <string name="official_code_rules_refresh_success">Official rules refreshed.</string>
     <string name="official_code_rules_refresh_failed">Refresh failed. Using cached or bundled rules.</string>
+    <string name="action_rule_source_settings">Configure rule source</string>
+    <string name="rule_source_settings_title">Rule source</string>
+    <string name="rule_source_url_label">Custom source URL</string>
+    <string name="rule_source_url_summary">Leave blank to use the default source. Enter a catalog base URL or a full rules-index.json URL.</string>
+    <string name="rule_source_url_invalid">Enter a valid HTTP or HTTPS URL.</string>
+    <string name="rule_source_saved">Rule source saved.</string>
+    <string name="rule_source_save_failed">Couldn\'t save rule source.</string>
+    <string name="action_save">Save</string>
     <string name="official_rule_badge_format">Official rule %1$d</string>
     <string name="rule_company_placeholder">eg. Verification Code</string>
     <string name="builtin_code_rules_title">Built-in rules (read only)</string>
