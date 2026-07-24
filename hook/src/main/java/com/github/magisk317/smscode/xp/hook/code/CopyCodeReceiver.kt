@@ -11,6 +11,7 @@ import com.github.magisk317.smscode.hook.R
 import io.github.magisk317.smscode.runtime.common.utils.ClipboardUtils
 import io.github.magisk317.smscode.verification.CodeNotificationActionHandler
 import io.github.magisk317.smscode.verification.CodeNotificationActionPayload
+import io.github.magisk317.xposed.logging.MagiskOtel
 
 /**
  * Receiver for copy code when notification clicked
@@ -18,6 +19,17 @@ import io.github.magisk317.smscode.verification.CodeNotificationActionPayload
 class CopyCodeReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
+        MagiskOtel.event(
+            name = "sms.copy",
+            attributes = mapOf(
+                "result" to "ok",
+                "duration_ms" to "0",
+                "process" to "hook",
+                "stage" to "receiver",
+                "reason" to "copy_click",
+            ),
+            statusOk = true,
+        )
         CodeNotificationActionHandler.handleCopyCodeReceiverIntent(
             context = context,
             intent = intent,

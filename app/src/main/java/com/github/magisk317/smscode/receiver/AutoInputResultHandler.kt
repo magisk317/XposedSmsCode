@@ -12,6 +12,7 @@ import kotlinx.coroutines.runBlocking
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
+import io.github.magisk317.xposed.logging.MagiskOtel
 
 object AutoInputResultHandler {
     val action: String
@@ -31,6 +32,18 @@ object AutoInputResultHandler {
                 "AutoInput result worker rejected: %s",
                 error.message ?: error.javaClass.simpleName,
             )
+            MagiskOtel.event(
+                name = "auto.input",
+                attributes = mapOf(
+                    "result" to "error",
+                    "duration_ms" to "0",
+                    "process" to "app",
+                    "stage" to "result_handler",
+                    "reason" to "worker_rejected",
+                    "error_class" to error.javaClass.simpleName,
+                ),
+                statusOk = false,
+            )
             onComplete()
         }
     }
@@ -45,14 +58,51 @@ object AutoInputResultHandler {
                 },
             )
         ) {
-            AutoInputResultProcessor.ValidationResult.Ignored -> return@runBlocking
-            AutoInputResultProcessor.ValidationResult.MissingAttemptId -> return@runBlocking
+            AutoInputResultProcessor.ValidationResult.Ignored -> {
+                MagiskOtel.event(
+                    name = "auto.input",
+                    attributes = mapOf(
+                        "result" to "skip",
+                        "duration_ms" to "0",
+                        "process" to "app",
+                        "stage" to "result_handler",
+                        "reason" to "ignored",
+                    ),
+                    statusOk = true,
+                )
+                return@runBlocking
+            }
+            AutoInputResultProcessor.ValidationResult.MissingAttemptId -> {
+                MagiskOtel.event(
+                    name = "auto.input",
+                    attributes = mapOf(
+                        "result" to "skip",
+                        "duration_ms" to "0",
+                        "process" to "app",
+                        "stage" to "result_handler",
+                        "reason" to "missing_attempt_id",
+                    ),
+                    statusOk = true,
+                )
+                return@runBlocking
+            }
             is AutoInputResultProcessor.ValidationResult.RejectedToken -> {
                 XLog.w(
                     "Diag AutoInputResultReceiver rejected token: attemptId=%d expectedEmpty=%s receivedEmpty=%s",
                     validation.result.attemptId,
                     validation.expectedTokenEmpty,
                     validation.receivedTokenEmpty,
+                )
+                MagiskOtel.event(
+                    name = "auto.input",
+                    attributes = mapOf(
+                        "result" to "error",
+                        "duration_ms" to "0",
+                        "process" to "app",
+                        "stage" to "result_handler",
+                        "reason" to "token_rejected",
+                    ),
+                    statusOk = false,
                 )
                 return@runBlocking
             }
@@ -89,10 +139,34 @@ object AutoInputResultHandler {
                 "AutoInput result persist failed: %s",
                 error.message ?: error.javaClass.simpleName,
             )
+            MagiskOtel.event(
+                name = "auto.input",
+                attributes = mapOf(
+                    "result" to "error",
+                    "duration_ms" to "0",
+                    "process" to "app",
+                    "stage" to "result_handler",
+                    "reason" to "persist_failed",
+                    "error_class" to error.javaClass.simpleName,
+                ),
+                statusOk = false,
+            )
         }.getOrNull() ?: return@runBlocking
 
         when (outcome) {
-            AutoInputResultProcessor.PersistenceOutcome.UPDATED -> Unit
+            AutoInputResultProcessor.PersistenceOutcome.UPDATED -> {
+                MagiskOtel.event(
+                    name = "auto.input",
+                    attributes = mapOf(
+                        "result" to if (result.success) "ok" else "error",
+                        "duration_ms" to "0",
+                        "process" to "app",
+                        "stage" to "result_handler",
+                        "reason" to "updated",
+                    ),
+                    statusOk = result.success,
+                )
+            }
             AutoInputResultProcessor.PersistenceOutcome.STALE -> {
                 XLog.w(
                     "Diag AutoInputResultReceiver skipped stale result: attemptId=%d success=%s reason=%s",
@@ -100,12 +174,34 @@ object AutoInputResultHandler {
                     result.success,
                     result.reason ?: "<none>",
                 )
+                MagiskOtel.event(
+                    name = "auto.input",
+                    attributes = mapOf(
+                        "result" to "skip",
+                        "duration_ms" to "0",
+                        "process" to "app",
+                        "stage" to "result_handler",
+                        "reason" to "stale",
+                    ),
+                    statusOk = true,
+                )
             }
             AutoInputResultProcessor.PersistenceOutcome.UPSERTED -> {
                 XLog.i(
                     "Diag AutoInputResultReceiver recovered stale result via upsert: attemptId=%d success=%s",
                     result.attemptId,
                     result.success,
+                )
+                MagiskOtel.event(
+                    name = "auto.input",
+                    attributes = mapOf(
+                        "result" to if (result.success) "ok" else "error",
+                        "duration_ms" to "0",
+                        "process" to "app",
+                        "stage" to "result_handler",
+                        "reason" to "upserted",
+                    ),
+                    statusOk = result.success,
                 )
             }
         }
