@@ -37,6 +37,7 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
 import timber.log.Timber
+import io.github.magisk317.xposed.logging.MagiskOtel
 
 class SmsCodeApplication : Application() {
 
@@ -46,6 +47,23 @@ class SmsCodeApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         android.util.Log.w("XSmsCode", "SmsCodeApplication.onCreate() START")
+        MagiskOtel.configure(
+            MagiskOtel.Config(
+                enabled = BuildConfig.DEBUG,
+                serviceName = "xposedsmscode",
+                serviceVersion = BuildConfig.VERSION_NAME,
+                projectId = "83955172",
+                projectName = "XposedSmsCode",
+                environment = if (BuildConfig.DEBUG) "debug" else "release",
+            ),
+        )
+        MagiskOtel.event(
+            name = "app.boot",
+            attributes = mapOf(
+                "result" to "ok",
+                "process" to "main",
+            ),
+        )
         ensureIpcToken()
         RuntimeDiagnosticsBridge.ensureInstalled()
         RuntimeLogStore.initialize(this, enableDetailedLogs = false)
