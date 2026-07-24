@@ -1,6 +1,8 @@
-- 升级至 3.3.1-beta2（121）。
-- 彻底重构验证码通知拦截调度，全面采用 app-owned 模式，并下放鉴权校验给应用层。
-- 优化 Hook 进程生命周期、热重载以及状态恢复同步流程。
-- 迁移底层 Hook 层的日志系统，全面接入原生的 XposedLogClient。
-- 优化短信拦截逻辑，集成 magisk-ci-toolkit 发版组件并更新契约测试。
+- 升级至 3.3.1-beta3（122）。
+- 抽出独立 hook 模块，并收敛 runtime / UI 边界。
+- 加固短信解析 IPC，补齐 Google Messages 支持。
+- 本地处理应用通知验证码，并共享通知偏好桥接。
+- 主界面改用共享 MainTabScaffold 与 ui-kit 组件。
+- 统一日志脱敏链路；设置改为原子恢复并加固 IPC 门控。
 - https://github.com/magisk317/XposedSmsCode/releases
+- https://gitlab.com/magisk3171/XposedSmsCode/-/releases

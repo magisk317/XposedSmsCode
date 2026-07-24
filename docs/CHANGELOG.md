@@ -4,9 +4,15 @@
 
 ---
 
-## [v3.3.1-beta3] - WIP
+## [v3.3.1-beta3] - 2026-07-24
 - 版本：`versionCode 122` / `versionName 3.3.1-beta3`。
-- `[TODO]` 准备下一阶段开发。
+- `[arch]` 抽出独立 `:hook` 模块，并收敛 runtime / UI 边界。
+- `[hook/sms]` 加固短信解析 IPC，并补齐 Google Messages 支持。
+- `[notification]` 本地处理应用通知验证码，并共享通知偏好桥接。
+- `[ui]` 主界面改用共享 `MainTabScaffold` 与 ui-kit 组件。
+- `[log]` 统一日志与脱敏链路，支持 hook 侧开关热更新。
+- `[prefs/security]` 设置改为原子恢复，并加固 IPC 与进程重启门控。
+- `[ci/deps]` 对齐共享 CI 工具链、Renovate 与子模块指针。
 
 > Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.3.1-beta2...v3.3.1-beta3
 
