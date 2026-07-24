@@ -17,6 +17,7 @@ import com.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
 import com.github.magisk317.smscode.xp.helper.ModuleConflictArbiter
 import com.github.tianma8023.xposed.smscode.BuildConfig
 import io.github.magisk317.xposed.logging.DefaultLogSanitizer
+import io.github.magisk317.xposed.logging.MagiskOtel
 import io.github.magisk317.smscode.xposed.runtime.CoreHookPolicy
 import io.github.magisk317.smscode.xposed.runtime.CoreHookPolicyHolder
 import io.github.magisk317.smscode.xposed.runtime.CoreLogSink
@@ -55,6 +56,16 @@ object XposedRuntimeInstaller {
         XposedLogClient.configure(
             authority = RuntimeLogProvider.authority(BuildConfig.APPLICATION_ID),
             source = "SmsCode",
+        )
+        MagiskOtel.configureIfAbsent(
+            MagiskOtel.Config(
+                enabled = BuildConfig.DEBUG,
+                serviceName = "xposedsmscode",
+                serviceVersion = BuildConfig.VERSION_NAME,
+                projectId = "83955172",
+                projectName = "XposedSmsCode",
+                environment = if (BuildConfig.DEBUG) "debug" else "release",
+            ),
         )
         installHookBridge()
         installLogSink()
