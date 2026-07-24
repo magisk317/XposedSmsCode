@@ -14,6 +14,7 @@ import io.github.magisk317.smscode.xposed.hook.system.SystemInputInjectorHook
 import io.github.magisk317.smscode.xposed.utils.XLog
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
 import com.github.magisk317.smscode.xp.hook.code.action.CallableAction
+import io.github.magisk317.xposed.logging.MagiskOtel
 
 class KillMeAction(
     pluginContext: Context,
@@ -177,6 +178,18 @@ class KillMeAction(
             mWaitResolveSuccess,
             mWaitResolveReason,
         )
+        MagiskOtel.event(
+            name = "app.kill",
+            attributes = mapOf(
+                "result" to "ok",
+                "duration_ms" to "0",
+                "process" to "hook",
+                "stage" to "hook_chain",
+                "reason" to mWaitResolveReason.ifBlank { "n/a" },
+                "source" to if (mWaitResolveSuccess) "auto_input_ok" else "auto_input_fail",
+            ),
+            statusOk = true,
+        )
         proceedWithKillChain()
     }
 
@@ -193,17 +206,54 @@ class KillMeAction(
     }
 
     private fun killMe() {
-        if (!HookRuntimeBridge.prefsAccess.killMeEnabled(mPluginContext)) return
+        if (!HookRuntimeBridge.prefsAccess.killMeEnabled(mPluginContext)) {
+            MagiskOtel.event(
+                name = "app.kill",
+                attributes = mapOf(
+                    "result" to "skip",
+                    "duration_ms" to "0",
+                    "process" to "hook",
+                    "stage" to "primary",
+                    "reason" to "disabled",
+                ),
+                statusOk = true,
+            )
+            return
+        }
         if (requestSelfKillPrimary()) {
             return
         }
         XLog.w("KillMeAction: provider self-kill failed for process %s", mPhoneContext.packageName)
+        MagiskOtel.event(
+            name = "app.kill",
+            attributes = mapOf(
+                "result" to "error",
+                "duration_ms" to "0",
+                "process" to "hook",
+                "stage" to "primary",
+                "reason" to "request_failed",
+            ),
+            statusOk = false,
+        )
     }
 
     private fun requestSelfKillPrimary(): Boolean {
         return try {
             val token = HookRuntimeBridge.prefsAccess.getIpcToken(mPluginContext)
-            if (token.isBlank()) return false
+            if (token.isBlank()) {
+                MagiskOtel.event(
+                    name = "app.kill",
+                    attributes = mapOf(
+                        "result" to "error",
+                        "duration_ms" to "0",
+                        "process" to "hook",
+                        "stage" to "primary",
+                        "reason" to "token_blank",
+                    ),
+                    statusOk = false,
+                )
+                return false
+            }
             val intent = Intent(HookBroadcastContract.ACTION_KILL_SELF).apply {
                 setClassName(mPluginContext.packageName, HookBroadcastContract.KILL_SELF_RECEIVER_CLASS)
                 addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES)
@@ -212,9 +262,32 @@ class KillMeAction(
             }
             mPluginContext.sendBroadcast(intent)
             XLog.w("KillMeAction primary requested via KillSelfControlReceiver")
+            MagiskOtel.event(
+                name = "app.kill",
+                attributes = mapOf(
+                    "result" to "ok",
+                    "duration_ms" to "0",
+                    "process" to "hook",
+                    "stage" to "primary",
+                    "reason" to "broadcast_sent",
+                ),
+                statusOk = true,
+            )
             true
         } catch (e: Throwable) {
             XLog.w("KillMeAction primary failed: %s", e.message ?: e.javaClass.simpleName)
+            MagiskOtel.event(
+                name = "app.kill",
+                attributes = mapOf(
+                    "result" to "error",
+                    "duration_ms" to "0",
+                    "process" to "hook",
+                    "stage" to "primary",
+                    "reason" to "exception",
+                    "error_class" to e.javaClass.simpleName,
+                ),
+                statusOk = false,
+            )
             false
         }
     }
