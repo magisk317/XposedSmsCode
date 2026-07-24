@@ -20,6 +20,7 @@ import io.github.magisk317.xposed.MethodHook
 import io.github.magisk317.xposed.MethodHookParam
 import io.github.magisk317.smscode.runtime.contract.logging.LogRoute
 import io.github.magisk317.smscode.xposed.utils.XLog
+import io.github.magisk317.xposed.logging.MagiskOtel
 import java.lang.reflect.Method
 import java.util.concurrent.Executors
 
@@ -39,8 +40,33 @@ class MmsMessagesHook : BaseHook() {
         SERVICE_CLASS_NAMES.forEach { totalHooks += hookIntentMethods(classLoader, it) }
         if (totalHooks == 0) {
             XLog.w("MmsMessagesHook found no usable receiver/service entrypoints in %s", MMS_PACKAGE_NAME)
+            MagiskOtel.event(
+                name = "hook.load",
+                attributes = mapOf(
+                    "result" to "skip",
+                    "duration_ms" to "0",
+                    "process" to "hook",
+                    "stage" to "mms_hook",
+                    "reason" to "no_entrypoints",
+                    "target_package" to MMS_PACKAGE_NAME,
+                ),
+                statusOk = true,
+            )
         } else {
             XLog.i("MmsMessagesHook installed methods=%d", totalHooks)
+            MagiskOtel.event(
+                name = "hook.load",
+                attributes = mapOf(
+                    "result" to "ok",
+                    "duration_ms" to "0",
+                    "process" to "hook",
+                    "stage" to "mms_hook",
+                    "reason" to "installed",
+                    "target_package" to MMS_PACKAGE_NAME,
+                    "found_count" to totalHooks.toString(),
+                ),
+                statusOk = true,
+            )
         }
     }
 
@@ -134,6 +160,19 @@ class MmsMessagesHook : BaseHook() {
         }
         if (SmsIntentHookSupport.markDispatchHandled(intent, action)) {
             XLog.w("MmsMessagesHook duplicate skip: source=%s event_id=%s action=%s", source, eventId, action)
+            MagiskOtel.event(
+                name = "sms.dispatch",
+                attributes = mapOf(
+                    "result" to "skip",
+                    "duration_ms" to "0",
+                    "process" to "hook",
+                    "stage" to "mms",
+                    "reason" to "duplicate",
+                    "event_id_present" to eventId.isNotBlank().toString(),
+                    "source" to source.substringAfterLast('.').take(48),
+                ),
+                statusOk = true,
+            )
             return
         }
         if (ModuleConflictArbiter.shouldSuppressByRelay(context, "MmsMessagesHook#$source")) {
@@ -146,6 +185,18 @@ class MmsMessagesHook : BaseHook() {
             if (pluginContext != null) {
                 RelayConflictNoticeHelper.notifyConflictOnSms(pluginContext, context, eventId)
             }
+            MagiskOtel.event(
+                name = "hook.conflict",
+                attributes = mapOf(
+                    "result" to "skip",
+                    "duration_ms" to "0",
+                    "process" to "hook",
+                    "stage" to "mms",
+                    "reason" to "suppressed_by_relay",
+                    "event_id_present" to eventId.isNotBlank().toString(),
+                ),
+                statusOk = true,
+            )
             return
         }
         val resolvedPluginContext = pluginContext ?: return
@@ -164,9 +215,35 @@ class MmsMessagesHook : BaseHook() {
         CodeWorker(resolvedPluginContext, context, intent, eventId).parse()
         val reason = evaluation.blockReason ?: run {
             XLog.i("MmsMessagesHook allow system delivery after parse: source=%s event_id=%s", source, eventId)
+            MagiskOtel.event(
+                name = "sms.dispatch",
+                attributes = mapOf(
+                    "result" to "ok",
+                    "duration_ms" to "0",
+                    "process" to "hook",
+                    "stage" to "mms",
+                    "reason" to "allow_after_parse",
+                    "event_id_present" to eventId.isNotBlank().toString(),
+                    "source" to source.substringAfterLast('.').take(48),
+                ),
+                statusOk = true,
+            )
             return
         }
         XLog.w("MmsMessagesHook block start: source=%s reason=%s event_id=%s", source, reason, eventId)
+        MagiskOtel.event(
+            name = "sms.block",
+            attributes = mapOf(
+                "result" to "skip",
+                "duration_ms" to "0",
+                "process" to "hook",
+                "stage" to "mms",
+                "reason" to reason.take(64),
+                "event_id_present" to eventId.isNotBlank().toString(),
+                "source" to source.substringAfterLast('.').take(48),
+            ),
+            statusOk = true,
+        )
         // Delete SMS from database so it doesn't appear in the inbox
         if (evaluation.smsMsg != null) {
             scheduleBlacklistDelete(resolvedPluginContext, context, evaluation.smsMsg)
