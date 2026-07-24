@@ -14,6 +14,7 @@ import io.github.magisk317.smscode.verification.AutoInputAccessibilityNodeHelper
 import io.github.magisk317.smscode.verification.AutoInputAccessibilityRequestHandler
 import io.github.magisk317.smscode.xposed.hook.system.SystemInputInjectorHook
 import io.github.magisk317.smscode.xposed.utils.XLog
+import io.github.magisk317.xposed.logging.MagiskOtel
 
 class AutoInputAccessibilityService : AccessibilityService() {
 
@@ -22,6 +23,7 @@ class AutoInputAccessibilityService : AccessibilityService() {
     override fun onCreate() {
         super.onCreate()
         XLog.d("Accessibility lifecycle create: %s", accessibilityStateSnapshot())
+        emitA11y(stage = "create")
     }
 
     private val autoInputReceiver = object : BroadcastReceiver() {
@@ -47,6 +49,7 @@ class AutoInputAccessibilityService : AccessibilityService() {
             accessibilityServiceInfoSummary(),
         )
         XLog.d("Accessibility auto input service connected")
+        emitA11y(stage = "connected")
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
@@ -78,6 +81,7 @@ class AutoInputAccessibilityService : AccessibilityService() {
         )
         unregisterAutoInputReceiver()
         XLog.d("Accessibility auto input service destroyed")
+        emitA11y(stage = "destroy")
         super.onDestroy()
     }
 
@@ -180,6 +184,20 @@ class AutoInputAccessibilityService : AccessibilityService() {
         autoEnter: Boolean,
     ): AutoInputResult {
         return AutoInputAccessibilityNodeHelper.performAutoInput(rootInActiveWindow, code, autoEnter)
+    }
+
+
+    private fun emitA11y(stage: String, result: String = "ok", statusOk: Boolean = true) {
+        MagiskOtel.event(
+            name = "a11y.service",
+            attributes = mapOf(
+                "result" to result,
+                "duration_ms" to "0",
+                "process" to "app",
+                "stage" to stage,
+            ),
+            statusOk = statusOk,
+        )
     }
 
     private companion object {
