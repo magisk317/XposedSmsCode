@@ -4,6 +4,14 @@
 
 ---
 
+## [v3.3.1] - WIP
+- 版本：`versionCode 123` / `versionName 3.3.1`。
+- `[TODO]` 准备下一阶段开发。
+
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.3.1-beta3...v3.3.1
+
+---
+
 ## [v3.3.1-beta3] - 2026-07-24
 - 版本：`versionCode 122` / `versionName 3.3.1-beta3`。
 - `[arch]` 抽出独立 `:hook` 模块，并收敛 runtime / UI 边界。

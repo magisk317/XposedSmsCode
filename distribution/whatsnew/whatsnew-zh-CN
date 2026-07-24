@@ -1,8 +1,4 @@
-- 升级至 3.3.1-beta3（122）。
-- 抽出独立 hook 模块，并收敛 runtime / UI 边界。
-- 加固短信解析 IPC，补齐 Google Messages 支持。
-- 本地处理应用通知验证码，并共享通知偏好桥接。
-- 主界面改用共享 MainTabScaffold 与 ui-kit 组件。
-- 统一日志脱敏链路；设置改为原子恢复并加固 IPC 门控。
+- 升级至 3.3.1（123）。
+- 准备下一阶段开发。
 - https://github.com/magisk317/XposedSmsCode/releases
 - https://gitlab.com/magisk3171/XposedSmsCode/-/releases

@@ -1,8 +1,4 @@
-- Updated to 3.3.1-beta3 (122).
-- Extracted a dedicated hook module and tightened runtime/UI boundaries.
-- Hardened SMS parse IPC and improved Google Messages support.
-- Handle app-notification codes locally with shared preference bridges.
-- Adopted shared MainTabScaffold / ui-kit components for main chrome.
-- Unified log redaction; atomic settings restore and stronger IPC gates.
+- Updated to 3.3.1 (123).
+- Preparing the next development cycle.
 - https://github.com/magisk317/XposedSmsCode/releases
 - https://gitlab.com/magisk3171/XposedSmsCode/-/releases
