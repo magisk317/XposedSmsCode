@@ -16,6 +16,7 @@ import io.github.magisk317.smscode.xposed.hook.notification.NotificationHookCons
 import io.github.magisk317.smscode.xposed.utils.XLog
 import java.util.concurrent.Executors
 import java.util.concurrent.RejectedExecutionException
+import io.github.magisk317.xposed.logging.MagiskOtel
 
 class ForwardReceiver : BroadcastReceiver() {
     internal var actionDispatcher = ForwardActionDispatcher(::dispatchLocalNotificationCodeActions)
@@ -48,6 +49,7 @@ class ForwardReceiver : BroadcastReceiver() {
                 NotificationHookConst.ACTION_FORWARD_SMS,
                 eventId.ifBlank { "<empty>" },
             )
+            emitForward(result = "skip", reason = "action_mismatch", eventId = eventId, msgType = msgType)
             return
         }
 
@@ -61,6 +63,14 @@ class ForwardReceiver : BroadcastReceiver() {
                 receivedToken.isBlank(),
             )
             orderedResultFinisher.finish(this, RESULT_DATA_INVALID_TOKEN, false)
+            emitForward(
+                result = "error",
+                reason = "token_rejected",
+                eventId = eventId,
+                sourcePackage = sourcePackage,
+                msgType = msgType,
+                statusOk = false,
+            )
             return
         }
         if (!PrefsReader.isEnabled(appContext)) {
@@ -76,6 +86,13 @@ class ForwardReceiver : BroadcastReceiver() {
                 eventId.ifBlank { "<empty>" },
                 RESULT_DATA_MODULE_DISABLED,
                 resultSet,
+            )
+            emitForward(
+                result = "skip",
+                reason = "module_disabled",
+                eventId = eventId,
+                sourcePackage = sourcePackage,
+                msgType = msgType,
             )
             return
         }
@@ -98,6 +115,13 @@ class ForwardReceiver : BroadcastReceiver() {
                 eventId.ifBlank { "<empty>" },
                 CodeNotificationPayload.RESULT_DATA_BLANK_CODE,
                 resultSet,
+            )
+            emitForward(
+                result = "skip",
+                reason = "blank_code",
+                eventId = eventId,
+                sourcePackage = sourcePackage,
+                msgType = msgType,
             )
             return
         }
@@ -137,6 +161,42 @@ class ForwardReceiver : BroadcastReceiver() {
             if (ordered) resultData ?: "<null>" else "<not-ordered>",
             resultSet,
         )
+        emitForward(
+            result = if (dispatched) "ok" else "error",
+            reason = if (dispatched) "actions_dispatched" else "actions_failed",
+            eventId = eventId,
+            sourcePackage = sourcePackage,
+            msgType = msgType,
+            codeLength = smsCode.length,
+            statusOk = dispatched,
+        )
+    }
+
+    private fun emitForward(
+        result: String,
+        reason: String,
+        eventId: String,
+        sourcePackage: String = "",
+        msgType: String = "",
+        codeLength: Int? = null,
+        statusOk: Boolean = true,
+    ) {
+        val attrs = mutableMapOf(
+            "result" to result,
+            "duration_ms" to "0",
+            "process" to "app",
+            "stage" to "nms_forward",
+            "reason" to reason,
+            "event_id_present" to eventId.isNotBlank().toString(),
+            "msg_type" to msgType.ifBlank { "unknown" },
+        )
+        if (sourcePackage.isNotBlank()) {
+            attrs["target_package"] = sourcePackage
+        }
+        if (codeLength != null) {
+            attrs["code_length"] = codeLength.toString()
+        }
+        MagiskOtel.event(name = "sms.relay", attributes = attrs, statusOk = statusOk)
     }
 
     private fun createNotificationSmsMsg(
