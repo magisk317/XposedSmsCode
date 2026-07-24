@@ -16,6 +16,7 @@ import io.github.magisk317.smscode.verification.SmsRoleStateResolver
 import io.github.magisk317.smscode.xposed.utils.XLog
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
+import io.github.magisk317.xposed.logging.MagiskOtel
 
 internal class SmsInboxObserver(
     private val pluginContext: Context,
@@ -40,12 +41,36 @@ internal class SmsInboxObserver(
     }
 
     fun register() {
+        val startedAt = System.nanoTime()
         runCatching {
             phoneContext.contentResolver.registerContentObserver(Telephony.Sms.CONTENT_URI, true, observer)
             XLog.i("SmsInboxObserver registered")
             queryExecutor.execute { repairRecentRouting() }
+            val durationMs = ((System.nanoTime() - startedAt) / 1_000_000L).coerceAtLeast(0L)
+            MagiskOtel.event(
+                name = "sms.observe",
+                attributes = mapOf(
+                    "result" to "ok",
+                    "duration_ms" to durationMs.toString(),
+                    "process" to "hook",
+                    "stage" to "register",
+                ),
+                statusOk = true,
+            )
         }.onFailure {
             XLog.w("SmsInboxObserver register failed: %s", it.message ?: it.javaClass.simpleName)
+            val durationMs = ((System.nanoTime() - startedAt) / 1_000_000L).coerceAtLeast(0L)
+            MagiskOtel.event(
+                name = "sms.observe",
+                attributes = mapOf(
+                    "result" to "error",
+                    "duration_ms" to durationMs.toString(),
+                    "process" to "hook",
+                    "stage" to "register",
+                    "reason" to it.javaClass.simpleName,
+                ),
+                statusOk = false,
+            )
         }
     }
 
