@@ -6,6 +6,7 @@ import android.os.Handler
 import android.os.Looper
 import com.github.magisk317.smscode.data.db.DBProvider
 import java.util.concurrent.atomic.AtomicBoolean
+import io.github.magisk317.xposed.logging.MagiskOtel
 
 /**
  * Registers ContentObservers in a hooked process so module-app writes can invalidate
@@ -38,6 +39,16 @@ object HookCacheInvalidator {
                 override fun onChange(selfChange: Boolean) {
                     PrefsReader.invalidateCache()
                     XLog.d("HookCacheInvalidator: prefs cache cleared")
+                    MagiskOtel.event(
+                        name = "hook.cache",
+                        attributes = mapOf(
+                            "result" to "ok",
+                            "duration_ms" to "0",
+                            "process" to "hook",
+                            "stage" to "prefs_invalidate",
+                        ),
+                        statusOk = true,
+                    )
                 }
             }
             val rulesObs = object : ContentObserver(handler) {
@@ -45,6 +56,16 @@ object HookCacheInvalidator {
                     SmsCodeUtils.invalidateRuleCache()
                     SmsCodeUtils.invalidateOfficialRuleCache()
                     XLog.d("HookCacheInvalidator: rules caches cleared")
+                    MagiskOtel.event(
+                        name = "hook.cache",
+                        attributes = mapOf(
+                            "result" to "ok",
+                            "duration_ms" to "0",
+                            "process" to "hook",
+                            "stage" to "rules_invalidate",
+                        ),
+                        statusOk = true,
+                    )
                 }
             }
             runCatching {
@@ -61,6 +82,16 @@ object HookCacheInvalidator {
                 prefsObserver = prefsObs
                 rulesObserver = rulesObs
                 registered.set(true)
+                MagiskOtel.event(
+                    name = "hook.cache",
+                    attributes = mapOf(
+                        "result" to "ok",
+                        "duration_ms" to "0",
+                        "process" to "hook",
+                        "stage" to "register",
+                    ),
+                    statusOk = true,
+                )
                 XLog.i("HookCacheInvalidator: observers registered")
             }.onFailure { error ->
                 // Unregister partial registration if any.

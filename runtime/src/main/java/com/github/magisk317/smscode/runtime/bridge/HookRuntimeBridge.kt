@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import com.github.magisk317.smscode.data.db.DBManager
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
+import io.github.magisk317.xposed.logging.MagiskOtel
 
 /**
  * Bridge interfaces for hook-layer access to runtime services.
@@ -109,5 +110,15 @@ object HookRuntimeBridge {
         this.storage = storage
         this.codeRecord = codeRecord
         this.contentProvider = contentProvider
+        MagiskOtel.event(
+            name = "hook.bridge",
+            attributes = mapOf(
+                "result" to "ok",
+                "duration_ms" to "0",
+                "process" to "hook",
+                "stage" to "install",
+            ),
+            statusOk = true,
+        )
     }
 }
