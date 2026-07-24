@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TOOLKIT_DIR="${MAGISK_CI_TOOLKIT_DIR:-${ROOT_DIR}/.magisk-ci-toolkit}"
 TOOLKIT_REPOSITORY="${MAGISK_CI_TOOLKIT_REPOSITORY:-https://gitlab.com/magisk3171/magisk-ci-toolkit.git}"
-TOOLKIT_REF="${MAGISK_CI_TOOLKIT_REF:-a583472f8398b188f708db3dd4af3708a30e6bfb}"
+TOOLKIT_REF="${MAGISK_CI_TOOLKIT_REF:-a1105e151ce0b5de0da5135569ccc4878f983145}"
 
 if [[ ! -d "$TOOLKIT_DIR/.git" ]]; then
   rm -rf -- "$TOOLKIT_DIR"
