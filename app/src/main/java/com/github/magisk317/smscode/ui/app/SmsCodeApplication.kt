@@ -178,6 +178,18 @@ class SmsCodeApplication : Application() {
             frameworkName ?: "unknown",
             frameworkVersion ?: "unknown",
         )
+        MagiskOtel.event(
+            name = "app.lifecycle",
+            attributes = mapOf(
+                "result" to "ok",
+                "duration_ms" to "0",
+                "process" to "app",
+                "stage" to "xposed_service_bind",
+                "reason" to "connected",
+                "source" to (frameworkName ?: "unknown"),
+            ),
+            statusOk = true,
+        )
     }
 
     internal fun handleXposedServiceDied() {
@@ -188,10 +200,32 @@ class SmsCodeApplication : Application() {
             verboseLogging = PrefsReader.isVerboseLogMode(this),
         )
         XLog.w("Xposed service disconnected")
+        MagiskOtel.event(
+            name = "app.lifecycle",
+            attributes = mapOf(
+                "result" to "error",
+                "duration_ms" to "0",
+                "process" to "app",
+                "stage" to "xposed_service_died",
+                "reason" to "disconnected",
+            ),
+            statusOk = false,
+        )
     }
 
     internal fun logXposedServiceBridgeFailure(throwable: Throwable) {
         XLog.w("Failed to register Xposed service listener: %s", throwable.message ?: "unknown")
+        MagiskOtel.event(
+            name = "app.lifecycle",
+            attributes = mapOf(
+                "result" to "error",
+                "duration_ms" to "0",
+                "process" to "app",
+                "stage" to "xposed_service_bridge",
+                "reason" to throwable.javaClass.simpleName,
+            ),
+            statusOk = false,
+        )
     }
 
     private fun registerLicenseActivityKiller() {
