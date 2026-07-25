@@ -15,6 +15,7 @@ class PrefRestoreTypeRegistryTest {
     @Test
     fun typeOf_legacyBooleanKeys_areBoolean() {
         assertEquals(PrefValueType.BOOLEAN, PrefRestoreTypeRegistry.typeOf(PrefConst.KEY_HIDE_LAUNCHER_ICON))
+        assertEquals(PrefValueType.BOOLEAN, PrefRestoreTypeRegistry.typeOf(PrefConst.KEY_ENABLE_ANALYTICS))
     }
 
     @Test

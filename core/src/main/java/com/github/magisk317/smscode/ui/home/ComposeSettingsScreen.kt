@@ -51,6 +51,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.github.magisk317.smscode.core.BuildConfig
+import io.github.magisk317.xposed.logging.MagiskOtel
 import com.github.magisk317.smscode.core.R
 import com.github.magisk317.smscode.common.constant.Const
 import com.github.magisk317.smscode.common.constant.PrefConst
@@ -178,6 +179,7 @@ internal fun ComposeSettingsScreenShared(
     val launcherIconVisible = remember { mutableStateOf(settingsViewModel.isLauncherIconVisible()) }
     var runtimeLogRetentionDays by remember { mutableIntStateOf(PrefConst.RUNTIME_LOG_RETENTION_DAYS_DEFAULT) }
     val verboseLogEnabled = rememberPrefBoolean(PrefConst.KEY_VERBOSE_LOG_MODE, false)
+    val analyticsEnabled = rememberPrefBoolean(PrefConst.KEY_ENABLE_ANALYTICS, true)
     val sensitiveDebugLogEnabled = rememberPrefBoolean(PrefConst.KEY_SENSITIVE_DEBUG_LOG_MODE, false)
     var showRuntimeLogRetentionDialog by remember { mutableStateOf(false) }
     var showClearLogConfirmDialog by remember { mutableStateOf(false) }
@@ -935,6 +937,35 @@ internal fun ComposeSettingsScreenShared(
                         ) {
                             val intent = backupAccess.getImportRuleListSAFIntent(context)
                             restoreLauncher.launch(intent)
+                        }
+                        if (!BuildConfig.DEBUG) {
+                            io.github.magisk317.uikit.preference.StateSwitchItem(
+                                title = stringResource(id = R.string.pref_enable_analytics_title),
+                                summary = stringResource(id = R.string.pref_enable_analytics_summary),
+                                checked = analyticsEnabled.value,
+                                onCheckedChange = { enabled ->
+                                    analyticsEnabled.value = enabled
+                                    scope.launch {
+                                        AppPreferencesDataStore.setBoolean(
+                                            context,
+                                            PrefConst.KEY_ENABLE_ANALYTICS,
+                                            enabled,
+                                        )
+                                        HookPreferenceMirror.publish(context)
+                                        markPrefsSaved()
+                                    }
+                                    MagiskOtel.configure(
+                                        MagiskOtel.Config(
+                                            enabled = BuildConfig.DEBUG || enabled,
+                                            serviceName = "xposedsmscode",
+                                            serviceVersion = BuildConfig.VERSION_NAME,
+                                            projectId = "83955172",
+                                            projectName = "XposedSmsCode",
+                                            environment = if (BuildConfig.DEBUG) "debug" else "release",
+                                        ),
+                                    )
+                                },
+                            )
                         }
                         RuntimeLogDiagnosticsItems(
                             labels = RuntimeLogDiagnosticsLabels(

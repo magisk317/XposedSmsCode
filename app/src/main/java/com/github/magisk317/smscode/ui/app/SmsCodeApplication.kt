@@ -49,7 +49,13 @@ class SmsCodeApplication : Application() {
         android.util.Log.w("XSmsCode", "SmsCodeApplication.onCreate() START")
         MagiskOtel.configure(
             MagiskOtel.Config(
-                enabled = BuildConfig.DEBUG,
+                enabled = BuildConfig.DEBUG || runBlocking {
+                    AppPreferencesDataStore.getBoolean(
+                        this@SmsCodeApplication,
+                        PrefConst.KEY_ENABLE_ANALYTICS,
+                        true,
+                    )
+                },
                 serviceName = "xposedsmscode",
                 serviceVersion = BuildConfig.VERSION_NAME,
                 projectId = "83955172",

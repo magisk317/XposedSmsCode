@@ -73,6 +73,7 @@ object PrefConst {
     const val RUNTIME_LOG_RETENTION_DAYS_DEFAULT = 2
     const val RUNTIME_LOG_RETENTION_DAYS_MIN = 1
     const val KEY_SENSITIVE_DEBUG_LOG_MODE = "pref_sensitive_debug_log_mode"
+    const val KEY_ENABLE_ANALYTICS = "pref_enable_analytics"
     const val KEY_AUTO_UPDATE_ON_START = "pref_auto_update_on_start"
     const val KEY_AUTO_UPDATE_WIFI_ONLY = "pref_auto_update_wifi_only"
     const val KEY_GITHUB_IGNORED_VERSION = "pref_github_ignored_version"

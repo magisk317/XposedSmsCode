@@ -195,6 +195,8 @@
     <!-- preference others -->
     <string name="pref_verbose_log_mode_title">Detailed log</string>
     <string name="pref_verbose_log_mode_summary">Tap to view, share, or clear logs</string>
+    <string name="pref_enable_analytics_title">Analytics</string>
+    <string name="pref_enable_analytics_summary">Allow anonymous analytics for channel usage, success rates, crashes and technical diagnostics.</string>
     <string name="pref_runtime_log_retention_days_title">Runtime log retention</string>
     <string name="pref_runtime_log_retention_days_summary">Daily rotation, keep the last %1$d days</string>
     <string name="pref_runtime_log_retention_days_hint">Retention in days, minimum 1. Default is 2.</string>

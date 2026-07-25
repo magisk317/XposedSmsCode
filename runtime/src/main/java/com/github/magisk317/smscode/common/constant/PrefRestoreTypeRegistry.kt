@@ -32,6 +32,7 @@ object PrefRestoreTypeRegistry {
         PrefConst.KEY_DELETE_SMS,
         PrefConst.KEY_KILL_ME,
         PrefConst.KEY_VERBOSE_LOG_MODE,
+        PrefConst.KEY_ENABLE_ANALYTICS,
         PrefConst.KEY_AUTO_UPDATE_ON_START,
         PrefConst.KEY_AUTO_UPDATE_WIFI_ONLY,
         PrefConst.KEY_PRIVACY_POLICY_ACCEPTED,

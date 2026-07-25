@@ -57,9 +57,19 @@ object XposedRuntimeInstaller {
             authority = RuntimeLogProvider.authority(BuildConfig.APPLICATION_ID),
             source = "SmsCode",
         )
+        val hookApp = runCatching {
+            Class.forName("android.app.ActivityThread")
+                .getMethod("currentApplication")
+                .invoke(null) as? android.content.Context
+        }.getOrNull()
+        val otelEnabled = if (hookApp != null) {
+            BuildConfig.DEBUG || PrefsReader.isAnalyticsEnabled(hookApp)
+        } else {
+            true
+        }
         MagiskOtel.configureIfAbsent(
             MagiskOtel.Config(
-                enabled = BuildConfig.DEBUG,
+                enabled = otelEnabled,
                 serviceName = "xposedsmscode",
                 serviceVersion = BuildConfig.VERSION_NAME,
                 projectId = "83955172",

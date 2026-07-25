@@ -184,6 +184,11 @@ object PrefsReader {
     }
 
     @JvmStatic
+    fun isAnalyticsEnabled(context: Context): Boolean {
+        return getBooleanViaProvider(PrefConst.KEY_ENABLE_ANALYTICS, true)
+    }
+
+    @JvmStatic
     fun autoInputCodeEnabled(context: Context): Boolean {
         val defaultValue = true
         return getBooleanViaProvider(PrefConst.KEY_ENABLE_AUTO_INPUT_CODE, defaultValue)

@@ -194,6 +194,8 @@
     <!-- preference others -->
     <string name="pref_verbose_log_mode_title">詳細日誌</string>
     <string name="pref_verbose_log_mode_summary">點擊查看、分享或清空日誌</string>
+    <string name="pref_enable_analytics_title">統計資料</string>
+    <string name="pref_enable_analytics_summary">允許開發者匿名分析通道使用情況、成功率、崩潰等技術細節</string>
     <string name="pref_runtime_log_retention_days_title">日誌保留天數</string>
     <string name="pref_runtime_log_retention_days_summary">按天輪轉，保留最近 %1$d 天日誌</string>
     <string name="pref_runtime_log_retention_days_hint">單位：天，最小值 1，預設 2。</string>
