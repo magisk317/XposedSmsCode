@@ -18,6 +18,7 @@ import com.github.magisk317.smscode.xp.helper.ModuleConflictArbiter
 import com.github.tianma8023.xposed.smscode.BuildConfig
 import io.github.magisk317.xposed.logging.DefaultLogSanitizer
 import io.github.magisk317.xposed.logging.MagiskOtel
+import io.github.magisk317.xposed.logging.AnonymousInstallationId
 import io.github.magisk317.smscode.xposed.runtime.CoreHookPolicy
 import io.github.magisk317.smscode.xposed.runtime.CoreHookPolicyHolder
 import io.github.magisk317.smscode.xposed.runtime.CoreLogSink
@@ -75,6 +76,10 @@ object XposedRuntimeInstaller {
                 projectId = "83955172",
                 projectName = "XposedSmsCode",
                 environment = if (BuildConfig.DEBUG) "debug" else "release",
+                serviceInstanceId = PrefsReader.getStringPreference(
+                    AnonymousInstallationId.PREFERENCE_KEY,
+                    "",
+                ),
             ),
         )
         installHookBridge()

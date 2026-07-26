@@ -13,6 +13,8 @@ import java.io.OutputStreamWriter
 import java.nio.charset.StandardCharsets
 
 object RuntimeCodeRecordFacade : UiCodeRecordAccess {
+    private const val NANOS_PER_MILLI = 1_000_000L
+
     override fun recordsFlow(context: Context): Flow<List<SmsMsg>> {
         return DBManager.get(context).queryAllSmsMsgFlow()
     }
@@ -119,6 +121,6 @@ object RuntimeCodeRecordFacade : UiCodeRecordAccess {
     }
 
     private fun elapsedMs(startedAt: Long): Long {
-        return ((System.nanoTime() - startedAt) / 1_000_000L).coerceAtLeast(0L)
+        return ((System.nanoTime() - startedAt) / NANOS_PER_MILLI).coerceAtLeast(0L)
     }
 }

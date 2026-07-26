@@ -11,8 +11,6 @@ plugins {
 
 val versionNameStr = libs.versions.versionName.get()
 val versionCodeInt = libs.versions.versionCode.get().toInt()
-val minSdkStr = libs.versions.minSdk.get()
-val targetSdkStr = libs.versions.targetSdk.get()
 val ndkVersionStr = libs.versions.ndk.get()
 val relayDownloadUrl = "https://github.com/magisk317/xinyi-relay"
 val allowConflictBypass = findProperty("allowConflictBypass")
@@ -42,23 +40,6 @@ android {
 
     defaultConfig {
         applicationId = "com.github.tianma8023.xposed.smscode"
-        val minSdkCodename = minSdkStr.removePrefix("android-")
-        val minSdkAsInt = minSdkCodename.toIntOrNull()
-        if (minSdkAsInt != null) {
-            minSdk = minSdkAsInt
-        } else {
-            @Suppress("DEPRECATION")
-            minSdkPreview = minSdkCodename
-        }
-        
-        val targetSdkCodename = targetSdkStr.removePrefix("android-")
-        val targetSdkAsInt = targetSdkCodename.toIntOrNull()
-        if (targetSdkAsInt != null) {
-            targetSdk = targetSdkAsInt
-        } else {
-            targetSdkPreview = targetSdkCodename
-        }
-
         versionCode = versionCodeInt
         versionName = versionNameStr
 

@@ -38,6 +38,7 @@ import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
 import timber.log.Timber
 import io.github.magisk317.xposed.logging.MagiskOtel
+import io.github.magisk317.xposed.logging.AnonymousInstallationId
 
 class SmsCodeApplication : Application() {
 
@@ -47,7 +48,16 @@ class SmsCodeApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         android.util.Log.w("XSmsCode", "SmsCodeApplication.onCreate() START")
-        MagiskOtel.configure(
+        val installationId = AnonymousInstallationId.getOrCreate(this, TELEMETRY_PREFS_NAME)
+        runBlocking {
+            AppPreferencesDataStore.setString(
+                this@SmsCodeApplication,
+                AnonymousInstallationId.PREFERENCE_KEY,
+                installationId,
+            )
+        }
+        MagiskOtel.configureForInstallation(
+            this,
             MagiskOtel.Config(
                 enabled = BuildConfig.DEBUG || runBlocking {
                     AppPreferencesDataStore.getBoolean(
@@ -62,6 +72,7 @@ class SmsCodeApplication : Application() {
                 projectName = "XposedSmsCode",
                 environment = if (BuildConfig.DEBUG) "debug" else "release",
             ),
+            TELEMETRY_PREFS_NAME,
         )
         MagiskOtel.event(
             name = "app.boot",
@@ -92,6 +103,10 @@ class SmsCodeApplication : Application() {
         importPendingCodeRecords()
         syncPreferences()
         registerLicenseActivityKiller()
+    }
+
+    private companion object {
+        const val TELEMETRY_PREFS_NAME = "xposed_prefs"
     }
 
     private fun importPendingCodeRecords() {

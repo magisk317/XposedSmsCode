@@ -93,6 +93,14 @@ object AppPreferencesDataStore {
     }
 
     private suspend fun populateEditor(context: Context, editor: SharedPreferences.Editor) {
+        editor.putString(
+            io.github.magisk317.xposed.logging.AnonymousInstallationId.PREFERENCE_KEY,
+            getString(
+                context,
+                io.github.magisk317.xposed.logging.AnonymousInstallationId.PREFERENCE_KEY,
+                "",
+            ),
+        )
         editor.putBoolean(PrefConst.KEY_ENABLE, getBoolean(context, PrefConst.KEY_ENABLE, true))
         editor.putBoolean(
             PrefConst.KEY_SETTINGS_ACCORDION_MODE,
