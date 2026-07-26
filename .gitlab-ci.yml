@@ -1,15 +1,15 @@
 include:
   - project: magisk3171/magisk-ci-toolkit
-    ref: be19abe86ebf69044451e9ed1c803c01fa557131
+    ref: dfb0d9c34cc4df323379edbd6cbd8ec8c65cb73c
     file: /.gitlab/ci/android.yml
   - project: magisk3171/magisk-ci-toolkit
-    ref: be19abe86ebf69044451e9ed1c803c01fa557131
+    ref: dfb0d9c34cc4df323379edbd6cbd8ec8c65cb73c
     file: /.gitlab/ci/android-release.yml
   - project: magisk3171/magisk-ci-toolkit
-    ref: be19abe86ebf69044451e9ed1c803c01fa557131
+    ref: dfb0d9c34cc4df323379edbd6cbd8ec8c65cb73c
     file: /.gitlab/ci/telegram.yml
   - project: magisk3171/magisk-ci-toolkit
-    ref: be19abe86ebf69044451e9ed1c803c01fa557131
+    ref: dfb0d9c34cc4df323379edbd6cbd8ec8c65cb73c
     file: /.gitlab/ci/renovate.yml
 
 workflow:
@@ -37,7 +37,7 @@ stages:
   - maintenance
 
 variables:
-  MAGISK_CI_TOOLKIT_REF: "be19abe86ebf69044451e9ed1c803c01fa557131"
+  MAGISK_CI_TOOLKIT_REF: "dfb0d9c34cc4df323379edbd6cbd8ec8c65cb73c"
   GIT_DEPTH: "0"
   GIT_SUBMODULE_STRATEGY: recursive
   GIT_SUBMODULE_DEPTH: "0"
@@ -53,8 +53,7 @@ variables:
   MAGISK_ANDROID_RELEASE_PLAY_TRACK: "production"
   MAGISK_RENOVATE_REPOSITORY: "magisk3171/XposedSmsCode"
 
-android:build:
-  extends: .magisk_android_build
+.xposed_android_rules:
   rules:
     - if: '$DEPENDENCY_OWNER == "gitlab" && $CI_PIPELINE_SOURCE == "web"'
       when: never
@@ -62,11 +61,18 @@ android:build:
       when: never
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
       when: never
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH =~ /^renovate\//'
+      when: never
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_COMMIT_TITLE =~ /^Merge branch .renovate\/.+ into /'
       when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_TAG'
     - if: '$CI_COMMIT_BRANCH'
+    - when: never
+
+android:build:
+  extends:
+    - .magisk_android_build
+    - .xposed_android_rules
   variables:
     MAGISK_ANDROID_BUILD_TASKS: >-
       :core:check
@@ -99,22 +105,12 @@ android:build:
       - app/build/outputs/apk/**/debug/*.apk
 
 android:detekt:
-  extends: .magisk_android_detekt
+  extends:
+    - .magisk_android_detekt
+    - .xposed_android_rules
   stage: quality
   allow_failure: true
   needs: []
-  rules:
-    - if: '$DEPENDENCY_OWNER == "gitlab" && $CI_PIPELINE_SOURCE == "web"'
-      when: never
-    - if: '$DEPENDENCY_OWNER == "gitlab" && $CI_PIPELINE_SOURCE == "api"'
-      when: never
-    - if: '$CI_PIPELINE_SOURCE == "schedule"'
-      when: never
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_COMMIT_TITLE =~ /^Merge branch .renovate\/.+ into /'
-      when: never
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_TAG'
-    - if: '$CI_COMMIT_BRANCH'
   artifacts:
     name: "XposedSmsCode-detekt-$CI_COMMIT_REF_SLUG"
     when: always
@@ -129,6 +125,7 @@ android:release:guard:
 
 android:release:github-apk:
   extends: .magisk_android_release_apk
+  resource_group: xposed-android-release-apk
   stage: release-build
   needs:
     - job: android:release:guard
@@ -143,6 +140,7 @@ android:release:github-apk:
 
 android:release:play-bundle:
   extends: .magisk_android_release_aab
+  resource_group: xposed-android-release-play
   stage: release-build
   needs:
     - job: android:release:guard
@@ -158,6 +156,7 @@ android:release:play-bundle:
 
 android:release:gitlab:
   extends: .magisk_android_gitlab_release
+  resource_group: xposed-android-release-publish
   stage: release-publish
   needs:
     - job: android:release:github-apk
@@ -168,6 +167,7 @@ android:release:gitlab:
 
 android:release:play:
   extends: .magisk_android_publish_play
+  resource_group: xposed-android-release-play
   stage: release-publish
   needs:
     - job: android:release:play-bundle
@@ -175,6 +175,7 @@ android:release:play:
 
 android:release:modules-repo:
   extends: .magisk_android_publish_modules_repo
+  resource_group: xposed-android-release-publish
   stage: release-publish
   needs:
     - job: android:release:github-apk
@@ -192,7 +193,9 @@ telegram:release:
       artifacts: true
 
 telegram:ci:
-  extends: .magisk_telegram_ci
+  extends:
+    - .magisk_telegram_ci
+    - .xposed_android_rules
   stage: notify
   allow_failure: true
   variables:
@@ -202,8 +205,9 @@ telegram:ci:
   needs:
     - job: android:build
       artifacts: true
-      optional: true
+      optional: false
 
 renovate:gitlab:
   extends: .magisk_renovate_gitlab
+  interruptible: false
   stage: maintenance
