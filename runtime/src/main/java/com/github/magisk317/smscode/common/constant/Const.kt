@@ -7,10 +7,7 @@ import com.github.magisk317.smscode.runtime.BuildConfig
  */
 object Const {
 
-    /* QQ begin */
-    const val QQ_GROUP_URL = "https://qm.qq.com/q/4mMpX3vk4U"
     const val TELEGRAM_GROUP_URL = "https://t.me/+NR2QaQ4dlEgxYmNl"
-    /* QQ end */
 
     /* Xposed SmsCode begin */
     const val HOME_ACTIVITY_ALIAS = BuildConfig.APPLICATION_ID + ".HomeActivityAlias"
@@ -19,10 +16,12 @@ object Const {
     const val ACTION_OPEN_RULES = "smscode_rules"
     const val ACTION_OPEN_SETTINGS = "smscode_settings"
 
-    const val PROJECT_SOURCE_CODE_URL = "https://github.com/magisk317/XposedSmsCode"
-    const val PROJECT_GITHUB_LATEST_RELEASE_URL = PROJECT_SOURCE_CODE_URL + "/releases/latest"
+    const val PROJECT_SOURCE_CODE_URL = "https://gitlab.com/magisk3171/XposedSmsCode"
+    const val PROJECT_GITHUB_LATEST_RELEASE_URL =
+        "https://github.com/magisk317/XposedSmsCode/releases/latest"
     const val PROJECT_DOC_BASE_URL = "https://magisk317.github.io/SmsCode"
-    const val PRIVACY_POLICY_URL = "https://github.com/magisk317/XposedSmsCode/blob/dev/docs/PRIVACY.md"
+    const val PRIVACY_POLICY_URL =
+        "https://gitlab.com/magisk3171/XposedSmsCode/-/blob/beta/docs/PRIVACY.md"
     const val DOC_SMS_CODE_RULE_HELP = "sms_code_rule_help"
     /* Xposed SmsCode end */
 

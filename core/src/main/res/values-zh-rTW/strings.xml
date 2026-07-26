@@ -235,9 +235,6 @@
     <!-- preference about -->
 
 
-    <string name="pref_join_qq_group_title">QQ</string>
-    <string name="pref_join_qq_group_summary">點擊加入</string>
-    <string name="prompt_join_qq_group_failed">請先安裝手機 QQ</string>
     <string name="pref_join_telegram_group_title">Telegram</string>
     <string name="pref_join_telegram_group_summary">點擊加入</string>
     <string name="pref_source_code_title">專案源碼</string>

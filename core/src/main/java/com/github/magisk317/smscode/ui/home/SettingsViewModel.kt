@@ -270,10 +270,6 @@ class SettingsViewModel(
         }
     }
 
-    fun joinQQGroup() {
-        PackageUtils.joinQQGroup(getApplication())
-    }
-
     fun showSourceProject() {
         BrowserUtils.openWebPage(
             getApplication(),

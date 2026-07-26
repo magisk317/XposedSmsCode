@@ -238,9 +238,6 @@
     <!-- preference about -->
 
 
-    <string name="pref_join_qq_group_title">QQ</string>
-    <string name="pref_join_qq_group_summary">点击加入</string>
-    <string name="prompt_join_qq_group_failed">请先安装 QQ</string>
     <string name="pref_join_telegram_group_title">Telegram</string>
     <string name="pref_join_telegram_group_summary">点击加入</string>
     <string name="pref_source_code_title">源代码</string>

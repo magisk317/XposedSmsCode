@@ -81,7 +81,6 @@ object PrefConst {
     // About
     const val KEY_ABOUT = "pref_about"
     const val KEY_VERSION = "pref_version"
-    const val KEY_JOIN_QQ_GROUP = "pref_join_qq_group"
     const val KEY_SOURCE_CODE = "pref_source_code"
     const val KEY_DONATE_BY_ALIPAY = "pref_donate_by_alipay"
     const val KEY_PRIVACY_POLICY = "pref_privacy_policy"

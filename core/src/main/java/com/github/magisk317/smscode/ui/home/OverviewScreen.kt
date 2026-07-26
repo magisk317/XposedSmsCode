@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.*
@@ -198,7 +197,6 @@ internal fun OverviewScreenShared() {
             item {
                 io.github.magisk317.uikit.surface.OverviewLinksCard(
                     onCheckUpdate = { settingsViewModel.requestPreferredUpdate() },
-                    onJoinQQ = { PackageUtils.joinQQGroup(context)?.let(::showMessage) },
                     onJoinTelegram = {
                         BrowserUtils.openWebPage(
                             context,

@@ -12,9 +12,7 @@ object PackageUtils {
     private val actions = ConfiguredPackageActions(
         PackageActionConfig(
             applicationId = BuildConfig.APPLICATION_ID,
-            qqGroupUrl = Const.QQ_GROUP_URL,
             githubLatestReleaseUrl = Const.PROJECT_GITHUB_LATEST_RELEASE_URL,
-            joinQqGroupFailedMessageResId = R.string.prompt_join_qq_group_failed,
             browserMissingMessageResId = R.string.browser_install_or_enable_prompt,
         ),
     )
@@ -32,8 +30,6 @@ object PackageUtils {
         actions.getLsposedModuleInfo(context)
 
     fun hasRootAccess(): Boolean = actions.hasRootAccess()
-
-    fun joinQQGroup(context: Context): String? = actions.joinQQGroup(context)
 
     fun isInstalledFromPlay(context: Context): Boolean = actions.isInstalledFromPlay(context)
 
