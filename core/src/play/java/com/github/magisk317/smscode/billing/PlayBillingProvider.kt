@@ -1,6 +1,7 @@
 package com.github.magisk317.smscode.billing
 
 import android.app.Activity
+import io.github.magisk317.uikit.billing.BillingManager
 
 class PlayBillingProvider(
     private val billingManager: BillingManager,

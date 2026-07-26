@@ -35,6 +35,12 @@ android {
         disable.add("MissingTranslation")
         disable.add("LocalContextGetResourceValueCall")
     }
+
+    sourceSets {
+        listOf("github", "fdroid").forEach { flavor ->
+            getByName(flavor).kotlin.directories.add("src/nonPlayBilling/java")
+        }
+    }
 }
 
 dependencies {
@@ -60,7 +66,7 @@ dependencies {
     implementation(libs.timber)
     implementation(libs.kotlinx.collections.immutable)
     add("playImplementation", libs.play.app.update)
-    add("playImplementation", libs.billing.ktx)
+    add("playImplementation", project(":magisk-ui-kit:billing"))
 
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.mockk)
