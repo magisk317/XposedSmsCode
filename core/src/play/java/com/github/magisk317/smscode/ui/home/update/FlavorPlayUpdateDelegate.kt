@@ -15,6 +15,7 @@ import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.install.model.UpdateAvailability
 import com.github.magisk317.smscode.runtime.RuntimePlayAction
 import com.github.magisk317.smscode.runtime.bridge.UiUpdateAccess
+import io.github.magisk317.uikit.shell.PlayUpdateDelegate
 
 class FlavorPlayUpdateDelegate(
     private val updateAccess: UiUpdateAccess,

@@ -1,6 +1,7 @@
 package com.github.magisk317.smscode.ui.home.update
 
 import androidx.activity.ComponentActivity
+import io.github.magisk317.uikit.shell.PlayUpdateDelegate
 
 class FlavorPlayUpdateDelegate : PlayUpdateDelegate {
 

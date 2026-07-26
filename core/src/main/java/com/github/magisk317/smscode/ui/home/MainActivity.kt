@@ -78,7 +78,7 @@ import io.github.magisk317.uikit.theme.applyEdgeToEdge
 import io.github.magisk317.uikit.common.DismissibleSnackbarHost
 import io.github.magisk317.uikit.foundation.LocalSnackbarHostState
 import com.github.magisk317.smscode.ui.home.update.FlavorPlayUpdateDelegate
-import com.github.magisk317.smscode.ui.home.update.PlayUpdateDelegate
+import io.github.magisk317.uikit.shell.PlayUpdateDelegate
 import com.github.magisk317.smscode.ui.nav.SmsCodeNavHost
 import com.github.magisk317.smscode.ui.privacy.PrivacyPolicyPage
 import com.github.magisk317.smscode.ui.theme.AppTheme

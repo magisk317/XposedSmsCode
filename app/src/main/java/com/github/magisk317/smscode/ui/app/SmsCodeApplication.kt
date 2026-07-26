@@ -95,7 +95,7 @@ class SmsCodeApplication : Application() {
             modules(appModule, com.github.magisk317.smscode.di.billingModule)
         }
         
-        org.koin.core.context.GlobalContext.get().getAll<com.github.magisk317.smscode.app.AppInitializer>().forEach {
+        org.koin.core.context.GlobalContext.get().getAll<io.github.magisk317.uikit.shell.AppInitializer>().forEach {
             it.init(this)
         }
 
