@@ -4,53 +4,17 @@
 
 ---
 
-## [v3.3.1] - WIP
-- 版本：`versionCode 123` / `versionName 3.3.1`。
-- `[TODO]` 准备下一阶段开发。
+## [v3.3.1] - 2026-07-26
+- 版本：`versionCode 124` / `versionName 3.3.1`。
+- `[architecture]` 抽出独立 `:hook` 模块，复用共享 Hook 入口、Billing runtime 与 Preview SDK 约定，收敛 runtime / UI 边界并清理旧兼容资源。
+- `[hook/sms]` 加固短信解析 IPC、分发去重与进程生命周期恢复，补齐 Google Messages、MMS、Telephony Provider 和收件箱观察链路。
+- `[notification/auto-input]` 统一应用自持有通知及偏好桥接，完善验证码复制、取消、自动输入结果和 Hook 进程重启链路。
+- `[telemetry]` 为应用启动、短信解析、拦截、通知、自动输入、记录操作及 Xposed 服务生命周期补齐 OpenTelemetry 观测，并让 Hook 侧共享安装标识与发布开关。
+- `[log/prefs/security]` 统一日志、脱敏与动态开关链路，设置恢复改为原子操作，并加固跨进程通信与重启门控。
+- `[ui]` 主界面改用共享 `MainTabScaffold` 与 ui-kit 组件，整理设置页、更新入口和关于页链接。
+- `[ci/deps]` 对齐 GitHub / GitLab 发布并发、Renovate 通知和共享 CI 工具链，更新构建约定及核心子模块指针。
 
-> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.3.1-beta3...v3.3.1
-
----
-
-## [v3.3.1-beta3] - 2026-07-24
-- 版本：`versionCode 122` / `versionName 3.3.1-beta3`。
-- `[arch]` 抽出独立 `:hook` 模块，并收敛 runtime / UI 边界。
-- `[hook/sms]` 加固短信解析 IPC，并补齐 Google Messages 支持。
-- `[notification]` 本地处理应用通知验证码，并共享通知偏好桥接。
-- `[ui]` 主界面改用共享 `MainTabScaffold` 与 ui-kit 组件。
-- `[log]` 统一日志与脱敏链路，支持 hook 侧开关热更新。
-- `[prefs/security]` 设置改为原子恢复，并加固 IPC 与进程重启门控。
-- `[ci/deps]` 对齐共享 CI 工具链、Renovate 与子模块指针。
-
-> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.3.1-beta2...v3.3.1-beta3
-
----
-
-## [v3.3.1-beta2] - 2026-06-28
-- 版本：`versionCode 121` / `versionName 3.3.1-beta2`。
-- `[xposed/hook]` 优化进程生命周期同步与热重载恢复。
-- `[notification]` 废弃 phone-owned，全面采用 app-owned 模式发送通知。
-- `[log]` 迁移 Hook 层日志至原生 XposedLogClient。
-- `[hook/sms]` 优化短信拦截逻辑并解决潜在的冲突。
-- `[ci/release]` 深度集成并完善本地及云端发版流水线。
-- `[test]` 修复过期契约测试及 Lint 静态检查误报。
-- `[deps/submodules]` 升级周边依赖并同步核心子模块指针。
-
-> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.3.1-beta...v3.3.1-beta2
-
----
-
-## [v3.3.1-beta] - 2026-06-22
-- 版本：`versionCode 120` / `versionName 3.3.1-beta`。
-- `[xposed/hook]` 修复当前进程派发与热重载恢复。
-- `[hook/sms]` 修复短信分发去重时机，并恢复 MMS 解析链路。
-- `[notification]` 通知默认回到 phone-owned，app-owned 失败时更可靠地回退。
-- `[notification]` 修复宿主 UID 与模块包名不匹配导致的通知失败。
-- `[ui]` 优化首页概览和记录页滚动体验。
-- `[ci/release]` 整理 CI、发布、依赖治理和安全脚本。
-- `[deps/submodules]` 升级依赖并同步共享子模块指针。
-
-> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.3.0...v3.3.1-beta
+> Full Changelog: https://gitlab.com/magisk3171/XposedSmsCode/-/compare/v3.3.0...v3.3.1
 
 ---
 

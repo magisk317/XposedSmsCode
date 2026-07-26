@@ -41,6 +41,8 @@ import io.github.magisk317.uikit.surface.MainTabScaffold
 import io.github.magisk317.uikit.surface.MainTabSpec
 import io.github.magisk317.uikit.surface.tabEnterTransition
 import io.github.magisk317.uikit.surface.tabExitTransition
+import io.github.magisk317.uikit.surface.tabPredictivePopEnterTransition
+import io.github.magisk317.uikit.surface.tabPredictivePopExitTransition
 import io.github.magisk317.uikit.surface.tabTransitionDirection
 import io.github.magisk317.uikit.surface.rememberIsCompactWidth
 import io.github.magisk317.uikit.surface.rememberMainChromeController
@@ -200,22 +202,10 @@ fun MainScreen(
                 )
             },
             predictivePopEnterTransition = { _ ->
-                tabEnterTransition(
-                    tabTransitionDirection(
-                        initialIndex = resolveTabIndex(initialState.destination),
-                        targetIndex = resolveTabIndex(targetState.destination),
-                        isPop = true,
-                    ),
-                )
+                tabPredictivePopEnterTransition()
             },
-            predictivePopExitTransition = { _ ->
-                tabExitTransition(
-                    tabTransitionDirection(
-                        initialIndex = resolveTabIndex(initialState.destination),
-                        targetIndex = resolveTabIndex(targetState.destination),
-                        isPop = true,
-                    ),
-                )
+            predictivePopExitTransition = { swipeEdge ->
+                tabPredictivePopExitTransition(swipeEdge)
             },
         ) {
             composable<OverviewRoute> {

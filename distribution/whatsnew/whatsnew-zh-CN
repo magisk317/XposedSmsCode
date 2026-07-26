@@ -1,4 +1,8 @@
-- 升级至 3.3.1（123）。
-- 准备下一阶段开发。
+- 升级至 3.3.1（124）。
+- 抽出独立 Hook 模块，复用共享入口与计费组件，清理旧兼容资源。
+- 加固短信解析、分发和进程恢复，补齐 Google Messages、MMS 与收件箱链路。
+- 统一应用通知、自动输入及操作链路，完善原子恢复和跨进程安全门控。
+- 为短信、通知、自动输入、记录和 Xposed 生命周期补齐 OpenTelemetry 观测。
+- 更新共享 UI、Preview SDK、CI 发布工具链和核心子模块。
 - https://github.com/magisk317/XposedSmsCode/releases
 - https://gitlab.com/magisk3171/XposedSmsCode/-/releases
