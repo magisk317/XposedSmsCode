@@ -112,7 +112,7 @@ exceptions:
     excludes:
       - '**/xp/**'
       - '**/feature/backup/RuleImporter.kt'
-      - '**/common/utils/PrefsReader.kt'
+      - '**/common/utils/HookPrefsReader.kt'
       - '**/common/utils/Utils.kt'
       - '**/common/utils/XLog.kt'
       - '**/ui/**/ViewModel.kt'

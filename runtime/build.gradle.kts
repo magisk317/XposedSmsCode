@@ -5,6 +5,14 @@ plugins {
     id("magisk.android.room")
 }
 val relayDownloadUrl = "https://github.com/magisk3171/xinyi-relay"
+val mobileEntitlementApiOrigin = providers.gradleProperty("mobileEntitlementApiOrigin")
+    .orElse("https://activate.magisk317.qzz.io")
+    .get()
+val mobileEntitlementSigningPublicJwk = providers.gradleProperty("mobileEntitlementSigningPublicJwk")
+    .orElse("""{"kty":"EC","x":"4kPpwUt1wFRuF3EqGq6q57J3YmANf7wyiNH90FNkAbI","y":"U4-E1XK6LjWIXMFNEoSAoik7nD1S07BDb7qAipQd4Ts","crv":"P-256","alg":"ES256","use":"sig","kid":"mobile-entitlement-1"}""")
+    .get()
+fun buildConfigString(value: String): String =
+    "\"${value.replace("\\", "\\\\").replace("\"", "\\\"")}\""
 
 android {
     namespace = "com.github.magisk317.smscode.runtime"
@@ -21,9 +29,11 @@ android {
     }
 
     defaultConfig {
-        buildConfigField("String", "LOG_TAG", "\"XSmsCode\"")
+        buildConfigField("String", "LOG_TAG", "\"smscode\"")
         buildConfigField("String", "APPLICATION_ID", "\"com.github.tianma8023.xposed.smscode\"")
         buildConfigField("String", "B_DOWNLOAD_URL", "\"$relayDownloadUrl\"")
+        buildConfigField("String", "MOBILE_ENTITLEMENT_API_ORIGIN", buildConfigString(mobileEntitlementApiOrigin))
+        buildConfigField("String", "MOBILE_ENTITLEMENT_SIGNING_PUBLIC_JWK", buildConfigString(mobileEntitlementSigningPublicJwk))
         consumerProguardFiles("consumer-rules.pro")
     }
 
@@ -45,6 +55,7 @@ android {
 }
 
 dependencies {
+    implementation("com.magisk317.mobile:entitlement-android:0.1.16")
     implementation(project(":magisk-xposed-kit"))
     implementation(project(":smscode-core:contract"))
     implementation(project(":smscode-core:hook"))

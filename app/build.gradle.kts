@@ -61,7 +61,7 @@ android {
         versionCode = versionCodeInt
         versionName = versionNameStr
 
-        buildConfigField("String", "LOG_TAG", "\"XSmsCode\"")
+        buildConfigField("String", "LOG_TAG", "\"smscode\"")
         buildConfigField("String", "COMMIT_HASH", "\"$gitCommitHash\"")
         buildConfigField("int", "MODULE_VERSION", "$versionCodeInt")
         buildConfigField("boolean", "ALLOW_CONFLICT_BYPASS", allowConflictBypass.toString())
@@ -111,7 +111,7 @@ tasks.named("preBuild") {
 }
 
 dependencies {
-    implementation("com.magisk317.mobile:entitlement-android:0.1.14")
+    implementation(libs.mobile.entitlement.android)
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     implementation(project(":core"))
     implementation(project(":magisk-ui-kit"))
