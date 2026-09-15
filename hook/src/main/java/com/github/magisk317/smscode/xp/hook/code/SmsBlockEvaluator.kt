@@ -2,7 +2,7 @@ package com.github.magisk317.smscode.xp.hook.code
 
 import android.content.Context
 import android.content.Intent
-import com.github.magisk317.smscode.runtime.RuntimePrefsFacade as PrefsReader
+import com.github.magisk317.smscode.common.utils.HookPrefsReader
 import com.github.magisk317.smscode.common.utils.SmsBlacklistUtils
 import com.github.magisk317.smscode.common.utils.SmsCodeUtils
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
@@ -24,7 +24,7 @@ object SmsBlockEvaluator {
         blacklistMatcher = { context, sender, body ->
             SmsBlacklistUtils.match(context, sender, body).toVerificationResult()
         },
-        blockSmsEnabledReader = PrefsReader::blockSmsEnabled,
+        blockSmsEnabledReader = HookPrefsReader::blockSmsEnabled,
         smsCodeParser = { context, body -> SmsCodeUtils.parseSmsCodeIfExists(context, body) },
     )
 

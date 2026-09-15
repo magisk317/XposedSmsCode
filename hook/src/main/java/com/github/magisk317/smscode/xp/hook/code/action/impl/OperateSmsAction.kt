@@ -4,7 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import androidx.annotation.IntDef
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
-import com.github.magisk317.smscode.runtime.RuntimePrefsFacade as PrefsReader
+import com.github.magisk317.smscode.common.utils.HookPrefsReader
 import com.github.magisk317.smscode.xp.hook.code.action.CallableAction
 import com.github.magisk317.smscode.xp.hook.code.toVerificationMessage
 import io.github.magisk317.smscode.runtime.verification.OperateSmsActionHelper
@@ -33,8 +33,8 @@ class OperateSmsAction(pluginContext: Context, phoneContext: Context, smsMsg: Sm
             pluginContext = mPluginContext,
             phoneContext = mPhoneContext,
             smsMsg = mSmsMsg.toVerificationMessage(),
-            deleteSmsEnabledReader = PrefsReader::deleteSmsEnabled,
-            markAsReadEnabledReader = PrefsReader::markAsReadEnabled,
+            deleteSmsEnabledReader = HookPrefsReader::deleteSmsEnabled,
+            markAsReadEnabledReader = HookPrefsReader::markAsReadEnabled,
         ).execute(
             OperateSmsActionHelper.resolveForcedOperation(
                 forcedOperation = forcedOp,

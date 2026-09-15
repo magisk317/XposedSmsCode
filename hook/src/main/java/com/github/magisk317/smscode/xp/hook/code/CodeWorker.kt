@@ -6,7 +6,7 @@ import androidx.core.os.BundleCompat
 import com.github.magisk317.smscode.runtime.BuildConfig as RuntimeBuildConfig
 import com.github.magisk317.smscode.hook.BuildConfig
 import com.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
-import com.github.magisk317.smscode.common.utils.PrefsReader
+import com.github.magisk317.smscode.common.utils.HookPrefsReader
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.smscode.runtime.verification.CodeWorker as SharedCodeWorker
 import io.github.magisk317.smscode.runtime.verification.SmsCodePostParseCoordinator
@@ -30,8 +30,8 @@ class CodeWorker(
             smsIntent = mSmsIntent,
             eventId = eventId,
             settingsLoader = { context -> SmsCodePostParseCoordinator.loadSettings(SmsCodeVerificationPrefs(context)) },
-            moduleEnabledReader = PrefsReader::isEnabled,
-            verboseLogReader = PrefsReader::isVerboseLogMode,
+            moduleEnabledReader = HookPrefsReader::isEnabled,
+            verboseLogReader = HookPrefsReader::isVerboseLogMode,
             logLevelSetter = XLog::setLogLevel,
             currentLogLevelReader = XLog::getLogLevel,
             defaultLogLevel = RuntimeBuildConfig.LOG_LEVEL,

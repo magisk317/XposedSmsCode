@@ -1,40 +1,42 @@
 package com.github.magisk317.smscode.common.utils
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
+import com.github.magisk317.smscode.runtime.BuildConfig
 import com.github.magisk317.smscode.common.constant.CodeNotificationOwner
 import com.github.magisk317.smscode.common.constant.PrefConst
-import java.util.Collections
+import com.magisk317.mobile.entitlement.MobileEntitlementGate
+import com.magisk317.mobile.entitlement.MobileEntitlementVerificationPolicy
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
-import io.github.magisk317.smscode.runtime.common.prefs.PrefsResolver
-import io.github.magisk317.smscode.runtime.common.prefs.SharedPrefsSource
+import com.github.magisk317.smscode.runtime.bridge.HookPrefsAccess
+import io.github.magisk317.smscode.runtime.contract.prefs.PrefRead
 import io.github.magisk317.smscode.runtime.contract.prefs.PrefReadResult
 import io.github.magisk317.smscode.runtime.contract.prefs.PrefSources
 import io.github.magisk317.smscode.runtime.contract.prefs.PrefsSource
+import io.github.magisk317.smscode.runtime.common.prefs.PrefsResolver
+import io.github.magisk317.xposed.preferences.PreferenceRead
+import io.github.magisk317.xposed.preferences.PreferenceSource
+import io.github.magisk317.xposed.preferences.SharedPreferencesSource
+import java.util.Collections
 
-@SuppressLint("StaticFieldLeak")
-object PrefsReader {
-    private const val PREFS_NAME = "xposed_prefs"
+/**
+ * Hook-process preference reader.
+ *
+ * The hook process has no local preference source. Every value comes from the
+ * libxposed remote-preferences Provider, with the method default used only when
+ * that Provider is unavailable.
+ */
+object HookPrefsReader : HookPrefsAccess {
     private const val MISSING_LONG_VALUE = "-9223372036854775808"
     private const val SOURCE_REMOTE_PROVIDER = "provider"
-    private const val SOURCE_LOCAL_HOOK_PREFS = "local_hook_prefs"
 
     /**
-     * TTL for the in-process resolved-pref cache.
-     *
-     * In a hooked system process (e.g. com.android.phone) every public getter here
-     * ultimately reads a remote SharedPreferences owned by the module app process over
-     * Binder. On the per-SMS parse path several of these fire (keywords, toggles, ...),
-     * and when the module process is frozen (NoActive) each read blocks for tens of
-     * seconds. Caching the resolved value for a short window collapses the repeated IPC
-     * to at most one read per key per window while staying fresh enough that a settings
-     * change becomes visible a few seconds later — there is no live pref listener in the
-     * hook process (mirrors XposedRuntimeInstaller.SANITIZER_SYNC_TTL_MS). Kept shorter
-     * than the rule cache TTL because toggles are cheap to re-read and users expect
-     * config changes to apply promptly.
+     * A non-zero cache would be unsafe here: the provider can disappear without a callback when the
+     * module process is frozen or the remote binding is removed. The shared resolver retains stale
+     * hits for unavailable sources, so this parent must re-resolve every read instead of serving an
+     * old hook configuration after source failure.
      */
-    private const val PREFS_CACHE_TTL_MS = 5_000L
+    private const val PREFS_CACHE_TTL_MS = 0L
     private val prefsResolver = PrefsResolver(
         cacheTtlMs = PREFS_CACHE_TTL_MS,
         clock = { android.os.SystemClock.elapsedRealtime() },
@@ -44,22 +46,25 @@ object PrefsReader {
     @Volatile
     private var remotePrefsProvider: (() -> SharedPreferences?)? = null
     @Volatile
-    private var hookContext: Context? = null
-    @Volatile
     private var remoteProviderLogged = false
     private val remoteTraceLoggedKeys = Collections.synchronizedSet(mutableSetOf<String>())
     private data class BooleanReadTrace(val value: Boolean, val source: String)
     private data class StringReadTrace(val value: String, val source: String)
-    private val remotePrefsSource = SharedPrefsSource(
-        sourceName = SOURCE_REMOTE_PROVIDER,
-        provider = ::getRemotePrefs,
-        onError = ::logPrefsSourceError,
+    private val remotePrefsSource: PrefsSource = KitPreferenceSourceAdapter(
+        SharedPreferencesSource(
+            sourceName = SOURCE_REMOTE_PROVIDER,
+            provider = ::getRemotePrefs,
+            onError = ::logPrefsSourceError,
+        ),
     )
-    private val localPrefsSource = SharedPrefsSource(
-        sourceName = SOURCE_LOCAL_HOOK_PREFS,
-        provider = ::getLocalPrefs,
-        onError = ::logPrefsSourceError,
-    )
+
+    private val mobileEntitlementPolicy
+        get() = MobileEntitlementVerificationPolicy(
+            signingPublicJwk = BuildConfig.MOBILE_ENTITLEMENT_SIGNING_PUBLIC_JWK,
+            issuer = BuildConfig.MOBILE_ENTITLEMENT_API_ORIGIN,
+            appId = "xposed-sms-code",
+            enforced = true,
+        )
 
     @JvmStatic
     fun setRemotePrefsProvider(provider: (() -> SharedPreferences?)?) {
@@ -68,15 +73,10 @@ object PrefsReader {
         prefsResolver.invalidate()
     }
 
-    @JvmStatic
-    fun setHookContext(context: Context) {
-        hookContext = context.applicationContext ?: context
-    }
 
     /**
-     * Drops all cached pref values so the next read hits the backing store. Wire this to
-     * a settings-change signal in the hook process to apply config immediately instead of
-     * waiting out [PREFS_CACHE_TTL_MS]; otherwise the TTL alone bounds staleness.
+     * Drops the resolver state so the next read hits the backing store. Public reads also invalidate
+     * immediately before resolving because remote binding loss has no callback in the hook process.
      */
     @JvmStatic
     fun invalidateCache() {
@@ -88,18 +88,13 @@ object PrefsReader {
         return runCatching { provider.invoke() }.getOrElse { t ->
             if (!remoteProviderLogged) {
                 remoteProviderLogged = true
-                XLog.w("PrefsReader: remote prefs provider failed", t)
+                XLog.w("HookPrefsReader: remote prefs provider failed", t)
             }
             null
         }
     }
 
-    private fun getLocalPrefs(): SharedPreferences? {
-        val ctx = hookContext ?: return null
-        return runCatching { ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }.getOrNull()
-    }
-
-    private fun prefSources(): List<PrefsSource> = listOf(remotePrefsSource, localPrefsSource)
+    private fun prefSources(): List<PrefsSource> = listOf(remotePrefsSource)
 
     private fun logRemoteTraceOnce(key: String, state: String) {
         if (remoteTraceLoggedKeys.add(key)) {
@@ -108,17 +103,23 @@ object PrefsReader {
     }
 
     private fun logPrefsSourceError(message: String, error: Throwable) {
-        XLog.w("PrefsReader: %s", message, error)
+        XLog.w("HookPrefsReader: %s", message, error)
     }
 
-    private fun resolveBooleanPref(key: String, defaultValue: Boolean): PrefReadResult<Boolean> =
-        prefsResolver.resolveBoolean(key, defaultValue, prefSources())
+    private fun resolveBooleanPref(key: String, defaultValue: Boolean): PrefReadResult<Boolean> {
+        prefsResolver.invalidate()
+        return prefsResolver.resolveBoolean(key, defaultValue, prefSources())
+    }
 
-    private fun resolveStringPref(key: String, defaultValue: String): PrefReadResult<String> =
-        prefsResolver.resolveString(key, defaultValue, prefSources())
+    private fun resolveStringPref(key: String, defaultValue: String): PrefReadResult<String> {
+        prefsResolver.invalidate()
+        return prefsResolver.resolveString(key, defaultValue, prefSources())
+    }
 
-    private fun resolveIntPref(key: String, defaultValue: Int): PrefReadResult<Int> =
-        prefsResolver.resolveInt(key, defaultValue, prefSources())
+    private fun resolveIntPref(key: String, defaultValue: Int): PrefReadResult<Int> {
+        prefsResolver.invalidate()
+        return prefsResolver.resolveInt(key, defaultValue, prefSources())
+    }
 
     private fun traceState(result: PrefReadResult<*>): String =
         if (result.source == PrefSources.SOURCE_DEFAULT) "default" else "hit"
@@ -165,30 +166,22 @@ object PrefsReader {
     fun getIntPreference(key: String, defaultValue: Int): Int =
         getIntViaProvider(key, defaultValue)
 
-    @JvmStatic
-    fun isEnabled(context: Context): Boolean {
+    override fun isEnabled(context: Context): Boolean {
         val defaultValue = true
         return getBooleanViaProvider(PrefConst.KEY_ENABLE, defaultValue)
     }
 
-    @JvmStatic
-    fun mobileAutomationAllowed(context: Context): Boolean = getBooleanViaProvider(
-        PrefConst.KEY_MOBILE_ENTITLEMENT_AUTOMATION_ALLOWED,
-        PrefConst.DEFAULT_MOBILE_ENTITLEMENT_AUTOMATION_ALLOWED,
-    )
+    override fun mobileAutomationAllowed(context: Context): Boolean {
+        val state = MobileEntitlementGate.read(getRemotePrefs())
+        return MobileEntitlementGate.isAllowed(state, mobileEntitlementPolicy)
+    }
 
-    @JvmStatic
-    fun isVerboseLogMode(context: Context): Boolean {
+    override fun isVerboseLogMode(context: Context): Boolean {
         val defaultValue = false
         return getBooleanViaProvider(PrefConst.KEY_VERBOSE_LOG_MODE, defaultValue)
     }
 
-    @JvmStatic
-    fun isSensitiveDebugLogSupported(): Boolean = true
-
-    @JvmStatic
-    fun isSensitiveDebugLogMode(context: Context): Boolean {
-        if (!isSensitiveDebugLogSupported()) return false
+    override fun isSensitiveDebugLogMode(context: Context): Boolean {
         return getBooleanViaProvider(PrefConst.KEY_SENSITIVE_DEBUG_LOG_MODE, false)
     }
 
@@ -197,8 +190,7 @@ object PrefsReader {
         return getBooleanViaProvider(PrefConst.KEY_ENABLE_ANALYTICS, true)
     }
 
-    @JvmStatic
-    fun autoInputCodeEnabled(context: Context): Boolean {
+    override fun autoInputCodeEnabled(context: Context): Boolean {
         val defaultValue = true
         return getBooleanViaProvider(PrefConst.KEY_ENABLE_AUTO_INPUT_CODE, defaultValue)
     }
@@ -209,8 +201,7 @@ object PrefsReader {
         return getBooleanViaProvider(PrefConst.KEY_ENABLE_AUTO_ENTER_CODE, defaultValue)
     }
 
-    @JvmStatic
-    fun getAutoInputCodeDelay(context: Context): Long {
+    override fun getAutoInputCodeDelay(context: Context): Long {
         val value = getStringViaProvider(
             PrefConst.KEY_AUTO_INPUT_CODE_DELAY,
             MISSING_LONG_VALUE,
@@ -224,8 +215,7 @@ object PrefsReader {
             ?: PrefConst.KEY_AUTO_INPUT_CODE_DELAY_DEFAULT.toLong()
     }
 
-    @JvmStatic
-    fun getAutoInputCodeIntervalMs(context: Context): Long {
+    override fun getAutoInputCodeIntervalMs(context: Context): Long {
         val value = getStringViaProvider(
             PrefConst.KEY_AUTO_INPUT_CODE_INTERVAL,
             PrefConst.KEY_AUTO_INPUT_CODE_INTERVAL_DEFAULT,
@@ -237,8 +227,7 @@ object PrefsReader {
         }
     }
 
-    @JvmStatic
-    fun shouldShowToast(context: Context): Boolean {
+    override fun shouldShowToast(context: Context): Boolean {
         val defaultValue = true
         return getBooleanViaProvider(PrefConst.KEY_SHOW_TOAST, defaultValue)
     }
@@ -249,20 +238,17 @@ object PrefsReader {
         PrefConst.SMSCODE_KEYWORDS_DEFAULT,
     )
 
-    @JvmStatic
-    fun markAsReadEnabled(context: Context): Boolean {
+    override fun markAsReadEnabled(context: Context): Boolean {
         val defaultValue = false
         return getBooleanViaProvider(PrefConst.KEY_MARK_AS_READ, defaultValue)
     }
 
-    @JvmStatic
-    fun deleteSmsEnabled(context: Context): Boolean {
+    override fun deleteSmsEnabled(context: Context): Boolean {
         val defaultValue = false
         return getBooleanViaProvider(PrefConst.KEY_DELETE_SMS, defaultValue)
     }
 
-    @JvmStatic
-    fun copyToClipboardEnabled(context: Context): Boolean {
+    override fun copyToClipboardEnabled(context: Context): Boolean {
         val defaultValue = false
         val trace = readBooleanWithTrace(PrefConst.KEY_COPY_TO_CLIPBOARD, defaultValue)
         XLog.w(
@@ -279,8 +265,7 @@ object PrefsReader {
         return recordCodeSmsEnabled(context)
     }
 
-    @JvmStatic
-    fun recordCodeSmsEnabled(context: Context): Boolean {
+    override fun recordCodeSmsEnabled(context: Context): Boolean {
         return getBooleanViaProvider(PrefConst.KEY_ENABLE_CODE_RECORDS_CODE, true)
     }
 
@@ -289,30 +274,25 @@ object PrefsReader {
         return getBooleanViaProvider(PrefConst.KEY_ENABLE_CODE_RECORDS_PLAIN_SMS, true)
     }
 
-    @JvmStatic
-    fun recordAppNotifyEnabled(context: Context): Boolean {
+    override fun recordAppNotifyEnabled(context: Context): Boolean {
         return getBooleanViaProvider(PrefConst.KEY_ENABLE_CODE_RECORDS_APP_NOTIFY, true)
     }
 
-    @JvmStatic
-    fun recordCallNotifyEnabled(context: Context): Boolean {
+    override fun recordCallNotifyEnabled(context: Context): Boolean {
         return getBooleanViaProvider(PrefConst.KEY_ENABLE_CODE_RECORDS_CALL_NOTIFY, true)
     }
 
-    @JvmStatic
-    fun blockSmsEnabled(context: Context): Boolean {
+    override fun blockSmsEnabled(context: Context): Boolean {
         val defaultValue = false
         return getBooleanViaProvider(PrefConst.KEY_BLOCK_SMS, defaultValue)
     }
 
-    @JvmStatic
-    fun killMeEnabled(context: Context): Boolean {
+    override fun killMeEnabled(context: Context): Boolean {
         val defaultValue = false
         return getBooleanViaProvider(PrefConst.KEY_KILL_ME, defaultValue)
     }
 
-    @JvmStatic
-    fun showCodeNotification(context: Context): Boolean {
+    override fun showCodeNotification(context: Context): Boolean {
         val defaultValue = true
         return getBooleanViaProvider(PrefConst.KEY_SHOW_CODE_NOTIFICATION, defaultValue)
     }
@@ -323,14 +303,12 @@ object PrefsReader {
         return CodeNotificationOwner.normalize(value)
     }
 
-    @JvmStatic
-    fun autoCancelCodeNotification(context: Context): Boolean {
+    override fun autoCancelCodeNotification(context: Context): Boolean {
         val defaultValue = false
         return getBooleanViaProvider(PrefConst.KEY_AUTO_CANCEL_CODE_NOTIFICATION, defaultValue)
     }
 
-    @JvmStatic
-    fun getNotificationRetentionTime(context: Context): Int {
+    override fun getNotificationRetentionTime(context: Context): Int {
         val value = getStringViaProvider(
             PrefConst.KEY_NOTIFICATION_RETENTION_TIME,
             PrefConst.NOTIFICATION_RETENTION_TIME_DEFAULT,
@@ -342,8 +320,7 @@ object PrefsReader {
         }
     }
 
-    @JvmStatic
-    fun deduplicateSms(context: Context): Boolean {
+    override fun deduplicateSms(context: Context): Boolean {
         val defaultValue = true
         return getBooleanViaProvider(PrefConst.KEY_DEDUPLICATE_SMS, defaultValue)
     }
@@ -382,8 +359,7 @@ object PrefsReader {
         return getBooleanViaProvider(PrefConst.KEY_SMS_BLACKLIST_ACTION_BLOCK, defaultValue)
     }
 
-    @JvmStatic
-    fun getHistoryLimit(context: Context): Int {
+    override fun getHistoryLimit(context: Context): Int {
         return getCodeHistoryLimit(context)
     }
 
@@ -419,8 +395,7 @@ object PrefsReader {
         )
     }
 
-    @JvmStatic
-    fun getHistoryLimit(context: Context, msgType: Int, isCodeSms: Boolean): Int {
+    override fun getHistoryLimit(context: Context, msgType: Int, isCodeSms: Boolean): Int {
         return when (msgType) {
             SmsMsg.MSG_TYPE_APP_NOTIFY -> getAppNotifyHistoryLimit(context)
             SmsMsg.MSG_TYPE_CALL_NOTIFY -> getCallNotifyHistoryLimit(context)
@@ -438,8 +413,7 @@ object PrefsReader {
         }
     }
 
-    @JvmStatic
-    fun getIpcToken(context: Context): String {
+    override fun getIpcToken(context: Context): String {
         val trace = readStringWithTrace(PrefConst.KEY_IPC_TOKEN, "")
         if (trace.value.isBlank() || trace.source != "provider") {
             XLog.w(
@@ -459,5 +433,27 @@ object PrefsReader {
             else -> return ""
         }
         return getStringViaProvider(key, "").trim()
+    }
+
+    private class KitPreferenceSourceAdapter(
+        private val delegate: PreferenceSource,
+    ) : PrefsSource {
+        override val sourceName: String
+            get() = delegate.sourceName
+
+        override fun readBoolean(key: String, defaultValue: Boolean): PrefRead<Boolean> =
+            delegate.readBoolean(key, defaultValue).toCoreResult()
+
+        override fun readString(key: String, defaultValue: String): PrefRead<String> =
+            delegate.readString(key, defaultValue).toCoreResult()
+
+        override fun readInt(key: String, defaultValue: Int): PrefRead<Int> =
+            delegate.readInt(key, defaultValue).toCoreResult()
+
+        private fun <T> PreferenceRead<T>.toCoreResult(): PrefRead<T> = when (this) {
+            is PreferenceRead.Hit -> PrefRead.Hit(value, source)
+            PreferenceRead.Missing -> PrefRead.Miss
+            PreferenceRead.Unavailable -> PrefRead.Unavailable
+        }
     }
 }

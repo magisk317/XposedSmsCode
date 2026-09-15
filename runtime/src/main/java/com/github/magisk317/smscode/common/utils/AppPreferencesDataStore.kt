@@ -15,7 +15,6 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.github.magisk317.smscode.common.constant.CodeNotificationOwner
 import com.github.magisk317.smscode.common.constant.PrefConst
 import com.github.magisk317.smscode.common.utils.XLog
-import io.github.magisk317.smscode.runtime.common.utils.StorageUtils
 import io.github.magisk317.smscode.runtime.contract.prefs.PreferenceChange
 import io.github.magisk317.smscode.runtime.contract.prefs.PreferenceChangeSet
 import kotlinx.coroutines.flow.Flow
@@ -26,7 +25,6 @@ import java.io.File
 object AppPreferencesDataStore {
     private val backupCompatTipShownKey = booleanPreferencesKey(PrefConst.KEY_BACKUP_COMPAT_TIP_SHOWN)
     private const val DATASTORE_FILE_NAME = "app_preferences.preferences_pb"
-    private const val SHARED_PREFS_FILE_NAME = "xposed_prefs"
 
     @Volatile
     private var INSTANCE: DataStore<Preferences>? = null
@@ -40,36 +38,6 @@ object AppPreferencesDataStore {
                 File(safeContext.dataDir, "datastore/$DATASTORE_FILE_NAME")
             }.also { INSTANCE = it }
         }
-    }
-
-    private fun getDataStoreFile(context: Context): File = File(context.dataDir, "datastore/$DATASTORE_FILE_NAME")
-
-    private fun getSharedPrefsFile(context: Context): File =
-        File(context.dataDir, "shared_prefs/$SHARED_PREFS_FILE_NAME.xml")
-
-    private fun getSharedPrefs(context: Context): SharedPreferences =
-        context.getSharedPreferences(SHARED_PREFS_FILE_NAME, Context.MODE_PRIVATE)
-
-    private fun coerceBooleanValue(key: String, value: Boolean): Boolean {
-        if (key == PrefConst.KEY_SENSITIVE_DEBUG_LOG_MODE && !PrefsReader.isSensitiveDebugLogSupported()) {
-            return false
-        }
-        return value
-    }
-
-    private fun ensureDataStoreReadable(context: Context) {
-        val file = getDataStoreFile(context)
-        StorageUtils.setFileWorldReadable(file, 3)
-    }
-
-    private fun ensureSharedPrefsReadable(context: Context) {
-        val file = getSharedPrefsFile(context)
-        StorageUtils.setFileWorldReadable(file, 3)
-    }
-
-    fun ensureReadable(context: Context) {
-        ensureDataStoreReadable(context)
-        ensureSharedPrefsReadable(context)
     }
 
     @Volatile
@@ -93,7 +61,7 @@ object AppPreferencesDataStore {
         }
     }
 
-    private suspend fun populateEditor(context: Context, editor: SharedPreferences.Editor) {
+    private suspend fun populateRemoteEditor(context: Context, editor: SharedPreferences.Editor) {
         editor.putString(
             io.github.magisk317.xposed.logging.AnonymousInstallationId.PREFERENCE_KEY,
             getString(
@@ -110,6 +78,10 @@ object AppPreferencesDataStore {
                 PrefConst.KEY_MOBILE_ENTITLEMENT_AUTOMATION_ALLOWED,
                 PrefConst.DEFAULT_MOBILE_ENTITLEMENT_AUTOMATION_ALLOWED,
             ),
+        )
+        editor.putString(
+            PrefConst.KEY_MOBILE_ENTITLEMENT_TOKEN,
+            getString(context, PrefConst.KEY_MOBILE_ENTITLEMENT_TOKEN, ""),
         )
         editor.putBoolean(
             PrefConst.KEY_SETTINGS_ACCORDION_MODE,
@@ -286,20 +258,16 @@ object AppPreferencesDataStore {
     }
 
     suspend fun getBoolean(context: Context, key: String, defaultValue: Boolean): Boolean {
-        if (key == PrefConst.KEY_SENSITIVE_DEBUG_LOG_MODE && !PrefsReader.isSensitiveDebugLogSupported()) {
-            return false
-        }
         val prefKey = booleanPreferencesKey(key)
         return getInstance(context).data
-            .map { prefs: Preferences -> coerceBooleanValue(key, safeRead(prefs, prefKey, defaultValue)) }
+            .map { prefs: Preferences -> safeRead(prefs, prefKey, defaultValue) }
             .first()
     }
 
     suspend fun setBoolean(context: Context, key: String, value: Boolean) {
-        val safeValue = coerceBooleanValue(key, value)
         val prefKey = booleanPreferencesKey(key)
         getInstance(context).edit { prefs ->
-            prefs[prefKey] = safeValue
+            prefs[prefKey] = value
         }
     }
 
@@ -361,7 +329,7 @@ object AppPreferencesDataStore {
         changes.changes.forEach { change ->
             when (change) {
                 is PreferenceChange.PutBoolean -> {
-                    prefs[booleanPreferencesKey(change.key)] = coerceBooleanValue(change.key, change.value)
+                    prefs[booleanPreferencesKey(change.key)] = change.value
                 }
                 is PreferenceChange.PutString -> prefs[stringPreferencesKey(change.key)] = change.value
                 is PreferenceChange.PutInt -> prefs[intPreferencesKey(change.key)] = change.value
@@ -388,7 +356,7 @@ object AppPreferencesDataStore {
                 when (operation) {
                     is BatchOp.SetBool -> {
                         prefs[booleanPreferencesKey(operation.key)] =
-                            coerceBooleanValue(operation.key, operation.value)
+                            operation.value
                     }
                     is BatchOp.SetStr -> prefs[stringPreferencesKey(operation.key)] = operation.value
                     is BatchOp.SetInt -> prefs[intPreferencesKey(operation.key)] = operation.value
@@ -425,65 +393,6 @@ object AppPreferencesDataStore {
         data class SetFlt(val key: String, val value: Float) : BatchOp
     }
 
-    suspend fun getBooleanCompat(context: Context, key: String, defaultValue: Boolean): Boolean {
-        if (key == PrefConst.KEY_SENSITIVE_DEBUG_LOG_MODE && !PrefsReader.isSensitiveDebugLogSupported()) {
-            return false
-        }
-        val sharedPrefs = getSharedPrefs(context)
-        return if (sharedPrefs.contains(key)) {
-            runCatching {
-                coerceBooleanValue(key, sharedPrefs.getBoolean(key, defaultValue))
-            }.getOrElse {
-                XLog.w(
-                    "SharedPreferences boolean type mismatch key=%s err=%s",
-                    key,
-                    it.message ?: it.javaClass.simpleName,
-                )
-                getBoolean(context, key, defaultValue)
-            }
-        } else {
-            getBoolean(context, key, defaultValue)
-        }
-    }
-
-    suspend fun getStringCompat(context: Context, key: String, defaultValue: String): String {
-        val sharedPrefs = getSharedPrefs(context)
-        return if (sharedPrefs.contains(key)) {
-            sharedPrefs.getString(key, defaultValue) ?: defaultValue
-        } else {
-            getString(context, key, defaultValue)
-        }
-    }
-
-    suspend fun getIntCompat(context: Context, key: String, defaultValue: Int): Int {
-        val sharedPrefs = getSharedPrefs(context)
-        return if (sharedPrefs.contains(key)) {
-            runCatching {
-                sharedPrefs.getInt(key, defaultValue)
-            }.getOrElse {
-                XLog.w(
-                    "SharedPreferences int type mismatch key=%s err=%s",
-                    key,
-                    it.message ?: it.javaClass.simpleName,
-                )
-                getInt(context, key, defaultValue)
-            }
-        } else {
-            getInt(context, key, defaultValue)
-        }
-    }
-
-    suspend fun syncToSharedPrefs(context: Context): Boolean {
-        val editor = getSharedPrefs(context).edit()
-        populateEditor(context, editor)
-        if (!editor.commit()) {
-            XLog.w("SharedPreferences sync commit failed")
-            return false
-        }
-        ensureSharedPrefsReadable(context)
-        return syncToRemotePrefs(context) != false
-    }
-
     @SuppressLint("ApplySharedPref")
     @Suppress("TooGenericExceptionCaught")
     suspend fun syncToRemotePrefs(context: Context): Boolean? {
@@ -491,7 +400,7 @@ object AppPreferencesDataStore {
         val prefs = getRemotePrefs() ?: return false
         return try {
             val editor = prefs.edit()
-            populateEditor(context, editor)
+            populateRemoteEditor(context, editor)
             editor.commit().also { committed ->
                 if (!committed) XLog.w("RemotePrefs sync commit failed")
             }
@@ -501,11 +410,21 @@ object AppPreferencesDataStore {
         }
     }
 
+    suspend fun snapshotForBackup(context: Context): Map<String, String?> =
+        getInstance(context).data.first().asMap()
+            .asSequence()
+            .filterNot { (key, _) ->
+                key.name.startsWith("internal_") ||
+                    key.name == PrefConst.KEY_MOBILE_ENTITLEMENT_TOKEN ||
+                    key.name == PrefConst.KEY_MOBILE_ENTITLEMENT_AUTOMATION_ALLOWED
+            }
+            .associate { (key, value) -> key.name to value.toString() }
+
     fun getBooleanFlow(context: Context, key: String, defaultValue: Boolean): Flow<Boolean> {
         val prefKey = booleanPreferencesKey(key)
         return getInstance(context).data
             .map { prefs: Preferences ->
-                coerceBooleanValue(key, safeRead(prefs, prefKey, defaultValue))
+                safeRead(prefs, prefKey, defaultValue)
             }
     }
 

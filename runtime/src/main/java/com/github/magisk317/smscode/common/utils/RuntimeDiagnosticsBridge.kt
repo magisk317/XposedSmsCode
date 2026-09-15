@@ -6,7 +6,8 @@ import io.github.magisk317.smscode.runtime.contract.diagnostics.ActivationDiagno
 import io.github.magisk317.smscode.runtime.contract.diagnostics.ActivationStatusInputs
 import io.github.magisk317.smscode.runtime.common.diagnostics.RuntimeDiagnosticsConfig
 import io.github.magisk317.smscode.runtime.common.diagnostics.RuntimeDiagnosticsInstaller
-import io.github.magisk317.smscode.runtime.common.diagnostics.RuntimeDiagnosticsPreferences
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 
 object RuntimeDiagnosticsBridge {
     private const val KEY_RUNTIME_LOG_RETENTION_DAYS = "pref_runtime_log_retention_days"
@@ -31,13 +32,15 @@ object RuntimeDiagnosticsBridge {
     fun ensureInstalled() = installer.ensureInstalled()
 
     private fun readConfiguredLogRetentionDays(context: Context): Int {
-        return RuntimeDiagnosticsPreferences.readInt(
-            context = context,
-            preferencesName = "xposed_prefs",
-            key = KEY_RUNTIME_LOG_RETENTION_DAYS,
-            defaultValue = RUNTIME_LOG_RETENTION_DAYS_DEFAULT,
-            minimumValue = RUNTIME_LOG_RETENTION_DAYS_MIN,
-        )
+        // RuntimeLogStore may invoke this callback with a target-process context when the
+        // provider route is unavailable. Never interpret that process's private DataStore as
+        // module configuration.
+        if (context.packageName != BuildConfig.APPLICATION_ID) {
+            return RUNTIME_LOG_RETENTION_DAYS_DEFAULT
+        }
+        return runBlocking(Dispatchers.IO) {
+            AppPreferencesDataStore.getInt(context, KEY_RUNTIME_LOG_RETENTION_DAYS, RUNTIME_LOG_RETENTION_DAYS_DEFAULT)
+        }.coerceAtLeast(RUNTIME_LOG_RETENTION_DAYS_MIN)
     }
 
     private fun resolveActivationStatus(

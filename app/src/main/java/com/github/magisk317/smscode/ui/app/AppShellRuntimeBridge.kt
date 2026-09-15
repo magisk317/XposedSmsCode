@@ -2,11 +2,10 @@ package com.github.magisk317.smscode.ui.app
 
 import android.content.Context
 import android.net.Uri
-import com.github.magisk317.smscode.common.utils.PrefsReader
 import com.github.magisk317.smscode.data.db.DBProvider
 import com.github.magisk317.smscode.runtime.RuntimeCodeRecordRestoreFacade
 import com.github.magisk317.smscode.runtime.RuntimeNotificationFacade
-import com.github.magisk317.smscode.runtime.RuntimePrefsFacade
+import com.github.magisk317.smscode.common.utils.HookPrefsReader
 import com.github.magisk317.smscode.runtime.RuntimeStorageFacade
 import com.github.magisk317.smscode.runtime.bridge.HookContentProviderAccess
 import com.github.magisk317.smscode.runtime.bridge.HookRuntimeGateClaimResult
@@ -14,10 +13,8 @@ import com.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
 
 internal object AppShellRuntimeBridge {
     fun install(context: Context) {
-        PrefsReader.setHookContext(context.applicationContext ?: context)
-        PrefsReader.invalidateCache()
         HookRuntimeBridge.install(
-            prefs = RuntimePrefsFacade,
+            prefs = HookPrefsReader,
             notification = RuntimeNotificationFacade,
             storage = RuntimeStorageFacade,
             codeRecord = RuntimeCodeRecordRestoreFacade,

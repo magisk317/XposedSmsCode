@@ -3,7 +3,7 @@ package com.github.magisk317.smscode.xp
 import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
-import com.github.magisk317.smscode.common.utils.PrefsReader
+import com.github.magisk317.smscode.common.utils.HookPrefsReader
 import com.github.magisk317.smscode.common.utils.RuntimeDiagnosticsBridge
 import io.github.magisk317.smscode.runtime.common.diagnostics.RuntimeLogStore
 import com.github.magisk317.smscode.data.db.DBProvider
@@ -11,7 +11,6 @@ import com.github.magisk317.smscode.data.log.RuntimeLogProvider
 import com.github.magisk317.smscode.runtime.BuildConfig as RuntimeBuildConfig
 import com.github.magisk317.smscode.runtime.RuntimeCodeRecordRestoreFacade
 import com.github.magisk317.smscode.runtime.RuntimeNotificationFacade
-import com.github.magisk317.smscode.runtime.RuntimePrefsFacade
 import com.github.magisk317.smscode.runtime.RuntimeStorageFacade
 import com.github.magisk317.smscode.runtime.bridge.HookContentProviderAccess
 import com.github.magisk317.smscode.runtime.bridge.HookRuntimeGateClaimResult
@@ -59,7 +58,7 @@ object XposedRuntimeInstaller {
         })
         XposedLogClient.configure(
             authority = RuntimeLogProvider.authority(BuildConfig.APPLICATION_ID),
-            source = "SmsCode",
+            source = "smscode",
         )
         val hookApp = runCatching {
             Class.forName("android.app.ActivityThread")
@@ -67,7 +66,7 @@ object XposedRuntimeInstaller {
                 .invoke(null) as? android.content.Context
         }.getOrNull()
         val otelEnabled = if (hookApp != null) {
-            BuildConfig.DEBUG || PrefsReader.isAnalyticsEnabled(hookApp)
+            BuildConfig.DEBUG || HookPrefsReader.isAnalyticsEnabled(hookApp)
         } else {
             true
         }
@@ -79,7 +78,7 @@ object XposedRuntimeInstaller {
                 projectId = "83955172",
                 projectName = "XposedSmsCode",
                 environment = if (BuildConfig.DEBUG) "debug" else "release",
-                serviceInstanceId = PrefsReader.getStringPreference(
+                serviceInstanceId = HookPrefsReader.getStringPreference(
                     AnonymousInstallationId.PREFERENCE_KEY,
                     "",
                 ),
@@ -96,7 +95,7 @@ object XposedRuntimeInstaller {
      */
     private fun installHookBridge() {
         HookRuntimeBridge.install(
-            prefs = RuntimePrefsFacade,
+            prefs = HookPrefsReader,
             notification = RuntimeNotificationFacade,
             storage = RuntimeStorageFacade,
             codeRecord = RuntimeCodeRecordRestoreFacade,
@@ -149,8 +148,7 @@ object XposedRuntimeInstaller {
 
     fun ensureHookProcessLogging(moduleContext: Context) {
         this.moduleContext = moduleContext.applicationContext ?: moduleContext
-        com.github.magisk317.smscode.common.utils.PrefsReader.setHookContext(this.moduleContext!!)
-        val verbose = com.github.magisk317.smscode.common.utils.PrefsReader.isVerboseLogMode(moduleContext)
+        val verbose = HookPrefsReader.isVerboseLogMode(moduleContext)
         RuntimeDiagnosticsBridge.ensureInstalled()
         RuntimeLogStore.initialize(this.moduleContext ?: moduleContext, enableDetailedLogs = verbose)
         // Cross-process cache invalidation: listen for module-app notifyChange signals.
@@ -164,7 +162,7 @@ object XposedRuntimeInstaller {
         synchronized(this) {
             if (logSinkInstalled) return
             XposedLogClient.attachContext(moduleContext ?: return@synchronized)
-            android.util.Log.w("XSmsCode", "installLogSink: installing CoreLogSink, moduleContext=${moduleContext != null}")
+            android.util.Log.w("smscode", "installLogSink: installing CoreLogSink, moduleContext=${moduleContext != null}")
             syncLogSanitizerConfig()
             CoreLogSinkHolder.install(object : CoreLogSink {
                 override fun append(
@@ -174,6 +172,7 @@ object XposedRuntimeInstaller {
                     force: Boolean,
                     route: String?,
                     sensitive: Boolean,
+                    throwableText: String?,
                 ) {
                     // Cheap TTL re-sync so a settings-page toggle reaches this hook
                     // process within SANITIZER_SYNC_TTL_MS without reading prefs on
@@ -184,7 +183,7 @@ object XposedRuntimeInstaller {
                     } else {
                         message
                     }
-                    XposedLogClient.append(priority, tag, safeMessage, force, route, sensitive)
+                    XposedLogClient.append(priority, tag, safeMessage, force, route, sensitive, throwableText)
                 }
             })
             logSinkInstalled = true
@@ -199,10 +198,10 @@ object XposedRuntimeInstaller {
     private fun syncLogSanitizerConfig() {
         val ctx = moduleContext ?: return
         val sensitiveDebugEnabled = runCatching {
-            com.github.magisk317.smscode.common.utils.PrefsReader.isSensitiveDebugLogMode(ctx)
+            HookPrefsReader.isSensitiveDebugLogMode(ctx)
         }.getOrNull()
         io.github.magisk317.xposed.logging.LogSanitizerConfig
-            .syncSanitizationEnabled(sensitiveDebugEnabled?.not())
+            .syncFromVerboseMode(sensitiveDebugEnabled)
         lastSanitizerSyncAt = android.os.SystemClock.elapsedRealtime()
     }
 

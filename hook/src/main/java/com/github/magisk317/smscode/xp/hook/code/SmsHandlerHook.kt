@@ -640,6 +640,9 @@ class SmsHandlerHook : BaseHook() {
         val runtime = ensureRuntimeForDispatch(param, receiverIndex = -1) ?: return
         val pluginContext = runtime.pluginContext
         val phoneContext = runtime.phoneContext
+        if (!runCatching { HookRuntimeBridge.prefsAccess.isEnabled(pluginContext) }.getOrDefault(false)) {
+            return
+        }
         if (!runCatching { HookRuntimeBridge.prefsAccess.mobileAutomationAllowed(pluginContext) }.getOrDefault(false)) {
             XLog.i("Mobile entitlement gate skipped dispatch-chain side effects")
             return

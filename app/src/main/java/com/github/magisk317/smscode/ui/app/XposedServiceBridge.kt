@@ -1,5 +1,6 @@
 package com.github.magisk317.smscode.ui.app
 
+import com.github.magisk317.smscode.common.constant.PrefConst
 import com.github.magisk317.smscode.common.utils.AppPreferencesDataStore
 import com.github.magisk317.smscode.common.utils.HookPreferenceMirror
 import io.github.libxposed.service.XposedService
@@ -32,7 +33,7 @@ internal object XposedServiceBridge {
                             service.frameworkVersion,
                         )
                         application.handleXposedServiceBound(
-                            remotePrefsProvider = { service.getRemotePreferences("xposed_prefs") },
+                            remotePrefsProvider = { service.getRemotePreferences(PrefConst.REMOTE_PREFS_GROUP) },
                             frameworkName = service.frameworkName,
                             frameworkVersion = service.frameworkVersion,
                         )

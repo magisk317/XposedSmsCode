@@ -21,7 +21,7 @@ object HookPreferenceSpecs {
         PreferenceSpec.string(PrefConst.KEY_AUTO_INPUT_CODE_INTERVAL, PrefConst.KEY_AUTO_INPUT_CODE_INTERVAL_DEFAULT)
 }
 
-/** Coordinates durable writes before cache invalidation and cross-process publication. */
+/** Coordinates durable writes before cross-process preference publication. */
 object AppPreferenceTransactions {
     suspend fun commit(
         context: Context,
@@ -31,7 +31,6 @@ object AppPreferenceTransactions {
         edit: PreferenceEditScope.() -> Unit,
     ): PreferenceCommitResult = createHookPreferenceCommitCoordinator(
         persistence = persistence,
-        invalidate = PrefsReader::invalidateCache,
         publish = {
             check(HookPreferenceMirror.publish(context)) { "Hook preference publication failed" }
         },
@@ -40,12 +39,10 @@ object AppPreferenceTransactions {
 
 internal fun createHookPreferenceCommitCoordinator(
     persistence: AtomicPreferencePersistence,
-    invalidate: suspend () -> Unit,
     publish: suspend () -> Unit,
 ): PreferenceCommitCoordinator = PreferenceCommitCoordinator(
     persistence = persistence,
     hooks = listOf(
-        PreferencePostCommitHooks.invalidate { invalidate() },
         PreferencePostCommitHooks.publish { publish() },
     ),
 )

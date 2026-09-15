@@ -37,7 +37,7 @@ object HookCacheInvalidator {
             val handler = Handler(Looper.getMainLooper())
             val prefsObs = object : ContentObserver(handler) {
                 override fun onChange(selfChange: Boolean) {
-                    PrefsReader.invalidateCache()
+                    HookPrefsReader.invalidateCache()
                     XLog.d("HookCacheInvalidator: prefs cache cleared")
                     MagiskOtel.event(
                         name = "hook.cache",

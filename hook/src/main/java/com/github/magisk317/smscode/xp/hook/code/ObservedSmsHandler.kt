@@ -7,7 +7,7 @@ import android.net.Uri
 import android.os.Build
 import android.telephony.SubscriptionManager
 import android.util.Log
-import com.github.magisk317.smscode.runtime.RuntimePrefsFacade as PrefsReader
+import com.github.magisk317.smscode.common.utils.HookPrefsReader
 import io.github.magisk317.smscode.runtime.contract.logging.LogRoute
 import com.github.magisk317.smscode.common.utils.SmsCodeUtils
 import com.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
@@ -30,7 +30,7 @@ internal class ObservedSmsHandler(
     },
     private val planFactory: (SmsCodePostParseCoordinator.Settings) -> SmsCodePostParseCoordinator.ObservedSmsPlan =
         SmsCodePostParseCoordinator::createObservedSmsPlan,
-    private val moduleEnabledReader: (Context) -> Boolean = PrefsReader::isEnabled,
+        private val moduleEnabledReader: (Context) -> Boolean = HookPrefsReader::isEnabled,
     private val conflictSuppressor: (Context, String) -> Boolean = { context, source ->
         ModuleConflictArbiter.shouldSuppressByRelay(context, source)
     },

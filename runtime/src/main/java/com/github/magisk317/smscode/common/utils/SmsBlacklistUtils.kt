@@ -18,13 +18,13 @@ object SmsBlacklistUtils {
     private val adapter = RuntimeSmsBlacklistAdapter(
         configProvider = SmsBlacklistConfigProvider { context ->
             SmsBlacklistConfig(
-                enabled = PrefsReader.smsBlacklistEnabled(context),
-                actionDelete = PrefsReader.smsBlacklistActionDelete(context),
-                actionBlock = PrefsReader.smsBlacklistActionBlock(context),
-                numbers = PrefsReader.smsBlacklistNumbers(context),
-                prefixes = PrefsReader.smsBlacklistPrefixes(context),
-                content = PrefsReader.smsBlacklistContent(context),
-                regex = PrefsReader.smsBlacklistRegex(context),
+                enabled = HookPrefsReader.smsBlacklistEnabled(context),
+                actionDelete = HookPrefsReader.smsBlacklistActionDelete(context),
+                actionBlock = HookPrefsReader.smsBlacklistActionBlock(context),
+                numbers = HookPrefsReader.smsBlacklistNumbers(context),
+                prefixes = HookPrefsReader.smsBlacklistPrefixes(context),
+                content = HookPrefsReader.smsBlacklistContent(context),
+                regex = HookPrefsReader.smsBlacklistRegex(context),
             )
         },
     )

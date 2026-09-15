@@ -2,7 +2,7 @@ package com.github.magisk317.smscode.xp.hook.code.action.impl
 
 import android.content.Context
 import android.content.Intent
-import com.github.magisk317.smscode.runtime.RuntimePrefsFacade as PrefsReader
+import com.github.magisk317.smscode.common.utils.HookPrefsReader
 import com.github.magisk317.smscode.common.utils.SmsCodeUtils
 import io.github.magisk317.smscode.runtime.common.utils.StringUtils
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
@@ -37,7 +37,7 @@ class SmsParseAction(pluginContext: Context, phoneContext: Context, smsMsg: SmsM
             smsIntent = mSmsIntent,
             deduplicateEnabled = mDeduplicateEnabled,
             incomingSmsParser = { SmsMsg.fromIntent(it).toVerificationMessage() },
-            sensitiveDebugLogReader = PrefsReader::isSensitiveDebugLogMode,
+            sensitiveDebugLogReader = HookPrefsReader::isSensitiveDebugLogMode,
             summarizeSender = { sensitive, value ->
                 if (sensitive) StringUtils.escape(value).orEmpty() else StringUtils.summarizeSender(value)
             },

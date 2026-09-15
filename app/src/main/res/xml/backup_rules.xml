@@ -14,7 +14,10 @@
         path="datastore/" />
     <exclude
         domain="sharedpref"
-        path="xposed_prefs.xml" />
+        path="smscode_telemetry_prefs.xml" />
+    <exclude
+        domain="sharedpref"
+        path="mobile_entitlement.xml" />
     <exclude
         domain="file"
         path="log/" />

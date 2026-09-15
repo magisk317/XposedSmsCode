@@ -1,16 +1,15 @@
 package com.github.magisk317.smscode.data.log
 
-import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
-import android.os.Binder
 import androidx.core.net.toUri
 import com.github.magisk317.smscode.common.utils.ProviderCallerGuard
 import com.github.magisk317.smscode.common.utils.RuntimeDiagnosticsBridge
 import io.github.magisk317.smscode.runtime.common.diagnostics.RuntimeLogStore
 import io.github.magisk317.smscode.runtime.common.utils.StorageUtils
 import io.github.magisk317.xposed.logging.BaseXposedLogProvider
-import io.github.magisk317.xposed.logging.FixedWindowIngressLimiter
+import io.github.magisk317.xposed.logging.LogProviderQuotaConfig
+import io.github.magisk317.xposed.logging.LogProviderQuotaPolicy
 import io.github.magisk317.xposed.logging.XposedLogEvent
 import java.io.File
 import java.util.Locale
@@ -24,17 +23,19 @@ class RuntimeLogProvider : BaseXposedLogProvider() {
         return ProviderCallerGuard.isCallerAllowed(context)
     }
 
-    override fun insert(uri: Uri, values: ContentValues?): Uri? {
-        val ctx = context?.applicationContext ?: return null
-        if (uri.lastPathSegment != ENTRY_PATH || values == null) return null
-        val callingUid = Binder.getCallingUid()
-        if (!ingressLimiter.tryAcquire(callingUid, System.currentTimeMillis())) return null
-        if (!RuntimeLogIngressPolicy.ensurePersistentQuota(StorageUtils.getLogDir(ctx))) return null
-        return super.insert(uri, values)
-    }
+    override val ingressPolicy: LogProviderQuotaPolicy = LogProviderQuotaPolicy(
+        LogProviderQuotaConfig(
+            maxEventsPerWindow = 600,
+            windowMs = 60_000L,
+            maxBytesPerDay = RuntimeLogIngressPolicy.MAX_PERSISTED_LOG_BYTES,
+            maxEventsPerDay = 100_000L,
+            maxTrackedUids = 64,
+        ),
+    )
 
     override fun appendLog(event: XposedLogEvent) {
         val ctx = context?.applicationContext ?: return
+        if (!RuntimeLogIngressPolicy.ensurePersistentQuota(StorageUtils.getLogDir(ctx))) return
         RuntimeDiagnosticsBridge.ensureInstalled()
         RuntimeLogStore.initialize(ctx, enableDetailedLogs = true)
         val normalizedLevel = RuntimeLogIngressPolicy.normalizeLevel(event.level)
@@ -50,17 +51,16 @@ class RuntimeLogProvider : BaseXposedLogProvider() {
                 event.route ?: event.source,
                 RuntimeLogIngressPolicy.MAX_ROUTE_BYTES,
             ),
+            throwable = RuntimeLogIngressPolicy.truncateUtf8(
+                event.throwable,
+                RuntimeLogIngressPolicy.MAX_THROWABLE_BYTES,
+            ),
         )
     }
 
     companion object {
         private const val AUTHORITY_SUFFIX = "runtime-log.provider"
-        private const val ENTRY_PATH = "entry"
         private val FORCE_LEVELS = setOf("W", "E")
-        private val ingressLimiter = FixedWindowIngressLimiter(
-            maxEvents = 600,
-            windowMs = 60_000L,
-        )
 
         fun authority(packageName: String): String = "$packageName.$AUTHORITY_SUFFIX"
 
@@ -123,6 +123,7 @@ internal object RuntimeLogIngressPolicy {
     const val MAX_TAG_BYTES = 128
     const val MAX_ROUTE_BYTES = 128
     const val MAX_MESSAGE_BYTES = 16 * 1024
+    const val MAX_THROWABLE_BYTES = 64 * 1024
     const val MAX_PERSISTED_LOG_BYTES = 32L * 1024L * 1024L
     private const val PERSISTED_LOG_HEADROOM_BYTES = 64L * 1024L
 

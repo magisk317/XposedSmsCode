@@ -13,7 +13,6 @@ import androidx.core.net.toUri
 import kotlinx.coroutines.runBlocking
 import com.github.magisk317.smscode.common.constant.PrefConst
 import com.github.magisk317.smscode.common.utils.AppPreferencesDataStore
-import io.github.magisk317.smscode.runtime.common.diagnostics.RuntimeDiagnosticsPreferences
 import com.github.magisk317.smscode.common.utils.ProviderCallerGuard
 import com.github.magisk317.smscode.data.db.entity.AppInfo
 import com.github.magisk317.smscode.data.db.entity.SmsCodeRule
@@ -674,13 +673,13 @@ class DBProvider : ContentProvider() {
     )
 
     private fun getRetentionDays(ctx: Context): Bundle? {
-        val days = RuntimeDiagnosticsPreferences.readInt(
-            context = ctx,
-            preferencesName = "xposed_prefs",
-            key = "pref_runtime_log_retention_days",
-            defaultValue = 2,
-            minimumValue = 1,
-        )
+        val days = runBlocking {
+            AppPreferencesDataStore.getInt(
+                ctx,
+                PrefConst.KEY_RUNTIME_LOG_RETENTION_DAYS,
+                PrefConst.RUNTIME_LOG_RETENTION_DAYS_DEFAULT,
+            )
+        }.coerceAtLeast(PrefConst.RUNTIME_LOG_RETENTION_DAYS_MIN)
         return Bundle().apply {
             putInt(RuntimeStateProviderContract.RESULT_RETENTION_DAYS, days)
         }
@@ -829,7 +828,7 @@ class DBProvider : ContentProvider() {
         /**
          * Notify-only signal URI for hook-side prefs cache invalidation.
          * Not backed by a table: writers call [notifyPrefsCacheChanged]; the hook process
-         * registers a ContentObserver and clears [com.github.magisk317.smscode.common.utils.PrefsReader].
+         * registers a ContentObserver and clears [com.github.magisk317.smscode.common.utils.HookPrefsReader].
          */
         fun prefsCacheContentUri(context: Context): Uri =
             prefsCacheContentUriString(context.packageName).toUri()
@@ -855,7 +854,7 @@ class DBProvider : ContentProvider() {
         /**
          * Broadcasts a prefs-cache invalidation to any hooked process observing
          * [prefsCacheContentUri]. Safe to call from the module app after mirroring
-         * settings to xposed_prefs / remote prefs.
+         * settings to the Xposed RemotePreferences group.
          */
         fun notifyPrefsCacheChanged(context: Context) {
             val appContext = context.applicationContext ?: context

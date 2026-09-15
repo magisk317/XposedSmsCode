@@ -84,7 +84,7 @@ object SmsCodeUtils {
 
     private val adapter = RuntimeSmsCodeAdapter(
         keywordProvider = SmsKeywordProvider { context, override ->
-            override ?: PrefsReader.getSMSCodeKeywords(context).orEmpty()
+            override ?: HookPrefsReader.getSMSCodeKeywords(context).orEmpty()
         },
         ruleProvider = SmsCodeRuleProvider { context ->
             loadMergedRuleSpecs(context)
@@ -98,16 +98,28 @@ object SmsCodeUtils {
         context: Context,
         content: String,
         source: SmsCodeParseSource? = null,
+        keywordsRegex: String? = null,
     ): String {
-        return adapter.parseSmsCodeIfExists(context, content, source = source)
+        return adapter.parseSmsCodeIfExists(
+            context,
+            content,
+            override = keywordsRegex,
+            source = source,
+        )
     }
 
     suspend fun parseSmsCodeResultIfExists(
         context: Context,
         content: String,
         source: SmsCodeParseSource? = null,
+        keywordsRegex: String? = null,
     ): SmsCodeParseResult {
-        return adapter.parseSmsCodeResultIfExists(context, content, source = source)
+        return adapter.parseSmsCodeResultIfExists(
+            context,
+            content,
+            override = keywordsRegex,
+            source = source,
+        )
     }
 
     @JvmStatic

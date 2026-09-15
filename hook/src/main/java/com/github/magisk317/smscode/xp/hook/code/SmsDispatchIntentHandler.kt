@@ -2,7 +2,7 @@ package com.github.magisk317.smscode.xp.hook.code
 
 import android.content.Context
 import android.content.Intent
-import com.github.magisk317.smscode.runtime.RuntimePrefsFacade as PrefsReader
+import com.github.magisk317.smscode.common.utils.HookPrefsReader
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
 import com.github.magisk317.smscode.xp.helper.ModuleConflictArbiter
 import com.github.magisk317.smscode.xp.helper.RelayConflictNoticeHelper
@@ -12,7 +12,7 @@ import io.github.magisk317.smscode.runtime.verification.SmsDispatchIntentHandler
 
 internal class SmsDispatchIntentHandler(
     private val runtimeResolver: (String) -> SmsHookRuntimeContext?,
-    private val moduleEnabledReader: (Context) -> Boolean = PrefsReader::isEnabled,
+    private val moduleEnabledReader: (Context) -> Boolean = HookPrefsReader::isEnabled,
     private val conflictSuppressor: (Context, String) -> Boolean = { context, source ->
         ModuleConflictArbiter.shouldSuppressByRelay(context, source)
     },

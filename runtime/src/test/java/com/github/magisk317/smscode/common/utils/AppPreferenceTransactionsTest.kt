@@ -38,14 +38,13 @@ class AppPreferenceTransactionsTest {
     }
 
     @Test
-    fun `successful persistence invalidates before publish`() = runBlocking {
+    fun `successful persistence publishes after persistence`() = runBlocking {
         val events = mutableListOf<String>()
         val coordinator = createHookPreferenceCommitCoordinator(
             persistence = AtomicPreferencePersistence {
                 events += "persist"
                 true
             },
-            invalidate = { events += "invalidate" },
             publish = { events += "publish" },
         )
 
@@ -54,7 +53,7 @@ class AppPreferenceTransactionsTest {
         }
 
         assertTrue(result is PreferenceCommitResult.Persisted)
-        assertEquals(listOf("persist", "invalidate", "publish"), events)
+        assertEquals(listOf("persist", "publish"), events)
     }
 
     @Test
@@ -65,7 +64,6 @@ class AppPreferenceTransactionsTest {
                 events += "persist"
                 false
             },
-            invalidate = { events += "invalidate" },
             publish = { events += "publish" },
         )
 

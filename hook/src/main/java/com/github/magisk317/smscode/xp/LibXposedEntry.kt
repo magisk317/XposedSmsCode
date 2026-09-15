@@ -1,7 +1,8 @@
 package com.github.magisk317.smscode.xp
 
 import com.github.magisk317.smscode.runtime.BuildConfig as RuntimeBuildConfig
-import com.github.magisk317.smscode.common.utils.PrefsReader
+import com.github.magisk317.smscode.common.constant.PrefConst
+import com.github.magisk317.smscode.common.utils.HookPrefsReader
 import com.github.magisk317.smscode.xp.hook.code.SmsHandlerHook
 import com.github.magisk317.smscode.xp.hook.me.ModuleUtilsHook
 import com.github.magisk317.smscode.xp.hook.mms.MmsMessagesHook
@@ -39,7 +40,7 @@ class LibXposedEntry : BaseLibXposedEntry {
         installCoreRuntime()
         HookEnv.init(hookApi)
         val remotePrefsProvider = { runCatching { getRemotePreferences(REMOTE_PREFS_GROUP) }.getOrNull() }
-        com.github.magisk317.smscode.common.utils.PrefsReader.setRemotePrefsProvider(remotePrefsProvider)
+        HookPrefsReader.setRemotePrefsProvider(remotePrefsProvider)
         CorePrefsBridge.installRemote(remotePrefsProvider)
         // Diagnostic: test remote prefs reading
         runCatching {
@@ -80,7 +81,7 @@ class LibXposedEntry : BaseLibXposedEntry {
     }
 
     private companion object {
-        private const val TAG = "XSmsCode"
-        private const val REMOTE_PREFS_GROUP = "xposed_prefs"
+        private const val TAG = "smscode"
+        private const val REMOTE_PREFS_GROUP = PrefConst.REMOTE_PREFS_GROUP
     }
 }

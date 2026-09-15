@@ -4,7 +4,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
 import android.os.Bundle
-import com.github.magisk317.smscode.runtime.RuntimePrefsFacade as PrefsReader
+import com.github.magisk317.smscode.common.utils.HookPrefsReader
 import com.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
 import io.github.magisk317.smscode.xposed.utils.XLog
 import com.github.magisk317.smscode.data.db.entity.AppInfo
@@ -38,7 +38,7 @@ class AutoInputAction(
             smsMsg = mSmsMsg.toVerificationMessage(),
             deduplicateEnabled = deduplicateEnabled,
             dispatchDelayMs = dispatchDelayMs,
-            deduplicateReader = PrefsReader::deduplicateSms,
+            deduplicateReader = HookPrefsReader::deduplicateSms,
             sharedGateClaimer = { context, fileName, key, windowMs, maxEntries ->
                 HookRuntimeBridge.contentProviderAccess.claimRuntimeGate(
                     context = context,
@@ -54,8 +54,8 @@ class AutoInputAction(
                 }
             },
             packageBlockedChecker = ::isPackageBlocked,
-            autoEnterReader = PrefsReader::autoEnterCodeEnabled,
-            inputIntervalReader = PrefsReader::getAutoInputCodeIntervalMs,
+            autoEnterReader = HookPrefsReader::autoEnterCodeEnabled,
+            inputIntervalReader = HookPrefsReader::getAutoInputCodeIntervalMs,
             attemptRecorder = { smsMsg, foregroundPackage ->
                 recordAutoInputAttempt(smsMsg.raw, foregroundPackage)
             },

@@ -12,7 +12,6 @@ import com.github.magisk317.smscode.common.constant.PrefConst
 import io.github.magisk317.smscode.runtime.common.diagnostics.ActivationDiagnosticsStore
 import com.github.magisk317.smscode.common.utils.AppPreferencesDataStore
 import com.github.magisk317.smscode.common.utils.HookPreferenceMirror
-import com.github.magisk317.smscode.runtime.RuntimePrefsFacade as PrefsReader
 import io.github.magisk317.smscode.xposed.utils.ModuleActivationStore
 import io.github.magisk317.smscode.xposed.utils.ModuleUtils
 import com.github.magisk317.smscode.common.utils.RuntimeDiagnosticsBridge
@@ -28,10 +27,11 @@ import io.github.magisk317.smscode.xposed.runtime.CoreRuntimeAccess
 import io.github.magisk317.smscode.xposed.utils.XLog
 import io.github.magisk317.xposed.logging.DefaultLogSanitizer
 import com.github.magisk317.smscode.di.appModule
-import com.github.magisk317.smscode.entitlement.MobileEntitlementCoordinator
 import com.github.magisk317.smscode.entitlement.mobileEntitlementGoogleSignInModule
 import com.magisk317.mobile.entitlement.MobileEntitlementBridge
 import com.magisk317.mobile.entitlement.MobileEntitlementConfig
+import com.magisk317.mobile.entitlement.MobileEntitlementCoordinator
+import com.magisk317.mobile.entitlement.MobileEntitlementPublishedState
 import com.magisk317.mobile.entitlement.MobileEntitlementRuntime
 import com.github.magisk317.smscode.runtime.RuntimeCodeRecordRestoreFacade
 import java.util.UUID
@@ -56,7 +56,8 @@ class SmsCodeApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        android.util.Log.w("XSmsCode", "SmsCodeApplication.onCreate() START")
+        configureMobileEntitlement()
+        android.util.Log.w("smscode", "SmsCodeApplication.onCreate() START")
         val installationId = AnonymousInstallationId.getOrCreate(this, TELEMETRY_PREFS_NAME)
         runBlocking {
             AppPreferencesDataStore.setString(
@@ -112,6 +113,10 @@ class SmsCodeApplication : Application() {
         importPendingCodeRecords()
         syncPreferences()
         registerLicenseActivityKiller()
+        MobileEntitlementCoordinator.initialize(this, applicationScope)
+    }
+
+    private fun configureMobileEntitlement() {
         MobileEntitlementRuntime.configure(
             MobileEntitlementConfig(
                 apiOrigin = BuildConfig.MOBILE_ENTITLEMENT_API_ORIGIN,
@@ -121,15 +126,18 @@ class SmsCodeApplication : Application() {
                 enforced = BuildConfig.MOBILE_ENTITLEMENT_ENFORCED,
             ),
             bridge = object : MobileEntitlementBridge {
-                override fun publish(context: Context, allowed: Boolean) {
-                    runBlocking {
-                        AppPreferencesDataStore.setBoolean(
-                            context,
+                override fun publish(context: Context, state: MobileEntitlementPublishedState): Boolean = runBlocking {
+                    AppPreferencesDataStore.batchEdit(context) {
+                        setBoolean(
                             PrefConst.KEY_MOBILE_ENTITLEMENT_AUTOMATION_ALLOWED,
-                            allowed,
+                            state.automationAllowed,
                         )
-                        HookPreferenceMirror.publish(context)
+                        setString(
+                            PrefConst.KEY_MOBILE_ENTITLEMENT_TOKEN,
+                            state.entitlementToken.orEmpty(),
+                        )
                     }
+                    HookPreferenceMirror.publish(context)
                 }
 
                 override fun log(message: String, vararg args: Any?) {
@@ -137,11 +145,10 @@ class SmsCodeApplication : Application() {
                 }
             },
         )
-        MobileEntitlementCoordinator.initialize(this, applicationScope)
     }
 
     private companion object {
-        const val TELEMETRY_PREFS_NAME = "xposed_prefs"
+        const val TELEMETRY_PREFS_NAME = "smscode_telemetry_prefs"
     }
 
     private fun importPendingCodeRecords() {
@@ -166,7 +173,7 @@ class SmsCodeApplication : Application() {
                 false,
             )
             io.github.magisk317.xposed.logging.LogSanitizerConfig
-                .syncSanitizationEnabled(!sensitiveDebugMode)
+                .syncFromVerboseMode(sensitiveDebugMode)
             StorageUtils.ensureExternalAppDataPermissions(this@SmsCodeApplication)
         }
     }
@@ -192,6 +199,7 @@ class SmsCodeApplication : Application() {
                 force: Boolean,
                 route: String?,
                 sensitive: Boolean,
+                throwableText: String?,
             ) {
                 // sensitive=true means payload may contain secrets; honor shared switch
                 // Opening pref_sensitive_debug_log_mode disables sanitization and lets
@@ -202,7 +210,7 @@ class SmsCodeApplication : Application() {
                     message
                 }
                 RuntimeDiagnosticsBridge.ensureInstalled()
-                RuntimeLogStore.append(priority, tag, safeMessage, force, route)
+                RuntimeLogStore.append(priority, tag, safeMessage, force, route, throwableText)
             }
         })
         CoreHookPolicyHolder.install(object : CoreHookPolicy {
@@ -228,7 +236,7 @@ class SmsCodeApplication : Application() {
             context = this,
             frameworkName = frameworkName ?: "unknown",
             frameworkVersion = frameworkVersion ?: "unknown",
-            verboseLogging = PrefsReader.isVerboseLogMode(this),
+            verboseLogging = readVerboseLogMode(),
         )
         XLog.i(
             "Xposed service connected: framework=%s version=%s",
@@ -254,7 +262,7 @@ class SmsCodeApplication : Application() {
         ModuleUtils.setRuntimeActivated(false)
         ActivationDiagnosticsStore.recordServiceDied(
             context = this,
-            verboseLogging = PrefsReader.isVerboseLogMode(this),
+            verboseLogging = readVerboseLogMode(),
         )
         XLog.w("Xposed service disconnected")
         MagiskOtel.event(
@@ -283,6 +291,10 @@ class SmsCodeApplication : Application() {
             ),
             statusOk = false,
         )
+    }
+
+    private fun readVerboseLogMode(): Boolean = runBlocking(Dispatchers.IO) {
+        AppPreferencesDataStore.getBoolean(this@SmsCodeApplication, PrefConst.KEY_VERBOSE_LOG_MODE, false)
     }
 
     private fun registerLicenseActivityKiller() {

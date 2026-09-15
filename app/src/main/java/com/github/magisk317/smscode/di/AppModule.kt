@@ -3,7 +3,7 @@ package com.github.magisk317.smscode.di
 import com.github.magisk317.smscode.runtime.RuntimeBackupFacade
 import com.github.magisk317.smscode.runtime.RuntimeCodeRecordFacade
 import com.github.magisk317.smscode.runtime.RuntimeNotificationFacade
-import com.github.magisk317.smscode.runtime.RuntimePrefsFacade
+import com.github.magisk317.smscode.runtime.AppPrefsFacade
 import com.github.magisk317.smscode.runtime.RuntimeStorageFacade
 import com.github.magisk317.smscode.runtime.RuntimeStoreFacade
 import com.github.magisk317.smscode.runtime.RuntimeUpdateFacade
@@ -26,7 +26,7 @@ val appModule = module {
     single<UiBackupAccess> { RuntimeBackupFacade }
     single<UiCodeRecordAccess> { RuntimeCodeRecordFacade }
     single<UiNotificationAccess> { RuntimeNotificationFacade }
-    single<UiPrefsAccess> { RuntimePrefsFacade }
+    single<UiPrefsAccess> { AppPrefsFacade }
     single<UiUpdateAccess> { RuntimeUpdateFacade }
 
     // Database

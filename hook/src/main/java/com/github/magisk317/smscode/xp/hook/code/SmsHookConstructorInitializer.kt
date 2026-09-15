@@ -1,7 +1,7 @@
 package com.github.magisk317.smscode.xp.hook.code
 
 import android.content.Context
-import com.github.magisk317.smscode.runtime.RuntimePrefsFacade as PrefsReader
+import com.github.magisk317.smscode.common.utils.HookPrefsReader
 import com.github.magisk317.smscode.xp.helper.ModuleConflictArbiter
 import com.github.magisk317.smscode.xp.helper.RelayConflictNoticeHelper
 import io.github.magisk317.smscode.runtime.verification.SmsHookConstructorInitializer as SharedSmsHookConstructorInitializer
@@ -14,7 +14,7 @@ internal class SmsHookConstructorInitializer(
     private val conflictSuppressor: (Context, String) -> Boolean = { context, source ->
         ModuleConflictArbiter.shouldSuppressByRelay(context, source)
     },
-    private val showNotificationReader: (Context) -> Boolean = PrefsReader::showCodeNotification,
+    private val showNotificationReader: (Context) -> Boolean = HookPrefsReader::showCodeNotification,
     private val notificationChannelInitializer: (SmsHookRuntimeContext) -> Unit = {},
     private val copyCodeRegistrar: (SmsHookRuntimeContext) -> Unit = {},
     private val activationMarker: (Context) -> Unit = ModuleActivationStore::markActivated,
