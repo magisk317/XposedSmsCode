@@ -1,18 +1,18 @@
 include:
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: 69622a4d07ac0237f83d2e4d3210602603241267
+    ref: 4b14b261edc2e64f22d9e133d5125df3f7405098
     file: /.gitlab/ci/android.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: 69622a4d07ac0237f83d2e4d3210602603241267
+    ref: 4b14b261edc2e64f22d9e133d5125df3f7405098
     file: /.gitlab/ci/android-release.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: 69622a4d07ac0237f83d2e4d3210602603241267
+    ref: 4b14b261edc2e64f22d9e133d5125df3f7405098
     file: /.gitlab/ci/telegram.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: 69622a4d07ac0237f83d2e4d3210602603241267
+    ref: 4b14b261edc2e64f22d9e133d5125df3f7405098
     file: /.gitlab/ci/renovate.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: 69622a4d07ac0237f83d2e4d3210602603241267
+    ref: 4b14b261edc2e64f22d9e133d5125df3f7405098
     file: /.gitlab/ci/cancel-mr-pipelines.yml
 
 workflow:
@@ -42,17 +42,18 @@ stages:
 
 variables:
   MAGISK_CI_TOOLKIT_REPOSITORY: "https://gitlab.com/magisk3171/shared/magisk-ci-toolkit.git"
-  MAGISK_CI_TOOLKIT_REF: "69622a4d07ac0237f83d2e4d3210602603241267"
+  MAGISK_CI_TOOLKIT_REF: "617a52e75324b5726998f07d504948b7657027a9"
   MAGISK_CANCEL_OLDER_MR_PIPELINES: "true"
   GIT_DEPTH: "0"
   GIT_SUBMODULE_STRATEGY: recursive
   GIT_SUBMODULE_DEPTH: "0"
   MAGISK_ANDROID_SDKMANAGER_CHANNEL: "3"
-  MAGISK_ANDROID_COMPILE_SDK: "37"
-  MAGISK_ANDROID_COMPILE_SDK_PACKAGE: "platforms;android-37.0"
+  MAGISK_ANDROID_COMPILE_SDK: "37.2"
+  MAGISK_ANDROID_COMPILE_SDK_PACKAGE: "platforms;android-37.2"
   MAGISK_ANDROID_SDK_PACKAGES: "platform-tools build-tools;37.0.0"
   MAGISK_GRADLE_ARGS: "--warning-mode all"
   MAGISK_ANDROID_RELEASE_PACKAGE_NAME: "com.github.tianma8023.xposed.smscode"
+  MAGISK_ANDROID_RELEASE_PLAY_URL: "https://play.google.com/store/apps/details?id=com.github.tianma8023.xposed.smscode"
   MAGISK_ANDROID_RELEASE_GITHUB_REPOSITORY: "magisk3171/XposedSmsCode"
   MAGISK_ANDROID_RELEASE_MODULES_REPO: ""
   MAGISK_ANDROID_RELEASE_PUBLISH_PLAY: "true"
@@ -88,6 +89,8 @@ android:check:
   extends:
     - .magisk_android_build
     - .xposed_android_rules
+  tags:
+    - magisk-amd64-linux
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - when: never
@@ -102,6 +105,37 @@ android:check:
       bash "$MAGISK_CI_TOOLKIT_DIR/gradle/run_gradle_with_retry.sh" \
         ${MAGISK_GRADLE_ARGS:---warning-mode all} "${selected_tasks[@]}" -PenableKover=true
 
+android:test:
+  extends:
+    - .magisk_android_base
+    - .xposed_android_rules
+  stage: quality
+  tags:
+    - magisk-amd64-linux
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH'
+    - when: never
+  needs: []
+  script:
+    - |
+      set -euo pipefail
+      mapfile -t selected_tasks < <(bash scripts/ci/select_android_test_tasks.sh "$MAGISK_CI_TOOLKIT_DIR")
+      if ((${#selected_tasks[@]} == 0)); then
+        echo "No Android test tasks selected for this change."
+        exit 0
+      fi
+      bash "$MAGISK_CI_TOOLKIT_DIR/gradle/run_gradle_with_retry.sh" \
+        ${MAGISK_GRADLE_ARGS:---warning-mode all} "${selected_tasks[@]}" -PenableKover=true
+  artifacts:
+    name: "XposedSmsCode-test-$CI_COMMIT_REF_SLUG"
+    when: always
+    expire_in: 14 days
+    reports:
+      junit:
+        - "**/build/test-results/test*/TEST-*.xml"
+    paths:
+      - "**/build/reports/kover/**"
+
 cancel:older:mr:pipelines:
   extends: .magisk_cancel_older_mr_pipelines
 
@@ -109,6 +143,8 @@ android:build:
   extends:
     - .magisk_android_build
     - .xposed_signed_android_rules
+  tags:
+    - magisk-arm64-linux
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: never
@@ -131,7 +167,7 @@ android:detekt:
     - .xposed_android_rules
   stage: quality
   tags:
-    - magisk-arm64-linux
+    - magisk-amd64-linux
   allow_failure: true
   needs: []
   artifacts:
@@ -220,6 +256,8 @@ android:ci:play-beta-bundle:
     - magisk-arm64-linux
   rules:
     - if: '$CI_COMMIT_BRANCH == "beta" && $CI_PIPELINE_SOURCE == "push" && $MAGISK_ANDROID_RELEASE_PUBLISH_PLAY == "true" && $RELEASE_KEYSTORE != "" && $STORE_PASSWORD != "" && $KEY_ALIAS != "" && $KEY_PASSWORD != "" && $ANDROID_PUBLISHER_CREDENTIALS != ""'
+    - if: '$CI_COMMIT_BRANCH == "beta" && $CI_PIPELINE_SOURCE == "schedule" && ($CI_COMMIT_TITLE =~ /^Merge branch .renovate\// || $CI_COMMIT_TITLE =~ /\[renovate\]$/) && $MAGISK_ANDROID_RELEASE_PUBLISH_PLAY == "true" && $RELEASE_KEYSTORE != "" && $STORE_PASSWORD != "" && $KEY_ALIAS != "" && $KEY_PASSWORD != "" && $ANDROID_PUBLISHER_CREDENTIALS != ""'
+      when: on_success
     - when: never
   script:
     - |
@@ -239,7 +277,7 @@ android:ci:play-beta-bundle:
           -PversionName="$MAGISK_PLAY_VERSION_NAME" -PversionCode="$MAGISK_PLAY_VERSION_CODE"
   artifacts:
     when: always
-    expire_in: 1 day
+    expire_in: 7 days
     paths:
       - app/build/outputs/bundle/**/*.aab
       - app/build/outputs/mapping/**/mapping.txt
@@ -253,7 +291,13 @@ android:ci:play-beta:
   tags:
     - magisk-arm64-linux
   rules:
+    - if: '$CI_COMMIT_BRANCH == "beta" && $CI_PIPELINE_SOURCE == "push" && ($CI_COMMIT_TITLE =~ /^Merge branch .renovate\// || $CI_COMMIT_TITLE =~ /\[renovate\]$/) && $MAGISK_ANDROID_RELEASE_PUBLISH_PLAY == "true" && $ANDROID_PUBLISHER_CREDENTIALS != ""'
+      when: on_success
     - if: '$CI_COMMIT_BRANCH == "beta" && $CI_PIPELINE_SOURCE == "push" && $MAGISK_ANDROID_RELEASE_PUBLISH_PLAY == "true" && $ANDROID_PUBLISHER_CREDENTIALS != ""'
+      when: manual
+      allow_failure: true
+    - if: '$CI_COMMIT_BRANCH == "beta" && $CI_PIPELINE_SOURCE == "schedule" && ($CI_COMMIT_TITLE =~ /^Merge branch .renovate\// || $CI_COMMIT_TITLE =~ /\[renovate\]$/) && $MAGISK_ANDROID_RELEASE_PUBLISH_PLAY == "true" && $ANDROID_PUBLISHER_CREDENTIALS != ""'
+      when: on_success
     - when: never
   needs:
     - job: android:ci:play-beta-bundle
@@ -309,7 +353,11 @@ telegram:ci:
   stage: notify
   allow_failure: true
   rules:
+    - if: '$CI_COMMIT_BRANCH == "beta" && $CI_PIPELINE_SOURCE == "push" && ($CI_COMMIT_TITLE =~ /^Merge branch .renovate\// || $CI_COMMIT_TITLE =~ /\[renovate\]$/) && $RELEASE_KEYSTORE != "" && $STORE_PASSWORD != "" && $KEY_ALIAS != "" && $KEY_PASSWORD != ""'
+      when: on_success
     - if: '$CI_COMMIT_BRANCH == "beta" && $CI_PIPELINE_SOURCE == "push" && $RELEASE_KEYSTORE != "" && $STORE_PASSWORD != "" && $KEY_ALIAS != "" && $KEY_PASSWORD != ""'
+      when: manual
+      allow_failure: true
     - when: never
   tags:
     - magisk-arm64-linux
@@ -324,13 +372,10 @@ telegram:ci:
     - job: android:build
       artifacts: true
       optional: true
-    - job: android:ci:play-beta
-      artifacts: false
-      optional: true
 
 renovate:gitlab:
   extends: .magisk_renovate_gitlab
-  interruptible: true
+  interruptible: false
   stage: maintenance
   tags:
     - magisk-arm64-linux

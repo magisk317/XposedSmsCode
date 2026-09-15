@@ -3,6 +3,18 @@
 本日志记录了项目重构后的主要变更。
 
 ---
+## [v3.3.3] - 2026-09-15
+- 版本：`versionCode 127` / `versionName 3.3.3`。
+- `[ui]` 统一 UI 组件与通用设置。
+- `[entitlement]` 激活界面支持发放时间与设备 ID 复制。
+- `[prefs]` 隔离 Hook 与 App 的偏好读取。
+- `[logging]` 统一日志导出并在写入时脱敏。
+- `[build]` 升级 Kotlin、AGP 及依赖，收口版本目录。
+- `[ci]` 升级发布工具链。
+
+> Full Changelog: https://gitlab.com/magisk3171/XposedSmsCode/-/compare/v3.3.2...v3.3.3
+
+---
 
 ## [v3.3.2] - 2026-08-31
 - 版本：`versionCode 126` / `versionName 3.3.2`。
