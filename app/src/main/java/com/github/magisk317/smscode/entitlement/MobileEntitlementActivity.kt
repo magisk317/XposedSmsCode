@@ -9,6 +9,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,7 +20,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.ui.Alignment
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -42,6 +45,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.magisk317.mobile.entitlement.MobileEntitlementCoordinator
+import com.magisk317.mobile.entitlement.MobileEntitlementStatus
 import com.github.magisk317.smscode.core.R
 import com.github.magisk317.smscode.common.utils.XLog
 import com.github.magisk317.smscode.ui.theme.AppTheme
@@ -193,16 +198,10 @@ private fun MobileEntitlementScreen(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    val currentEvaluation = evaluation
                     Text(
                         text = stringResource(
                             R.string.mobile_entitlement_status,
-                            when (currentEvaluation?.status) {
-                                MobileEntitlementStatus.UNACTIVATED ->
-                                    stringResource(R.string.mobile_entitlement_status_not_activated)
-                                null -> stringResource(R.string.mobile_entitlement_not_loaded)
-                                else -> currentEvaluation.status.name
-                            },
+                            stringResource(mobileEntitlementStatusStringRes(evaluation?.status)),
                         ),
                         style = MaterialTheme.typography.titleMedium,
                     )
@@ -216,30 +215,53 @@ private fun MobileEntitlementScreen(
                             },
                         ),
                     )
-                    evaluation?.claims?.expiresAt?.let { expiresAt ->
-                        Text(stringResource(R.string.mobile_entitlement_expires, formatEpoch(expiresAt)))
+                    evaluation?.claims?.issuedAt?.takeIf { it > 0 }?.let { issuedAt ->
+                        Text(stringResource(R.string.mobile_entitlement_issued_at, formatEpoch(issuedAt)))
                     }
-                    if (evaluation?.renewDue == true) {
-                        Text(
-                            text = stringResource(R.string.mobile_entitlement_renew_due),
-                            color = MaterialTheme.colorScheme.primary,
-                        )
+                    evaluation?.claims?.deviceId?.takeIf { it.isNotBlank() }?.let { deviceId ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = stringResource(R.string.mobile_entitlement_device_id, deviceId),
+                                modifier = Modifier.weight(1f, fill = false),
+                            )
+                            IconButton(
+                                onClick = {
+                                    val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
+                                    cm?.setPrimaryClip(android.content.ClipData.newPlainText("device_id", deviceId))
+                                    android.widget.Toast
+                                        .makeText(
+                                            context,
+                                            context.getString(R.string.mobile_entitlement_copied),
+                                            android.widget.Toast.LENGTH_SHORT,
+                                        ).show()
+                                },
+                            ) {
+                                Icon(
+                                    Icons.Default.ContentCopy,
+                                    contentDescription = stringResource(R.string.mobile_entitlement_copy),
+                                    modifier = Modifier.padding(start = 4.dp),
+                                )
+                            }
+                        }
                     }
                 }
             }
-            val isActivated = evaluation?.status == MobileEntitlementStatus.ACTIVE ||
-                evaluation?.status == MobileEntitlementStatus.GRACE
+            val isActivated = isMobileEntitlementActivated(evaluation?.status)
 
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Text(
-                        text = stringResource(R.string.mobile_entitlement_activation_token_label),
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    if (!isActivated) {
+            if (!isActivated) {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.mobile_entitlement_activation_token_label),
+                            style = MaterialTheme.typography.titleMedium,
+                        )
                         OutlinedTextField(
                             value = activationTokenInput,
                             onValueChange = { activationTokenInput = it.trim().uppercase() },
@@ -260,12 +282,6 @@ private fun MobileEntitlementScreen(
                         }
                         Text(
                             text = stringResource(R.string.mobile_entitlement_activation_token_get_hint),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    } else {
-                        Text(
-                            text = stringResource(R.string.mobile_entitlement_activation_token_used),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -319,3 +335,13 @@ private fun formatEpoch(epochSeconds: Long): String =
     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
         .withZone(ZoneId.systemDefault())
         .format(Instant.ofEpochSecond(epochSeconds))
+
+internal fun isMobileEntitlementActivated(status: MobileEntitlementStatus?): Boolean =
+    status == MobileEntitlementStatus.ACTIVE || status == MobileEntitlementStatus.GRACE
+
+@androidx.annotation.StringRes
+internal fun mobileEntitlementStatusStringRes(status: MobileEntitlementStatus?): Int = when {
+    status == null -> R.string.mobile_entitlement_not_loaded
+    isMobileEntitlementActivated(status) -> R.string.module_status_active
+    else -> R.string.module_status_inactive
+}
