@@ -3,13 +3,10 @@
 package com.github.magisk317.smscode.ui.home
 
 import android.content.Intent
-import android.graphics.Bitmap
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.ComponentActivity
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -34,15 +31,9 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.CompositingStrategy
 import com.github.magisk317.smscode.common.utils.HookPreferenceMirror
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.core.graphics.createBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.SpanStyle
@@ -99,7 +90,6 @@ import androidx.lifecycle.lifecycleScope
 import org.koin.android.ext.android.inject
 import org.koin.androidx.compose.koinViewModel
 import java.io.File
-import kotlin.math.hypot
 
 class MainActivity : ComponentActivity() {
 
@@ -199,21 +189,9 @@ class MainActivity : ComponentActivity() {
             // Circular Reveal Animation State
             var currentThemeMode by remember { mutableIntStateOf(themeState.mode) }
             var currentUiKitStyle by remember { mutableIntStateOf(themeState.uiKitStyle) }
-            var screenshotBitmap by remember { mutableStateOf<Bitmap?>(null) }
-            val revealAnim = remember { Animatable(0f) }
-            var isAnimating by remember { mutableStateOf(false) }
-            var animationCenter by remember { mutableStateOf(Offset.Zero) }
+            val themeRevealState = io.github.magisk317.uikit.theme.rememberThemeRevealState()
             val view = LocalView.current
             var requestedTab by remember { mutableStateOf<Any?>(null) }
-
-            fun clearScreenshotBitmap() {
-                screenshotBitmap?.let { bitmap ->
-                    if (!bitmap.isRecycled) {
-                        bitmap.recycle()
-                    }
-                }
-                screenshotBitmap = null
-            }
 
             LaunchedEffect(Unit) {
                 if (!SPUtils.isPrivacyPolicyAccepted(context)) {
@@ -250,66 +228,21 @@ class MainActivity : ComponentActivity() {
             // Effect to trigger logic when ThemeState changes
             LaunchedEffect(themeState) {
                 if (themeState.mode != currentThemeMode) {
-                    val width = view.width
-                    val height = view.height
-                    val pixelCount = width.toLong() * height.toLong()
-                    val exceedsLimits = width <= 0 ||
-                        height <= 0 ||
-                        width > MAX_CAPTURE_SIDE_PX ||
-                        height > MAX_CAPTURE_SIDE_PX ||
-                        pixelCount > MAX_CAPTURE_PIXELS
-                    if (exceedsLimits) {
-                        XLog.w(
-                            "Skip theme capture due to size: width=%d height=%d pixels=%d",
-                            width,
-                            height,
-                            pixelCount,
-                        )
-                        clearScreenshotBitmap()
-                        isAnimating = false
-                        currentThemeMode = themeState.mode
-                        return@LaunchedEffect
+                    val requestedCenter = if (themeState.centerX >= 0f && themeState.centerY >= 0f) {
+                        Offset(themeState.centerX, themeState.centerY)
+                    } else {
+                        Offset.Unspecified
                     }
-
-                    try {
-                        clearScreenshotBitmap()
-                        val bitmap = createBitmap(width, height, Bitmap.Config.ARGB_8888)
-                        val canvas = android.graphics.Canvas(bitmap)
-                        view.draw(canvas)
-                        screenshotBitmap = bitmap
-
-                        val centerX = if (themeState.centerX >= 0) themeState.centerX else width / 2f
-                        val centerY = if (themeState.centerY >= 0) themeState.centerY else height / 2f
-                        animationCenter = Offset(centerX, centerY)
-
-                        isAnimating = true
+                    val animated = themeRevealState.animateThemeChange(
+                        view = view,
+                        requestedCenter = requestedCenter,
+                    ) {
                         currentThemeMode = themeState.mode
                         currentUiKitStyle = themeState.uiKitStyle
-
-                        revealAnim.snapTo(0f)
-                        revealAnim.animateTo(
-                            targetValue = 1f,
-                            animationSpec = tween(durationMillis = 600),
-                        )
-                    } catch (oom: OutOfMemoryError) {
-                        XLog.w("Theme capture OOM, fallback to direct mode switch", oom)
+                    }
+                    if (!animated) {
                         currentThemeMode = themeState.mode
                         currentUiKitStyle = themeState.uiKitStyle
-                    } catch (e: RuntimeException) {
-                        if (e.message?.contains(LARGE_BITMAP_ERROR_KEYWORD, ignoreCase = true) == true) {
-                            XLog.w("Theme capture too large bitmap, fallback to direct mode switch")
-                        } else {
-                            XLog.w("Theme capture runtime exception: %s", e.message ?: "unknown")
-                        }
-                        currentThemeMode = themeState.mode
-                        currentUiKitStyle = themeState.uiKitStyle
-                    } catch (t: Throwable) {
-                        XLog.w("Theme capture failed: %s", t.message ?: "unknown")
-                        currentThemeMode = themeState.mode
-                        currentUiKitStyle = themeState.uiKitStyle
-                    } finally {
-                        isAnimating = false
-                        clearScreenshotBitmap()
                     }
                 } else if (themeState.uiKitStyle != currentUiKitStyle) {
                     currentUiKitStyle = themeState.uiKitStyle
@@ -653,35 +586,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                        // Overlay for Circular Reveal
-                        if (isAnimating && screenshotBitmap != null && !screenshotBitmap!!.isRecycled) {
-                            val bitmap = screenshotBitmap!!.asImageBitmap()
-                            Image(
-                                bitmap = bitmap,
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .graphicsLayer {
-                                        // Use Offscreen to allow BlendMode.Clear to punch a hole
-                                        compositingStrategy = CompositingStrategy.Offscreen
-                                    }
-                                    .drawWithContent {
-                                        drawContent() // Draw the Old Screenshot
-
-                                        // Calculate specific radius for time t
-                                        val maxRadius = hypot(size.width.toDouble(), size.height.toDouble()).toFloat()
-                                        val radius = maxRadius * revealAnim.value
-
-                                        // Draw a transparent circle to reveal the new content underneath
-                                        drawCircle(
-                                            color = androidx.compose.ui.graphics.Color.Transparent,
-                                            radius = radius,
-                                            center = animationCenter,
-                                            blendMode = BlendMode.Clear,
-                                        )
-                                    },
-                            )
-                        }
+                        io.github.magisk317.uikit.theme.ThemeRevealOverlay(themeRevealState)
                         DismissibleSnackbarHost(
                             hostState = appSnackbarHostState,
                             modifier = Modifier

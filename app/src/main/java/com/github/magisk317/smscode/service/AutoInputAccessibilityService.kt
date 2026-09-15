@@ -11,15 +11,17 @@ import androidx.core.content.ContextCompat
 import io.github.magisk317.smscode.runtime.verification.AutoInputAccessibilityNodeHelper
 import io.github.magisk317.smscode.runtime.verification.AutoInputAccessibilityNodeHelper.Result as AutoInputResult
 import io.github.magisk317.smscode.runtime.verification.AutoInputAccessibilityRequestHandler
-import com.github.magisk317.smscode.runtime.RuntimePrefsFacade as PrefsReader
+import com.github.magisk317.smscode.common.constant.PrefConst
+import com.github.magisk317.smscode.common.utils.AppPreferencesDataStore
 import io.github.magisk317.smscode.xposed.hook.system.SystemInputInjectorHook
 import io.github.magisk317.smscode.xposed.utils.XLog
 import io.github.magisk317.xposed.logging.MagiskOtel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 
 class AutoInputAccessibilityService : AccessibilityService() {
 
     private var receiverRegistered = false
-
     override fun onCreate() {
         super.onCreate()
         XLog.d("Accessibility lifecycle create: %s", accessibilityStateSnapshot())
@@ -28,7 +30,7 @@ class AutoInputAccessibilityService : AccessibilityService() {
 
     private val autoInputReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            if (!PrefsReader.mobileAutomationAllowed(this@AutoInputAccessibilityService)) {
+            if (!isMobileAutomationAllowed()) {
                 XLog.i("Mobile entitlement gate skipped accessibility auto-input")
                 return
             }
@@ -183,11 +185,19 @@ class AutoInputAccessibilityService : AccessibilityService() {
         code: String,
         autoEnter: Boolean,
     ): AutoInputResult {
-        if (!PrefsReader.mobileAutomationAllowed(this)) {
+        if (!isMobileAutomationAllowed()) {
             XLog.i("Mobile entitlement gate skipped accessibility execution")
             return AutoInputResult(false, "none", "mobile_entitlement", packageName)
         }
         return AutoInputAccessibilityNodeHelper.performAutoInput(rootInActiveWindow, code, autoEnter)
+    }
+
+    private fun isMobileAutomationAllowed(): Boolean = runBlocking(Dispatchers.IO) {
+        AppPreferencesDataStore.getBoolean(
+            applicationContext,
+            PrefConst.KEY_MOBILE_ENTITLEMENT_AUTOMATION_ALLOWED,
+            PrefConst.DEFAULT_MOBILE_ENTITLEMENT_AUTOMATION_ALLOWED,
+        )
     }
 
 

@@ -3,6 +3,7 @@
 package com.github.magisk317.smscode.ui.home
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.os.SystemClock
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.clickable
@@ -40,8 +41,10 @@ import io.github.magisk317.uikit.R as UiKitR
 import io.github.magisk317.smscode.runtime.contract.diagnostics.ActivationStatusState
 import com.github.magisk317.smscode.common.constant.Const
 import com.github.magisk317.smscode.common.constant.PrefConst
+import com.github.magisk317.smscode.common.utils.AppPreferencesDataStore
 import io.github.magisk317.smscode.runtime.contract.diagnostics.ActivationDiagnosticsSnapshot
 import io.github.magisk317.smscode.runtime.common.diagnostics.ActivationDiagnosticsStore
+import io.github.magisk317.uikit.entitlement.rememberEntitlementState
 import com.github.magisk317.smscode.common.utils.PackageUtils
 import io.github.magisk317.smscode.runtime.common.utils.BrowserUtils
 import io.github.magisk317.uikit.common.showLatestSnackbar
@@ -65,6 +68,13 @@ import io.github.magisk317.uikit.surface.DonateDialog
 import io.github.magisk317.uikit.surface.QRCodeDialog
 import io.github.magisk317.uikit.surface.startAlipayPlatformDonate
 import io.github.magisk317.uikit.surface.saveImageToGalleryAsync
+
+private suspend fun readEntitlementAutomationAllowed(context: Context): Boolean =
+    AppPreferencesDataStore.getBoolean(
+        context,
+        PrefConst.KEY_MOBILE_ENTITLEMENT_AUTOMATION_ALLOWED,
+        false,
+    )
 
 private data class OverviewPageRuntime(
     val isActive: Boolean = true,
@@ -126,7 +136,10 @@ internal fun OverviewScreenShared() {
     var statusTapCount by remember { mutableStateOf(0) }
     var statusTapStartedAtMs by remember { mutableStateOf(0L) }
     var showStatusDiagnostics by remember { mutableStateOf(false) }
-    var mobileAutomationAllowed by remember { mutableStateOf(PrefConst.DEFAULT_MOBILE_ENTITLEMENT_AUTOMATION_ALLOWED) }
+    val mobileAutomationAllowed = rememberEntitlementState(
+        isActive = isActive,
+        dataStoreReader = ::readEntitlementAutomationAllowed,
+    )
     val snackbarHostState = LocalSnackbarHostState.current
     val scope = rememberCoroutineScope()
 
@@ -189,15 +202,6 @@ internal fun OverviewScreenShared() {
                     PackageUtils.getPackageVersion(context, context.packageName)
                 }
                 hasAppVersionSnapshot = true
-            }
-        }
-        launch {
-            mobileAutomationAllowed = withContext(Dispatchers.IO) {
-                com.github.magisk317.smscode.common.utils.AppPreferencesDataStore.getBoolean(
-                    context,
-                    PrefConst.KEY_MOBILE_ENTITLEMENT_AUTOMATION_ALLOWED,
-                    PrefConst.DEFAULT_MOBILE_ENTITLEMENT_AUTOMATION_ALLOWED,
-                )
             }
         }
     }

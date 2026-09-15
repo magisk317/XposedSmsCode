@@ -196,8 +196,10 @@
 
 
     <!-- preference others -->
+    <string name="pref_share_log_title">儲存日誌</string>
+    <string name="pref_share_log_summary">儲存日誌包用於除錯</string>
     <string name="pref_verbose_log_mode_title">詳細日誌</string>
-    <string name="pref_verbose_log_mode_summary">點擊查看、分享或清空日誌</string>
+    <string name="pref_verbose_log_mode_summary">列印詳細運行日誌</string>
     <string name="pref_enable_analytics_title">統計資料</string>
     <string name="pref_enable_analytics_summary">允許開發者匿名分析通道使用情況、成功率、崩潰等技術細節</string>
     <string name="pref_runtime_log_retention_days_title">日誌保留天數</string>
@@ -215,6 +217,8 @@
     <string name="runtime_log_clear_summary">清空所有運行日誌和崩潰檔案</string>
     <string name="pref_sensitive_debug_log_mode_title">敏感除錯日誌</string>
     <string name="pref_sensitive_debug_log_mode_summary">僅 Debug 版本提供。開啟後日誌可輸出手機號、簡訊正文與驗證碼明文。</string>
+    <string name="pref_log_sanitization_title">脫敏日誌</string>
+    <string name="pref_log_sanitization_summary">開啟後隱藏日誌中的敏感資訊</string>
     <string name="pref_auto_update_on_start_title">啟動時自動更新</string>
     <string name="pref_auto_update_on_start_summary">應用啟動時執行一次更新策略</string>
     <string name="pref_auto_update_wifi_only_title">僅 Wi-Fi 自動檢查更新</string>
@@ -554,4 +558,5 @@
     <string name="status_entitlement_unverified">服務鑑權：未通過</string>
     <string name="status_entitlement_checking">正在檢查模組啟用與服務鑑權...</string>
     <string name="status_activate_hint">請嘗試在 LSPosed 中啟用並勾選作用域</string>
+    <string name="settings_group_general_summary">應用程式行為、外觀與語言</string>
 </resources>

@@ -215,7 +215,7 @@ internal fun CodeRecordScreenShared(
     val prefs = koinInject<UiPrefsAccess>()
     val simSlot1Remark by produceState(initialValue = "", context, keepDataActive) {
         if (!keepDataActive) return@produceState
-        val fallback = withContext(Dispatchers.IO) { prefs.getSimSlotRemark(context, 0) }
+        val fallback = prefs.getSimSlotRemark(context, 0)
         value = fallback
         AppPreferencesDataStore.getStringFlow(
             context,
@@ -225,7 +225,7 @@ internal fun CodeRecordScreenShared(
     }
     val simSlot2Remark by produceState(initialValue = "", context, keepDataActive) {
         if (!keepDataActive) return@produceState
-        val fallback = withContext(Dispatchers.IO) { prefs.getSimSlotRemark(context, 1) }
+        val fallback = prefs.getSimSlotRemark(context, 1)
         value = fallback
         AppPreferencesDataStore.getStringFlow(
             context,
@@ -611,6 +611,7 @@ internal fun CodeRecordScreenShared(
                             simSlotRemarkResolver = simSlotRemarkResolver,
                             scrollChromeState = scrollChromeState,
                             isActive = isActive,
+                            scrollToTopSignal = refreshTrigger,
                             onRowSwipeGestureActiveChanged = swipeGestureCoordinator::update,
                         )
                     }
@@ -959,10 +960,12 @@ private fun RecordSplitColumn(
     simSlotRemarkResolver: (Int) -> String,
     scrollChromeState: io.github.magisk317.uikit.scroll.ScrollChromeState? = null,
     isActive: Boolean = true,
+    scrollToTopSignal: Int = 0,
     onRowSwipeGestureActiveChanged: (rowKey: Any, active: Boolean) -> Unit = { _, _ -> },
 ) {
     val listState = rememberLazyListState()
     io.github.magisk317.uikit.scroll.ReportLazyListScrollToChrome(listState, scrollChromeState)
+    io.github.magisk317.uikit.surface.ScrollToTopEffect(listState, scrollToTopSignal)
     val isMiuix = currentUiKitStyle() == UiKitStyle.Miuix
     Surface(
         modifier = modifier,

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -41,7 +42,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -66,6 +66,7 @@ import io.github.magisk317.uikit.surface.AppFloatingActionButton
 import io.github.magisk317.uikit.surface.AppPrimaryButton
 import io.github.magisk317.uikit.surface.AppSecondaryButton
 import io.github.magisk317.uikit.surface.AppTextField
+import io.github.magisk317.uikit.surface.rememberSaveableTextFieldState
 import io.github.magisk317.uikit.surface.AppTextButton
 import io.github.magisk317.uikit.surface.AppTopBar
 import io.github.magisk317.uikit.surface.DetailSectionCard
@@ -461,16 +462,16 @@ internal fun SmsCodeRuleEditorScreenShared(
         id = R.string.rule_test_guidance,
         stringResource(id = R.string.pref_smscode_test_title),
     )
-    var company by rememberSaveable { mutableStateOf("") }
-    var keyword by rememberSaveable { mutableStateOf("") }
-    var regex by rememberSaveable { mutableStateOf("") }
+    val company = rememberSaveableTextFieldState()
+    val keyword = rememberSaveableTextFieldState()
+    val regex = rememberSaveableTextFieldState()
     var loading by remember { mutableStateOf(ruleId != 0L) }
 
     LaunchedEffect(ruleId) {
         if (builtinRule != null) {
-            company = ""
-            keyword = builtinKeywordSetting
-            regex = builtinRule.codeRegex
+            company.setTextAndPlaceCursorAtEnd("")
+            keyword.setTextAndPlaceCursorAtEnd(builtinKeywordSetting)
+            regex.setTextAndPlaceCursorAtEnd(builtinRule.codeRegex)
             loading = false
             return@LaunchedEffect
         }
@@ -484,18 +485,18 @@ internal fun SmsCodeRuleEditorScreenShared(
             onBack()
             return@LaunchedEffect
         }
-        company = rule.company.orEmpty()
-        keyword = rule.codeKeyword
-        regex = rule.codeRegex
+        company.setTextAndPlaceCursorAtEnd(rule.company.orEmpty())
+        keyword.setTextAndPlaceCursorAtEnd(rule.codeKeyword)
+        regex.setTextAndPlaceCursorAtEnd(rule.codeRegex)
         loading = false
     }
 
     fun saveRule() {
         if (isBuiltinRule) return
         scope.launch {
-            val normalizedCompany = company.trim().ifBlank { null }
-            val normalizedKeyword = keyword.trim()
-            val normalizedRegex = regex.trim()
+            val normalizedCompany = company.text.toString().trim().ifBlank { null }
+            val normalizedKeyword = keyword.text.toString().trim()
+            val normalizedRegex = regex.text.toString().trim()
             when {
                 normalizedKeyword.isEmpty() -> {
                     snackbarHostState.showSnackbar(keywordEmptyText)
@@ -584,17 +585,16 @@ internal fun SmsCodeRuleEditorScreenShared(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             AppTextField(
-                value = company,
-                onValueChange = { company = it },
+                state = company,
                 modifier = Modifier.fillMaxWidth(),
                 label = companyLabel,
                 placeholder = { Text(stringResource(id = R.string.rule_company_placeholder)) },
                 supportingText = { Text(if (isBuiltinRule) builtinSummary else rulesSummary) },
                 readOnly = isBuiltinRule,
                 enabled = !loading,
-                trailingIcon = if (isBuiltinRule && company.isNotBlank()) {
+                trailingIcon = if (isBuiltinRule && company.text.isNotBlank()) {
                     {
-                        IconButton(onClick = { copyField(companyLabel, company) }) {
+                        IconButton(onClick = { copyField(companyLabel, company.text.toString()) }) {
                             Icon(Icons.Filled.ContentCopy, contentDescription = copyLabel)
                         }
                     }
@@ -604,15 +604,14 @@ internal fun SmsCodeRuleEditorScreenShared(
                 singleLine = true,
             )
             AppTextField(
-                value = keyword,
-                onValueChange = { keyword = it },
+                state = keyword,
                 modifier = Modifier.fillMaxWidth(),
                 label = keywordLabel,
                 readOnly = isBuiltinRule,
                 enabled = !loading,
-                trailingIcon = if (isBuiltinRule && keyword.isNotBlank()) {
+                trailingIcon = if (isBuiltinRule && keyword.text.isNotBlank()) {
                     {
-                        IconButton(onClick = { copyField(keywordLabel, keyword) }) {
+                        IconButton(onClick = { copyField(keywordLabel, keyword.text.toString()) }) {
                             Icon(Icons.Filled.ContentCopy, contentDescription = copyLabel)
                         }
                     }
@@ -622,15 +621,14 @@ internal fun SmsCodeRuleEditorScreenShared(
                 singleLine = true,
             )
             AppTextField(
-                value = regex,
-                onValueChange = { regex = it },
+                state = regex,
                 modifier = Modifier.fillMaxWidth(),
                 label = regexLabel,
                 readOnly = isBuiltinRule,
                 enabled = !loading,
-                trailingIcon = if (isBuiltinRule && regex.isNotBlank()) {
+                trailingIcon = if (isBuiltinRule && regex.text.isNotBlank()) {
                     {
-                        IconButton(onClick = { copyField(regexLabel, regex) }) {
+                        IconButton(onClick = { copyField(regexLabel, regex.text.toString()) }) {
                             Icon(Icons.Filled.ContentCopy, contentDescription = copyLabel)
                         }
                     }

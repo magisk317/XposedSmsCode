@@ -199,8 +199,10 @@
 
 
     <!-- preference others -->
+    <string name="pref_share_log_title">Save logs</string>
+    <string name="pref_share_log_summary">Save log bundle for debugging</string>
     <string name="pref_verbose_log_mode_title">Detailed log</string>
-    <string name="pref_verbose_log_mode_summary">Tap to view, share, or clear logs</string>
+    <string name="pref_verbose_log_mode_summary">Print verbose runtime logs</string>
     <string name="pref_enable_analytics_title">Analytics</string>
     <string name="pref_enable_analytics_summary">Allow anonymous analytics for channel usage, success rates, crashes and technical diagnostics.</string>
     <string name="pref_runtime_log_retention_days_title">Runtime log retention</string>
@@ -211,6 +213,7 @@
     <string name="pref_runtime_log_retention_days_hint">Retention in days, minimum 1. Default is 2.</string>
     <string name="pref_runtime_log_retention_days_error">Please enter an integer greater than or equal to 1.</string>
     <string name="runtime_log_export_failed">Export failed: %1$s</string>
+    <string name="runtime_log_saved">Logs saved</string>
     <string name="runtime_log_share_failed">Share failed: %1$s</string>
     <string name="runtime_log_cleared">Logs and crash files cleared</string>
     <string name="runtime_log_clear_partial_failed">Partially cleared: %1$s</string>
@@ -219,6 +222,8 @@
     <string name="runtime_log_clear_summary">Clear all runtime logs and crash files</string>
     <string name="pref_sensitive_debug_log_mode_title">Sensitive debug log</string>
     <string name="pref_sensitive_debug_log_mode_summary">Debug builds only. Allows plaintext sender, body, and code in logs.</string>
+    <string name="pref_log_sanitization_title">Sanitize logs</string>
+    <string name="pref_log_sanitization_summary">Hide sensitive information in logs</string>
     <string name="pref_auto_update_on_start_title">Auto update on launch</string>
     <string name="pref_auto_update_on_start_summary">Run update strategy once when app starts</string>
     <string name="pref_auto_update_wifi_only_title">Wi-Fi only for auto update</string>
@@ -496,6 +501,10 @@
     <string name="mobile_entitlement_allowed">available</string>
     <string name="mobile_entitlement_paused">paused</string>
     <string name="mobile_entitlement_expires">Expires: %1$s</string>
+    <string name="mobile_entitlement_issued_at">Activated: %1$s</string>
+    <string name="mobile_entitlement_device_id">Activation ID: %1$s</string>
+    <string name="mobile_entitlement_copy">Copy</string>
+    <string name="mobile_entitlement_copied">Copied to clipboard</string>
     <string name="mobile_entitlement_renew_due">Activation status can be updated.</string>
     <string name="mobile_entitlement_refresh">Refresh status</string>
     <string name="mobile_entitlement_activate_telegram">Open Telegram</string>
@@ -572,4 +581,7 @@
     <string name="status_entitlement_unverified">Entitlement: Unverified</string>
     <string name="status_entitlement_checking">Checking module activation and entitlement...</string>
     <string name="status_activate_hint">Please enable module and scope in LSPosed</string>
+    <string name="module_status_active">Activated</string>
+    <string name="module_status_inactive">Not Activated</string>
+    <string name="settings_group_general_summary">App behavior, appearance and language</string>
 </resources>

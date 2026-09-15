@@ -63,6 +63,7 @@ import com.github.magisk317.smscode.common.utils.AppPreferencesDataStore
 import com.github.magisk317.smscode.common.utils.PackageUtils
 import com.github.magisk317.smscode.common.utils.RuntimeDiagnosticsBridge
 import io.github.magisk317.smscode.runtime.common.diagnostics.LogBundleExporter
+import io.github.magisk317.smscode.runtime.common.diagnostics.VerboseLogEnableTracker
 import com.github.magisk317.smscode.runtime.RuntimeBackupImportStatus
 import com.github.magisk317.smscode.runtime.bridge.UiBackupAccess
 import com.github.magisk317.smscode.runtime.bridge.UiNotificationAccess
@@ -76,6 +77,7 @@ import io.github.magisk317.uikit.common.DismissibleSnackbarHost
 import io.github.magisk317.uikit.foundation.PolygonMorphLoadingIndicator
 import io.github.magisk317.uikit.foundation.SessionLoadingRegistry
 import io.github.magisk317.uikit.foundation.rememberMinDurationLoading
+import io.github.magisk317.uikit.preference.GeneralSettingsSection
 import io.github.magisk317.uikit.preference.NonNegativeIntegerInputDialog
 import io.github.magisk317.uikit.preference.RuntimeLogDiagnosticsCallbacks
 import io.github.magisk317.uikit.preference.RuntimeLogDiagnosticsItem
@@ -86,6 +88,7 @@ import io.github.magisk317.uikit.preference.RuntimeLogDiagnosticsState
 import io.github.magisk317.uikit.preference.RuntimeLogShareEntryMode
 import io.github.magisk317.uikit.surface.ConfirmActionDialog
 import io.github.magisk317.uikit.preference.SingleChoiceOptionDialog
+import io.github.magisk317.uikit.preference.SingleChoicePositionDialog
 import io.github.magisk317.uikit.preference.SingleChoiceValueDialog
 import io.github.magisk317.uikit.preference.TextInputDialog
 import com.github.magisk317.smscode.ui.privacy.PrivacyPolicyPage
@@ -189,13 +192,11 @@ internal fun ComposeSettingsScreenShared(
     var showRetentionDialog by remember { mutableStateOf(false) }
     var showSmsTestDialog by remember { mutableStateOf(false) }
     var smsTestInput by remember { mutableStateOf("") }
-    var showThemeDialog by remember { mutableStateOf(false) }
     var showUiKitStyleDialog by remember { mutableStateOf(false) }
     var showPrivacyPolicyDialog by remember { mutableStateOf(false) }
     var showPrivacyPolicyPage by remember { mutableStateOf(false) }
     var showKeywordsDialog by remember { mutableStateOf(false) }
     var showSimSlotRemarkDialog by remember { mutableStateOf<Int?>(null) }
-    var showLanguageDialog by remember { mutableStateOf(false) }
     var isActivated by remember { mutableStateOf(false) }
     val supportsAccessibilityAutoInput = BuildConfig.ENABLE_ACCESSIBILITY_AUTO_INPUT
     var autoInputAccessibilityEnabled by remember { mutableStateOf(false) }
@@ -211,7 +212,6 @@ internal fun ComposeSettingsScreenShared(
     var runtimeLogRetentionDays by remember { mutableIntStateOf(PrefConst.RUNTIME_LOG_RETENTION_DAYS_DEFAULT) }
     val verboseLogEnabled = rememberPrefBoolean(PrefConst.KEY_VERBOSE_LOG_MODE, false)
     val analyticsEnabled = rememberPrefBoolean(PrefConst.KEY_ENABLE_ANALYTICS, true)
-    val sensitiveDebugLogEnabled = rememberPrefBoolean(PrefConst.KEY_SENSITIVE_DEBUG_LOG_MODE, false)
     var showRuntimeLogRetentionDialog by remember { mutableStateOf(false) }
     var showClearLogConfirmDialog by remember { mutableStateOf(false) }
 
@@ -423,11 +423,20 @@ internal fun ComposeSettingsScreenShared(
             }
             if (result.isNotBlank()) {
                 snackbarHostState.showSnackbar(context.getString(R.string.runtime_log_export_failed, result))
+            } else {
+                snackbarHostState.showSnackbar(context.getString(R.string.runtime_log_saved))
             }
         }
     }
 
     fun saveRuntimeLogBundle() {
+        val blockReason = LogBundleExporter.checkPreExport(verboseLogEnabled.value)
+        if (blockReason != null) {
+            val resId = context.resources.getIdentifier(blockReason, "string", context.packageName)
+            val message = if (resId != 0) context.getString(resId) else blockReason
+            scope.launch { snackbarHostState.showSnackbar(message) }
+            return
+        }
         val timestamp = java.text.SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", java.util.Locale.US)
             .format(java.util.Date())
         saveRuntimeLogLauncher.launch("smscode_logs_$timestamp.zip")
@@ -713,15 +722,6 @@ internal fun ComposeSettingsScreenShared(
                 ) {
                     Spacer(modifier = Modifier.height(topPadding))
 
-                    SwitchItem(
-                        title = stringResource(id = R.string.pref_enable_title),
-                        summary = stringResource(id = R.string.pref_enable_summary),
-                        key = PrefConst.KEY_ENABLE,
-                        defaultValue = true,
-                        stateOverride = moduleEnabled,
-                        modifier = Modifier.padding(horizontal = Const.PADDING_SMALL.dp),
-                        onSaved = markPrefsSaved,
-                    )
                     Item(
                         title = stringResource(id = R.string.mobile_entitlement_settings_title),
                         summary = stringResource(id = R.string.mobile_entitlement_settings_summary),
@@ -735,51 +735,73 @@ internal fun ComposeSettingsScreenShared(
                         )
                     }
 
-                    ExpandableSettingsSection(
-                        title = stringResource(id = R.string.settings_group_general),
-                        expanded = expandGeneral,
-                        onExpandedChange = { expandGeneral = !expandGeneral },
-                        accordionMode = accordionMode.value,
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = Const.PADDING_SMALL.dp),
                     ) {
-                        SwitchItem(
-                            title = stringResource(id = R.string.pref_settings_display_mode_title),
-                            summary = stringResource(id = R.string.pref_settings_display_mode_summary),
-                            key = PrefConst.KEY_SETTINGS_ACCORDION_MODE,
-                            defaultValue = true,
-                            stateOverride = accordionMode,
-                            onSaved = markPrefsSaved,
-                        )
-                        SwitchItem(
-                            title = stringResource(id = R.string.pref_show_launcher_icon_title),
-                            summary = stringResource(id = R.string.pref_show_launcher_icon_summary),
-                            key = PrefConst.KEY_SHOW_LAUNCHER_ICON,
-                            defaultValue = true,
-                            stateOverride = launcherIconVisible,
-                            onToggle = { visible ->
-                                val success = settingsViewModel.setLauncherIconVisible(visible)
-                                if (!success) {
-                                    launcherIconVisible.value = !visible
-                                    scope.launch {
-                                        AppPreferencesDataStore.setBoolean(
-                                            context,
-                                            PrefConst.KEY_SHOW_LAUNCHER_ICON,
-                                            !visible,
-                                        )
-                                        HookPreferenceMirror.publish(context)
-                                    }
-                                    scope.launch {
-                                        snackbarHostState.showSnackbar(
-                                            context.getString(R.string.pref_show_launcher_icon_failed),
-                                        )
-                                    }
+                        GeneralSettingsSection(
+                            title = stringResource(id = R.string.settings_group_general),
+                            summary = stringResource(id = R.string.settings_group_general_summary),
+                            expanded = expandGeneral,
+                            onExpandedChange = { expandGeneral = !expandGeneral },
+                            accordionMode = accordionMode.value,
+                            moduleEnabled = moduleEnabled.value,
+                            onModuleEnabledChange = { checked ->
+                                moduleEnabled.value = checked
+                                scope.launch {
+                                    AppPreferencesDataStore.setBoolean(
+                                        context,
+                                        PrefConst.KEY_ENABLE,
+                                        checked,
+                                    )
+                                    HookPreferenceMirror.publish(context)
+                                    markPrefsSaved()
                                 }
                             },
-                            onSaved = markPrefsSaved,
-                        )
-                        Item(
-                            title = stringResource(id = R.string.pref_language_title),
-                            summary = stringResource(id = R.string.pref_language_summary),
-                        ) { showLanguageDialog = true }
+                            moduleTitle = stringResource(id = R.string.pref_enable_title),
+                            moduleSummary = stringResource(id = R.string.pref_enable_summary),
+                            themeMode = themeMode,
+                            onThemeSelected = { mode, x, y ->
+                                settingsViewModel.setThemeMode(mode, x, y)
+                            },
+                        ) {
+                            SwitchItem(
+                                title = stringResource(id = R.string.pref_settings_display_mode_title),
+                                summary = stringResource(id = R.string.pref_settings_display_mode_summary),
+                                key = PrefConst.KEY_SETTINGS_ACCORDION_MODE,
+                                defaultValue = true,
+                                stateOverride = accordionMode,
+                                onSaved = markPrefsSaved,
+                            )
+                            SwitchItem(
+                                title = stringResource(id = R.string.pref_show_launcher_icon_title),
+                                summary = stringResource(id = R.string.pref_show_launcher_icon_summary),
+                                key = PrefConst.KEY_SHOW_LAUNCHER_ICON,
+                                defaultValue = true,
+                                stateOverride = launcherIconVisible,
+                                onToggle = { visible ->
+                                    val success = settingsViewModel.setLauncherIconVisible(visible)
+                                    if (!success) {
+                                        launcherIconVisible.value = !visible
+                                        scope.launch {
+                                            AppPreferencesDataStore.setBoolean(
+                                                context,
+                                                PrefConst.KEY_SHOW_LAUNCHER_ICON,
+                                                !visible,
+                                            )
+                                            HookPreferenceMirror.publish(context)
+                                        }
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar(
+                                                context.getString(R.string.pref_show_launcher_icon_failed),
+                                            )
+                                        }
+                                    }
+                                },
+                                onSaved = markPrefsSaved,
+                            )
+                        }
                     }
 
                     ExpandableSettingsSection(
@@ -1031,6 +1053,8 @@ internal fun ComposeSettingsScreenShared(
                         }
                         RuntimeLogDiagnosticsItems(
                             labels = RuntimeLogDiagnosticsLabels(
+                                shareLogTitle = stringResource(id = R.string.pref_share_log_title),
+                                shareLogSummary = stringResource(id = R.string.pref_share_log_summary),
                                 verboseLogTitle = stringResource(id = R.string.pref_verbose_log_mode_title),
                                 verboseLogSummary = stringResource(id = R.string.pref_verbose_log_mode_summary),
                                 retentionTitle = stringResource(id = R.string.pref_runtime_log_retention_days_title),
@@ -1041,17 +1065,17 @@ internal fun ComposeSettingsScreenShared(
                                 ),
                                 clearLogTitle = stringResource(id = R.string.runtime_log_clear_confirm_title),
                                 clearLogSummary = stringResource(id = R.string.runtime_log_clear_summary),
-                                sensitiveLogTitle = stringResource(id = R.string.pref_sensitive_debug_log_mode_title),
-                                sensitiveLogSummary = stringResource(id = R.string.pref_sensitive_debug_log_mode_summary),
                             ),
                             state = RuntimeLogDiagnosticsState(
                                 verboseLogEnabled = verboseLogEnabled.value,
-                                sensitiveLogEnabled = sensitiveDebugLogEnabled.value,
                             ),
                             callbacks = RuntimeLogDiagnosticsCallbacks(
                                 onShareLog = ::saveRuntimeLogBundle,
                                 onVerboseLogEnabledChange = { enabled ->
                                     verboseLogEnabled.value = enabled
+                                    VerboseLogEnableTracker.onVerboseLogToggled(enabled)
+                                    io.github.magisk317.xposed.logging.LogSanitizerConfig
+                                        .syncFromVerboseMode(enabled)
                                     scope.launch {
                                         AppPreferencesDataStore.setBoolean(
                                             context,
@@ -1069,28 +1093,16 @@ internal fun ComposeSettingsScreenShared(
                                 },
                                 onRetentionClick = { showRuntimeLogRetentionDialog = true },
                                 onClearLogClick = { showClearLogConfirmDialog = true },
-                                onSensitiveLogEnabledChange = { enabled ->
-                                    sensitiveDebugLogEnabled.value = enabled
-                                    scope.launch {
-                                        AppPreferencesDataStore.setBoolean(
-                                            context,
-                                            PrefConst.KEY_SENSITIVE_DEBUG_LOG_MODE,
-                                            enabled,
-                                        )
-                                        HookPreferenceMirror.publish(context)
-                                        markPrefsSaved()
-                                    }
-                                    io.github.magisk317.xposed.logging.LogSanitizerConfig
-                                        .syncSanitizationEnabled(!enabled)
-                                },
+
                             ),
                             layout = RuntimeLogDiagnosticsLayout(
-                                shareEntryMode = RuntimeLogShareEntryMode.VERBOSE_ROW,
+                                shareEntryMode = RuntimeLogShareEntryMode.SEPARATE_ITEM,
                                 itemOrder = listOf(
+                                    RuntimeLogDiagnosticsItem.SHARE_LOG,
                                     RuntimeLogDiagnosticsItem.VERBOSE_LOG,
+                                    RuntimeLogDiagnosticsItem.SENSITIVE_LOG,
                                     RuntimeLogDiagnosticsItem.RETENTION,
                                     RuntimeLogDiagnosticsItem.CLEAR_LOG,
-                                    RuntimeLogDiagnosticsItem.SENSITIVE_LOG,
                                 ),
                             ),
                         )
@@ -1146,7 +1158,6 @@ internal fun ComposeSettingsScreenShared(
     SettingsDialogs(
         context = context,
         scope = scope,
-        themeMode = themeMode,
         uiKitStyle = uiKitStyle,
         autoInputDelay = autoInputDelay,
         autoInputInterval = autoInputInterval,
@@ -1158,7 +1169,6 @@ internal fun ComposeSettingsScreenShared(
         showRetentionDialog = showRetentionDialog,
         showSmsTestDialog = showSmsTestDialog,
         showKeywordsDialog = showKeywordsDialog,
-        showThemeDialog = showThemeDialog,
         showUiKitStyleDialog = showUiKitStyleDialog,
         showPrivacyPolicyDialog = showPrivacyPolicyDialog,
         showPrivacyPolicyPage = showPrivacyPolicyPage,
@@ -1175,7 +1185,6 @@ internal fun ComposeSettingsScreenShared(
         onShowRetentionDialogChange = { showRetentionDialog = it },
         onShowSmsTestDialogChange = { showSmsTestDialog = it },
         onShowKeywordsDialogChange = { showKeywordsDialog = it },
-        onShowThemeDialogChange = { showThemeDialog = it },
         onShowUiKitStyleDialogChange = { showUiKitStyleDialog = it },
         onShowPrivacyPolicyDialogChange = { showPrivacyPolicyDialog = it },
         onShowPrivacyPolicyPageChange = { showPrivacyPolicyPage = it },
@@ -1186,7 +1195,6 @@ internal fun ComposeSettingsScreenShared(
         backupLauncher = backupLauncher,
         settingsViewModel = settingsViewModel,
         onExit = onExit,
-        onSetTheme = { mode, x, y -> settingsViewModel.setThemeMode(mode, x, y) },
         onSetUiKitStyle = { style -> settingsViewModel.setUiKitStyle(style) },
     )
 
@@ -1260,23 +1268,6 @@ internal fun ComposeSettingsScreenShared(
         }
     }
 
-    if (showLanguageDialog) {
-        LanguageChooserDialog(
-            onDismiss = { showLanguageDialog = false },
-            onLanguageSelected = { tag ->
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                    val localeManager = context.getSystemService(android.app.LocaleManager::class.java)
-                    localeManager?.applicationLocales = if (tag.isEmpty()) {
-                        android.os.LocaleList.getEmptyLocaleList()
-                    } else {
-                        android.os.LocaleList.forLanguageTags(tag)
-                    }
-                }
-                showLanguageDialog = false
-            },
-        )
-    }
-
     }
 }
 
@@ -1334,7 +1325,6 @@ private fun handleSettingsEvent(
 private fun SettingsDialogs(
     context: android.content.Context,
     scope: kotlinx.coroutines.CoroutineScope,
-    themeMode: Int,
     uiKitStyle: Int,
     autoInputDelay: String,
     autoInputInterval: String,
@@ -1346,7 +1336,6 @@ private fun SettingsDialogs(
     showRetentionDialog: Boolean,
     showSmsTestDialog: Boolean,
     showKeywordsDialog: Boolean,
-    showThemeDialog: Boolean,
     showUiKitStyleDialog: Boolean,
     showPrivacyPolicyDialog: Boolean,
     showPrivacyPolicyPage: Boolean,
@@ -1363,7 +1352,6 @@ private fun SettingsDialogs(
     onShowRetentionDialogChange: (Boolean) -> Unit,
     onShowSmsTestDialogChange: (Boolean) -> Unit,
     onShowKeywordsDialogChange: (Boolean) -> Unit,
-    onShowThemeDialogChange: (Boolean) -> Unit,
     onShowUiKitStyleDialogChange: (Boolean) -> Unit,
     onShowPrivacyPolicyDialogChange: (Boolean) -> Unit,
     onShowPrivacyPolicyPageChange: (Boolean) -> Unit,
@@ -1374,7 +1362,6 @@ private fun SettingsDialogs(
     backupLauncher: androidx.activity.result.ActivityResultLauncher<Intent>,
     settingsViewModel: SettingsViewModel,
     onExit: () -> Unit,
-    onSetTheme: (Int, Float, Float) -> Unit,
     onSetUiKitStyle: (Int) -> Unit,
 ) {
     val activityOwner = context as? Activity
@@ -1476,17 +1463,6 @@ private fun SettingsDialogs(
             }
             onShowKeywordsDialogChange(false)
         }
-    }
-
-    if (showThemeDialog) {
-        ThemeChooserDialog(
-            currentMode = themeMode,
-            onDismiss = { onShowThemeDialogChange(false) },
-            onThemeSelected = { mode, x, y ->
-                onSetTheme(mode, x, y)
-                onShowThemeDialogChange(false)
-            },
-        )
     }
 
     if (BuildConfig.ENABLE_UI_KIT_STYLE_SWITCH && showUiKitStyleDialog) {
@@ -1753,61 +1729,6 @@ fun RetentionDialog(
 }
 
 @Composable
-fun ThemeChooserDialog(currentMode: Int, onDismiss: () -> Unit, onThemeSelected: (Int, Float, Float) -> Unit) {
-    val modes = listOf(
-        stringResource(id = R.string.theme_follow_system) to 0,
-        stringResource(id = R.string.theme_light) to 1,
-        stringResource(id = R.string.theme_dark) to 2,
-        stringResource(id = R.string.theme_black) to 3,
-    )
-    io.github.magisk317.uikit.surface.AppBasicDialog(
-        onDismissRequest = onDismiss,
-    ) {
-        io.github.magisk317.uikit.surface.AppDialogSurface(
-            title = stringResource(id = R.string.pref_choose_theme_title),
-        ) {
-            Column {
-                modes.forEach { (label, mode) ->
-                    var rowCoords: LayoutCoordinates? by remember { mutableStateOf(null) }
-                    val view = LocalView.current
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 12.dp)
-                            .onGloballyPositioned { rowCoords = it }
-                            .pointerInput(Unit) {
-                                detectTapGestures(
-                                    onTap = { tapOffset ->
-                                        val locationOnScreen = IntArray(2)
-                                        view.getLocationOnScreen(locationOnScreen)
-
-                                        val rootCoords =
-                                            rowCoords?.positionInRoot() ?: androidx.compose.ui.geometry.Offset.Zero
-
-                                        // Dialog Window Offset + Item Offset in Dialog + Tap Offset
-                                        val finalX = locationOnScreen[0] + rootCoords.x + tapOffset.x
-                                        val finalY = locationOnScreen[1] + rootCoords.y + tapOffset.y
-
-                                        onThemeSelected(mode, finalX, finalY)
-                                    },
-                                )
-                            },
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        io.github.magisk317.uikit.preference.AppRadioButton(
-                            selected = mode == currentMode,
-                            onClick = null,
-                        )
-                        Text(text = label, modifier = Modifier.padding(start = 16.dp))
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
 fun UiKitStyleChooserDialog(
     currentStyle: Int,
     onDismiss: () -> Unit,
@@ -1834,38 +1755,6 @@ private fun uiKitStyleLabel(style: Int): String {
         UiKitStyle.Miuix -> stringResource(id = R.string.ui_kit_style_miuix)
         UiKitStyle.Expressive -> stringResource(id = R.string.ui_kit_style_expressive)
     }
-}
-
-@Composable
-fun LanguageChooserDialog(onDismiss: () -> Unit, onLanguageSelected: (String) -> Unit) {
-    val context = LocalContext.current
-    val currentTag = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-        val localeManager = context.getSystemService(android.app.LocaleManager::class.java)
-        val appLocales = localeManager?.applicationLocales ?: android.os.LocaleList.getEmptyLocaleList()
-        if (appLocales.isEmpty) "" else appLocales.get(0)?.toLanguageTag() ?: ""
-    } else {
-        ""
-    }
-
-    val languages = listOf(
-        stringResource(id = R.string.language_follow_system) to "",
-        stringResource(id = R.string.language_en) to "en",
-        stringResource(id = R.string.language_zh_cn) to "zh-CN",
-        stringResource(id = R.string.language_zh_tw) to "zh-TW",
-    )
-
-    val selectedIndex = languages.indexOfFirst { (_, tag) ->
-        if (tag.isEmpty()) currentTag.isEmpty() else currentTag.startsWith(tag)
-    }.coerceAtLeast(0)
-    SingleChoiceOptionDialog(
-        title = stringResource(id = R.string.pref_language_title),
-        options = languages.map { it.first },
-        selectedIndex = selectedIndex,
-        onSelectionChange = { index ->
-            languages.getOrNull(index)?.second?.let(onLanguageSelected)
-        },
-        onDismissRequest = onDismiss,
-    )
 }
 
 @Composable

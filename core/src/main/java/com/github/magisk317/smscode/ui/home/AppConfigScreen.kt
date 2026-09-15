@@ -3,6 +3,7 @@
 package com.github.magisk317.smscode.ui.home
 
 import android.os.SystemClock
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -63,8 +64,9 @@ import io.github.magisk317.uikit.foundation.PolygonMorphLoadingIndicator
 import io.github.magisk317.uikit.foundation.SessionLoadingRegistry
 import io.github.magisk317.uikit.foundation.rememberMinDurationLoading
 import io.github.magisk317.uikit.surface.OverlayHeaderScaffold
-import io.github.magisk317.uikit.surface.WorkspaceTopBarSearchOverlay
+import io.github.magisk317.uikit.surface.SearchOverlayContent
 import io.github.magisk317.uikit.surface.WorkspaceListItem
+import io.github.magisk317.uikit.surface.rememberSearchOverlayState
 import io.github.magisk317.uikit.theme.UiKitStyle
 import io.github.magisk317.uikit.theme.currentUiKitStyle
 import kotlinx.coroutines.delay
@@ -166,8 +168,13 @@ internal fun AppConfigScreenShared(
     var manualRefreshing by remember { mutableStateOf(false) }
     var manualRefreshStartedAt by remember { mutableLongStateOf(0L) }
     var showUsagePermissionDialog by remember { mutableStateOf(false) }
-    val searchQuery by viewModel.filterFlow.collectAsStateWithLifecycle()
+    val searchState = rememberSearchOverlayState(
+        onSearchChange = { viewModel.doFilter(it) },
+    )
     var showSettingsMenu by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = searchState.expanded) { searchState.close() }
+    LaunchedEffect(isActive) { if (!isActive) searchState.close() }
 
     val showLoading = rememberMinDurationLoading(
         actualLoading = isActive && isLoading && shouldShowInitialLoading,
@@ -249,6 +256,7 @@ internal fun AppConfigScreenShared(
 
     val listState = rememberLazyListState()
     io.github.magisk317.uikit.scroll.ReportLazyListScrollToChrome(listState, scrollChromeState)
+    io.github.magisk317.uikit.surface.ScrollToTopEffect(listState, refreshTrigger)
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val pullToRefreshState = rememberPullToRefreshState()
     val isMiuix = io.github.magisk317.uikit.theme.currentUiKitStyle() ==
@@ -278,9 +286,9 @@ internal fun AppConfigScreenShared(
                 .align(Alignment.TopCenter)
                 .fillMaxWidth(),
             overlay = {
-                WorkspaceTopBarSearchOverlay(
+                SearchOverlayContent(
+                    state = searchState,
                     title = stringResource(R.string.app_config_settings),
-                    searchQuery = searchQuery,
                     searchPlaceholder = stringResource(R.string.action_search),
                     navigationIcon = if (onBack != null) {
                         {
@@ -299,8 +307,6 @@ internal fun AppConfigScreenShared(
                             Icon(Icons.Default.Tune, contentDescription = null)
                         }
                     },
-                    scrollBehavior = scrollBehavior,
-                    onSearchChange = { viewModel.doFilter(it) },
                 )
             },
             content = { overlayPadding ->
