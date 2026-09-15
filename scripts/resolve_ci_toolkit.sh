@@ -4,8 +4,8 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TOOLKIT_DIR="${MAGISK_CI_TOOLKIT_DIR:-${ROOT_DIR}/.magisk-ci-toolkit}"
-TOOLKIT_REPOSITORY="${MAGISK_CI_TOOLKIT_REPOSITORY:-https://gitlab.com/magisk3171/magisk-ci-toolkit.git}"
-TOOLKIT_REF="${MAGISK_CI_TOOLKIT_REF:-69622a4d07ac0237f83d2e4d3210602603241267}"
+TOOLKIT_REPOSITORY="${MAGISK_CI_TOOLKIT_REPOSITORY:-https://gitlab.com/magisk3171/shared/magisk-ci-toolkit.git}"
+TOOLKIT_REF="${MAGISK_CI_TOOLKIT_REF:-d3cf3d9d14c2fe83dd0cb6e2dd6e8be8c4c8140d}"
 TOOLKIT_REPOSITORY_AUTH="$TOOLKIT_REPOSITORY"
 if [[ -n "${CI_JOB_TOKEN:-}" && "$TOOLKIT_REPOSITORY" == https://gitlab.com/* ]]; then
   TOOLKIT_REPOSITORY_AUTH="${TOOLKIT_REPOSITORY/https:\/\//https:\/\/gitlab-ci-token:${CI_JOB_TOKEN}@}"

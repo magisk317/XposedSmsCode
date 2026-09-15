@@ -59,4 +59,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
-          gh pr merge "${{ steps.cpr.outputs.pull-request-number }}" --auto --merge --delete-branch
+          gh pr merge "${{ steps.cpr.outputs.pull-request-number }}" --auto --squash --delete-branch

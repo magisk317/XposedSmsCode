@@ -53,7 +53,7 @@ jobs:
           fi
 
           set +e
-          merge_output="$(gh pr merge --auto --merge --delete-branch "$PR_URL" 2>&1)"
+          merge_output="$(gh pr merge --auto --squash --delete-branch "$PR_URL" 2>&1)"
           merge_status=$?
           set -e
           printf '%s\n' "$merge_output"
