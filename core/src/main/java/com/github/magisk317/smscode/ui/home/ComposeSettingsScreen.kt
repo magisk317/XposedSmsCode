@@ -2030,7 +2030,9 @@ fun SliderDialog(
     onValueChange: (Float) -> Unit,
     valueFormatter: (Float) -> String = { "%.2f".format(it) }
 ) {
-    var sliderValue by remember { mutableFloatStateOf(value) }
+    // rememberSliderState(value, steps, valueRange): the three-argument overload is
+    // the only non-deprecated one (the one taking onValueChangeFinished is not).
+    val sliderState = rememberSliderState(value, steps, valueRange)
     val cancelLabel = stringResource(id = R.string.cancel)
     val confirmLabel = stringResource(id = R.string.confirm)
     io.github.magisk317.uikit.surface.AppAlertDialog(
@@ -2039,15 +2041,13 @@ fun SliderDialog(
         text = {
             Column {
                 Text(
-                    text = valueFormatter(sliderValue),
+                    text = valueFormatter(sliderState.value),
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
                 Slider(
-                    value = sliderValue,
-                    onValueChange = { sliderValue = it },
-                    valueRange = valueRange,
-                    steps = steps
+                    state = sliderState,
+                    onValueChange = { sliderState.value = it },
                 )
             }
         },
@@ -2065,7 +2065,7 @@ fun SliderDialog(
                     weight = 1f,
                 )
                 clickableItem(
-                    onClick = { onValueChange(sliderValue) },
+                    onClick = { onValueChange(sliderState.value) },
                     label = confirmLabel,
                     weight = 1f,
                 )
