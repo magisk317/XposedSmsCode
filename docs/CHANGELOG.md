@@ -3,10 +3,13 @@
 本日志记录了项目重构后的主要变更。
 
 ---
-## [v3.3.4] - 2026-09-15
+## [v3.3.4] - 2026-09-18
 - 版本：`versionCode 128` / `versionName 3.3.4`。
-- `[ci]` GitLab CI runner tag 改为变量引用，统一使用 arm64。
-- `[build]` 准备下一阶段开发。
+- 账号解封，恢复模块仓库更新。
+- `[ui]` 概览页新增 QQ 频道入口。
+- `[entitlement]` 移除残留依赖。
+- `[ci]` 发布流水线接入共享 toolkit。
+- `[deps]` 升级部分依赖。
 
 > Full Changelog: https://gitlab.com/magisk3171/XposedSmsCode/-/compare/v3.3.3...v3.3.4
 
