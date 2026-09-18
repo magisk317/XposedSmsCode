@@ -5,9 +5,13 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TOOLKIT_DIR="${MAGISK_CI_TOOLKIT_DIR:-${ROOT_DIR}/.magisk-ci-toolkit}"
 TOOLKIT_REPOSITORY="${MAGISK_CI_TOOLKIT_REPOSITORY:-https://gitlab.com/magisk3171/shared/magisk-ci-toolkit.git}"
-TOOLKIT_REF="${MAGISK_CI_TOOLKIT_REF:-d3cf3d9d14c2fe83dd0cb6e2dd6e8be8c4c8140d}"
+TOOLKIT_REF="${MAGISK_CI_TOOLKIT_REF:-v1}"
+# The toolkit lives in a private repository, so an anonymous fetch gets HTTP 401
+# ("could not read Username for 'https://gitlab.com'"). Inject the job token when
+# GitLab CI provides one. Skip injection when the URL already carries credentials
+# so a pre-authenticated MAGISK_CI_TOOLKIT_REPOSITORY never gets doubled up.
 TOOLKIT_REPOSITORY_AUTH="$TOOLKIT_REPOSITORY"
-if [[ -n "${CI_JOB_TOKEN:-}" && "$TOOLKIT_REPOSITORY" == https://gitlab.com/* ]]; then
+if [[ -n "${CI_JOB_TOKEN:-}" && "$TOOLKIT_REPOSITORY" == https://gitlab.com/* && "$TOOLKIT_REPOSITORY" != *"@"* ]]; then
   TOOLKIT_REPOSITORY_AUTH="${TOOLKIT_REPOSITORY/https:\/\//https:\/\/gitlab-ci-token:${CI_JOB_TOKEN}@}"
 fi
 

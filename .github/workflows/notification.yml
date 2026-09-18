@@ -1,11 +1,6 @@
 name: Telegram Notification
 
 on:
-  workflow_run:
-    types: [completed]
-    workflows: [CI, Release]
-  release:
-    types: [published]
   workflow_dispatch:
 
 concurrency:
@@ -24,8 +19,7 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Resolve CI toolkit
-        run: bash scripts/resolve_ci_toolkit.sh
+      - uses: ./.github/actions/resolve-ci-toolkit
 
       - name: Download artifacts
         if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'beta'

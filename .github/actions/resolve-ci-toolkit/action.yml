@@ -1,0 +1,43 @@
+name: Resolve CI toolkit
+description: >-
+  Fetch the pinned magisk-ci-toolkit commit into .magisk-ci-toolkit. Mirrors the
+  GitLab include ref so GitHub workflows consume the same toolkit commit as the
+  GitLab pipeline; no platform-specific behavior.
+
+inputs:
+  ref:
+    description: magisk-ci-toolkit commit SHA to fetch
+    required: false
+    default: 'v1'
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        TOOLKIT_REF: ${{ inputs.ref }}
+      run: |
+        set -euo pipefail
+
+        TOOLKIT_DIR="$PWD/.magisk-ci-toolkit"
+        TOOLKIT_REPOSITORY="https://gitlab.com/magisk3171/shared/magisk-ci-toolkit.git"
+
+        if [[ ! -d "$TOOLKIT_DIR/.git" ]]; then
+          rm -rf -- "$TOOLKIT_DIR"
+          git init --quiet "$TOOLKIT_DIR"
+          git -C "$TOOLKIT_DIR" remote add origin "$TOOLKIT_REPOSITORY"
+        elif git -C "$TOOLKIT_DIR" remote get-url origin >/dev/null 2>&1; then
+          git -C "$TOOLKIT_DIR" remote set-url origin "$TOOLKIT_REPOSITORY"
+        else
+          git -C "$TOOLKIT_DIR" remote add origin "$TOOLKIT_REPOSITORY"
+        fi
+
+        git -C "$TOOLKIT_DIR" fetch --depth 1 origin "$TOOLKIT_REF"
+        git -C "$TOOLKIT_DIR" checkout --detach --force FETCH_HEAD
+
+        resolved_ref="$(git -C "$TOOLKIT_DIR" rev-parse HEAD)"
+        expected_ref="$(printf '%s' "$TOOLKIT_REF" | tr '[:upper:]' '[:lower:]')"
+        if [[ "$resolved_ref" != "$expected_ref" ]]; then
+          echo "ERROR: resolved toolkit commit $resolved_ref does not match pinned ref $TOOLKIT_REF" >&2
+          exit 1
+        fi

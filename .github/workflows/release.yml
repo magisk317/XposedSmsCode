@@ -23,8 +23,7 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
-      - name: Resolve CI toolkit
-        run: bash scripts/resolve_ci_toolkit.sh
+      - uses: ./.github/actions/resolve-ci-toolkit
       - name: Setup Android CI
         uses: ./.magisk-ci-toolkit/.github/actions/setup-android-ci
         with:
@@ -49,15 +48,14 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
-      - name: Resolve CI toolkit
-        run: bash scripts/resolve_ci_toolkit.sh
+      - uses: ./.github/actions/resolve-ci-toolkit
       - name: Setup Android CI
         uses: ./.magisk-ci-toolkit/.github/actions/setup-android-ci
         with:
           checkout: 'false'
       - name: Decode Keystore
         if: env.HAS_RELEASE_KEYSTORE == 'true'
-        run: echo "${{ secrets.RELEASE_KEYSTORE }}" | base64 --decode > app/release.jks
+        run: echo "${{ secrets.RELEASE_KEYSTORE }}" | base64 --decode > release.jks
       - name: Build GitHub APK with Splits
         uses: ./.magisk-ci-toolkit/.github/actions/run-gradle-with-retry
         with:
@@ -87,15 +85,14 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
-      - name: Resolve CI toolkit
-        run: bash scripts/resolve_ci_toolkit.sh
+      - uses: ./.github/actions/resolve-ci-toolkit
       - name: Setup Android CI
         uses: ./.magisk-ci-toolkit/.github/actions/setup-android-ci
         with:
           checkout: 'false'
       - name: Decode Keystore
         if: env.HAS_RELEASE_KEYSTORE == 'true'
-        run: echo "${{ secrets.RELEASE_KEYSTORE }}" | base64 --decode > app/release.jks
+        run: echo "${{ secrets.RELEASE_KEYSTORE }}" | base64 --decode > release.jks
       - name: Resolve Play release version
         shell: bash
         env:
@@ -157,8 +154,7 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
-      - name: Resolve CI toolkit
-        run: bash scripts/resolve_ci_toolkit.sh
+      - uses: ./.github/actions/resolve-ci-toolkit
       - uses: actions/download-artifact@v8
         with:
           name: apks-github
@@ -211,8 +207,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - name: Resolve CI toolkit
-        run: bash scripts/resolve_ci_toolkit.sh
+      - uses: ./.github/actions/resolve-ci-toolkit
       - uses: actions/download-artifact@v8
         with:
           name: bundle-assets
@@ -282,8 +277,7 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
-      - name: Resolve CI toolkit
-        run: bash scripts/resolve_ci_toolkit.sh
+      - uses: ./.github/actions/resolve-ci-toolkit
       - uses: actions/download-artifact@v8
         with:
           name: bundle-assets
@@ -338,8 +332,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - name: Resolve CI toolkit
-        run: bash scripts/resolve_ci_toolkit.sh
+      - uses: ./.github/actions/resolve-ci-toolkit
       - uses: actions/download-artifact@v8
         with:
           name: apks-github
@@ -402,8 +395,7 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
-      - name: Resolve CI toolkit
-        run: bash scripts/resolve_ci_toolkit.sh
+      - uses: ./.github/actions/resolve-ci-toolkit
       - name: Setup Android CI
         uses: ./.magisk-ci-toolkit/.github/actions/setup-android-ci
         with:

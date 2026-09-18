@@ -25,8 +25,7 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
-      - name: Resolve CI toolkit
-        run: bash scripts/resolve_ci_toolkit.sh
+      - uses: ./.github/actions/resolve-ci-toolkit
       - name: Setup Android CI
         uses: ./.magisk-ci-toolkit/.github/actions/setup-android-ci
         with:
@@ -34,7 +33,7 @@ jobs:
 
       - name: Decode Keystore
         if: env.HAS_RELEASE_SIGNING == 'true'
-        run: echo "${{ secrets.RELEASE_KEYSTORE }}" | base64 --decode > app/release.jks
+        run: echo "${{ secrets.RELEASE_KEYSTORE }}" | base64 --decode > release.jks
 
       - name: Build GitHub Debug APK
         if: env.HAS_RELEASE_SIGNING == 'true'
