@@ -305,6 +305,13 @@ internal fun OverviewScreenShared() {
                             R.string.browser_install_or_enable_prompt,
                         )?.let(::showMessage)
                     },
+                    onJoinQqChannel = {
+                        BrowserUtils.openWebPage(
+                            context,
+                            Const.QQ_CHANNEL_URL,
+                            R.string.browser_install_or_enable_prompt,
+                        )?.let(::showMessage)
+                    },
                     onSourceCode = {
                         BrowserUtils.openWebPage(
                             context,

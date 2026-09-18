@@ -588,7 +588,7 @@ internal fun SmsCodeRuleEditorScreenShared(
                 state = company,
                 modifier = Modifier.fillMaxWidth(),
                 label = companyLabel,
-                placeholder = { Text(stringResource(id = R.string.rule_company_placeholder)) },
+                placeholderText = stringResource(id = R.string.rule_company_placeholder),
                 supportingText = { Text(if (isBuiltinRule) builtinSummary else rulesSummary) },
                 readOnly = isBuiltinRule,
                 enabled = !loading,

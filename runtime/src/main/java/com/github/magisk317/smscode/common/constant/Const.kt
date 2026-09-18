@@ -9,6 +9,8 @@ object Const {
 
     const val TELEGRAM_GROUP_URL = "https://t.me/+NR2QaQ4dlEgxYmNl"
 
+    const val QQ_CHANNEL_URL = "https://pd.qq.com/s/bmleyy1mj"
+
     /* Xposed SmsCode begin */
     const val HOME_ACTIVITY_ALIAS = BuildConfig.APPLICATION_ID + ".HomeActivityAlias"
     const val EXTRA_ACTION = "extra_action"
