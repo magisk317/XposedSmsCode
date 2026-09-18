@@ -54,7 +54,6 @@ billing = "9.1.0"
 kermit = "2.2.0"
 timber = "5.0.1"
 gson = "2.14.0"
-google-id = "1.2.1"
 jakarta-mail = "2.0.2"
 guava = "33.6.0-jre"
 conscrypt = "2.7.0"
@@ -141,7 +140,6 @@ detekt-rules-ktlint = { module = "dev.detekt:detekt-rules-ktlint-wrapper", versi
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-auth = { module = "com.google.firebase:firebase-auth" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
-google-id = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "google-id" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 hiddenapibypass = { module = "org.lsposed.hiddenapibypass:hiddenapibypass", version.ref = "hiddenapibypass" }
 hyperisland-kit = { module = "io.github.d4viddf:hyperisland_kit", version.ref = "hyperisland-kit" }

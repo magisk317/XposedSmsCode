@@ -27,7 +27,6 @@ import io.github.magisk317.smscode.xposed.runtime.CoreRuntimeAccess
 import io.github.magisk317.smscode.xposed.utils.XLog
 import io.github.magisk317.xposed.logging.DefaultLogSanitizer
 import com.github.magisk317.smscode.di.appModule
-import com.github.magisk317.smscode.entitlement.mobileEntitlementGoogleSignInModule
 import com.magisk317.mobile.entitlement.MobileEntitlementBridge
 import com.magisk317.mobile.entitlement.MobileEntitlementConfig
 import com.magisk317.mobile.entitlement.MobileEntitlementCoordinator
@@ -102,7 +101,7 @@ class SmsCodeApplication : Application() {
         startKoin {
             androidLogger()
             androidContext(this@SmsCodeApplication)
-            modules(appModule, com.github.magisk317.smscode.di.billingModule, mobileEntitlementGoogleSignInModule)
+            modules(appModule, com.github.magisk317.smscode.di.billingModule)
         }
         
         org.koin.core.context.GlobalContext.get().getAll<io.github.magisk317.uikit.shell.AppInitializer>().forEach {

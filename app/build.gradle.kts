@@ -27,8 +27,6 @@ val mobileEntitlementApiOrigin = findProperty("mobileEntitlementApiOrigin")?.toS
     ?: "https://activate.magisk317.qzz.io"
 val mobileEntitlementSigningPublicJwk = findProperty("mobileEntitlementSigningPublicJwk")?.toString()
     ?: """{"kty":"EC","x":"4kPpwUt1wFRuF3EqGq6q57J3YmANf7wyiNH90FNkAbI","y":"U4-E1XK6LjWIXMFNEoSAoik7nD1S07BDb7qAipQd4Ts","crv":"P-256","alg":"ES256","use":"sig","kid":"mobile-entitlement-1"}"""
-val mobileEntitlementGoogleWebClientId = findProperty("mobileEntitlementGoogleWebClientId")?.toString()
-    ?: "87389120666-vom72bgs4me1eijuiufo0rnug528n6ce.apps.googleusercontent.com"
 fun buildConfigString(value: String): String =
     "\"${value.replace("\\", "\\\\").replace("\"", "\\\"")}\""
 val generatedSmsCodeRulesAssetsDir = layout.buildDirectory.dir("generated/smscodeRulesAssets")
@@ -69,7 +67,6 @@ android {
         buildConfigField("boolean", "MOBILE_ENTITLEMENT_ENFORCED", mobileEntitlementEnforced.toString())
         buildConfigField("String", "MOBILE_ENTITLEMENT_API_ORIGIN", buildConfigString(mobileEntitlementApiOrigin))
         buildConfigField("String", "MOBILE_ENTITLEMENT_SIGNING_PUBLIC_JWK", buildConfigString(mobileEntitlementSigningPublicJwk))
-        buildConfigField("String", "MOBILE_ENTITLEMENT_GOOGLE_WEB_CLIENT_ID", buildConfigString(mobileEntitlementGoogleWebClientId))
     }
 
     productFlavors {
@@ -149,9 +146,6 @@ dependencies {
     implementation(libs.koin.compose.viewmodel)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.collections.immutable)
-    add("playImplementation", libs.androidx.credential.core)
-    add("playImplementation", libs.androidx.credential.play.services.auth)
-    add("playImplementation", libs.google.id)
 }
 
 val verifyNoLocalVerificationEngine = tasks.register("verifyNoLocalVerificationEngine") {
