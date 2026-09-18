@@ -3,6 +3,14 @@
 本日志记录了项目重构后的主要变更。
 
 ---
+## [v3.3.4] - 2026-09-15
+- 版本：`versionCode 128` / `versionName 3.3.4`。
+- `[ci]` GitLab CI runner tag 改为变量引用，统一使用 arm64。
+- `[build]` 准备下一阶段开发。
+
+> Full Changelog: https://gitlab.com/magisk3171/XposedSmsCode/-/compare/v3.3.3...v3.3.4
+
+---
 ## [v3.3.3] - 2026-09-15
 - 版本：`versionCode 127` / `versionName 3.3.3`。
 - `[ui]` 统一 UI 组件与通用设置。
@@ -57,7 +65,7 @@
 - `[records/ui]` 验证码与短信记录持久化并新增 SIM 卡槽备注展示；记录查询逻辑统一重构至 Runtime 门面；修复 Edge-to-Edge 设计在底部导航栏的遮挡问题。
 - `[architecture/security]` 修复发送者 UID（sendingUid）获取前缺乏 SDK 版本校验导致的兼容性异常；同步安全更新 Netty 基础组件以修复相关漏洞；整理工程模块边界文档并新增架构层级阻断测试。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.2.10...v3.2.11
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.2.10...v3.2.11
 
 ---
 
@@ -77,7 +85,7 @@
 - `[ci/release]` Renovate/Dependabot 支持锁文件刷新、依赖图校验和分组规则收敛；GitHub Release 与 Xposed-Modules-Repo 改为直接发布。
 - `[ci/release]` 发布正文和 Telegram 发布通知统一读取本版本 changelog 块。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.2.9...v3.2.10
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.2.9...v3.2.10
 
 ---
 
@@ -91,7 +99,7 @@
 - `[deps/security]` 依赖治理从 Dependabot 迁移到自托管 Renovate，启用 OSV 安全联动、强制依赖修复和全模块 lockfile；同步修复 Netty `4.1.133.Final` 系列安全升级并更新 AGP/KSP/Gradle 相关版本与校验。
 - `[ci/release]` CI 补强依赖图提交流程（校验、重试、失败治理），通知流改为 `workflow_run` 并对齐 arm64 产物投递策略，发版链路与元数据同步检查继续收敛。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.2.8...v3.2.9
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.2.8...v3.2.9
 
 ---
 
@@ -102,7 +110,7 @@
 - `[ci]` 优化 CI 工作流，移除对外部相邻仓库的冗余检查逻辑，提升构建流水线运行效率。
 - `[submodules]` 同步 `smscode-core` 子模块指针，解决 `mokkery` 引用冲突，保持 API 抽象层与实现层的一致性。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.2.7...v3.2.8
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.2.7...v3.2.8
 
 ---
 
@@ -115,7 +123,7 @@
 - `[activation/framework]` 启动阶段增加已知不兼容框架拦截，首页/设置页进一步依赖激活诊断信息驱动状态展示，减少“模块已恢复工作但界面仍停留旧状态”的误判。
 - `[build/ci]` CI、tag 发版工作流与 `release_tag.sh` 对齐到新的质量门：发包前会先跑 `:core:check`、`:runtime:check`、`:app:check`，同时同步 release guard 与 Fastlane 元数据流程。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.2.6...v3.2.7
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.2.6...v3.2.7
 
 ---
 
@@ -129,7 +137,7 @@
 - `[logs]` 导出日志包文件名增加命名空间整理，连续多次导出时更容易区分不同来源，减少覆盖和反馈混淆。
 - `[api101/legacy]` 同步共享子模块和构建逻辑，继续收敛两条发版链路的实现差异，减少后续维护和发版漂移。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.2.5...v3.2.6
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.2.5...v3.2.6
 
 ---
 
@@ -142,7 +150,7 @@
 - `[ui]` 设置页数值输入继续做规范化处理，并同步简化无障碍服务说明文案与设置项文案复制逻辑。
 - `[build/ci]` 对齐共享子模块基础设施、发布产物工作流与依赖强制维护脚本，降低后续发版维护成本。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.2.4...v3.2.5
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.2.4...v3.2.5
 
 ---
 
@@ -158,7 +166,7 @@
 - `[api101/legacy]` 修复 Android 16 上的短信拦截兼容性问题，并修正 `Rule` 表迁移中 `check` 列的 SQLite 关键字转义。
 - `[build]` 更新 Compose、Kover、`androidx.browser` 与 CI 依赖，保持构建链路与发布环境同步。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.2.3...v3.2.4
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.2.3...v3.2.4
 
 ---
 
@@ -170,7 +178,7 @@
 - `[api101/legacy]` 强化验证码 Toast 去重与短信分发防重，降低重复提示、重复处理与重复自动输入概率。
 - `[legacy]` 进一步避免 `InboundSmsHandler` 重复初始化与重复分发，兼容旧框架重复加载场景并提升稳定性。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.2.2...v3.2.3
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.2.2...v3.2.3
 
 ---
 
@@ -182,7 +190,7 @@
 - `[api101/legacy]` 更新检查按 Xposed API flavor 匹配发布资产，减少 `api101` / `legacy` 安装包选错概率。
 - `[api101/legacy]` 状态卡新增激活诊断展示，并记录短信/Provider 链路的激活线索，便于排查未激活或注入失败。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.2.1...v3.2.2
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.2.1...v3.2.2
 
 ---
 
@@ -194,7 +202,7 @@
 - 自动输入增加“近期去重缓存”，减少重复输入。
 - 移除 legacy 入口、旧配置迁移与兼容依赖。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.2.0...v3.2.1
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.2.0...v3.2.1
 
 ---
 
@@ -209,7 +217,7 @@
 - 日志包新增 logcat 抓取；恢复流程修复 SAF 持久权限。
 - 依赖/构建更新（Kotlin/Koin/Gradle），CI 支持 submodule 拉取。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.1.9...v3.2.0
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.1.9...v3.2.0
 
 ---
 
@@ -220,7 +228,7 @@
 - HyperOS 3 改用 Provider 自杀路径，提升 kill 稳定性。
 - 设置页支持一键导出分享日志包，构建签名启用 v1/v2/v3。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.1.8...v3.1.9
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.1.8...v3.1.9
 
 ---
 
@@ -230,7 +238,7 @@
 - 默认 Xposed 作用域补充 `system`，改善 system_server 相关场景下的注入覆盖率。
 - 修复繁体中文（zh-TW）设置分组与备份项字符串缺失问题，提升多语言一致性。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.1.8...v3.1.9-beta
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.1.8...v3.1.9-beta
 
 ---
 
@@ -242,7 +250,7 @@
 - 精简应用黑名单与记录页面，并将恢复策略切换为 Kill Action，减少复杂恢复路径带来的不确定性。
 - 构建增强：支持 `buildTs` 覆盖属性，便于 CI/本地构建注入统一时间戳。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.1.7...v3.1.8
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.1.7...v3.1.8
 
 ---
 
@@ -251,7 +259,7 @@
 - 本版本涉及版本切换与分包调整，请务必提前备份数据，避免意外丢失。
 - 预告：下个版本将移除转发、通知相关功能，请提前做好迁移准备。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.1.6...v3.1.7
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.1.6...v3.1.7
 
 ---
 
@@ -281,8 +289,8 @@
 - 版本升级到 `versionCode 97` / `versionName 3.1.6`。
 - 构建链路与静态检查持续清理（Gradle nightly / Detekt），并将 Renovate 基线分支调整为 `beta` 以对齐自动化流程。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.1.5...v3.1.6
-> Incremental since beta.5: https://github.com/magisk3171/XposedSmsCode/compare/v3.1.6-beta.5...v3.1.6
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.1.5...v3.1.6
+> Incremental since beta.5: https://github.com/magisk317/XposedSmsCode/compare/v3.1.6-beta.5...v3.1.6
 
 ---
 
@@ -331,7 +339,7 @@
 - `d0d384f` feat(update): add non-Play in-app upgrade flow and recovery settings
 - `be52786` fix(settings): link notification options visibility to status bar toggle
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.1.6-beta.4...v3.1.6-beta.5
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.1.6-beta.4...v3.1.6-beta.5
 
 ---
 
@@ -381,7 +389,7 @@
 - `25237e4` fix(prefs): tolerate datastore/sharedprefs type mismatch
 - `02e644c` feat(sms): improve auto-delete reliability with observer flow
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.1.6-beta.3...v3.1.6-beta.4
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.1.6-beta.3...v3.1.6-beta.4
 
 ---
 
@@ -401,7 +409,7 @@
 - 修复结果实体混淆问题与多处构建/依赖兼容性细节。
 - 升级到 `versionCode 94` / `versionName 3.1.6-beta.3`。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.1.6-beta.2...v3.1.6-beta.3
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.1.6-beta.2...v3.1.6-beta.3
 
 ---
 
@@ -420,7 +428,7 @@
 - 模板渲染后自动移除空值整行，输出内容更整洁。
 - 记录页样式优化：顶部计数标题居中、数量使用括号、去除不必要色块背景。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.1.6-beta...v3.1.6-beta.2
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.1.6-beta...v3.1.6-beta.2
 
 ---
 
@@ -436,7 +444,7 @@
 - 修复 `LicenseActivity` 从后台恢复时可能出现的灰屏问题（#116）。
 - 修复飞书机器人 webhook 兼容性：按飞书要求发送 `msg_type/content`，并按业务返回码判定成功/失败。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.1.5...v3.1.6-beta
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.1.5...v3.1.6-beta
 
 ---
 
@@ -455,7 +463,7 @@
 - 升级 Gradle Wrapper 到最新的 Nightly 测试版本。
 - 修复 Detekt 代码检查中基于 `int:LOG_LEVEL` 引入的无用警告误报。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.1.5-beta.3...v3.1.5
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.1.5-beta.3...v3.1.5
 
 ---
 
@@ -463,7 +471,7 @@
 ### 修复 (Fixed)
 - 修复 Hook 进程中因 `Context/dataDir` 与未解锁阶段 CE 偏好读取导致的验证码解析失败问题（#108）。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.1.5-beta.2...v3.1.5-beta.3
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.1.5-beta.2...v3.1.5-beta.3
 
 ---
 
@@ -482,7 +490,7 @@
 ### 构建与发布 (Build & Release)
 - 升级到 `versionCode 89` / `versionName 3.1.5-beta.2`。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.1.5-beta...v3.1.5-beta.2
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.1.5-beta...v3.1.5-beta.2
 
 ---
 
@@ -509,7 +517,7 @@
 - 例行更新 Gradle Wrapper 夜版工具链（#97）。
 - 升级到 `versionCode 88` / `versionName 3.1.5`。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.1.4...v3.1.5-beta
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.1.4...v3.1.5-beta
 
 ---
 
@@ -530,7 +538,7 @@
 - 调整 Gradle Wrapper 定时更新策略，优化自动更新时效。
 - 升级到 `versionCode 87` / `versionName 3.1.4`。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.1.3...v3.1.4
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.1.3...v3.1.4
 
 ---
 
@@ -548,7 +556,7 @@
 - Gradle Wrapper 更新至 nightly。
 - KSP 升级至 `2.3.6`。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.1.2...v3.1.3
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.1.2...v3.1.3
 
 ---
 
@@ -562,7 +570,7 @@
 - 多页面国际化完善，并补充系统版本代号展示。
 - CI 支持按 tag 后缀自动分发至 Google Play 多轨道并同步发布说明。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.1.1...v3.1.2
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.1.1...v3.1.2
 
 ---
 
@@ -576,7 +584,7 @@
 - 修复设置布局重叠、Haze 首次绘制刷新等 UI 稳定性问题。
 - 修正 PrefsProvider 访问策略与关键 Hook 引用问题。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.1.0...v3.1.1
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.1.0...v3.1.1
 
 ---
 
@@ -589,7 +597,7 @@
 - 重写主界面布局，优化 Edge-to-Edge 下的无缝模糊与转场动画体验。
 - 修复 Telegram 换行渲染及系统输入 Hook 稳定性问题。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.0.7...v3.1.0
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.0.7...v3.1.0
 
 ---
 
@@ -601,7 +609,7 @@
 ### CI/CD
 - 增强 CI 构建摘要与 Debug 产物上传能力，改进发布通知策略。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.0.6...v3.0.7
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.0.6...v3.0.7
 
 ---
 
@@ -615,7 +623,7 @@
 - 强化 PrefsProvider 访问控制和实体存储容错能力。
 - CI 增加 symbols/mapping 上传，改进崩溃排查支持。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.0.5...v3.0.6
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.0.5...v3.0.6
 
 ---
 
@@ -625,7 +633,7 @@
 - 重构 `EntityStoreManager`，增强空文件与异常数据处理能力。
 - 新增验证码记录滑动删除与设置同步暴露能力。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.0.4...v3.0.5
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.0.4...v3.0.5
 
 ---
 
@@ -637,7 +645,7 @@
 ### 构建与发布 (Build & Release)
 - 集成 Google Play 发布工作流，优化分包构建与依赖版本。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.0.3...v3.0.4
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.0.3...v3.0.4
 
 ---
 
@@ -656,7 +664,7 @@
     - 清理了所有不必要的非空断言 (`!!`) 与弃用的 Material 3 API 警告。
     - 优化了 JDK 25 下的原生访问权限配置。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.0.2...v3.0.3
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.0.2...v3.0.3
 
 ---
 
@@ -665,7 +673,7 @@
 - 修复了自动填写权限逻辑。
 - 修复了剪贴板静默失败的问题。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.0.1...v3.0.2
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.0.1...v3.0.2
 
 ---
 
@@ -673,7 +681,7 @@
 ### 发布 (Released)
 - v3.0.1 版本发布，包含多处稳定性改进。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/v3.0.0...v3.0.1
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/v3.0.0...v3.0.1
 
 ---
 
@@ -683,7 +691,7 @@
 - **架构重构**：采用 Single Activity 架构，引入 Compose Navigation。
 - **自动化**：集成 GitHub Actions CI 自动化构建流程。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/compare/2.5.1_53...v3.0.0
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/compare/2.5.1_53...v3.0.0
 
 ---
 
@@ -691,7 +699,7 @@
 ### 变更 (Changed)
 - 提升版本代码至 53。
 
-> Full Changelog: https://github.com/magisk3171/XposedSmsCode/releases/tag/2.5.1_53
+> Full Changelog: https://github.com/magisk317/XposedSmsCode/releases/tag/2.5.1_53
 
 ---
 
