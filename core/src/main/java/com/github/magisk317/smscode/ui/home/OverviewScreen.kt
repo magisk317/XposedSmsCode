@@ -8,8 +8,7 @@ import android.content.Intent
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -283,15 +282,22 @@ fun OverviewScreen(
         onDonate = { showDonateDialog = true },
     )
 
+    // Hoisted so the quick return-to-top affordances (double-tap hotspot +
+    // scroll-to-top FAB wired by the style variants) drive the very scroll
+    // state that renders the page body.
+    val scrollState = rememberScrollState()
+
     when (currentUiKitStyle()) {
         UiKitStyle.Miuix -> OverviewScreenMiuix(
             state = state,
             actions = actions,
+            scrollState = scrollState,
         )
 
         UiKitStyle.Expressive -> OverviewScreenMaterial(
             state = state,
             actions = actions,
+            scrollState = scrollState,
         )
     }
 

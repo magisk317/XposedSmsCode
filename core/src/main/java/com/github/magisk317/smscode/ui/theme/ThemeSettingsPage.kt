@@ -25,8 +25,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.github.magisk317.smscode.ui.home.SettingsViewModel
 import com.github.magisk317.smscode.core.R
 import io.github.magisk317.uikit.R as UiKitR
-import com.github.magisk317.smscode.ui.shell.PageScaffoldExpressive
-import com.github.magisk317.smscode.ui.shell.PageScaffoldMiuix
+import io.github.magisk317.uikit.surface.PageScaffoldExpressive
+import io.github.magisk317.uikit.surface.PageScaffoldMiuix
 import io.github.magisk317.uikit.preference.Item as SettingsItem
 import io.github.magisk317.uikit.preference.SingleChoiceOptionDialog
 import io.github.magisk317.uikit.preference.StateSwitchItem as SettingsSwitchItem

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -157,8 +158,11 @@ fun SmsCodeRuleListScreen(
         loadOfficialRules(refresh = false)
     }
 
+    val listState = rememberLazyListState()
+
     val body: @Composable (PaddingValues, Modifier) -> Unit = { listPadding, scrollModifier ->
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(listPadding)
@@ -278,6 +282,7 @@ fun SmsCodeRuleListScreen(
             actions = actions,
             snackbarHost = snackbarHost,
             floatingActionButton = floatingActionButton,
+            listState = listState,
             body = body,
         )
 
@@ -286,6 +291,7 @@ fun SmsCodeRuleListScreen(
             actions = actions,
             snackbarHost = snackbarHost,
             floatingActionButton = floatingActionButton,
+            listState = listState,
             body = body,
         )
     }

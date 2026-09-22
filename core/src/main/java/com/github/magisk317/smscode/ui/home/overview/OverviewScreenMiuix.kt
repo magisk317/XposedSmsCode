@@ -2,22 +2,28 @@ package com.github.magisk317.smscode.ui.home
 
 import android.os.Build
 import androidx.annotation.StringRes
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -26,9 +32,12 @@ import androidx.compose.ui.unit.dp
 import com.github.magisk317.smscode.core.R
 import io.github.magisk317.uikit.R as UiKitR
 import io.github.magisk317.uikit.surface.AppCard
+import io.github.magisk317.uikit.surface.DoubleTapToTopOverlay
+import io.github.magisk317.uikit.surface.ScrollToTopFAB
 import io.github.magisk317.uikit.surface.rememberUiKitGlassTopBar
 import io.github.magisk317.uikit.surface.uiKitSurfaceGlassSample
 import io.github.magisk317.uikit.theme.LocalUiKitSurfaceBlur
+import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
@@ -40,136 +49,161 @@ import top.yukonga.miuix.kmp.utils.scrollEndHaptic
  * Miuix implementation of the Overview page. Follows KernelSU `HomeMiuix`
  * and MiPush `OverviewMiuix` composition model: page-owned miuix `Scaffold` +
  * collapsing `TopAppBar` driven by `MiuixScrollBehavior`.
+ * Quick return-to-top: double-tap the bar title strip or use the FAB that
+ * appears once the body has scrolled away from the top.
  */
 @Composable
 internal fun OverviewScreenMiuix(
     state: OverviewUiState,
     actions: OverviewActions,
+    scrollState: ScrollState,
 ) {
     val scrollBehavior = MiuixScrollBehavior()
-    val scrollState = rememberScrollState()
+    val scrollScope = rememberCoroutineScope()
+    val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val bottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 80.dp
     val unknown = stringResource(id = R.string.unknown)
 
     val topGlass = rememberUiKitGlassTopBar()
     val glassOn = LocalUiKitSurfaceBlur.current.usesBackdrop
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                modifier = Modifier.uiKitSurfaceGlassSample(topGlass),
-                title = stringResource(id = R.string.app_name),
-                scrollBehavior = scrollBehavior,
-                color = if (glassOn) Color.Transparent else io.github.magisk317.uikit.surface.chromeSurfaceColor(),
-                defaultWindowInsetsPadding = true,
-            )
-        },
-        contentWindowInsets = WindowInsets.systemBars
-            .union(WindowInsets.displayCutout)
-            .only(WindowInsetsSides.Horizontal),
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .then(if (glassOn) topGlass.contentRecorder() else Modifier)
-                .nestedScroll(scrollBehavior.nestedScrollConnection),
-        ) {
-            Column(
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    modifier = Modifier.uiKitSurfaceGlassSample(topGlass),
+                    title = stringResource(id = R.string.app_name),
+                    scrollBehavior = scrollBehavior,
+                    color = if (glassOn) Color.Transparent else io.github.magisk317.uikit.surface.chromeSurfaceColor(),
+                    defaultWindowInsetsPadding = true,
+                )
+            },
+            contentWindowInsets = WindowInsets.systemBars
+                .union(WindowInsets.displayCutout)
+                .only(WindowInsetsSides.Horizontal),
+        ) { innerPadding ->
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(scrollState)
-                    .scrollEndHaptic()
-                    .padding(
-                        PaddingValues(
-                            start = 12.dp,
-                            end = 12.dp,
-                            top = innerPadding.calculateTopPadding() + 12.dp,
-                            bottom = innerPadding.calculateBottomPadding() + 80.dp,
-                        ),
-                    ),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                    .then(if (glassOn) topGlass.contentRecorder() else Modifier)
+                    .nestedScroll(scrollBehavior.nestedScrollConnection),
             ) {
-                StatusCard(
-                    isEnabled = state.activationStatus.isEnabled,
-                    isEntitled = state.mobileAutomationAllowed,
-                    showDiagnostics = state.showStatusDiagnostics,
-                    diagnostics = state.statusDiagnostics,
-                    onActivateClick = actions.onActivateClick,
-                    onDiagnosticsToggle = actions.onToggleDiagnostics,
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState)
+                        .scrollEndHaptic()
+                        .padding(
+                            PaddingValues(
+                                start = 12.dp,
+                                end = 12.dp,
+                                top = innerPadding.calculateTopPadding() + 12.dp,
+                                bottom = innerPadding.calculateBottomPadding() + 80.dp,
+                            ),
+                        ),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    StatusCard(
+                        isEnabled = state.activationStatus.isEnabled,
+                        isEntitled = state.mobileAutomationAllowed,
+                        showDiagnostics = state.showStatusDiagnostics,
+                        diagnostics = state.statusDiagnostics,
+                        onActivateClick = actions.onActivateClick,
+                        onDiagnosticsToggle = actions.onToggleDiagnostics,
+                    )
+
+                    AppCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                            MiuixInfoRow(
+                                label = UiKitR.string.uikit_version_name,
+                                value = state.appVersionName.ifBlank { unknown },
+                            )
+                            MiuixInfoRow(
+                                label = UiKitR.string.uikit_version_code,
+                                value = state.appVersionCode.ifBlank { unknown },
+                            )
+                            MiuixActionRow(
+                                label = UiKitR.string.uikit_framework_type,
+                                value = state.frameworkType.ifBlank { unknown },
+                                onClick = if (state.hasRootAccess) null else actions.onRootHintClick,
+                            )
+                            MiuixActionRow(
+                                label = UiKitR.string.uikit_framework_version,
+                                value = state.frameworkVersion.ifBlank { unknown },
+                                onClick = if (state.hasRootAccess) null else actions.onRootHintClick,
+                            )
+                        }
+                    }
+
+                    AppCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                            MiuixInfoRow(
+                                label = UiKitR.string.uikit_manufacturer,
+                                value = Build.MANUFACTURER,
+                            )
+                            MiuixInfoRow(
+                                label = UiKitR.string.uikit_model,
+                                value = io.github.magisk317.uikit.platform.resolveAndroidDeviceDisplayName(),
+                            )
+                            MiuixInfoRow(
+                                label = UiKitR.string.uikit_android_version,
+                                value = Build.VERSION.RELEASE,
+                            )
+                            MiuixInfoRow(
+                                label = UiKitR.string.uikit_api_level,
+                                value = Build.VERSION.SDK_INT.toString(),
+                            )
+                            MiuixInfoRow(
+                                label = UiKitR.string.uikit_android_codename,
+                                value = Build.VERSION.CODENAME,
+                            )
+                        }
+                    }
+
+                    AppCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                            MiuixActionRow(
+                                label = UiKitR.string.uikit_pref_join_telegram_group_title,
+                                summary = UiKitR.string.uikit_pref_join_telegram_group_summary,
+                                onClick = actions.onJoinTelegram,
+                            )
+                            MiuixActionRow(
+                                label = UiKitR.string.uikit_pref_join_qq_channel_title,
+                                summary = UiKitR.string.uikit_pref_join_qq_channel_summary,
+                                onClick = actions.onJoinQqChannel,
+                            )
+                            MiuixActionRow(
+                                label = UiKitR.string.uikit_pref_source_code_title,
+                                summary = UiKitR.string.uikit_pref_source_code_summary,
+                                onClick = actions.onSourceCode,
+                            )
+                            MiuixActionRow(
+                                label = UiKitR.string.uikit_pref_donate_by_alipay_title,
+                                summary = UiKitR.string.uikit_dialog_donate_summary,
+                                onClick = actions.onDonate,
+                            )
+                        }
+                    }
+                }
+                ScrollToTopFAB(
+                    scrollState = scrollState,
+                    visible = true,
+                    extraBottomPadding = bottomPadding,
                 )
-
-                AppCard(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                        MiuixInfoRow(
-                            label = UiKitR.string.uikit_version_name,
-                            value = state.appVersionName.ifBlank { unknown },
-                        )
-                        MiuixInfoRow(
-                            label = UiKitR.string.uikit_version_code,
-                            value = state.appVersionCode.ifBlank { unknown },
-                        )
-                        MiuixActionRow(
-                            label = UiKitR.string.uikit_framework_type,
-                            value = state.frameworkType.ifBlank { unknown },
-                            onClick = if (state.hasRootAccess) null else actions.onRootHintClick,
-                        )
-                        MiuixActionRow(
-                            label = UiKitR.string.uikit_framework_version,
-                            value = state.frameworkVersion.ifBlank { unknown },
-                            onClick = if (state.hasRootAccess) null else actions.onRootHintClick,
-                        )
-                    }
-                }
-
-                AppCard(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                        MiuixInfoRow(
-                            label = UiKitR.string.uikit_manufacturer,
-                            value = Build.MANUFACTURER,
-                        )
-                        MiuixInfoRow(
-                            label = UiKitR.string.uikit_model,
-                            value = io.github.magisk317.uikit.platform.resolveAndroidDeviceDisplayName(),
-                        )
-                        MiuixInfoRow(
-                            label = UiKitR.string.uikit_android_version,
-                            value = Build.VERSION.RELEASE,
-                        )
-                        MiuixInfoRow(
-                            label = UiKitR.string.uikit_api_level,
-                            value = Build.VERSION.SDK_INT.toString(),
-                        )
-                        MiuixInfoRow(
-                            label = UiKitR.string.uikit_android_codename,
-                            value = Build.VERSION.CODENAME,
-                        )
-                    }
-                }
-
-                AppCard(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                        MiuixActionRow(
-                            label = UiKitR.string.uikit_pref_join_telegram_group_title,
-                            summary = UiKitR.string.uikit_pref_join_telegram_group_summary,
-                            onClick = actions.onJoinTelegram,
-                        )
-                        MiuixActionRow(
-                            label = UiKitR.string.uikit_pref_join_qq_channel_title,
-                            summary = UiKitR.string.uikit_pref_join_qq_channel_summary,
-                            onClick = actions.onJoinQqChannel,
-                        )
-                        MiuixActionRow(
-                            label = UiKitR.string.uikit_pref_source_code_title,
-                            summary = UiKitR.string.uikit_pref_source_code_summary,
-                            onClick = actions.onSourceCode,
-                        )
-                        MiuixActionRow(
-                            label = UiKitR.string.uikit_pref_donate_by_alipay_title,
-                            summary = UiKitR.string.uikit_dialog_donate_summary,
-                            onClick = actions.onDonate,
-                        )
-                    }
-                }
             }
         }
+        // Transparent double-tap hotspot over the top bar title strip. This
+        // page's bar has no navigation icon or actions, so the strip spans the
+        // full bar width; single taps fall through to the bar underneath.
+        DoubleTapToTopOverlay(
+            onDoubleTap = {
+                scrollScope.launch { scrollState.animateScrollTo(0) }
+            },
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(start = 16.dp, top = statusBarTop, end = 16.dp)
+                .fillMaxWidth()
+                .height(64.dp),
+        )
     }
 }
 
