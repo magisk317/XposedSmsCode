@@ -50,12 +50,12 @@ import com.github.magisk317.smscode.core.R
 import com.github.magisk317.smscode.common.constant.Const
 import com.github.magisk317.smscode.common.constant.PrefConst
 import com.github.magisk317.smscode.common.constant.TransitionConst
-import com.github.magisk317.smscode.common.utils.AppPreferencesDataStore
+import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import io.github.magisk317.smscode.runtime.common.utils.FrameworkCompatibilityMonitor
 import com.github.magisk317.smscode.runtime.bridge.UiPrefsAccess
 import com.github.magisk317.smscode.runtime.bridge.UiUpdateAccess
 import com.github.magisk317.smscode.common.utils.XLog
-import com.github.magisk317.smscode.common.utils.SPUtils
+import com.github.magisk317.smscode.common.utils.AppPreferences
 import com.github.magisk317.smscode.common.utils.PackageUtils
 import io.github.magisk317.smscode.runtime.common.utils.StringUtils
 import io.github.magisk317.smscode.runtime.common.utils.BrowserUtils
@@ -194,7 +194,7 @@ class MainActivity : ComponentActivity() {
             var requestedTab by remember { mutableStateOf<Any?>(null) }
 
             LaunchedEffect(Unit) {
-                if (!SPUtils.isPrivacyPolicyAccepted(context)) {
+                if (!AppPreferences.isPrivacyPolicyAccepted(context)) {
                     showPrivacyPolicyDialog = true
                 }
             }
@@ -298,10 +298,7 @@ class MainActivity : ComponentActivity() {
             }
 
             CompositionLocalProvider(LocalSnackbarHostState provides appSnackbarHostState) {
-                AppTheme(
-                    themeMode = currentThemeMode,
-                    uiKitStyle = currentUiKitStyle,
-                ) {
+                AppTheme {
                     Surface(color = MaterialTheme.colorScheme.background) {
                     LaunchedEffect(Unit) {
                         viewModel.setInternalFilesWritable()
@@ -327,11 +324,11 @@ class MainActivity : ComponentActivity() {
                             PrivacyPolicyDialog(
                                 onDismiss = {},
                                 onConfirm = {
-                                    scope.launch { SPUtils.setPrivacyPolicyAccepted(context, true) }
+                                    scope.launch { AppPreferences.setPrivacyPolicyAccepted(context, true) }
                                     showPrivacyPolicyDialog = false
                                 },
                                 onCancel = {
-                                    scope.launch { SPUtils.setPrivacyPolicyAccepted(context, false) }
+                                    scope.launch { AppPreferences.setPrivacyPolicyAccepted(context, false) }
                                     showPrivacyPolicyDialog = false
                                     finish()
                                 },
@@ -349,7 +346,7 @@ class MainActivity : ComponentActivity() {
                                 onDismiss = {
                                     showPrivacyPolicyPage = false
                                     scope.launch {
-                                        if (!SPUtils.isPrivacyPolicyAccepted(context)) {
+                                        if (!AppPreferences.isPrivacyPolicyAccepted(context)) {
                                             showPrivacyPolicyDialog = true
                                         }
                                     }

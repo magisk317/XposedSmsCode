@@ -106,31 +106,6 @@ fun SmsCodeRuleListScreen(
     onEditClick: (Long) -> Unit,
     onSourceSettingsClick: () -> Unit,
 ) {
-    when (currentUiKitStyle()) {
-        UiKitStyle.Miuix -> SmsCodeRuleListScreenMiuix(
-            onBack = onBack,
-            onAddClick = onAddClick,
-            onEditClick = onEditClick,
-            onSourceSettingsClick = onSourceSettingsClick,
-        )
-
-        UiKitStyle.Expressive -> SmsCodeRuleListScreenMaterial(
-            onBack = onBack,
-            onAddClick = onAddClick,
-            onEditClick = onEditClick,
-            onSourceSettingsClick = onSourceSettingsClick,
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-internal fun SmsCodeRuleListScreenShared(
-    onBack: () -> Unit,
-    onAddClick: () -> Unit,
-    onEditClick: (Long) -> Unit,
-    onSourceSettingsClick: () -> Unit,
-) {
     val context = LocalContext.current
     val storage = koinInject<UiStorageAccess>()
     val dbManager = remember(context) { storage.dbManager(context) }
@@ -182,52 +157,12 @@ internal fun SmsCodeRuleListScreenShared(
         loadOfficialRules(refresh = false)
     }
 
-    Scaffold(
-        topBar = {
-            AppTopBar(
-                title = stringResource(id = R.string.rule_list),
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onSourceSettingsClick) {
-                        Icon(
-                            Icons.Filled.Settings,
-                            contentDescription = stringResource(id = R.string.action_rule_source_settings),
-                        )
-                    }
-                    IconButton(
-                        enabled = !officialLoading,
-                        onClick = { loadOfficialRules(refresh = true) },
-                    ) {
-                        Icon(Icons.Filled.Refresh, contentDescription = stringResource(id = R.string.action_refresh))
-                    }
-                },
-            )
-        },
-        snackbarHost = {
-            io.github.magisk317.uikit.common.DismissibleSnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier.navigationBarsPadding(),
-            )
-        },
-        floatingActionButton = {
-            AppFloatingActionButton(
-                modifier = Modifier
-                    .navigationBarsPadding()
-                    .padding(bottom = 56.dp),
-                onClick = onAddClick,
-                imageVector = Icons.Filled.Add,
-                contentDescription = stringResource(id = R.string.create_rule),
-            )
-        },
-    ) { paddingValues ->
+    val body: @Composable (PaddingValues, Modifier) -> Unit = { listPadding, scrollModifier ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
+                .padding(listPadding)
+                .then(scrollModifier),
             contentPadding = PaddingValues(
                 start = 16.dp,
                 top = 16.dp,
@@ -303,7 +238,59 @@ internal fun SmsCodeRuleListScreenShared(
             }
         }
     }
+
+    val actions: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {
+        IconButton(onClick = onSourceSettingsClick) {
+            Icon(
+                Icons.Filled.Settings,
+                contentDescription = stringResource(id = R.string.action_rule_source_settings),
+            )
+        }
+        IconButton(
+            enabled = !officialLoading,
+            onClick = { loadOfficialRules(refresh = true) },
+        ) {
+            Icon(Icons.Filled.Refresh, contentDescription = stringResource(id = R.string.action_refresh))
+        }
+    }
+
+    val snackbarHost: @Composable () -> Unit = {
+        io.github.magisk317.uikit.common.DismissibleSnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.navigationBarsPadding(),
+        )
+    }
+
+    val floatingActionButton: @Composable () -> Unit = {
+        AppFloatingActionButton(
+            modifier = Modifier
+                .navigationBarsPadding()
+                .padding(bottom = 56.dp, end = 16.dp),
+            onClick = onAddClick,
+            imageVector = Icons.Filled.Add,
+            contentDescription = stringResource(id = R.string.create_rule),
+        )
+    }
+
+    when (currentUiKitStyle()) {
+        UiKitStyle.Miuix -> SmsCodeRuleListScreenMiuix(
+            onBack = onBack,
+            actions = actions,
+            snackbarHost = snackbarHost,
+            floatingActionButton = floatingActionButton,
+            body = body,
+        )
+
+        UiKitStyle.Expressive -> SmsCodeRuleListScreenMaterial(
+            onBack = onBack,
+            actions = actions,
+            snackbarHost = snackbarHost,
+            floatingActionButton = floatingActionButton,
+            body = body,
+        )
+    }
 }
+
 
 @Composable
 fun SmsCodeRuleSourceSettingsScreen(onBack: () -> Unit) {
@@ -413,25 +400,6 @@ fun SmsCodeRuleEditorScreen(
     ruleId: Long,
     onBack: () -> Unit,
 ) {
-    when (currentUiKitStyle()) {
-        UiKitStyle.Miuix -> SmsCodeRuleEditorScreenMiuix(
-            ruleId = ruleId,
-            onBack = onBack,
-        )
-
-        UiKitStyle.Expressive -> SmsCodeRuleEditorScreenMaterial(
-            ruleId = ruleId,
-            onBack = onBack,
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-internal fun SmsCodeRuleEditorScreenShared(
-    ruleId: Long,
-    onBack: () -> Unit,
-) {
     val context = LocalContext.current
     val clipboard = LocalClipboard.current
     val storage = koinInject<UiStorageAccess>()
@@ -454,6 +422,11 @@ internal fun SmsCodeRuleEditorScreenShared(
         BuiltinSmsCodeRules.RULE_ID_ALPHANUMERIC -> stringResource(id = R.string.builtin_rule_alphanumeric_title)
         BuiltinSmsCodeRules.RULE_ID_DIGITS -> stringResource(id = R.string.builtin_rule_digits_title)
         else -> stringResource(id = R.string.builtin_rule_badge)
+    }
+    val title = if (isBuiltinRule) builtinTitle else {
+        stringResource(
+            id = if (ruleId == 0L) R.string.create_rule else R.string.edit_rule,
+        )
     }
     val companyLabel = stringResource(id = R.string.rule_company_hint)
     val keywordLabel = stringResource(id = R.string.rule_keyword_hint)
@@ -546,41 +519,29 @@ internal fun SmsCodeRuleEditorScreenShared(
         }
     }
 
-    Scaffold(
-        topBar = {
-            AppTopBar(
-                title = if (isBuiltinRule) builtinTitle else {
-                    stringResource(
-                        id = if (ruleId == 0L) R.string.create_rule else R.string.edit_rule,
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
-                    }
-                },
-                actions = {
-                    if (!isBuiltinRule) {
-                        AppTextButton(
-                            text = confirmLabel,
-                            enabled = !loading,
-                            onClick = ::saveRule,
-                        )
-                    }
-                },
+    val actions: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {
+        if (!isBuiltinRule) {
+            AppTextButton(
+                text = confirmLabel,
+                enabled = !loading,
+                onClick = ::saveRule,
             )
-        },
-        snackbarHost = {
-            io.github.magisk317.uikit.common.DismissibleSnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier.navigationBarsPadding(),
-            )
-        },
-    ) { paddingValues ->
+        }
+    }
+
+    val snackbarHost: @Composable () -> Unit = {
+        io.github.magisk317.uikit.common.DismissibleSnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.navigationBarsPadding(),
+        )
+    }
+
+    val body: @Composable (PaddingValues, Modifier) -> Unit = { listPadding, scrollModifier ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(listPadding)
+                .then(scrollModifier)
                 .padding(horizontal = 16.dp, vertical = 20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -645,5 +606,23 @@ internal fun SmsCodeRuleEditorScreenShared(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+    }
+
+    when (currentUiKitStyle()) {
+        UiKitStyle.Miuix -> SmsCodeRuleEditorScreenMiuix(
+            title = title,
+            onBack = onBack,
+            actions = actions,
+            snackbarHost = snackbarHost,
+            body = body,
+        )
+
+        UiKitStyle.Expressive -> SmsCodeRuleEditorScreenMaterial(
+            title = title,
+            onBack = onBack,
+            actions = actions,
+            snackbarHost = snackbarHost,
+            body = body,
+        )
     }
 }

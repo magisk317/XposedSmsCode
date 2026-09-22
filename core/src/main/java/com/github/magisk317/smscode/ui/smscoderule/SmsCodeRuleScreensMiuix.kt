@@ -1,29 +1,44 @@
 package com.github.magisk317.smscode.ui.smscoderule
 
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.github.magisk317.smscode.core.R
+import com.github.magisk317.smscode.ui.shell.PageScaffoldMiuix
 
 @Composable
 internal fun SmsCodeRuleListScreenMiuix(
     onBack: () -> Unit,
-    onAddClick: () -> Unit,
-    onEditClick: (Long) -> Unit,
-    onSourceSettingsClick: () -> Unit,
+    actions: @Composable RowScope.() -> Unit = {},
+    snackbarHost: @Composable () -> Unit = {},
+    floatingActionButton: @Composable () -> Unit = {},
+    body: @Composable (PaddingValues, Modifier) -> Unit,
 ) {
-    SmsCodeRuleListScreenShared(
+    PageScaffoldMiuix(
+        title = stringResource(id = R.string.rule_list),
         onBack = onBack,
-        onAddClick = onAddClick,
-        onEditClick = onEditClick,
-        onSourceSettingsClick = onSourceSettingsClick,
+        actions = actions,
+        snackbarHost = snackbarHost,
+        floatingActionButton = floatingActionButton,
+        content = body,
     )
 }
 
 @Composable
 internal fun SmsCodeRuleEditorScreenMiuix(
-    ruleId: Long,
+    title: String,
     onBack: () -> Unit,
+    actions: @Composable RowScope.() -> Unit = {},
+    snackbarHost: @Composable () -> Unit = {},
+    body: @Composable (PaddingValues, Modifier) -> Unit,
 ) {
-    SmsCodeRuleEditorScreenShared(
-        ruleId = ruleId,
+    PageScaffoldMiuix(
+        title = title,
         onBack = onBack,
+        actions = actions,
+        snackbarHost = snackbarHost,
+        content = body,
     )
 }

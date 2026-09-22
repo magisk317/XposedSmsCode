@@ -1,5 +1,6 @@
 package com.github.magisk317.smscode.ui.home
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -42,6 +43,8 @@ import com.github.magisk317.smscode.ui.nav.MainPagerActivationTracker
 import com.github.magisk317.smscode.ui.nav.MainRoutePagerSynchronizer
 import com.github.magisk317.smscode.ui.nav.MainTopLevelPage
 import com.github.magisk317.smscode.ui.nav.OverviewRoute
+import com.github.magisk317.smscode.ui.nav.ThemeSettingsRoute
+import com.github.magisk317.smscode.ui.theme.ThemeSettingsPage
 import com.github.magisk317.smscode.ui.nav.RecordSwipeGestureArbitrator
 import com.github.magisk317.smscode.ui.nav.RecordsRoute
 import com.github.magisk317.smscode.ui.nav.SettingsRoute
@@ -135,6 +138,8 @@ fun MainScreen(
 ) {
     val navController = rememberNavController()
     val appConfigViewModel: AppConfigViewModel = koinViewModel()
+    val themeViewModel: SettingsViewModel = koinViewModel()
+    val chromeThemeState by themeViewModel.themeState.collectAsStateWithLifecycle()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val currentRouteKey = currentDestination?.route
@@ -408,7 +413,11 @@ fun MainScreen(
             tabs = tabs,
             pagerState = pagerState,
             isCompact = isCompact,
+            showSystemBarsScrim = false,
             chromeController = chromeController,
+            floatingBottomBar = chromeThemeState.floatingBottomBar,
+            bottomBarBlur = chromeThemeState.bottomBarBlur,
+            bottomBarBackdrop = chromeThemeState.bottomBarBackdrop,
             onTabReselected = ::triggerRefreshForIndex,
             pagerVisible = isTopLevelRoute,
                 onChromeTransition = { transition ->
@@ -498,13 +507,17 @@ fun MainScreen(
                         onPageDataReady = { cacheHit -> recordPageDataReady(page, cacheHit) },
                         onRecordSwipeGestureActiveChanged = onRecordSwipeGestureActiveChanged,
                     )
-                    MainTopLevelPage.SETTINGS.index -> ComposeSettingsScreen(
-                        onExit = { /* In tab, ignore exit */ },
-                        refreshTrigger = settingsRefreshTrigger,
-                        isActive = pageState.isActive,
-                        keepDataActive = pageState.isDataActive,
-                        onPageDataReady = { cacheHit -> recordPageDataReady(page, cacheHit) },
-                    )
+                    MainTopLevelPage.SETTINGS.index -> androidx.compose.runtime.CompositionLocalProvider(
+                        LocalThemeSettingsNavigation provides { navController.navigate(ThemeSettingsRoute) },
+                    ) {
+                        ComposeSettingsScreen(
+                            onExit = { /* In tab, ignore exit */ },
+                            refreshTrigger = settingsRefreshTrigger,
+                            isActive = pageState.isActive,
+                            keepDataActive = pageState.isDataActive,
+                            onPageDataReady = { cacheHit -> recordPageDataReady(page, cacheHit) },
+                        )
+                    }
                 }
             }
         if (!isTopLevelRoute) {
@@ -512,7 +525,11 @@ fun MainScreen(
                 tabs = tabs,
                 selectedIndex = resolveTabIndex(currentDestination),
                 isCompact = isCompact,
+                showSystemBarsScrim = false,
                 chromeController = chromeController,
+                floatingBottomBar = chromeThemeState.floatingBottomBar,
+                bottomBarBlur = chromeThemeState.bottomBarBlur,
+                bottomBarBackdrop = chromeThemeState.bottomBarBackdrop,
                 onTabSelected = { index ->
                     pendingPerformanceInput = NavigationInput.CLICK
                     pendingPerformanceTargetPage = index
@@ -648,13 +665,26 @@ fun MainScreen(
                         )
                     }
                     composable<SettingsRoute> {
-                        ComposeSettingsScreen(
-                            onExit = { /* In tab, ignore exit */ },
-                            refreshTrigger = settingsRefreshTrigger,
-                            isActive = currentDestination?.hasRoute(SettingsRoute::class) == true,
-                            onPageDataReady = { cacheHit ->
-                                recordPageDataReady(MainTopLevelPage.SETTINGS.index, cacheHit)
-                            },
+                        androidx.compose.runtime.CompositionLocalProvider(
+                            LocalThemeSettingsNavigation provides { navController.navigate(ThemeSettingsRoute) },
+                        ) {
+                            ComposeSettingsScreen(
+                                onExit = { /* In tab, ignore exit */ },
+                                refreshTrigger = settingsRefreshTrigger,
+                                isActive = currentDestination?.hasRoute(SettingsRoute::class) == true,
+                                onPageDataReady = { cacheHit ->
+                                    recordPageDataReady(MainTopLevelPage.SETTINGS.index, cacheHit)
+                                },
+                            )
+                        }
+                    }
+                    composable<ThemeSettingsRoute> {
+                        ThemeSettingsPage(
+                            // The activity-scoped instance MainScreen and MainActivity
+                            // already observe; a plain koinViewModel() here would resolve to
+                            // the NavBackStackEntry scope and write to an orphan instance.
+                            viewModel = themeViewModel,
+                            onBack = { navController.popBackStack() },
                         )
                     }
                 }

@@ -1,5 +1,8 @@
 package com.github.magisk317.smscode.ui.home
 
+import io.github.magisk317.smscode.runtime.common.prefs.AppearancePreferences
+import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
+import io.github.magisk317.smscode.runtime.common.prefs.SharedPreferenceKeys
 import android.app.Application
 import android.content.ComponentName
 import android.content.Context
@@ -99,6 +102,16 @@ class SettingsViewModel(
     data class ThemeState(
         val mode: Int,
         val uiKitStyle: Int = UiKitStyle.Expressive.value,
+        val layoutScale: Int = SharedPreferenceKeys.Appearance.DEFAULT_LAYOUT_SCALE,
+        val paletteStyle: Int = SharedPreferenceKeys.Appearance.DEFAULT_PALETTE_STYLE,
+        val colorSpec: Int = SharedPreferenceKeys.Appearance.DEFAULT_COLOR_SPEC,
+        val accentColor: Int = SharedPreferenceKeys.Appearance.DEFAULT_ACCENT_COLOR,
+        val monetEnabled: Boolean = SharedPreferenceKeys.Appearance.DEFAULT_MONET_ENABLED,
+        val surfaceBlur: Boolean = SharedPreferenceKeys.Appearance.DEFAULT_SURFACE_BLUR,
+        val dynamicColor: Boolean = SharedPreferenceKeys.Appearance.DEFAULT_DYNAMIC_COLOR,
+        val floatingBottomBar: Boolean = SharedPreferenceKeys.Appearance.DEFAULT_FLOATING_BOTTOM_BAR,
+        val bottomBarBlur: Boolean = SharedPreferenceKeys.Appearance.DEFAULT_BOTTOM_BAR_BLUR,
+        val bottomBarBackdrop: Boolean = SharedPreferenceKeys.Appearance.DEFAULT_BOTTOM_BAR_BACKDROP,
         val centerX: Float = -1f,
         val centerY: Float = -1f,
     )
@@ -116,9 +129,22 @@ class SettingsViewModel(
 
     init {
         viewModelScope.launch {
-            val mode = SPUtils.getThemeMode(getApplication())
-            val uiKitStyle = SPUtils.getUiKitStyle(getApplication())
-            _themeState.value = ThemeState(mode = mode, uiKitStyle = uiKitStyle)
+            val mode = AppPreferences.getThemeMode(getApplication())
+            val uiKitStyle = AppPreferences.getUiKitStyle(getApplication())
+            _themeState.value = ThemeState(
+                mode = mode,
+                uiKitStyle = uiKitStyle,
+                layoutScale = AppearancePreferences.layoutScale(getApplication()),
+                paletteStyle = AppearancePreferences.paletteStyle(getApplication()),
+                colorSpec = AppearancePreferences.colorSpec(getApplication()),
+                accentColor = AppearancePreferences.accentColor(getApplication()),
+                monetEnabled = AppearancePreferences.monetEnabled(getApplication()),
+                surfaceBlur = AppearancePreferences.surfaceBlurEnabled(getApplication()),
+                dynamicColor = AppearancePreferences.dynamicColorEnabled(getApplication()),
+                floatingBottomBar = AppearancePreferences.floatingBottomBarEnabled(getApplication()),
+                bottomBarBlur = AppearancePreferences.bottomBarBlurEnabled(getApplication()),
+                bottomBarBackdrop = AppearancePreferences.bottomBarBackdropEnabled(getApplication()),
+            )
         }
         viewModelScope.launch {
             HookPreferenceMirror.publish(getApplication())
@@ -127,15 +153,85 @@ class SettingsViewModel(
 
     fun setThemeMode(mode: Int, x: Float = -1f, y: Float = -1f) {
         viewModelScope.launch {
-            SPUtils.setThemeMode(getApplication(), mode)
+            AppPreferences.setThemeMode(getApplication(), mode)
             _themeState.value = _themeState.value.copy(mode = mode, centerX = x, centerY = y)
         }
     }
 
     fun setUiKitStyle(style: Int) {
         viewModelScope.launch {
-            SPUtils.setUiKitStyle(getApplication(), style)
+            AppPreferences.setUiKitStyle(getApplication(), style)
             _themeState.value = _themeState.value.copy(uiKitStyle = style)
+        }
+    }
+
+    fun setLayoutScale(value: Int) {
+        viewModelScope.launch {
+            AppearancePreferences.setLayoutScale(getApplication(), value)
+            _themeState.value = _themeState.value.copy(layoutScale = value)
+        }
+    }
+
+    fun setPaletteStyle(value: Int) {
+        viewModelScope.launch {
+            AppearancePreferences.setPaletteStyle(getApplication(), value)
+            _themeState.value = _themeState.value.copy(paletteStyle = value)
+        }
+    }
+
+    fun setColorSpec(value: Int) {
+        viewModelScope.launch {
+            AppearancePreferences.setColorSpec(getApplication(), value)
+            _themeState.value = _themeState.value.copy(colorSpec = value)
+        }
+    }
+
+    fun setAccentColor(argb: Int) {
+        viewModelScope.launch {
+            AppearancePreferences.setAccentColor(getApplication(), argb)
+            _themeState.value = _themeState.value.copy(accentColor = argb)
+        }
+    }
+
+    fun setMonetEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            AppearancePreferences.setMonetEnabled(getApplication(), enabled)
+            _themeState.value = _themeState.value.copy(monetEnabled = enabled)
+        }
+    }
+
+    fun setSurfaceBlurEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            AppearancePreferences.setSurfaceBlurEnabled(getApplication(), enabled)
+            _themeState.value = _themeState.value.copy(surfaceBlur = enabled)
+        }
+    }
+
+    fun setDynamicColorEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            AppearancePreferences.setDynamicColorEnabled(getApplication(), enabled)
+            _themeState.value = _themeState.value.copy(dynamicColor = enabled)
+        }
+    }
+
+    fun setFloatingBottomBarEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            AppearancePreferences.setFloatingBottomBarEnabled(getApplication(), enabled)
+            _themeState.value = _themeState.value.copy(floatingBottomBar = enabled)
+        }
+    }
+
+    fun setBottomBarBlurEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            AppearancePreferences.setBottomBarBlurEnabled(getApplication(), enabled)
+            _themeState.value = _themeState.value.copy(bottomBarBlur = enabled)
+        }
+    }
+
+    fun setBottomBarBackdropEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            AppearancePreferences.setBottomBarBackdropEnabled(getApplication(), enabled)
+            _themeState.value = _themeState.value.copy(bottomBarBackdrop = enabled)
         }
     }
 
@@ -143,7 +239,7 @@ class SettingsViewModel(
         if (args == null) return
 
         viewModelScope.launch {
-            if (!SPUtils.isPrivacyPolicyAccepted(getApplication())) {
+            if (!AppPreferences.isPrivacyPolicyAccepted(getApplication())) {
                 _eventsFlow.tryEmit(SettingsEvent.ShowPrivacyPolicy)
             } else {
                 val extraAction = args.getString(Const.EXTRA_ACTION)

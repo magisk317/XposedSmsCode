@@ -4,7 +4,7 @@ package com.github.magisk317.smscode.ui.home
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.os.SystemClock
+import android.content.Intent
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -41,7 +41,7 @@ import io.github.magisk317.uikit.R as UiKitR
 import io.github.magisk317.smscode.runtime.contract.diagnostics.ActivationStatusState
 import com.github.magisk317.smscode.common.constant.Const
 import com.github.magisk317.smscode.common.constant.PrefConst
-import com.github.magisk317.smscode.common.utils.AppPreferencesDataStore
+import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import io.github.magisk317.smscode.runtime.contract.diagnostics.ActivationDiagnosticsSnapshot
 import io.github.magisk317.smscode.runtime.common.diagnostics.ActivationDiagnosticsStore
 import io.github.magisk317.uikit.entitlement.rememberEntitlementState
@@ -55,6 +55,7 @@ import io.github.magisk317.uikit.surface.SummaryRow
 import io.github.magisk317.uikit.surface.SummarySectionCard
 import io.github.magisk317.uikit.theme.UiKitStyle
 import io.github.magisk317.uikit.theme.currentUiKitStyle
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -76,10 +77,16 @@ private suspend fun readEntitlementAutomationAllowed(context: Context): Boolean 
         false,
     )
 
-private data class OverviewPageRuntime(
-    val isActive: Boolean = true,
-    val keepDataActive: Boolean = isActive,
-    val onPageDataReady: (cacheHit: Boolean) -> Unit = {},
+internal data class OverviewUiState(
+    val activationStatus: ActivationStatusState,
+    val mobileAutomationAllowed: Boolean,
+    val showStatusDiagnostics: Boolean,
+    val statusDiagnostics: List<Pair<String, String>>,
+    val frameworkType: String,
+    val frameworkVersion: String,
+    val hasRootAccess: Boolean,
+    val appVersionName: String,
+    val appVersionCode: String,
 )
 
 private data class FrameworkDiagnostics(
@@ -88,7 +95,15 @@ private data class FrameworkDiagnostics(
     val managerInstalled: Boolean = false,
 )
 
-private val LocalOverviewPageRuntime = staticCompositionLocalOf { OverviewPageRuntime() }
+internal class OverviewActions(
+    val onActivateClick: () -> Unit,
+    val onToggleDiagnostics: () -> Unit,
+    val onRootHintClick: () -> Unit,
+    val onJoinTelegram: () -> Unit,
+    val onJoinQqChannel: () -> Unit,
+    val onSourceCode: () -> Unit,
+    val onDonate: () -> Unit,
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,28 +112,7 @@ fun OverviewScreen(
     keepDataActive: Boolean = isActive,
     onPageDataReady: (cacheHit: Boolean) -> Unit = {},
 ) {
-    CompositionLocalProvider(
-        LocalOverviewPageRuntime provides OverviewPageRuntime(
-            isActive = isActive,
-            keepDataActive = keepDataActive,
-            onPageDataReady = onPageDataReady,
-        ),
-    ) {
-        when (currentUiKitStyle()) {
-            UiKitStyle.Miuix -> OverviewScreenMiuix()
-            UiKitStyle.Expressive -> OverviewScreenMaterial()
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-@SuppressLint("AutoboxingStateCreation")
-internal fun OverviewScreenShared() {
-    val pageRuntime = LocalOverviewPageRuntime.current
-    val isActive = pageRuntime.isActive
-    val keepDataActive = pageRuntime.keepDataActive
-    val currentOnPageDataReady by rememberUpdatedState(pageRuntime.onPageDataReady)
+    val currentOnPageDataReady by rememberUpdatedState(onPageDataReady)
     val context = LocalContext.current
     val activityOwner = context as? ComponentActivity
     val settingsViewModel = if (keepDataActive) {
@@ -133,8 +127,6 @@ internal fun OverviewScreenShared() {
     var showDonateDialog by remember { mutableStateOf(false) }
     val billingProvider: com.github.magisk317.smscode.billing.BillingProvider = org.koin.compose.koinInject()
     var showQRCodeDialog by remember { mutableStateOf<Pair<Int, String>?>(null) }
-    var statusTapCount by remember { mutableStateOf(0) }
-    var statusTapStartedAtMs by remember { mutableStateOf(0L) }
     var showStatusDiagnostics by remember { mutableStateOf(false) }
     val mobileAutomationAllowed = rememberEntitlementState(
         isActive = isActive,
@@ -142,15 +134,10 @@ internal fun OverviewScreenShared() {
     )
     val snackbarHostState = LocalSnackbarHostState.current
     val scope = rememberCoroutineScope()
-
     fun showMessage(message: String) {
-        scope.launch {
-            snackbarHostState.showLatestSnackbar(message)
-        }
+        scope.launch { snackbarHostState.showLatestSnackbar(message) }
     }
 
-    val listState = rememberLazyListState()
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     var activationStatus by remember { mutableStateOf(ActivationStatusState()) }
     var frameworkDiagnostics by remember { mutableStateOf(FrameworkDiagnostics()) }
     var hasRootAccessState by remember { mutableStateOf(false) }
@@ -234,102 +221,77 @@ internal fun OverviewScreenShared() {
     val appVersionCode = BuildConfig.COMMIT_HASH.takeIf { it.isNotBlank() && it != "unknown" }
         ?: (appVersionState?.second?.toString() ?: stringResource(id = R.string.unknown))
 
-    Box(
-        modifier = Modifier.fillMaxSize(),
-    ) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .padding(horizontal = 16.dp),
-            state = listState,
-            contentPadding = PaddingValues(
-                top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 64.dp + 8.dp,
-                bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 80.dp,
-            ),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            item {
-                StatusCard(
-                    isEnabled = activationStatus.isEnabled,
-                    isEntitled = mobileAutomationAllowed,
-                    showDiagnostics = showStatusDiagnostics,
-                    diagnostics = buildStatusDiagnostics(
-                        context = context,
-                        snapshot = activationStatus.diagnostics,
-                        runtimeConnected = activationStatus.runtimeConnected,
-                    ),
-                    onClick = {
-                        val now = SystemClock.uptimeMillis()
-                        val withinWindow = now - statusTapStartedAtMs <= 1800L
-                        statusTapCount = if (withinWindow) statusTapCount + 1 else 1
-                        statusTapStartedAtMs = now
-                        if (statusTapCount >= 5) {
-                            showStatusDiagnostics = !showStatusDiagnostics
-                            statusTapCount = 0
-                            statusTapStartedAtMs = 0L
-                            showMessage(
-                                if (showStatusDiagnostics) {
-                                    context.getString(R.string.status_diag_shown)
-                                } else {
-                                    context.getString(R.string.status_diag_hidden)
-                                },
-                            )
-                        }
-                    },
-                )
-            }
-            item {
-                val rootHint = stringResource(id = R.string.root_permission_hint)
-                io.github.magisk317.uikit.surface.OverviewAppInfoCard(
-                    appVersionName = appVersionName,
-                    appVersionCode = appVersionCode,
-                    appVersionCodeLabel = stringResource(id = UiKitR.string.uikit_version_code),
-                    frameworkType = frameworkType,
-                    frameworkVersion = frameworkVersion,
-                    interactive = true,
-                    onRootHint = if (hasRootAccessState) null else { { showMessage(rootHint) } },
-                )
-            }
+    val rootHint = stringResource(id = R.string.root_permission_hint)
 
-            item {
-                io.github.magisk317.uikit.surface.OverviewDeviceInfoCard()
-            }
+    val state = OverviewUiState(
+        activationStatus = activationStatus,
+        mobileAutomationAllowed = mobileAutomationAllowed,
+        showStatusDiagnostics = showStatusDiagnostics,
+        statusDiagnostics = buildStatusDiagnostics(
+            context = context,
+            snapshot = activationStatus.diagnostics,
+            runtimeConnected = activationStatus.runtimeConnected,
+        ),
+        frameworkType = frameworkType,
+        frameworkVersion = frameworkVersion,
+        hasRootAccess = hasRootAccessState,
+        appVersionName = appVersionName,
+        appVersionCode = appVersionCode,
+    )
 
-            item {
-                io.github.magisk317.uikit.surface.OverviewLinksCard(
-                    onJoinTelegram = {
-                        BrowserUtils.openWebPage(
-                            context,
-                            Const.TELEGRAM_GROUP_URL,
-                            R.string.browser_install_or_enable_prompt,
-                        )?.let(::showMessage)
-                    },
-                    onJoinQqChannel = {
-                        BrowserUtils.openWebPage(
-                            context,
-                            Const.QQ_CHANNEL_URL,
-                            R.string.browser_install_or_enable_prompt,
-                        )?.let(::showMessage)
-                    },
-                    onSourceCode = {
-                        BrowserUtils.openWebPage(
-                            context,
-                            Const.PROJECT_SOURCE_CODE_URL,
-                            R.string.browser_install_or_enable_prompt,
-                        )?.let(::showMessage)
-                    },
-                    onDonate = { showDonateDialog = true },
-                )
-            }
-        }
+    val actions = OverviewActions(
+        onActivateClick = {
+            context.startActivity(
+                Intent().setClassName(
+                    context,
+                    "com.github.magisk317.smscode.entitlement.MobileEntitlementActivity",
+                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
+        },
+        onToggleDiagnostics = {
+            showStatusDiagnostics = !showStatusDiagnostics
+            showMessage(
+                if (showStatusDiagnostics) {
+                    context.getString(R.string.status_diag_shown)
+                } else {
+                    context.getString(R.string.status_diag_hidden)
+                },
+            )
+        },
+        onRootHintClick = { showMessage(rootHint) },
+        onJoinTelegram = {
+            BrowserUtils.openWebPage(
+                context,
+                Const.TELEGRAM_GROUP_URL,
+                R.string.browser_install_or_enable_prompt,
+            )?.let(::showMessage)
+        },
+        onJoinQqChannel = {
+            BrowserUtils.openWebPage(
+                context,
+                Const.QQ_CHANNEL_URL,
+                R.string.browser_install_or_enable_prompt,
+            )?.let(::showMessage)
+        },
+        onSourceCode = {
+            BrowserUtils.openWebPage(
+                context,
+                Const.PROJECT_SOURCE_CODE_URL,
+                R.string.browser_install_or_enable_prompt,
+            )?.let(::showMessage)
+        },
+        onDonate = { showDonateDialog = true },
+    )
 
-        AppTopBar(
-            title = stringResource(id = R.string.app_name),
-            scrollBehavior = scrollBehavior,
-            windowInsets = WindowInsets.statusBars,
-            modifier = Modifier
-                .align(Alignment.TopCenter),
+    when (currentUiKitStyle()) {
+        UiKitStyle.Miuix -> OverviewScreenMiuix(
+            state = state,
+            actions = actions,
+        )
+
+        UiKitStyle.Expressive -> OverviewScreenMaterial(
+            state = state,
+            actions = actions,
         )
     }
 
@@ -356,10 +318,22 @@ internal fun OverviewScreenShared() {
                 showQRCodeDialog = Pair(UiKitR.drawable.wx, "wechat")
             },
             showPlayDonations = com.github.magisk317.smscode.core.BuildConfig.HAS_BILLING,
-            onDonate099 = { activityOwner?.let { billingProvider.launchDonation(it, "donate_099") } },
-            onDonate200 = { activityOwner?.let { billingProvider.launchDonation(it, "donate_200") } },
-            onDonate999 = { activityOwner?.let { billingProvider.launchDonation(it, "donate_999") } },
-            onDonate1999 = { activityOwner?.let { billingProvider.launchDonation(it, "donate_1999") } },
+            onDonate099 = {
+                val owner = activityOwner ?: (context as? ComponentActivity)
+                owner?.let { billingProvider.launchDonation(it, "donate_099") }
+            },
+            onDonate200 = {
+                val owner = activityOwner ?: (context as? ComponentActivity)
+                owner?.let { billingProvider.launchDonation(it, "donate_200") }
+            },
+            onDonate999 = {
+                val owner = activityOwner ?: (context as? ComponentActivity)
+                owner?.let { billingProvider.launchDonation(it, "donate_999") }
+            },
+            onDonate1999 = {
+                val owner = activityOwner ?: (context as? ComponentActivity)
+                owner?.let { billingProvider.launchDonation(it, "donate_1999") }
+            },
         )
     }
 
@@ -384,7 +358,8 @@ fun StatusCard(
     isEntitled: Boolean,
     showDiagnostics: Boolean,
     diagnostics: List<Pair<String, String>>,
-    onClick: (() -> Unit)? = null,
+    onActivateClick: (() -> Unit)? = null,
+    onDiagnosticsToggle: (() -> Unit)? = null,
 ) {
     val moduleStatusText = if (isEnabled) {
         stringResource(id = R.string.status_module_activated)
@@ -411,7 +386,9 @@ fun StatusCard(
         icon = if (isAllOk) Icons.Default.CheckCircle else Icons.Default.Warning,
         highlighted = isAllOk,
         diagnostics = if (showDiagnostics) diagnostics else emptyList(),
-        onClick = onClick,
+        isEntitled = isEntitled,
+        onActivateClick = onActivateClick,
+        onDiagnosticsToggle = onDiagnosticsToggle,
     )
 }
 

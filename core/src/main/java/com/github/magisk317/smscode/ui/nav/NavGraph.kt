@@ -19,6 +19,9 @@ object OverviewRoute
 object SettingsRoute
 
 @Serializable
+object ThemeSettingsRoute
+
+@Serializable
 object RecordsRoute
 
 @Serializable
