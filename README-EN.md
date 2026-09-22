@@ -1,12 +1,12 @@
 # XposedSmsCode
 
-![Star History Chart](https://api.star-history.com/svg?repos=magisk3171/XposedSmsCode&type=Date)
+![Star History Chart](https://api.star-history.com/svg?repos=magisk317/XposedSmsCode&type=Date)
 
 <div align="center">
     <a href="https://play.google.com/store/apps/details?id=com.github.tianma8023.xposed.smscode">
         <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="80"/>
     </a>
-    <a href="https://github.com/magisk3171/XposedSmsCode/releases">
+    <a href="https://github.com/magisk317/XposedSmsCode/releases">
         <img src="https://raw.githubusercontent.com/machiav3lli/oandbackupx/master/badge_github.png" alt="Get it on GitHub" height="80"/>
     </a>
 </div>
@@ -14,7 +14,7 @@
 <div align="center">
 
 <!-- badges:platform:start -->
-[![Commits](https://img.shields.io/github/commit-activity/y/magisk3171/XposedSmsCode?style=flat-square)](https://github.com/magisk3171/XposedSmsCode/graphs/commit-activity) [![Last Commit](https://img.shields.io/github/last-commit/magisk3171/XposedSmsCode?style=flat-square)](https://github.com/magisk3171/XposedSmsCode/commits) [![Contributors](https://img.shields.io/github/contributors/magisk3171/XposedSmsCode?style=flat-square)](https://github.com/magisk3171/XposedSmsCode/graphs/contributors) [![CI](https://img.shields.io/github/actions/workflow/status/magisk3171/XposedSmsCode/ci.yml?style=flat-square&label=Build&logo=github-actions&logoColor=white)](https://github.com/magisk3171/XposedSmsCode/actions/workflows/ci.yml) [![Latest Release](https://img.shields.io/github/v/release/magisk3171/XposedSmsCode?include_prereleases&style=flat-square&logo=github)](https://github.com/magisk3171/XposedSmsCode/releases) [![Release Date](https://img.shields.io/github/release-date/magisk3171/XposedSmsCode?style=flat-square)](https://github.com/magisk3171/XposedSmsCode/releases) [![Downloads](https://img.shields.io/github/downloads/magisk3171/XposedSmsCode/total?style=flat-square&color=blue)](https://github.com/magisk3171/XposedSmsCode/releases) [![License](https://img.shields.io/github/license/magisk3171/XposedSmsCode?style=flat-square)](LICENSE)
+[![Commits](https://img.shields.io/github/commit-activity/y/magisk3171/XposedSmsCode?style=flat-square)](https://github.com/magisk317/XposedSmsCode/graphs/commit-activity) [![Last Commit](https://img.shields.io/github/last-commit/magisk3171/XposedSmsCode?style=flat-square)](https://github.com/magisk317/XposedSmsCode/commits) [![Contributors](https://img.shields.io/github/contributors/magisk3171/XposedSmsCode?style=flat-square)](https://github.com/magisk317/XposedSmsCode/graphs/contributors) [![CI](https://img.shields.io/github/actions/workflow/status/magisk3171/XposedSmsCode/ci.yml?style=flat-square&label=Build&logo=github-actions&logoColor=white)](https://github.com/magisk317/XposedSmsCode/actions/workflows/ci.yml) [![Latest Release](https://img.shields.io/github/v/release/magisk3171/XposedSmsCode?include_prereleases&style=flat-square&logo=github)](https://github.com/magisk317/XposedSmsCode/releases) [![Release Date](https://img.shields.io/github/release-date/magisk3171/XposedSmsCode?style=flat-square)](https://github.com/magisk317/XposedSmsCode/releases) [![Downloads](https://img.shields.io/github/downloads/magisk3171/XposedSmsCode/total?style=flat-square&color=blue)](https://github.com/magisk317/XposedSmsCode/releases) [![License](https://img.shields.io/github/license/magisk3171/XposedSmsCode?style=flat-square)](LICENSE)
 <!-- badges:platform:end -->
 
 <!-- badges:tech:start -->
@@ -25,7 +25,7 @@
 
 An Xposed module which can recognize, parse SMS code and copy it to clipboard when a new message arrives. It can also input SMS code automatically.
 
-If you also need to forward verification codes, SMS content, or app notifications to Telegram, Webhook, email, or other channels, you may also want to check out the newer project [Xinyi Relay](https://github.com/magisk3171/xinyi-relay). It is more focused on message relay and verification-code workflows; if your main need is SMS code recognition and auto-fill, this project is still the better fit.
+If you also need to forward verification codes, SMS content, or app notifications to Telegram, Webhook, email, or other channels, you may also want to check out the newer project [Xinyi Relay](https://github.com/magisk317/xinyi-relay). It is more focused on message relay and verification-code workflows; if your main need is SMS code recognition and auto-fill, this project is still the better fit.
 
 [中文版说明](./README.md)
 

@@ -1,12 +1,12 @@
 # XposedSmsCode
 
-![Star History Chart](https://api.star-history.com/svg?repos=magisk3171/XposedSmsCode&type=Date)
+![Star History Chart](https://api.star-history.com/svg?repos=magisk317/XposedSmsCode&type=Date)
 
 <div align="center">
     <a href="https://play.google.com/store/apps/details?id=com.github.tianma8023.xposed.smscode">
         <img src="https://play.google.com/intl/zh-CN/badges/static/images/badges/zh-cn_badge_web_generic.png" alt="Get it on Google Play" height="80"/>
     </a>
-    <a href="https://github.com/magisk3171/XposedSmsCode/releases">
+    <a href="https://github.com/magisk317/XposedSmsCode/releases">
         <img src="https://raw.githubusercontent.com/machiav3lli/oandbackupx/master/badge_github.png" alt="Get it on GitHub" height="80"/>
     </a>
 </div>
@@ -14,7 +14,7 @@
 <div align="center">
 
 <!-- badges:platform:start -->
-[![Commits](https://img.shields.io/github/commit-activity/y/magisk3171/XposedSmsCode?style=flat-square)](https://github.com/magisk3171/XposedSmsCode/graphs/commit-activity) [![Last Commit](https://img.shields.io/github/last-commit/magisk3171/XposedSmsCode?style=flat-square)](https://github.com/magisk3171/XposedSmsCode/commits) [![Contributors](https://img.shields.io/github/contributors/magisk3171/XposedSmsCode?style=flat-square)](https://github.com/magisk3171/XposedSmsCode/graphs/contributors) [![CI](https://img.shields.io/github/actions/workflow/status/magisk3171/XposedSmsCode/ci.yml?style=flat-square&label=Build&logo=github-actions&logoColor=white)](https://github.com/magisk3171/XposedSmsCode/actions/workflows/ci.yml) [![Latest Release](https://img.shields.io/github/v/release/magisk3171/XposedSmsCode?include_prereleases&style=flat-square&logo=github)](https://github.com/magisk3171/XposedSmsCode/releases) [![Release Date](https://img.shields.io/github/release-date/magisk3171/XposedSmsCode?style=flat-square)](https://github.com/magisk3171/XposedSmsCode/releases) [![Downloads](https://img.shields.io/github/downloads/magisk3171/XposedSmsCode/total?style=flat-square&color=blue)](https://github.com/magisk3171/XposedSmsCode/releases) [![License](https://img.shields.io/github/license/magisk3171/XposedSmsCode?style=flat-square)](LICENSE)
+[![Commits](https://img.shields.io/github/commit-activity/y/magisk3171/XposedSmsCode?style=flat-square)](https://github.com/magisk317/XposedSmsCode/graphs/commit-activity) [![Last Commit](https://img.shields.io/github/last-commit/magisk3171/XposedSmsCode?style=flat-square)](https://github.com/magisk317/XposedSmsCode/commits) [![Contributors](https://img.shields.io/github/contributors/magisk3171/XposedSmsCode?style=flat-square)](https://github.com/magisk317/XposedSmsCode/graphs/contributors) [![CI](https://img.shields.io/github/actions/workflow/status/magisk3171/XposedSmsCode/ci.yml?style=flat-square&label=Build&logo=github-actions&logoColor=white)](https://github.com/magisk317/XposedSmsCode/actions/workflows/ci.yml) [![Latest Release](https://img.shields.io/github/v/release/magisk3171/XposedSmsCode?include_prereleases&style=flat-square&logo=github)](https://github.com/magisk317/XposedSmsCode/releases) [![Release Date](https://img.shields.io/github/release-date/magisk3171/XposedSmsCode?style=flat-square)](https://github.com/magisk317/XposedSmsCode/releases) [![Downloads](https://img.shields.io/github/downloads/magisk3171/XposedSmsCode/total?style=flat-square&color=blue)](https://github.com/magisk317/XposedSmsCode/releases) [![License](https://img.shields.io/github/license/magisk3171/XposedSmsCode?style=flat-square)](LICENSE)
 <!-- badges:platform:end -->
 
 <!-- badges:tech:start -->
@@ -25,7 +25,7 @@
 
 识别短信验证码的Xposed模块，并将验证码拷贝到剪切板，亦可以自动输入验证码。
 
-如果你还需要将验证码、短信内容或应用通知进一步转发到 Telegram、Webhook、邮箱等通道，可以了解一下新项目 [信驿 Relay](https://github.com/magisk3171/xinyi-relay)。它更偏向消息转发与验证码联动场景；若主要需求是验证码识别与自动输入，继续使用本项目会更合适。
+如果你还需要将验证码、短信内容或应用通知进一步转发到 Telegram、Webhook、邮箱等通道，可以了解一下新项目 [信驿 Relay](https://github.com/magisk317/xinyi-relay)。它更偏向消息转发与验证码联动场景；若主要需求是验证码识别与自动输入，继续使用本项目会更合适。
 
 [English Version](./README-EN.md)
 

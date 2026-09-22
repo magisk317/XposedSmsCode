@@ -7,14 +7,14 @@ import java.io.File
 class NotifyActionContractTest {
 
     @Test
-    fun `app owned notifications defer channel checks to app receiver`() {
+    fun `app owned fallback delegates posting to the shared runtime and app receiver`() {
         val source = resolveProjectFile(
             "hook/src/main/java/com/github/magisk317/smscode/xp/hook/code/action/impl/NotifyAction.kt",
         ).readText()
 
         assertTrue("CodeNotificationDeliveryHelper.requestAppOwnedNotification" in source)
-        assertTrue("summary = \"deferred_to_receiver\"" in source)
-        assertTrue("channelInitializer = { context -> ensureNotificationChannel(context) }" in source)
+        assertTrue("intentFactory = CodeNotificationBroadcastContract::createIntent" in source)
+        assertTrue("PhoneOwnedNotificationDispatcher.isPackageAllowedToPost" in source)
     }
 
     private fun resolveProjectFile(relativePath: String): File {
