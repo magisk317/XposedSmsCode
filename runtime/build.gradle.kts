@@ -55,7 +55,7 @@ android {
 }
 
 dependencies {
-    implementation("com.magisk317.mobile:entitlement-android:0.1.16")
+    implementation(libs.mobile.entitlement.android)
     implementation(project(":magisk-xposed-kit"))
     implementation(project(":smscode-core:contract"))
     implementation(project(":smscode-core:hook"))
@@ -66,14 +66,11 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.gson)
-    
     // Networking (needed by GithubUpdateChecker)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging.interceptor)
     // Database (Room)
-    
     implementation(libs.timber)
-
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.mockk)

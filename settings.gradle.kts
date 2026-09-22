@@ -29,7 +29,7 @@ dependencyResolutionManagement {
             )
             val jobToken = System.getenv("CI_JOB_TOKEN")
             val deployToken = System.getenv("GITLAB_DEPLOY_TOKEN")
-                ?: System.getenv("GITLAB_TOKEN")
+            val privateToken = System.getenv("GITLAB_TOKEN")
             if (!jobToken.isNullOrBlank()) {
                 credentials(HttpHeaderCredentials::class) {
                     name = "Job-Token"
@@ -42,6 +42,14 @@ dependencyResolutionManagement {
                 credentials(HttpHeaderCredentials::class) {
                     name = "Deploy-Token"
                     value = deployToken
+                }
+                authentication {
+                    create<HttpHeaderAuthentication>("header")
+                }
+            } else if (!privateToken.isNullOrBlank()) {
+                credentials(HttpHeaderCredentials::class) {
+                    name = "Private-Token"
+                    value = privateToken
                 }
                 authentication {
                     create<HttpHeaderAuthentication>("header")
@@ -70,6 +78,7 @@ include(
     ":magisk-xposed-kit",
     ":magisk-xposed-kit:logging",
     ":magisk-xposed-kit:diagnostics",
+    ":magisk-xposed-kit:permission",
 )
 
 project(":smscode-core:hook").projectDir = file("smscode/core/hook")
@@ -81,4 +90,5 @@ project(":smscode-core:verification").projectDir = file("smscode/core/verificati
 project(":smscode-core").projectDir = file("smscode/core")
 project(":magisk-xposed-kit:logging").projectDir = file("magisk-xposed-kit/logging")
 project(":magisk-xposed-kit:diagnostics").projectDir = file("magisk-xposed-kit/diagnostics")
+project(":magisk-xposed-kit:permission").projectDir = file("magisk-xposed-kit/permission")
 project(":magisk-ui-kit:billing").projectDir = file("magisk-ui-kit/billing")
