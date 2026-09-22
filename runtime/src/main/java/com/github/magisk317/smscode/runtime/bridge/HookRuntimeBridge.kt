@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import com.github.magisk317.smscode.data.db.DBManager
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
+import io.github.magisk317.smscode.runtime.contract.notification.NotificationPlatformBridge
 import io.github.magisk317.xposed.logging.MagiskOtel
 
 /**
@@ -46,16 +47,17 @@ interface HookPrefsAccess {
 }
 
 /**
- * Notification channel management needed by hook code.
+ * Notification channel management and delivery diagnostics needed by hook code.
+ *
+ * Extends the shared [NotificationPlatformBridge] rather than redeclaring its members, so the
+ * shared runtime helpers can be handed this bridge directly instead of every hook layer
+ * re-implementing the same three lookups against the right package.
+ *
+ * Hook code must pass the context of the package it posts as. For the phone-owned fallback that is
+ * the phone app, not the module package, because both the permission lookup and the channel lookup
+ * resolve against the package of the posting process.
  */
-interface HookNotificationAccess {
-    fun createNotificationChannel(
-        context: Context,
-        channelId: String,
-        channelName: String,
-        importance: Int,
-    )
-}
+interface HookNotificationAccess : NotificationPlatformBridge
 
 /**
  * Database access for hook code (query deduplication, insert records).

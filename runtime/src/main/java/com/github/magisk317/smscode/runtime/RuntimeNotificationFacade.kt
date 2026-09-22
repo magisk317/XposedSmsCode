@@ -18,7 +18,7 @@ object RuntimeNotificationFacade : HookNotificationAccess, UiNotificationAccess 
         platform.createNotificationChannel(context, channelId, channelName, importance)
     }
 
-    fun inspectDelivery(context: Context, channelId: String): NotificationDeliveryDiagnostics =
+    override fun inspectDelivery(context: Context, channelId: String): NotificationDeliveryDiagnostics =
         platform.inspectDelivery(context, channelId)
 
     override fun hasPostNotificationsPermission(context: Context): Boolean {
