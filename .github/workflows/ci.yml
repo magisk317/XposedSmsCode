@@ -6,21 +6,25 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-on:
-  pull_request:
-  push:
-    branches:
-      - beta
-  workflow_dispatch:
-
+on: workflow_dispatch
 jobs:
   build-debug:
     name: Build Debug APKs
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     env:
       GRADLE_OPTS: -Dorg.gradle.warning.mode=all
       HAS_RELEASE_SIGNING: ${{ secrets.RELEASE_KEYSTORE != '' && secrets.STORE_PASSWORD != '' && secrets.KEY_ALIAS != '' && secrets.KEY_PASSWORD != '' }}
     steps:
+      - name: Configure GitLab submodule credentials
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          if [[ -z "$GITLAB_TOKEN" ]]; then
+            echo "::error::GITLAB_TOKEN secret is not set; cannot clone gitlab.com submodules"
+            exit 1
+          fi
+          git config --global http.https://gitlab.com/.extraheader "AUTHORIZATION: basic $(printf 'oauth2:%s' "$GITLAB_TOKEN" | base64 -w0)"
+          echo "GITLAB_TOKEN=$GITLAB_TOKEN" >> "$GITHUB_ENV"
       - uses: actions/checkout@v7
         with:
           submodules: recursive
@@ -41,6 +45,7 @@ jobs:
             --warning-mode all
             :app:assembleGithubDebug
             -PbuildSplits
+            -PminifyDebug
         env:
           KEYSTORE_FILE: release.jks
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
@@ -63,20 +68,59 @@ jobs:
               echo "| $name | $size |"
             done < <(find app/build/outputs/apk -path '*/debug/*.apk' | sort)
           } >> "$GITHUB_STEP_SUMMARY"
-      - name: Upload Debug APKs
+      - name: Upload Debug APK (arm64-v8a)
         if: always() && env.HAS_RELEASE_SIGNING == 'true'
         uses: actions/upload-artifact@v7
         with:
-          name: XposedSmsCode-debug-apks
-          path: app/build/outputs/apk/**/debug/*.apk
+          name: XposedSmsCode-debug-apks-arm64-v8a
+          path: app/build/outputs/apk/**/debug/arm64-v8a_*.apk
+          if-no-files-found: error
+      - name: Upload Debug APK (armeabi-v7a)
+        if: always() && env.HAS_RELEASE_SIGNING == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: XposedSmsCode-debug-apks-armeabi-v7a
+          path: app/build/outputs/apk/**/debug/armeabi-v7a_*.apk
+          if-no-files-found: error
+      - name: Upload Debug APK (x86_64)
+        if: always() && env.HAS_RELEASE_SIGNING == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: XposedSmsCode-debug-apks-x86_64
+          path: app/build/outputs/apk/**/debug/x86_64_*.apk
+          if-no-files-found: error
+      - name: Upload Debug APK (x86)
+        if: always() && env.HAS_RELEASE_SIGNING == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: XposedSmsCode-debug-apks-x86
+          path: app/build/outputs/apk/**/debug/x86_[!6]*.apk
+          if-no-files-found: error
+      - name: Upload Debug APK (universal)
+        if: always() && env.HAS_RELEASE_SIGNING == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: XposedSmsCode-debug-apks-universal
+          path: app/build/outputs/apk/**/debug/universal_*.apk
+          if-no-files-found: error
   test:
     name: Post-build Tests
     needs: [build-debug]
     if: always() && needs.build-debug.result == 'success'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     env:
       GRADLE_OPTS: -Dorg.gradle.warning.mode=all
     steps:
+      - name: Configure GitLab submodule credentials
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          if [[ -z "$GITLAB_TOKEN" ]]; then
+            echo "::error::GITLAB_TOKEN secret is not set; cannot clone gitlab.com submodules"
+            exit 1
+          fi
+          git config --global http.https://gitlab.com/.extraheader "AUTHORIZATION: basic $(printf 'oauth2:%s' "$GITLAB_TOKEN" | base64 -w0)"
+          echo "GITLAB_TOKEN=$GITLAB_TOKEN" >> "$GITHUB_ENV"
       - uses: actions/checkout@v7
         with:
           submodules: recursive

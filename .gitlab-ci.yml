@@ -159,6 +159,7 @@ android:build:
     MAGISK_ANDROID_BUILD_TASKS: >-
       :app:assembleGithubDebug
       -PbuildSplits
+      -PminifyDebug
   artifacts:
     name: "XposedSmsCode-debug-$CI_COMMIT_REF_SLUG"
     when: always
@@ -375,9 +376,6 @@ telegram:ci:
     MAGISK_TELEGRAM_PROJECT_NAME: "XposedSmsCode"
     MAGISK_TELEGRAM_CI_BRANCH: "beta"
   needs:
-    - job: android:check
-      artifacts: false
-      optional: true
     - job: android:build
       artifacts: true
       optional: true

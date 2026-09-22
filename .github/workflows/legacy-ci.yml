@@ -7,20 +7,25 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-on:
-  push:
-    branches:
-      - legacy
-  workflow_dispatch:
-
+on: workflow_dispatch
 jobs:
   build:
     if: github.ref == 'refs/heads/legacy'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     env:
       GRADLE_OPTS: -Dorg.gradle.warning.mode=all
       HAS_RELEASE_SIGNING: ${{ secrets.RELEASE_KEYSTORE != '' && secrets.STORE_PASSWORD != '' && secrets.KEY_ALIAS != '' && secrets.KEY_PASSWORD != '' }}
     steps:
+      - name: Configure GitLab submodule credentials
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          if [[ -z "$GITLAB_TOKEN" ]]; then
+            echo "::error::GITLAB_TOKEN secret is not set; cannot clone gitlab.com submodules"
+            exit 1
+          fi
+          git config --global http.https://gitlab.com/.extraheader "AUTHORIZATION: basic $(printf 'oauth2:%s' "$GITLAB_TOKEN" | base64 -w0)"
+          echo "GITLAB_TOKEN=$GITLAB_TOKEN" >> "$GITHUB_ENV"
       - uses: actions/checkout@v7
         with:
           submodules: recursive
@@ -42,6 +47,7 @@ jobs:
           arguments: >
             --warning-mode all
             :app:assembleGithubDebug
+            -PminifyDebug
         env:
           KEYSTORE_FILE: release.jks
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}

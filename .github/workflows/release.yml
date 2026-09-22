@@ -17,8 +17,18 @@ jobs:
   validate-release-metadata:
     name: Validate Release Metadata
     if: ${{ (vars.RELEASE_OWNER == '' || vars.RELEASE_OWNER == 'github') && startsWith(github.ref, 'refs/tags/') }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
+      - name: Configure GitLab submodule credentials
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          if [[ -z "$GITLAB_TOKEN" ]]; then
+            echo "::error::GITLAB_TOKEN secret is not set; cannot clone gitlab.com submodules"
+            exit 1
+          fi
+          git config --global http.https://gitlab.com/.extraheader "AUTHORIZATION: basic $(printf 'oauth2:%s' "$GITLAB_TOKEN" | base64 -w0)"
+          echo "GITLAB_TOKEN=$GITLAB_TOKEN" >> "$GITHUB_ENV"
       - uses: actions/checkout@v7
         with:
           submodules: recursive
@@ -40,10 +50,20 @@ jobs:
     name: Build GitHub APK
     needs: [validate-release-metadata]
     if: ${{ (vars.RELEASE_OWNER == '' || vars.RELEASE_OWNER == 'github') && startsWith(github.ref, 'refs/tags/') }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     env:
       HAS_RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE != '' }}
     steps:
+      - name: Configure GitLab submodule credentials
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          if [[ -z "$GITLAB_TOKEN" ]]; then
+            echo "::error::GITLAB_TOKEN secret is not set; cannot clone gitlab.com submodules"
+            exit 1
+          fi
+          git config --global http.https://gitlab.com/.extraheader "AUTHORIZATION: basic $(printf 'oauth2:%s' "$GITLAB_TOKEN" | base64 -w0)"
+          echo "GITLAB_TOKEN=$GITLAB_TOKEN" >> "$GITHUB_ENV"
       - uses: actions/checkout@v7
         with:
           submodules: recursive
@@ -75,12 +95,22 @@ jobs:
     name: Build Bundle
     needs: [validate-release-metadata]
     if: ${{ (vars.RELEASE_OWNER == '' || vars.RELEASE_OWNER == 'github') && startsWith(github.ref, 'refs/tags/') }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       has_play_native_symbols: ${{ steps.play_symbols.outputs.exists }}
     env:
       HAS_RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE != '' }}
     steps:
+      - name: Configure GitLab submodule credentials
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          if [[ -z "$GITLAB_TOKEN" ]]; then
+            echo "::error::GITLAB_TOKEN secret is not set; cannot clone gitlab.com submodules"
+            exit 1
+          fi
+          git config --global http.https://gitlab.com/.extraheader "AUTHORIZATION: basic $(printf 'oauth2:%s' "$GITLAB_TOKEN" | base64 -w0)"
+          echo "GITLAB_TOKEN=$GITLAB_TOKEN" >> "$GITHUB_ENV"
       - uses: actions/checkout@v7
         with:
           submodules: recursive
@@ -144,12 +174,22 @@ jobs:
     name: Create Release
     needs: [validate-release-metadata, build-github-apk, build-aab]
     if: always() && (vars.RELEASE_OWNER == '' || vars.RELEASE_OWNER == 'github') && startsWith(github.ref, 'refs/tags/') && needs.validate-release-metadata.result == 'success' && needs.build-github-apk.result == 'success'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: write
     env:
       HAS_RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE != '' }}
     steps:
+      - name: Configure GitLab submodule credentials
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          if [[ -z "$GITLAB_TOKEN" ]]; then
+            echo "::error::GITLAB_TOKEN secret is not set; cannot clone gitlab.com submodules"
+            exit 1
+          fi
+          git config --global http.https://gitlab.com/.extraheader "AUTHORIZATION: basic $(printf 'oauth2:%s' "$GITLAB_TOKEN" | base64 -w0)"
+          echo "GITLAB_TOKEN=$GITLAB_TOKEN" >> "$GITHUB_ENV"
       - uses: actions/checkout@v7
         with:
           submodules: recursive
@@ -200,7 +240,7 @@ jobs:
     name: Publish to Google Play
     needs: [build-aab]
     if: ${{ (vars.RELEASE_OWNER == '' || vars.RELEASE_OWNER == 'github') && startsWith(github.ref, 'refs/tags/') }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     env:
       HAS_GOOGLE_PLAY_CREDENTIALS: ${{ secrets.ANDROID_PUBLISHER_CREDENTIALS != '' }}
     steps:
@@ -268,11 +308,21 @@ jobs:
     name: Publish Alpha to Google Play
     needs: [build-aab]
     if: ${{ false }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     env:
       HAS_RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE != '' }}
       HAS_GOOGLE_PLAY_CREDENTIALS: ${{ secrets.ANDROID_PUBLISHER_CREDENTIALS != '' }}
     steps:
+      - name: Configure GitLab submodule credentials
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          if [[ -z "$GITLAB_TOKEN" ]]; then
+            echo "::error::GITLAB_TOKEN secret is not set; cannot clone gitlab.com submodules"
+            exit 1
+          fi
+          git config --global http.https://gitlab.com/.extraheader "AUTHORIZATION: basic $(printf 'oauth2:%s' "$GITLAB_TOKEN" | base64 -w0)"
+          echo "GITLAB_TOKEN=$GITLAB_TOKEN" >> "$GITHUB_ENV"
       - uses: actions/checkout@v7
         with:
           submodules: recursive
@@ -324,7 +374,7 @@ jobs:
     name: Publish to Xposed-Modules-Repo
     needs: [build-github-apk]
     if: ${{ (vars.RELEASE_OWNER == '' || vars.RELEASE_OWNER == 'github') && startsWith(github.ref, 'refs/tags/') }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     env:
       HAS_MODULES_REPO_TOKEN: ${{ secrets.XPOSED_MODULES_REPO_TOKEN != '' }}
       MODULES_REPO: Xposed-Modules-Repo/com.github.tianma8023.xposed.smscode
@@ -370,7 +420,7 @@ jobs:
     name: Release Notification
     needs: [release, publish-play, publish-play-alpha, publish-modules-repo]
     if: always() && (vars.RELEASE_OWNER == '' || vars.RELEASE_OWNER == 'github') && startsWith(github.ref, 'refs/tags/') && needs.publish-play.result != 'failure' && needs.publish-play-alpha.result != 'failure' && needs.publish-modules-repo.result != 'failure' && needs.release.result != 'failure'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Write release status
         shell: bash
@@ -389,8 +439,18 @@ jobs:
     name: Post-release Quality
     needs: [release, publish-play, publish-play-alpha, publish-modules-repo]
     if: always() && (vars.RELEASE_OWNER == '' || vars.RELEASE_OWNER == 'github') && startsWith(github.ref, 'refs/tags/') && needs.publish-play.result != 'failure' && needs.publish-play-alpha.result != 'failure' && needs.publish-modules-repo.result != 'failure' && needs.release.result != 'failure'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
+      - name: Configure GitLab submodule credentials
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          if [[ -z "$GITLAB_TOKEN" ]]; then
+            echo "::error::GITLAB_TOKEN secret is not set; cannot clone gitlab.com submodules"
+            exit 1
+          fi
+          git config --global http.https://gitlab.com/.extraheader "AUTHORIZATION: basic $(printf 'oauth2:%s' "$GITLAB_TOKEN" | base64 -w0)"
+          echo "GITLAB_TOKEN=$GITLAB_TOKEN" >> "$GITHUB_ENV"
       - uses: actions/checkout@v7
         with:
           submodules: recursive
