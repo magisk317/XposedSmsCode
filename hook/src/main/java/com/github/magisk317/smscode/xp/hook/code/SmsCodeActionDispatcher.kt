@@ -218,7 +218,10 @@ object SmsCodeActionDispatcher {
         plan: SmsCodePostParseCoordinator.NotificationPlan,
         deduplicateEnabled: Boolean,
     ) {
-        if (!mobileAutomationAllowed(pluginContext)) return
+        if (!mobileAutomationAllowed(pluginContext)) {
+            XLog.i("Mobile entitlement gate skipped code notification")
+            return
+        }
         if (deduplicateEnabled && !claimNotificationDispatch(pluginContext, smsMsg)) return
         XLog.i("scheduleNotification() running inline: smsCode=%s", smsMsg.smsCode)
         runCatching {
@@ -249,6 +252,8 @@ object SmsCodeActionDispatcher {
             Callable {
                 if (mobileAutomationAllowed(pluginContext)) {
                     OperateSmsAction(pluginContext, phoneContext, smsMsg).call()
+                } else {
+                    XLog.i("Mobile entitlement gate skipped SMS operations")
                 }
             }
         }
@@ -259,7 +264,10 @@ object SmsCodeActionDispatcher {
         smsMsg: SmsMsg,
         delayMs: Long,
     ): Boolean {
-        if (!mobileAutomationAllowed(pluginContext)) return false
+        if (!mobileAutomationAllowed(pluginContext)) {
+            XLog.i("Mobile entitlement gate skipped auto-input dispatch")
+            return false
+        }
         return AutoInputDispatchGuard.claim(
             pluginContext = pluginContext,
             smsMsg = smsMsg.toVerificationMessage(),
