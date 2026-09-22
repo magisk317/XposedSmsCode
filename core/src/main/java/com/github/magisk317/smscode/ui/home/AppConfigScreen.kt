@@ -4,38 +4,21 @@ package com.github.magisk317.smscode.ui.home
 
 import android.os.SystemClock
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,12 +27,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -63,8 +44,6 @@ import io.github.magisk317.uikit.foundation.LoadingIndicatorTokens
 import io.github.magisk317.uikit.foundation.PolygonMorphLoadingIndicator
 import io.github.magisk317.uikit.foundation.SessionLoadingRegistry
 import io.github.magisk317.uikit.foundation.rememberMinDurationLoading
-import io.github.magisk317.uikit.surface.OverlayHeaderScaffold
-import io.github.magisk317.uikit.surface.SearchOverlayContent
 import io.github.magisk317.uikit.surface.WorkspaceListItem
 import io.github.magisk317.uikit.surface.rememberSearchOverlayState
 import io.github.magisk317.uikit.theme.UiKitStyle
@@ -75,14 +54,6 @@ import kotlinx.coroutines.flow.first
 import org.koin.compose.viewmodel.koinViewModel
 
 private const val APP_LIST_PREFETCH_DISTANCE = 12
-
-private data class AppConfigPageRuntime(
-    val isActive: Boolean = true,
-    val keepDataActive: Boolean = isActive,
-    val onPageDataReady: (cacheHit: Boolean) -> Unit = {},
-)
-
-private val LocalAppConfigPageRuntime = staticCompositionLocalOf { AppConfigPageRuntime() }
 
 internal enum class PageRefreshAction {
     INITIAL_LOAD,
@@ -118,43 +89,7 @@ fun AppConfigScreen(
     viewModel: AppConfigViewModel = koinViewModel(),
     scrollChromeState: io.github.magisk317.uikit.scroll.ScrollChromeState? = null,
 ) {
-    CompositionLocalProvider(
-        LocalAppConfigPageRuntime provides AppConfigPageRuntime(
-            isActive = isActive,
-            keepDataActive = keepDataActive,
-            onPageDataReady = onPageDataReady,
-        ),
-    ) {
-        when (currentUiKitStyle()) {
-            UiKitStyle.Miuix -> AppConfigScreenMiuix(
-                onBack = onBack,
-                refreshTrigger = refreshTrigger,
-                viewModel = viewModel,
-                scrollChromeState = scrollChromeState,
-            )
-
-            UiKitStyle.Expressive -> AppConfigScreenMaterial(
-                onBack = onBack,
-                refreshTrigger = refreshTrigger,
-                viewModel = viewModel,
-                scrollChromeState = scrollChromeState,
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-internal fun AppConfigScreenShared(
-    onBack: (() -> Unit)? = null,
-    refreshTrigger: Int = 0,
-    viewModel: AppConfigViewModel = koinViewModel(),
-    scrollChromeState: io.github.magisk317.uikit.scroll.ScrollChromeState? = null,
-) {
-    val pageRuntime = LocalAppConfigPageRuntime.current
-    val isActive = pageRuntime.isActive
-    val keepDataActive = pageRuntime.keepDataActive
-    val currentOnPageDataReady by rememberUpdatedState(pageRuntime.onPageDataReady)
+    val currentOnPageDataReady by rememberUpdatedState(onPageDataReady)
     val apps by viewModel.appsFlow.collectAsStateWithLifecycle()
     val isLoading by viewModel.loadingFlow.collectAsStateWithLifecycle()
     val hasMoreApps by viewModel.hasMoreAppsFlow.collectAsStateWithLifecycle()
@@ -257,12 +192,7 @@ internal fun AppConfigScreenShared(
     val listState = rememberLazyListState()
     io.github.magisk317.uikit.scroll.ReportLazyListScrollToChrome(listState, scrollChromeState)
     io.github.magisk317.uikit.surface.ScrollToTopEffect(listState, refreshTrigger)
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-    val pullToRefreshState = rememberPullToRefreshState()
-    val isMiuix = io.github.magisk317.uikit.theme.currentUiKitStyle() ==
-        io.github.magisk317.uikit.theme.UiKitStyle.Miuix
-    val defaultTopPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 156.dp
-    val bottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 80.dp
+    val isMiuix = currentUiKitStyle() == UiKitStyle.Miuix
 
     LaunchedEffect(isActive, listState, apps.size, hasMoreApps, manualRefreshing, showLoading) {
         if (!isActive || manualRefreshing || showLoading) return@LaunchedEffect
@@ -276,99 +206,88 @@ internal fun AppConfigScreenShared(
             }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        OverlayHeaderScaffold(
-            fallbackTopPadding = defaultTopPadding,
-            bottomPadding = bottomPadding,
-            headerOffsetY = scrollChromeState?.animatedHeaderOffsetY ?: 0f,
-            onHeaderHeightChanged = { scrollChromeState?.headerHeightPx = it.toFloat() },
-            overlayModifier = Modifier
-                .align(Alignment.TopCenter)
-                .fillMaxWidth(),
-            overlay = {
-                SearchOverlayContent(
-                    state = searchState,
-                    title = stringResource(R.string.app_config_settings),
-                    searchPlaceholder = stringResource(R.string.action_search),
-                    navigationIcon = if (onBack != null) {
-                        {
-                            IconButton(onClick = onBack) {
-                                Icon(
-                                    Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = stringResource(R.string.action_back),
-                                )
-                            }
-                        }
-                    } else {
-                        null
-                    },
-                    actions = {
-                        IconButton(onClick = { showSettingsMenu = true }) {
-                            Icon(Icons.Default.Tune, contentDescription = null)
-                        }
-                    },
+    val body: @Composable (PaddingValues, Modifier) -> Unit = { listPadding, scrollModifier ->
+        val overlayTopPadding = listPadding.calculateTopPadding()
+        val pullToRefreshState = rememberPullToRefreshState()
+        PullToRefreshBox(
+            state = pullToRefreshState,
+            isRefreshing = manualRefreshing,
+            onRefresh = {
+                manualRefreshStartedAt = SystemClock.elapsedRealtime()
+                manualRefreshing = true
+                viewModel.refreshData(force = true)
+            },
+            indicator = {
+                PullToRefreshDefaults.LoadingIndicator(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = overlayTopPadding + LoadingIndicatorTokens.OverlayTopSpacing),
+                    isRefreshing = manualRefreshing,
+                    state = pullToRefreshState,
                 )
             },
-            content = { overlayPadding ->
-                val overlayTopPadding = overlayPadding.calculateTopPadding()
-                PullToRefreshBox(
-                    state = pullToRefreshState,
-                    isRefreshing = manualRefreshing,
-                    onRefresh = {
-                        manualRefreshStartedAt = SystemClock.elapsedRealtime()
-                        manualRefreshing = true
-                        viewModel.refreshData(force = true)
-                    },
-                    indicator = {
-                        PullToRefreshDefaults.LoadingIndicator(
-                            modifier = Modifier
-                                .align(Alignment.TopCenter)
-                                .padding(top = overlayTopPadding + LoadingIndicatorTokens.OverlayTopSpacing),
-                            isRefreshing = manualRefreshing,
-                            state = pullToRefreshState,
-                        )
-                    },
-                    modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            if (showLoading && !manualRefreshing) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    PolygonMorphLoadingIndicator(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = overlayTopPadding + LoadingIndicatorTokens.OverlayTopSpacing),
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .then(scrollModifier),
+                    state = listState,
+                    verticalArrangement = Arrangement.spacedBy(if (isMiuix) 12.dp else 0.dp),
+                    contentPadding = PaddingValues(
+                        start = 12.dp,
+                        end = 12.dp,
+                        top = overlayTopPadding,
+                        bottom = listPadding.calculateBottomPadding(),
+                    ),
                 ) {
-                    if (showLoading && !manualRefreshing) {
-                        Box(modifier = Modifier.fillMaxSize()) {
-                            PolygonMorphLoadingIndicator(
-                                modifier = Modifier
-                                    .align(Alignment.TopCenter)
-                                    .padding(top = overlayTopPadding + LoadingIndicatorTokens.OverlayTopSpacing),
+                    items(apps) { app ->
+                        AppConfigItem(
+                            app = app,
+                            isDataActive = keepDataActive,
+                            onBlockedChange = { blocked -> viewModel.setBlocked(app.packageName, blocked) },
+                        )
+                        if (!isMiuix) {
+                            HorizontalDivider(
+                                thickness = 0.5.dp,
+                                color = MaterialTheme.colorScheme.outlineVariant,
                             )
-                        }
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .nestedScroll(scrollBehavior.nestedScrollConnection),
-                            state = listState,
-                            verticalArrangement = Arrangement.spacedBy(if (isMiuix) 12.dp else 0.dp),
-                            contentPadding = PaddingValues(
-                                top = overlayTopPadding,
-                                bottom = overlayPadding.calculateBottomPadding(),
-                            ),
-                        ) {
-                            items(apps) { app ->
-                                AppConfigItem(
-                                    app = app,
-                                    isDataActive = keepDataActive,
-                                    onBlockedChange = { blocked -> viewModel.setBlocked(app.packageName, blocked) },
-                                )
-                                if (!isMiuix) {
-                                    HorizontalDivider(
-                                        modifier = Modifier.padding(horizontal = 16.dp),
-                                        thickness = 0.5.dp,
-                                        color = MaterialTheme.colorScheme.outlineVariant,
-                                    )
-                                }
-                            }
                         }
                     }
                 }
-            },
-        )
+            }
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        when (currentUiKitStyle()) {
+            UiKitStyle.Miuix -> AppConfigScreenMiuix(
+                onBack = onBack,
+                onOpenSettings = { showSettingsMenu = true },
+                scrollChromeState = scrollChromeState,
+                searchState = searchState,
+                listState = listState,
+                body = body,
+            )
+
+            UiKitStyle.Expressive -> AppConfigScreenMaterial(
+                onBack = onBack,
+                onOpenSettings = { showSettingsMenu = true },
+                scrollChromeState = scrollChromeState,
+                searchState = searchState,
+                listState = listState,
+                body = body,
+            )
+        }
 
         SnackbarHost(
             hostState = snackbarHostState,
@@ -439,6 +358,7 @@ internal fun AppConfigScreenShared(
         }
     }
 
+
     if (showUsagePermissionDialog) {
         io.github.magisk317.uikit.surface.AppAlertDialog(
             onDismissRequest = { showUsagePermissionDialog = false },
@@ -459,13 +379,14 @@ internal fun AppConfigScreenShared(
             dismissButton = {
                 io.github.magisk317.uikit.surface.AppSecondaryButton(
                     text = stringResource(R.string.cancel),
-                    onClick = { showUsagePermissionDialog = false },
+                    onClick = {
+                        showUsagePermissionDialog = false
+                    },
                 )
             },
         )
     }
 }
-
 @Composable
 fun AppConfigItem(
     app: AppInfo,

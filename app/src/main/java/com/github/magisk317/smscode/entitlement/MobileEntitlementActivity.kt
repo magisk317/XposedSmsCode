@@ -9,32 +9,23 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.ui.Alignment
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -42,15 +33,28 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.dp
 import com.magisk317.mobile.entitlement.MobileEntitlementCoordinator
 import com.magisk317.mobile.entitlement.MobileEntitlementStatus
+import com.github.magisk317.smscode.common.constant.Const
 import com.github.magisk317.smscode.core.R
 import com.github.magisk317.smscode.common.utils.XLog
 import com.github.magisk317.smscode.ui.theme.AppTheme
-import io.github.magisk317.uikit.theme.UiKitStyle
+import io.github.magisk317.uikit.surface.AppCard
+import io.github.magisk317.uikit.surface.AppCircularProgressIndicator
+import io.github.magisk317.uikit.surface.AppIcon
+import io.github.magisk317.uikit.surface.AppIconButton
+import io.github.magisk317.uikit.surface.AppPrimaryButton
+import io.github.magisk317.uikit.surface.AppScaffold
+import io.github.magisk317.uikit.surface.AppSecondaryButton
+import io.github.magisk317.uikit.surface.AppTextField
+import io.github.magisk317.uikit.surface.AppTopBar
+import io.github.magisk317.uikit.surface.SectionColumn
+import io.github.magisk317.uikit.surface.rememberSaveableTextFieldState
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -63,7 +67,10 @@ class MobileEntitlementActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         XLog.w("Mobile entitlement activity created")
         setContent {
-            AppTheme(themeMode = 0, uiKitStyle = UiKitStyle.Expressive.value) {
+            // Follow the stored appearance preferences (theme mode + UI kit style) like the
+            // main activity: passing explicit values here pinned the page to dark Expressive
+            // even when the app ran light or Miuix.
+            AppTheme {
                 MobileEntitlementScreen(
                     activity = this@MobileEntitlementActivity,
                     onBack = ::finish,
@@ -73,7 +80,6 @@ class MobileEntitlementActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MobileEntitlementScreen(
     activity: Activity,
@@ -86,7 +92,15 @@ private fun MobileEntitlementScreen(
     }
     var busyAction by remember { mutableStateOf<ActivationAction?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
-    var activationTokenInput by remember { mutableStateOf("") }
+    val tokenState = rememberSaveableTextFieldState()
+    val tokenInputTransformation = InputTransformation {
+        val original = toString()
+        val normalized = original.trim().uppercase()
+        if (normalized != original) {
+            replace(0, length, normalized)
+            selection = TextRange(normalized.length)
+        }
+    }
 
     fun refreshStatus(force: Boolean = false) {
         scope.launch {
@@ -139,7 +153,7 @@ private fun MobileEntitlementScreen(
     }
 
     fun activateWithToken() {
-        val trimmed = activationTokenInput.trim()
+        val trimmed = tokenState.text.toString().trim().uppercase()
         if (trimmed.length != 32) {
             message = context.getString(R.string.mobile_entitlement_activation_token_invalid)
             return
@@ -154,7 +168,7 @@ private fun MobileEntitlementScreen(
                 }
             }.onSuccess {
                 evaluation = it
-                activationTokenInput = ""
+                tokenState.edit { replace(0, length, "") }
                 XLog.w(
                     "Mobile entitlement token activation success status=%s allowed=%s",
                     it.status,
@@ -172,28 +186,30 @@ private fun MobileEntitlementScreen(
         refreshStatus()
     }
 
-    Scaffold(
+    AppScaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.mobile_entitlement_title)) },
+            AppTopBar(
+                title = stringResource(R.string.mobile_entitlement_title),
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                    AppIconButton(onClick = onBack) {
+                        AppIcon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = null,
+                        )
                     }
                 },
             )
         },
     ) { paddingValues ->
-        Column(
+        SectionColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 20.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(horizontal = Const.PADDING_SMALL.dp),
+            verticalArrangement = Arrangement.spacedBy(Const.SPACING_SMALL.dp),
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Card(modifier = Modifier.fillMaxWidth()) {
+            AppCard(modifier = Modifier.fillMaxWidth()) {
                 Column(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -216,7 +232,12 @@ private fun MobileEntitlementScreen(
                         ),
                     )
                     evaluation?.claims?.issuedAt?.takeIf { it > 0 }?.let { issuedAt ->
-                        Text(stringResource(R.string.mobile_entitlement_issued_at, formatEpoch(issuedAt)))
+                        Text(
+                            text = stringResource(
+                                R.string.mobile_entitlement_issued_at,
+                                formatEpoch(issuedAt),
+                            ),
+                        )
                     }
                     evaluation?.claims?.deviceId?.takeIf { it.isNotBlank() }?.let { deviceId ->
                         Row(
@@ -228,32 +249,38 @@ private fun MobileEntitlementScreen(
                                 text = stringResource(R.string.mobile_entitlement_device_id, deviceId),
                                 modifier = Modifier.weight(1f, fill = false),
                             )
-                            IconButton(
+                            AppIconButton(
                                 onClick = {
-                                    val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
-                                    cm?.setPrimaryClip(android.content.ClipData.newPlainText("device_id", deviceId))
+                                    val cm = context.getSystemService(Context.CLIPBOARD_SERVICE)
+                                        as? android.content.ClipboardManager
+                                    cm?.setPrimaryClip(
+                                        android.content.ClipData.newPlainText("device_id", deviceId),
+                                    )
                                     android.widget.Toast
                                         .makeText(
                                             context,
                                             context.getString(R.string.mobile_entitlement_copied),
                                             android.widget.Toast.LENGTH_SHORT,
-                                        ).show()
+                                        )
+                                        .show()
                                 },
                             ) {
-                                Icon(
-                                    Icons.Default.ContentCopy,
-                                    contentDescription = stringResource(R.string.mobile_entitlement_copy),
-                                    modifier = Modifier.padding(start = 4.dp),
+                                AppIcon(
+                                    imageVector = Icons.Default.ContentCopy,
+                                    contentDescription = stringResource(
+                                        R.string.mobile_entitlement_copy,
+                                    ),
                                 )
                             }
                         }
                     }
                 }
             }
+
             val isActivated = isMobileEntitlementActivated(evaluation?.status)
 
             if (!isActivated) {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                AppCard(modifier = Modifier.fillMaxWidth()) {
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -262,26 +289,40 @@ private fun MobileEntitlementScreen(
                             text = stringResource(R.string.mobile_entitlement_activation_token_label),
                             style = MaterialTheme.typography.titleMedium,
                         )
-                        OutlinedTextField(
-                            value = activationTokenInput,
-                            onValueChange = { activationTokenInput = it.trim().uppercase() },
-                            label = { Text(stringResource(R.string.mobile_entitlement_activation_token_hint)) },
+                        AppTextField(
+                            state = tokenState,
+                            label = stringResource(
+                                R.string.mobile_entitlement_activation_token_hint,
+                            ),
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             enabled = busyAction == null,
+                            inputTransformation = tokenInputTransformation,
                         )
-                        Button(
+                        AppPrimaryButton(
                             onClick = ::activateWithToken,
-                            enabled = busyAction == null && activationTokenInput.trim().length == 32,
+                            enabled = busyAction == null &&
+                                tokenState.text.toString().trim().length == 32,
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             if (busyAction == ActivationAction.TOKEN) {
-                                CircularProgressIndicator(modifier = Modifier.padding(end = 8.dp), strokeWidth = 2.dp)
+                                AppCircularProgressIndicator(
+                                    modifier = Modifier
+                                        .padding(end = 8.dp)
+                                        .size(18.dp),
+                                    strokeWidth = 2.dp,
+                                )
                             }
-                            Text(stringResource(R.string.mobile_entitlement_activation_token_confirm))
+                            Text(
+                                text = stringResource(
+                                    R.string.mobile_entitlement_activation_token_confirm,
+                                ),
+                            )
                         }
                         Text(
-                            text = stringResource(R.string.mobile_entitlement_activation_token_get_hint),
+                            text = stringResource(
+                                R.string.mobile_entitlement_activation_token_get_hint,
+                            ),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -294,25 +335,42 @@ private fun MobileEntitlementScreen(
                 currentEvaluation.status != MobileEntitlementStatus.ACTIVE ||
                 currentEvaluation.renewDue
             if (showActivationActions) {
-                OutlinedButton(
+                AppSecondaryButton(
                     onClick = ::openTelegramBot,
                     enabled = busyAction == null,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     if (busyAction == ActivationAction.TELEGRAM) {
-                        CircularProgressIndicator(modifier = Modifier.padding(end = 8.dp), strokeWidth = 2.dp)
+                        AppCircularProgressIndicator(
+                            modifier = Modifier
+                                .padding(end = 8.dp)
+                                .size(18.dp),
+                            strokeWidth = 2.dp,
+                        )
                     }
-                    Text(stringResource(R.string.mobile_entitlement_activate_telegram))
+                    Text(text = stringResource(R.string.mobile_entitlement_activate_telegram))
                 }
             }
-            OutlinedButton(
+            AppSecondaryButton(
                 onClick = { refreshStatus(force = true) },
                 enabled = busyAction == null,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Icon(Icons.Default.Refresh, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(stringResource(R.string.mobile_entitlement_refresh))
+                if (busyAction == ActivationAction.REFRESH) {
+                    AppCircularProgressIndicator(
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .size(18.dp),
+                        strokeWidth = 2.dp,
+                    )
+                } else {
+                    AppIcon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 8.dp),
+                    )
+                }
+                Text(text = stringResource(R.string.mobile_entitlement_refresh))
             }
             message?.let {
                 Text(

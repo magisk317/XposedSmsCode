@@ -559,4 +559,9 @@
     <string name="status_entitlement_checking">正在檢查模組啟用與服務鑑權...</string>
     <string name="status_activate_hint">請嘗試在 LSPosed 中啟用並勾選作用域</string>
     <string name="settings_group_general_summary">應用程式行為、外觀與語言</string>
+    <string name="settings_group_smscode_summary">關鍵詞、驗證碼規則、SIM 備註與測試工具</string>
+    <string name="settings_group_auto_input_summary">無障礙自動填入與延遲間隔</string>
+    <string name="settings_group_notification_summary">Toast、驗證碼通知與保留時長</string>
+    <string name="settings_group_experimental_summary">進階使用者適用的風險功能</string>
+    <string name="settings_group_others_summary">備份、還原、更新與隱私</string>
 </resources>

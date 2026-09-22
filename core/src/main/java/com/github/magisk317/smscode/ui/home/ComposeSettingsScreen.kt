@@ -33,7 +33,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
 import com.github.magisk317.smscode.common.utils.HookPreferenceMirror
@@ -59,7 +58,7 @@ import com.github.magisk317.smscode.core.R
 import com.github.magisk317.smscode.common.constant.Const
 import com.github.magisk317.smscode.common.constant.PrefConst
 import io.github.magisk317.smscode.runtime.common.diagnostics.ActivationDiagnosticsStore
-import com.github.magisk317.smscode.common.utils.AppPreferencesDataStore
+import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import com.github.magisk317.smscode.common.utils.PackageUtils
 import com.github.magisk317.smscode.common.utils.RuntimeDiagnosticsBridge
 import io.github.magisk317.smscode.runtime.common.diagnostics.LogBundleExporter
@@ -69,8 +68,9 @@ import com.github.magisk317.smscode.runtime.bridge.UiBackupAccess
 import com.github.magisk317.smscode.runtime.bridge.UiNotificationAccess
 import org.koin.compose.koinInject
 import io.github.magisk317.smscode.runtime.common.diagnostics.RuntimeLogStore
-import com.github.magisk317.smscode.common.utils.SPUtils
+import com.github.magisk317.smscode.common.utils.AppPreferences
 import com.github.magisk317.smscode.common.utils.XLog
+import io.github.magisk317.xposed.permission.PermissionBridge
 import io.github.magisk317.uikit.foundation.LoadingIndicatorTokens
 import io.github.magisk317.uikit.foundation.LocalSnackbarHostState
 import io.github.magisk317.uikit.common.DismissibleSnackbarHost
@@ -87,9 +87,11 @@ import io.github.magisk317.uikit.preference.RuntimeLogDiagnosticsLayout
 import io.github.magisk317.uikit.preference.RuntimeLogDiagnosticsState
 import io.github.magisk317.uikit.preference.RuntimeLogShareEntryMode
 import io.github.magisk317.uikit.surface.ConfirmActionDialog
+import io.github.magisk317.uikit.surface.SectionColumn
 import io.github.magisk317.uikit.preference.SingleChoiceOptionDialog
 import io.github.magisk317.uikit.preference.SingleChoicePositionDialog
 import io.github.magisk317.uikit.preference.SingleChoiceValueDialog
+import io.github.magisk317.uikit.preference.StatusSettingsSection
 import io.github.magisk317.uikit.preference.TextInputDialog
 import com.github.magisk317.smscode.ui.privacy.PrivacyPolicyPage
 import io.github.magisk317.uikit.theme.UiKitStyle
@@ -147,10 +149,12 @@ fun ComposeSettingsScreen(
 @Suppress("CyclomaticComplexMethod")
 @SuppressLint("InlinedApi")
 @Composable
-internal fun ComposeSettingsScreenShared(
+internal fun ComposeSettingsScreenBody(
     viewModel: SettingsViewModel? = null,
     refreshTrigger: Int = 0,
     onExit: () -> Unit = {},
+    listPadding: PaddingValues,
+    scrollModifier: Modifier,
 ) {
     val pageRuntime = LocalSettingsPageRuntime.current
     val isActive = pageRuntime.isActive
@@ -493,43 +497,19 @@ internal fun ComposeSettingsScreenShared(
     }
 
     suspend fun toggleAccessibilityServiceViaRoot(context: android.content.Context, enable: Boolean): Boolean {
-        return kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-            try {
-                val component = ComponentName(
-                    context,
-                    "com.github.magisk317.smscode.service.AutoInputAccessibilityService",
-                ).flattenToString()
-                val currentServices = Settings.Secure.getString(
-                    context.contentResolver,
-                    Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
-                ).orEmpty()
-                val newServices = if (enable) {
-                    if (currentServices.contains(component)) return@withContext true
-                    if (currentServices.isEmpty()) component else "$currentServices:$component"
-                } else {
-                    if (!currentServices.contains(component)) return@withContext true
-                    currentServices.split(":").filter { it.isNotEmpty() && it != component }.joinToString(":")
-                }
-
-                val process = Runtime.getRuntime().exec("su")
-                val os = java.io.DataOutputStream(process.outputStream)
-                os.writeBytes("settings put secure enabled_accessibility_services $newServices\n")
-                if (enable) {
-                    os.writeBytes("settings put secure accessibility_enabled 1\n")
-                }
-                os.writeBytes("exit\n")
-                os.flush()
-                process.waitFor() == 0
-            } catch (e: java.io.IOException) {
-                XLog.w("Root accessibility toggle failed: %s", e.message ?: e.javaClass.simpleName)
-                false
-            } catch (e: SecurityException) {
-                XLog.w("Root accessibility toggle denied: %s", e.message ?: e.javaClass.simpleName)
-                false
-            } catch (e: InterruptedException) {
-                Thread.currentThread().interrupt()
-                XLog.w("Root accessibility toggle interrupted: %s", e.message ?: e.javaClass.simpleName)
-                false
+        return withContext(Dispatchers.IO) {
+            val component = ComponentName(
+                context,
+                "com.github.magisk317.smscode.service.AutoInputAccessibilityService",
+            ).flattenToString()
+            val currentServices = Settings.Secure.getString(
+                context.contentResolver,
+                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
+            )
+            // An empty list means the service is already in the requested state, so no su round trip.
+            val commands = PermissionBridge.accessibilityCommands(currentServices, component, enable)
+            commands.isEmpty() || PermissionBridge.runRoot(commands) { message ->
+                XLog.w("Root accessibility toggle: %s", message)
             }
         }
     }
@@ -644,10 +624,6 @@ internal fun ComposeSettingsScreenShared(
     }
 
     val scrollState = rememberScrollState()
-    val showTopDivider by remember {
-        derivedStateOf { scrollState.value > 0 }
-    }
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val shouldShowInitialLoading = remember { SessionLoadingRegistry.shouldShowInitial("settings") }
     val showLoading = rememberMinDurationLoading(
         actualLoading = isActive && shouldShowInitialLoading && !settingsDataLoaded,
@@ -676,8 +652,6 @@ internal fun ComposeSettingsScreenShared(
 
     CompositionLocalProvider(LocalSnackbarHostState provides snackbarHostState) {
         Box(modifier = Modifier.fillMaxSize()) {
-        val topPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() +
-            Const.TOP_BAR_HEIGHT.dp // TopBar height
         val isCompact = with(LocalDensity.current) {
             LocalWindowInfo.current.containerSize.width.toDp() < 600.dp
         }
@@ -695,7 +669,7 @@ internal fun ComposeSettingsScreenShared(
                 PullToRefreshDefaults.LoadingIndicator(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
-                        .padding(top = topPadding + LoadingIndicatorTokens.OverlayTopSpacing),
+                        .padding(top = listPadding.calculateTopPadding() + LoadingIndicatorTokens.OverlayTopSpacing),
                     isRefreshing = manualRefreshing,
                     state = pullToRefreshState,
                 )
@@ -708,31 +682,37 @@ internal fun ComposeSettingsScreenShared(
                     PolygonMorphLoadingIndicator(
                         modifier = Modifier
                             .align(Alignment.TopCenter)
-                            .padding(top = topPadding + LoadingIndicatorTokens.OverlayTopSpacing),
+                            .padding(top = listPadding.calculateTopPadding() + LoadingIndicatorTokens.OverlayTopSpacing),
                     )
                 }
             } else {
-                Column(
+                SectionColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(bottom = bottomPadding)
-                        .nestedScroll(scrollBehavior.nestedScrollConnection)
-                        .verticalScroll(scrollState),
+                        .verticalScroll(scrollState)
+                        .then(scrollModifier),
+                    contentPadding = PaddingValues(
+                        top = listPadding.calculateTopPadding(),
+                        bottom = bottomPadding,
+                    ),
                     verticalArrangement = Arrangement.spacedBy(Const.SPACING_SMALL.dp),
                 ) {
-                    Spacer(modifier = Modifier.height(topPadding))
-
-                    Item(
-                        title = stringResource(id = R.string.mobile_entitlement_settings_title),
-                        summary = stringResource(id = R.string.mobile_entitlement_settings_summary),
-                        modifier = Modifier.padding(horizontal = Const.PADDING_SMALL.dp),
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = Const.PADDING_SMALL.dp),
                     ) {
-                        context.startActivity(
-                            Intent().setClassName(
-                                context,
-                                "com.github.magisk317.smscode.entitlement.MobileEntitlementActivity",
-                            ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-                        )
+                        StatusSettingsSection(
+                            title = stringResource(id = R.string.mobile_entitlement_settings_title),
+                            summary = stringResource(id = R.string.mobile_entitlement_settings_summary),
+                        ) {
+                            context.startActivity(
+                                Intent().setClassName(
+                                    context,
+                                    "com.github.magisk317.smscode.entitlement.MobileEntitlementActivity",
+                                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                            )
+                        }
                     }
 
                     Box(
@@ -761,11 +741,17 @@ internal fun ComposeSettingsScreenShared(
                             },
                             moduleTitle = stringResource(id = R.string.pref_enable_title),
                             moduleSummary = stringResource(id = R.string.pref_enable_summary),
-                            themeMode = themeMode,
-                            onThemeSelected = { mode, x, y ->
-                                settingsViewModel.setThemeMode(mode, x, y)
-                            },
+                            themeMode = null,
+                            onThemeSelected = null,
                         ) {
+                            val navigateToThemeSettings = LocalThemeSettingsNavigation.current
+                            Item(
+                                title = stringResource(id = R.string.pref_theme_details_title),
+                                summary = stringResource(id = R.string.pref_theme_details_summary),
+                                onClick = {
+                                    navigateToThemeSettings?.invoke()
+                                },
+                            )
                             SwitchItem(
                                 title = stringResource(id = R.string.pref_settings_display_mode_title),
                                 summary = stringResource(id = R.string.pref_settings_display_mode_summary),
@@ -806,6 +792,7 @@ internal fun ComposeSettingsScreenShared(
 
                     ExpandableSettingsSection(
                         title = stringResource(id = R.string.settings_group_smscode),
+                        summary = stringResource(id = R.string.settings_group_smscode_summary),
                         expanded = expandSmsCode,
                         onExpandedChange = { expandSmsCode = !expandSmsCode },
                         accordionMode = accordionMode.value,
@@ -843,6 +830,7 @@ internal fun ComposeSettingsScreenShared(
 
                     ExpandableSettingsSection(
                         title = stringResource(id = R.string.settings_group_auto_input),
+                        summary = stringResource(id = R.string.settings_group_auto_input_summary),
                         expanded = expandAutoInput,
                         onExpandedChange = { expandAutoInput = !expandAutoInput },
                         accordionMode = accordionMode.value,
@@ -904,6 +892,7 @@ internal fun ComposeSettingsScreenShared(
 
                     ExpandableSettingsSection(
                         title = stringResource(id = R.string.settings_group_notification),
+                        summary = stringResource(id = R.string.settings_group_notification_summary),
                         expanded = expandNotification,
                         onExpandedChange = { expandNotification = !expandNotification },
                         accordionMode = accordionMode.value,
@@ -985,6 +974,7 @@ internal fun ComposeSettingsScreenShared(
 
                     ExpandableSettingsSection(
                         title = stringResource(id = R.string.settings_group_experimental),
+                        summary = stringResource(id = R.string.settings_group_experimental_summary),
                         expanded = expandExperimental,
                         onExpandedChange = { expandExperimental = !expandExperimental },
                         accordionMode = accordionMode.value,
@@ -1007,6 +997,7 @@ internal fun ComposeSettingsScreenShared(
 
                     ExpandableSettingsSection(
                         title = stringResource(id = R.string.settings_group_others),
+                        summary = stringResource(id = R.string.settings_group_others_summary),
                         expanded = expandOthers,
                         onExpandedChange = { expandOthers = !expandOthers },
                         accordionMode = accordionMode.value,
@@ -1132,18 +1123,6 @@ internal fun ComposeSettingsScreenShared(
                     Spacer(modifier = Modifier.height(Const.SPACING_SMALL.dp))
                 }
             }
-        }
-
-        Column(
-            modifier = Modifier
-                .align(Alignment.TopCenter),
-        ) {
-            io.github.magisk317.uikit.surface.AppTopBar(
-                title = stringResource(id = R.string.pref_general_title),
-                scrollBehavior = scrollBehavior,
-                windowInsets = WindowInsets.statusBars,
-                modifier = Modifier,
-            )
         }
 
         DismissibleSnackbarHost(
@@ -1480,11 +1459,11 @@ private fun SettingsDialogs(
         PrivacyPolicyDialog(
             onDismiss = { onShowPrivacyPolicyDialogChange(false) },
             onConfirm = {
-                scope.launch { SPUtils.setPrivacyPolicyAccepted(context, true) }
+                scope.launch { AppPreferences.setPrivacyPolicyAccepted(context, true) }
                 onShowPrivacyPolicyDialogChange(false)
             },
             onCancel = {
-                scope.launch { SPUtils.setPrivacyPolicyAccepted(context, false) }
+                scope.launch { AppPreferences.setPrivacyPolicyAccepted(context, false) }
                 onShowPrivacyPolicyDialogChange(false)
                 onExit()
             },
@@ -1534,6 +1513,7 @@ private fun SettingsDialogs(
 @Composable
 private fun ExpandableSettingsSection(
     title: String,
+    summary: String = "",
     expanded: Boolean,
     onExpandedChange: () -> Unit,
     accordionMode: Boolean,
@@ -1548,6 +1528,7 @@ private fun ExpandableSettingsSection(
     ) {
         io.github.magisk317.uikit.preference.SectionCard(
             title = title,
+            summary = summary,
             accordionMode = accordionMode,
             sectionExpanded = sectionExpanded,
             onExpandedChange = onExpandedChange,
@@ -2074,3 +2055,11 @@ fun SliderDialog(
         dismissButton = {},
     )
 }
+
+/**
+ * Navigation into the dedicated theme-details page, provided by the host that
+ * owns the NavHost (MainScreen). Settings lives inside the tab graph, so the
+ * callback is composed there instead of being threaded through four signature
+ * layers.
+ */
+internal val LocalThemeSettingsNavigation = androidx.compose.runtime.staticCompositionLocalOf<(() -> Unit)?> { null }
