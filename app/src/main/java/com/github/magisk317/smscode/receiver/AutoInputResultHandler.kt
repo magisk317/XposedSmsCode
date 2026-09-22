@@ -3,7 +3,7 @@ package com.github.magisk317.smscode.receiver
 import android.content.Context
 import android.content.Intent
 import com.github.magisk317.smscode.common.constant.PrefConst
-import com.github.magisk317.smscode.common.utils.AppPreferencesDataStore
+import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import com.github.magisk317.smscode.runtime.RuntimeStorageFacade
 import io.github.magisk317.smscode.runtime.common.autoinput.AutoInputResultProcessor
 import io.github.magisk317.smscode.xposed.hook.system.SystemInputInjectorHook

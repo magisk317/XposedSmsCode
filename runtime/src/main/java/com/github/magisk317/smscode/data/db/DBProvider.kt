@@ -12,7 +12,7 @@ import android.os.Bundle
 import androidx.core.net.toUri
 import kotlinx.coroutines.runBlocking
 import com.github.magisk317.smscode.common.constant.PrefConst
-import com.github.magisk317.smscode.common.utils.AppPreferencesDataStore
+import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import com.github.magisk317.smscode.common.utils.ProviderCallerGuard
 import com.github.magisk317.smscode.data.db.entity.AppInfo
 import com.github.magisk317.smscode.data.db.entity.SmsCodeRule

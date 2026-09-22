@@ -1,5 +1,6 @@
 package com.github.magisk317.smscode.common.utils
 
+import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.mutablePreferencesOf

@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Process
 import com.github.magisk317.smscode.common.constant.PrefConst
-import com.github.magisk317.smscode.common.utils.AppPreferencesDataStore
+import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import io.github.magisk317.smscode.xposed.utils.XLog
 import kotlinx.coroutines.runBlocking
 import io.github.magisk317.xposed.logging.MagiskOtel

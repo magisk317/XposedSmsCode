@@ -12,7 +12,7 @@ import io.github.magisk317.smscode.runtime.verification.AutoInputAccessibilityNo
 import io.github.magisk317.smscode.runtime.verification.AutoInputAccessibilityNodeHelper.Result as AutoInputResult
 import io.github.magisk317.smscode.runtime.verification.AutoInputAccessibilityRequestHandler
 import com.github.magisk317.smscode.common.constant.PrefConst
-import com.github.magisk317.smscode.common.utils.AppPreferencesDataStore
+import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import io.github.magisk317.smscode.xposed.hook.system.SystemInputInjectorHook
 import io.github.magisk317.smscode.xposed.utils.XLog
 import io.github.magisk317.xposed.logging.MagiskOtel

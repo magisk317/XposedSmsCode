@@ -14,6 +14,9 @@ import io.github.magisk317.smscode.runtime.contract.prefs.PrefReadResult
 import io.github.magisk317.smscode.runtime.contract.prefs.PrefSources
 import io.github.magisk317.smscode.runtime.contract.prefs.PrefsSource
 import io.github.magisk317.smscode.runtime.common.prefs.PrefsResolver
+import io.github.magisk317.smscode.runtime.common.prefs.PrefsSnapshot
+import io.github.magisk317.smscode.runtime.common.prefs.SnapshotPrefsSource
+import io.github.magisk317.smscode.runtime.common.prefs.sharedPrefsSnapshot
 import io.github.magisk317.xposed.preferences.PreferenceRead
 import io.github.magisk317.xposed.preferences.PreferenceSource
 import io.github.magisk317.xposed.preferences.SharedPreferencesSource
@@ -29,6 +32,7 @@ import java.util.Collections
 object HookPrefsReader : HookPrefsAccess {
     private const val MISSING_LONG_VALUE = "-9223372036854775808"
     private const val SOURCE_REMOTE_PROVIDER = "provider"
+    private const val SNAPSHOT_PREFS_NAME = "hook_prefs_snapshot"
 
     /**
      * A non-zero cache would be unsafe here: the provider can disappear without a callback when the
@@ -57,6 +61,17 @@ object HookPrefsReader : HookPrefsAccess {
             onError = ::logPrefsSourceError,
         ),
     )
+
+    /**
+     * Last values the remote Provider actually served, persisted in this process so a frozen module
+     * app cannot make a switch the user turned off read back as on. Installed from the hosted
+     * process context because the module package's own storage is not writable from here.
+     */
+    @Volatile
+    private var prefsSnapshot: PrefsSnapshot? = null
+    @Volatile
+    private var snapshotInstalled = false
+    private val fallbackTraceLoggedKeys = Collections.synchronizedSet(mutableSetOf<String>())
 
     private val mobileEntitlementPolicy
         get() = MobileEntitlementVerificationPolicy(
@@ -94,7 +109,14 @@ object HookPrefsReader : HookPrefsAccess {
         }
     }
 
-    private fun prefSources(): List<PrefsSource> = listOf(remotePrefsSource)
+    private fun prefSources(): List<PrefsSource> {
+        val snapshotSource = prefsSnapshot?.let(::SnapshotPrefsSource)
+        return if (snapshotSource == null) {
+            listOf(remotePrefsSource)
+        } else {
+            listOf(remotePrefsSource, snapshotSource)
+        }
+    }
 
     private fun logRemoteTraceOnce(key: String, state: String) {
         if (remoteTraceLoggedKeys.add(key)) {
@@ -106,19 +128,54 @@ object HookPrefsReader : HookPrefsAccess {
         XLog.w("HookPrefsReader: %s", message, error)
     }
 
+    /**
+     * Only a value the Provider actually served may be remembered. Anything else - a snapshot hit
+     * or a bare default - means the real setting was unreachable, which is exactly the state that
+     * used to be invisible in the log.
+     */
+    private fun onResolved(key: String, source: String, remember: () -> Unit) {
+        if (source == SOURCE_REMOTE_PROVIDER) {
+            remember()
+            return
+        }
+        logFallbackOnce(key, source)
+    }
+
+    private fun logFallbackOnce(key: String, source: String) {
+        if (fallbackTraceLoggedKeys.add("$key@$source")) {
+            XLog.w("Diag prefs fallback: key=%s source=%s (remote provider unreachable)", key, source)
+        }
+    }
+
+    @JvmStatic
+    fun installSnapshot(context: Context?) {
+        if (context == null || snapshotInstalled) return
+        runCatching {
+            val target = context.getSharedPreferences(SNAPSHOT_PREFS_NAME, Context.MODE_PRIVATE)
+            prefsSnapshot = sharedPrefsSnapshot(prefs = { target })
+            snapshotInstalled = true
+        }.onFailure { logPrefsSourceError("snapshot install failed", it) }
+    }
+
     private fun resolveBooleanPref(key: String, defaultValue: Boolean): PrefReadResult<Boolean> {
         prefsResolver.invalidate()
-        return prefsResolver.resolveBoolean(key, defaultValue, prefSources())
+        val result = prefsResolver.resolveBoolean(key, defaultValue, prefSources())
+        onResolved(key, result.source) { prefsSnapshot?.recordBoolean(key, result.value) }
+        return result
     }
 
     private fun resolveStringPref(key: String, defaultValue: String): PrefReadResult<String> {
         prefsResolver.invalidate()
-        return prefsResolver.resolveString(key, defaultValue, prefSources())
+        val result = prefsResolver.resolveString(key, defaultValue, prefSources())
+        onResolved(key, result.source) { prefsSnapshot?.recordString(key, result.value) }
+        return result
     }
 
     private fun resolveIntPref(key: String, defaultValue: Int): PrefReadResult<Int> {
         prefsResolver.invalidate()
-        return prefsResolver.resolveInt(key, defaultValue, prefSources())
+        val result = prefsResolver.resolveInt(key, defaultValue, prefSources())
+        onResolved(key, result.source) { prefsSnapshot?.recordInt(key, result.value) }
+        return result
     }
 
     private fun traceState(result: PrefReadResult<*>): String =

@@ -10,7 +10,7 @@ import android.net.Uri
 import android.os.Binder
 import android.os.Bundle
 import androidx.core.net.toUri
-import com.github.magisk317.smscode.common.utils.AppPreferencesDataStore
+import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import com.github.magisk317.smscode.common.utils.ProviderCallerGuard
 import io.github.magisk317.smscode.xposed.utils.XLog
 import kotlinx.coroutines.runBlocking

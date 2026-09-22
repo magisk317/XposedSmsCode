@@ -1,5 +1,6 @@
 package com.github.magisk317.smscode.common.utils
 
+import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import android.content.Context
 import io.mockk.every
 import io.mockk.mockk

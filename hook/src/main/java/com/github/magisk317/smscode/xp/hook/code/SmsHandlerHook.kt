@@ -9,6 +9,7 @@ import android.provider.Telephony
 import com.github.magisk317.smscode.hook.BuildConfig
 import com.github.magisk317.smscode.common.constant.NotificationConst
 import com.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
+import com.github.magisk317.smscode.common.utils.HookPrefsReader
 import com.github.magisk317.smscode.common.utils.SmsBlacklistUtils
 import io.github.magisk317.smscode.xposed.utils.XLog
 import com.github.magisk317.smscode.data.db.entity.SmsMsg
@@ -768,6 +769,7 @@ class SmsHandlerHook : BaseHook() {
                     Context.CONTEXT_IGNORE_SECURITY,
                 )
                 mPluginContext?.let({ ctx -> HookRuntimeBridge.hookProcessInit?.invoke(ctx) })
+                HookPrefsReader.installSnapshot(mPhoneContext)
             } catch (e: Exception) {
                 XLog.e("Create plugin context failed: %s", e)
             }

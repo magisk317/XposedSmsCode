@@ -2,7 +2,7 @@ package com.github.magisk317.smscode.runtime
 
 import android.content.Context
 import com.github.magisk317.smscode.common.constant.PrefConst
-import com.github.magisk317.smscode.common.utils.AppPreferencesDataStore
+import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import com.github.magisk317.smscode.runtime.bridge.UiPrefsAccess
 
 /** App-process preference access. It never reads the hook's remote Provider. */

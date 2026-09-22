@@ -10,7 +10,8 @@ import com.github.magisk317.smscode.runtime.BuildConfig as RuntimeBuildConfig
 import com.github.tianma8023.xposed.smscode.BuildConfig
 import com.github.magisk317.smscode.common.constant.PrefConst
 import io.github.magisk317.smscode.runtime.common.diagnostics.ActivationDiagnosticsStore
-import com.github.magisk317.smscode.common.utils.AppPreferencesDataStore
+import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
+import com.github.magisk317.smscode.common.utils.XscPreferenceHooks
 import com.github.magisk317.smscode.common.utils.HookPreferenceMirror
 import io.github.magisk317.smscode.xposed.utils.ModuleActivationStore
 import io.github.magisk317.smscode.xposed.utils.ModuleUtils
@@ -55,6 +56,7 @@ class SmsCodeApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        AppPreferencesDataStore.install(XscPreferenceHooks)
         configureMobileEntitlement()
         android.util.Log.w("smscode", "SmsCodeApplication.onCreate() START")
         val installationId = AnonymousInstallationId.getOrCreate(this, TELEMETRY_PREFS_NAME)

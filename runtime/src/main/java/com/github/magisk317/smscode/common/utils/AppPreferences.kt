@@ -1,9 +1,10 @@
 package com.github.magisk317.smscode.common.utils
 
+import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import android.content.Context
 import com.github.magisk317.smscode.common.constant.PrefConst
 
-object SPUtils {
+object AppPreferences {
     private const val UI_KIT_STYLE_MATERIAL = 0
 
     /**
