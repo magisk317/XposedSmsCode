@@ -9,10 +9,6 @@ val allowConflictBypass = findProperty("allowConflictBypass")
     ?.toString()
     ?.toBooleanStrictOrNull()
     ?: false
-val enableUiKitStyleSwitch = findProperty("enableUiKitStyleSwitch")
-    ?.toString()
-    ?.toBooleanStrictOrNull()
-    ?: false
 
 android {
     namespace = "com.github.magisk317.smscode.core"
@@ -26,7 +22,6 @@ android {
         buildConfigField("String", "VERSION_NAME", "\"${libs.versions.versionName.get()}\"")
         buildConfigField("String", "COMMIT_HASH", "\"$gitCommitHash\"")
         buildConfigField("boolean", "ALLOW_CONFLICT_BYPASS", allowConflictBypass.toString())
-        buildConfigField("boolean", "ENABLE_UI_KIT_STYLE_SWITCH", enableUiKitStyleSwitch.toString())
     }
 
     buildFeatures {

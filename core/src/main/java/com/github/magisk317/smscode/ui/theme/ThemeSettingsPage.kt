@@ -11,14 +11,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.MaterialTheme
 import io.github.magisk317.uikit.theme.spacing
 import io.github.magisk317.uikit.preference.SectionCard
+import io.github.magisk317.uikit.preference.SettingsChoiceRow
 import io.github.magisk317.uikit.surface.SectionColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -27,16 +23,11 @@ import com.github.magisk317.smscode.core.R
 import io.github.magisk317.uikit.R as UiKitR
 import io.github.magisk317.uikit.surface.PageScaffoldExpressive
 import io.github.magisk317.uikit.surface.PageScaffoldMiuix
-import io.github.magisk317.uikit.preference.Item as SettingsItem
-import io.github.magisk317.uikit.preference.SingleChoiceOptionDialog
 import io.github.magisk317.uikit.preference.StateSwitchItem as SettingsSwitchItem
 import io.github.magisk317.uikit.theme.UiKitColorSpec
 import io.github.magisk317.uikit.theme.UiKitLayoutScale
 import io.github.magisk317.uikit.theme.UiKitPaletteStyle
 import io.github.magisk317.uikit.theme.UiKitStyle
-import top.yukonga.miuix.kmp.overlay.OverlayListPopup
-import top.yukonga.miuix.kmp.basic.DropdownImpl
-import top.yukonga.miuix.kmp.basic.ListPopupColumn
 import io.github.magisk317.uikit.theme.currentUiKitStyle
 
 @Composable
@@ -45,7 +36,6 @@ fun ThemeSettingsPage(
     onBack: () -> Unit,
 ) {
     val themeState by viewModel.themeState.collectAsStateWithLifecycle()
-    var choice by remember { mutableStateOf<ThemeChoice?>(null) }
 
     val themeOptions = listOf(
         stringResource(UiKitR.string.uikit_theme_follow_system),
@@ -117,47 +107,26 @@ fun ThemeSettingsPage(
                 sectionExpanded = true,
                 onExpandedChange = {},
             ) {
-                ThemeChoiceRow(
+                SettingsChoiceRow(
                     title = stringResource(R.string.pref_choose_theme_title),
                     summary = themeOptions[selectedTheme],
-                    miuix = isMiuixStyle,
-                    expanded = choice == ThemeChoice.Theme,
-                    onOpen = { choice = ThemeChoice.Theme },
-                    onDismiss = { choice = null },
                     options = themeOptions,
                     selectedIndex = selectedTheme,
-                    onSelect = { index ->
-                        viewModel.setThemeMode(index)
-                        choice = null
-                    },
+                    onSelect = { index -> viewModel.setThemeMode(index) },
                 )
-                ThemeChoiceRow(
+                SettingsChoiceRow(
                     title = stringResource(R.string.pref_ui_kit_style_title),
                     summary = uiKitStyleOptions[selectedUiKitStyle],
-                    miuix = isMiuixStyle,
-                    expanded = choice == ThemeChoice.UiKitStyle,
-                    onOpen = { choice = ThemeChoice.UiKitStyle },
-                    onDismiss = { choice = null },
                     options = uiKitStyleOptions,
                     selectedIndex = selectedUiKitStyle,
-                    onSelect = { index ->
-                        viewModel.setUiKitStyle(index)
-                        choice = null
-                    },
+                    onSelect = { index -> viewModel.setUiKitStyle(index) },
                 )
-                ThemeChoiceRow(
+                SettingsChoiceRow(
                     title = stringResource(R.string.pref_layout_scale_title),
                     summary = layoutScaleOptions[selectedLayoutScale],
-                    miuix = isMiuixStyle,
-                    expanded = choice == ThemeChoice.LayoutScale,
-                    onOpen = { choice = ThemeChoice.LayoutScale },
-                    onDismiss = { choice = null },
                     options = layoutScaleOptions,
                     selectedIndex = selectedLayoutScale,
-                    onSelect = { index ->
-                        viewModel.setLayoutScale(index)
-                        choice = null
-                    },
+                    onSelect = { index -> viewModel.setLayoutScale(index) },
                 )
             }
 
@@ -174,33 +143,19 @@ fun ThemeSettingsPage(
                 ) { enabled ->
                     viewModel.setMonetEnabled(enabled)
                 }
-                ThemeChoiceRow(
+                SettingsChoiceRow(
                     title = stringResource(R.string.pref_palette_style_title),
                     summary = paletteStyleOptions[selectedPaletteStyle],
-                    miuix = isMiuixStyle,
-                    expanded = choice == ThemeChoice.PaletteStyle,
-                    onOpen = { choice = ThemeChoice.PaletteStyle },
-                    onDismiss = { choice = null },
                     options = paletteStyleOptions,
                     selectedIndex = selectedPaletteStyle,
-                    onSelect = { index ->
-                        viewModel.setPaletteStyle(index)
-                        choice = null
-                    },
+                    onSelect = { index -> viewModel.setPaletteStyle(index) },
                 )
-                ThemeChoiceRow(
+                SettingsChoiceRow(
                     title = stringResource(R.string.pref_color_spec_title),
                     summary = colorSpecOptions[selectedColorSpec],
-                    miuix = isMiuixStyle,
-                    expanded = choice == ThemeChoice.ColorSpec,
-                    onOpen = { choice = ThemeChoice.ColorSpec },
-                    onDismiss = { choice = null },
                     options = colorSpecOptions,
                     selectedIndex = selectedColorSpec,
-                    onSelect = { index ->
-                        viewModel.setColorSpec(index)
-                        choice = null
-                    },
+                    onSelect = { index -> viewModel.setColorSpec(index) },
                 )
                 SettingsSwitchItem(
                     title = stringResource(R.string.pref_surface_blur_title),
@@ -217,19 +172,14 @@ fun ThemeSettingsPage(
                 ) { enabled ->
                     viewModel.setDynamicColorEnabled(enabled)
                 }
-                ThemeChoiceRow(
+                SettingsChoiceRow(
                     title = stringResource(R.string.pref_accent_color_title),
                     summary = accentOptions[selectedAccent],
-                    miuix = isMiuixStyle,
-                    expanded = choice == ThemeChoice.Accent,
-                    onOpen = { choice = ThemeChoice.Accent },
-                    onDismiss = { choice = null },
                     options = accentOptions,
                     selectedIndex = selectedAccent,
                     onSelect = { index ->
                         ThemeAccent.fromValue(index).colorArgb?.let(viewModel::setAccentColor)
                             ?: viewModel.setAccentColor(0)
-                        choice = null
                     },
                 )
             }
@@ -279,102 +229,4 @@ fun ThemeSettingsPage(
         UiKitStyle.Expressive -> PageScaffoldExpressive(title = pageTitle, onBack = onBack, content = body)
     }
 
-    val activeChoice = choice
-    if (activeChoice != null && !isMiuixStyle) {
-        val options = when (activeChoice) {
-            ThemeChoice.Theme -> themeOptions
-            ThemeChoice.UiKitStyle -> uiKitStyleOptions
-            ThemeChoice.LayoutScale -> layoutScaleOptions
-            ThemeChoice.PaletteStyle -> paletteStyleOptions
-            ThemeChoice.ColorSpec -> colorSpecOptions
-            ThemeChoice.Accent -> accentOptions
-        }
-        val selectedIndex = when (activeChoice) {
-            ThemeChoice.Theme -> selectedTheme
-            ThemeChoice.UiKitStyle -> selectedUiKitStyle
-            ThemeChoice.LayoutScale -> selectedLayoutScale
-            ThemeChoice.PaletteStyle -> selectedPaletteStyle
-            ThemeChoice.ColorSpec -> selectedColorSpec
-            ThemeChoice.Accent -> selectedAccent
-        }
-        SingleChoiceOptionDialog(
-            title = when (activeChoice) {
-                ThemeChoice.Theme -> stringResource(R.string.pref_choose_theme_title)
-                ThemeChoice.UiKitStyle -> stringResource(R.string.pref_ui_kit_style_title)
-                ThemeChoice.LayoutScale -> stringResource(R.string.pref_layout_scale_title)
-                ThemeChoice.PaletteStyle -> stringResource(R.string.pref_palette_style_title)
-                ThemeChoice.ColorSpec -> stringResource(R.string.pref_color_spec_title)
-                ThemeChoice.Accent -> stringResource(R.string.pref_accent_color_title)
-            },
-            options = options,
-            selectedIndex = selectedIndex,
-            onSelectionChange = { index ->
-                when (activeChoice) {
-                    ThemeChoice.Theme -> viewModel.setThemeMode(index)
-                    ThemeChoice.UiKitStyle -> viewModel.setUiKitStyle(index)
-                    ThemeChoice.LayoutScale -> viewModel.setLayoutScale(index)
-                    ThemeChoice.PaletteStyle -> viewModel.setPaletteStyle(index)
-                    ThemeChoice.ColorSpec -> viewModel.setColorSpec(index)
-                    ThemeChoice.Accent -> {
-                        ThemeAccent.fromValue(index).colorArgb?.let(viewModel::setAccentColor)
-                            ?: viewModel.setAccentColor(0)
-                    }
-                }
-                choice = null
-            },
-            onDismissRequest = { choice = null },
-        )
-    }
-}
-
-private enum class ThemeChoice {
-    Theme, UiKitStyle, LayoutScale, PaletteStyle, ColorSpec, Accent,
-}
-
-/**
- * A selectable settings row. Expressive keeps the classic choice dialog (page level);
- * miuix replaces it with the stock dropdown: an [OverlayListPopup] anchored right under
- * the row, styled by [DropdownImpl] with the selected check — the KernelSU/HyperOS form.
- */
-@Composable
-private fun ThemeChoiceRow(
-    title: String,
-    summary: String,
-    miuix: Boolean,
-    expanded: Boolean,
-    onOpen: () -> Unit,
-    onDismiss: () -> Unit,
-    options: List<String>,
-    selectedIndex: Int,
-    onSelect: (Int) -> Unit,
-) {
-    Box(modifier = Modifier.fillMaxWidth()) {
-        SettingsItem(
-            title = title,
-            summary = summary,
-            onClick = onOpen,
-        )
-        if (miuix) {
-            OverlayListPopup(
-                show = expanded,
-                onDismissRequest = onDismiss,
-                content = {
-                    ListPopupColumn {
-                        options.forEachIndexed { index, option ->
-                            DropdownImpl(
-                                text = option,
-                                optionSize = options.size,
-                                isSelected = index == selectedIndex,
-                                index = index,
-                                onSelectedIndexChange = { picked ->
-                                    onSelect(picked)
-                                    onDismiss()
-                                },
-                            )
-                        }
-                    }
-                },
-            )
-        }
-    }
 }

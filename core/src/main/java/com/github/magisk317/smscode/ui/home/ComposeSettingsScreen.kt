@@ -181,7 +181,6 @@ internal fun ComposeSettingsScreenBody(
         settingsViewModel.themeState.collect { value = it }
     }
     val themeMode = themeState.mode
-    val uiKitStyle = themeState.uiKitStyle
 
     var autoInputDelay by remember { mutableStateOf(PrefConst.KEY_AUTO_INPUT_CODE_DELAY_DEFAULT) }
     var autoInputInterval by remember { mutableStateOf(PrefConst.KEY_AUTO_INPUT_CODE_INTERVAL_DEFAULT) }
@@ -196,7 +195,6 @@ internal fun ComposeSettingsScreenBody(
     var showRetentionDialog by remember { mutableStateOf(false) }
     var showSmsTestDialog by remember { mutableStateOf(false) }
     var smsTestInput by remember { mutableStateOf("") }
-    var showUiKitStyleDialog by remember { mutableStateOf(false) }
     var showPrivacyPolicyDialog by remember { mutableStateOf(false) }
     var showPrivacyPolicyPage by remember { mutableStateOf(false) }
     var showKeywordsDialog by remember { mutableStateOf(false) }
@@ -1137,7 +1135,6 @@ internal fun ComposeSettingsScreenBody(
     SettingsDialogs(
         context = context,
         scope = scope,
-        uiKitStyle = uiKitStyle,
         autoInputDelay = autoInputDelay,
         autoInputInterval = autoInputInterval,
         retentionTime = retentionTime,
@@ -1148,7 +1145,6 @@ internal fun ComposeSettingsScreenBody(
         showRetentionDialog = showRetentionDialog,
         showSmsTestDialog = showSmsTestDialog,
         showKeywordsDialog = showKeywordsDialog,
-        showUiKitStyleDialog = showUiKitStyleDialog,
         showPrivacyPolicyDialog = showPrivacyPolicyDialog,
         showPrivacyPolicyPage = showPrivacyPolicyPage,
         showBackupDialog = showBackupDialog,
@@ -1164,7 +1160,6 @@ internal fun ComposeSettingsScreenBody(
         onShowRetentionDialogChange = { showRetentionDialog = it },
         onShowSmsTestDialogChange = { showSmsTestDialog = it },
         onShowKeywordsDialogChange = { showKeywordsDialog = it },
-        onShowUiKitStyleDialogChange = { showUiKitStyleDialog = it },
         onShowPrivacyPolicyDialogChange = { showPrivacyPolicyDialog = it },
         onShowPrivacyPolicyPageChange = { showPrivacyPolicyPage = it },
         onShowBackupDialogChange = { showBackupDialog = it },
@@ -1174,7 +1169,6 @@ internal fun ComposeSettingsScreenBody(
         backupLauncher = backupLauncher,
         settingsViewModel = settingsViewModel,
         onExit = onExit,
-        onSetUiKitStyle = { style -> settingsViewModel.setUiKitStyle(style) },
     )
 
     showSimSlotRemarkDialog?.let { simSlot ->
@@ -1304,7 +1298,6 @@ private fun handleSettingsEvent(
 private fun SettingsDialogs(
     context: android.content.Context,
     scope: kotlinx.coroutines.CoroutineScope,
-    uiKitStyle: Int,
     autoInputDelay: String,
     autoInputInterval: String,
     retentionTime: String,
@@ -1315,7 +1308,6 @@ private fun SettingsDialogs(
     showRetentionDialog: Boolean,
     showSmsTestDialog: Boolean,
     showKeywordsDialog: Boolean,
-    showUiKitStyleDialog: Boolean,
     showPrivacyPolicyDialog: Boolean,
     showPrivacyPolicyPage: Boolean,
     showBackupDialog: Boolean,
@@ -1331,7 +1323,6 @@ private fun SettingsDialogs(
     onShowRetentionDialogChange: (Boolean) -> Unit,
     onShowSmsTestDialogChange: (Boolean) -> Unit,
     onShowKeywordsDialogChange: (Boolean) -> Unit,
-    onShowUiKitStyleDialogChange: (Boolean) -> Unit,
     onShowPrivacyPolicyDialogChange: (Boolean) -> Unit,
     onShowPrivacyPolicyPageChange: (Boolean) -> Unit,
     onShowBackupDialogChange: (Boolean) -> Unit,
@@ -1341,7 +1332,6 @@ private fun SettingsDialogs(
     backupLauncher: androidx.activity.result.ActivityResultLauncher<Intent>,
     settingsViewModel: SettingsViewModel,
     onExit: () -> Unit,
-    onSetUiKitStyle: (Int) -> Unit,
 ) {
     val activityOwner = context as? Activity
     val backupAccess = koinInject<UiBackupAccess>()
@@ -1442,17 +1432,6 @@ private fun SettingsDialogs(
             }
             onShowKeywordsDialogChange(false)
         }
-    }
-
-    if (BuildConfig.ENABLE_UI_KIT_STYLE_SWITCH && showUiKitStyleDialog) {
-        UiKitStyleChooserDialog(
-            currentStyle = uiKitStyle,
-            onDismiss = { onShowUiKitStyleDialogChange(false) },
-            onStyleSelected = {
-                onSetUiKitStyle(it)
-                onShowUiKitStyleDialogChange(false)
-            },
-        )
     }
 
     if (showPrivacyPolicyDialog) {
@@ -1707,35 +1686,6 @@ fun RetentionDialog(
         onDismissRequest = onDismiss,
         modifier = modifier,
     )
-}
-
-@Composable
-fun UiKitStyleChooserDialog(
-    currentStyle: Int,
-    onDismiss: () -> Unit,
-    onStyleSelected: (Int) -> Unit,
-) {
-    val styles = listOf(
-        stringResource(id = R.string.ui_kit_style_expressive) to UiKitStyle.Expressive.value,
-        stringResource(id = R.string.ui_kit_style_miuix) to UiKitStyle.Miuix.value,
-    )
-    SingleChoiceOptionDialog(
-        title = stringResource(id = R.string.pref_ui_kit_style_title),
-        options = styles.map { it.first },
-        selectedIndex = styles.indexOfFirst { it.second == currentStyle }.coerceAtLeast(0),
-        onSelectionChange = { index ->
-            styles.getOrNull(index)?.second?.let(onStyleSelected)
-        },
-        onDismissRequest = onDismiss,
-    )
-}
-
-@Composable
-private fun uiKitStyleLabel(style: Int): String {
-    return when (UiKitStyle.fromValue(style)) {
-        UiKitStyle.Miuix -> stringResource(id = R.string.ui_kit_style_miuix)
-        UiKitStyle.Expressive -> stringResource(id = R.string.ui_kit_style_expressive)
-    }
 }
 
 @Composable
