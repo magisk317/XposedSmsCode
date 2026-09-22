@@ -3,6 +3,14 @@
 本日志记录了项目重构后的主要变更。
 
 ---
+## [v3.3.6] - 2026-09-22
+- 版本：`versionCode 130` / `versionName 3.3.6`。
+- 待补充。
+
+> Full Changelog: https://gitlab.com/magisk3171/XposedSmsCode/-/compare/v3.3.5...v3.3.6
+
+---
+
 ## [v3.3.5] - 2026-09-22
 - 版本：`versionCode 129` / `versionName 3.3.5`。
 - `[ui]` 双架构与主题页优化。
