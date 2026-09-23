@@ -49,9 +49,11 @@ import io.github.magisk317.smscode.runtime.common.utils.BrowserUtils
 import io.github.magisk317.uikit.common.showLatestSnackbar
 import io.github.magisk317.uikit.foundation.LocalSnackbarHostState
 import io.github.magisk317.uikit.surface.AppTopBar
+import io.github.magisk317.uikit.surface.MiuixStatusCheckCard
 import io.github.magisk317.uikit.surface.StatusHeroCard
 import io.github.magisk317.uikit.surface.SummaryRow
 import io.github.magisk317.uikit.surface.SummarySectionCard
+import io.github.magisk317.uikit.surface.rememberStatusCardClickHandler
 import io.github.magisk317.uikit.theme.UiKitStyle
 import io.github.magisk317.uikit.theme.currentUiKitStyle
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
@@ -377,20 +379,38 @@ fun StatusCard(
     } else {
         stringResource(id = R.string.status_entitlement_unverified)
     }
-    val title = "$moduleStatusText\n$entitlementStatusText"
-
-    val isAllOk = isEnabled && isEntitled
-    val summary = if (!isEnabled) {
+    val activateHint = if (!isEnabled) {
         stringResource(id = R.string.status_activate_hint)
     } else {
         null
     }
 
+    // Miuix hero card adopts the KernelSU-style oversized corner check mark shared via ui-kit
+    // (MiPush OverviewMiuix lineage). The auth state (mobile automation entitlement) drives the
+    // pass branch: entitled shows the check mark, everything else shows the error mark; a single
+    // tap opens the entitlement page while entitlement is missing.
+    if (currentUiKitStyle() == UiKitStyle.Miuix) {
+        val resolvedOnClick = rememberStatusCardClickHandler(
+            isEntitled = isEntitled,
+            onActivateClick = onActivateClick,
+            onDiagnosticsToggle = onDiagnosticsToggle,
+        )
+        MiuixStatusCheckCard(
+            passed = isEntitled,
+            title = entitlementStatusText,
+            badge = moduleStatusText,
+            summary = activateHint,
+            diagnostics = if (showDiagnostics) diagnostics else emptyList(),
+            onClick = { resolvedOnClick?.invoke() },
+        )
+        return
+    }
+
     StatusHeroCard(
-        title = title,
-        summary = summary,
-        icon = if (isAllOk) Icons.Default.CheckCircle else Icons.Default.Warning,
-        highlighted = isAllOk,
+        title = "$moduleStatusText\n$entitlementStatusText",
+        summary = activateHint,
+        icon = if (isEnabled && isEntitled) Icons.Default.CheckCircle else Icons.Default.Warning,
+        highlighted = isEnabled && isEntitled,
         diagnostics = if (showDiagnostics) diagnostics else emptyList(),
         isEntitled = isEntitled,
         onActivateClick = onActivateClick,
