@@ -15,9 +15,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -40,6 +37,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.github.magisk317.smscode.core.R
 import com.github.magisk317.smscode.data.db.entity.AppInfo
 import io.github.magisk317.uikit.surface.AppIconImage
+import io.github.magisk317.uikit.surface.AppPullToRefresh
 import io.github.magisk317.uikit.foundation.LoadingIndicatorTokens
 import io.github.magisk317.uikit.foundation.PolygonMorphLoadingIndicator
 import io.github.magisk317.uikit.foundation.SessionLoadingRegistry
@@ -208,25 +206,15 @@ fun AppConfigScreen(
 
     val body: @Composable (PaddingValues, Modifier) -> Unit = { listPadding, scrollModifier ->
         val overlayTopPadding = listPadding.calculateTopPadding()
-        val pullToRefreshState = rememberPullToRefreshState()
-        PullToRefreshBox(
-            state = pullToRefreshState,
+        AppPullToRefresh(
             isRefreshing = manualRefreshing,
             onRefresh = {
                 manualRefreshStartedAt = SystemClock.elapsedRealtime()
                 manualRefreshing = true
                 viewModel.refreshData(force = true)
             },
-            indicator = {
-                PullToRefreshDefaults.LoadingIndicator(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = overlayTopPadding + LoadingIndicatorTokens.OverlayTopSpacing),
-                    isRefreshing = manualRefreshing,
-                    state = pullToRefreshState,
-                )
-            },
             modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(top = overlayTopPadding),
         ) {
             if (showLoading && !manualRefreshing) {
                 Box(modifier = Modifier.fillMaxSize()) {

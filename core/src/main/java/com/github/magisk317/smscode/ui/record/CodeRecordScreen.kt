@@ -26,9 +26,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.*
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,6 +53,7 @@ import org.koin.compose.koinInject
 import io.github.magisk317.smscode.runtime.contract.sim.SimSlotLabelFormatter
 import io.github.magisk317.smscode.rule.utils.CodeRecordSimilarityUtils
 import io.github.magisk317.uikit.surface.AppIconImage
+import io.github.magisk317.uikit.surface.AppPullToRefresh
 import io.github.magisk317.uikit.foundation.LoadingIndicatorTokens
 import io.github.magisk317.uikit.foundation.LocalSnackbarHostState
 import io.github.magisk317.uikit.common.showLatestSnackbar
@@ -370,7 +368,6 @@ fun CodeRecordScreen(
 
     val body: @Composable (PaddingValues, Modifier) -> Unit = { listPadding, scrollModifier ->
         val topPadding = listPadding.calculateTopPadding()
-        val pullToRefreshState = rememberPullToRefreshState()
         val codeSmsList = deduplicateCodeRecords(
             smsList.filter { it.msgType == SmsMsg.MSG_TYPE_SMS && !it.smsCode.isNullOrBlank() },
         )
@@ -381,25 +378,16 @@ fun CodeRecordScreen(
         Box(
             modifier = Modifier.fillMaxSize(),
         ) {
-            PullToRefreshBox(
-                state = pullToRefreshState,
+            AppPullToRefresh(
                 isRefreshing = manualRefreshing,
                 onRefresh = {
                     manualRefreshStartedAt = SystemClock.elapsedRealtime()
                     manualRefreshing = true
                     viewModel.refreshData()
                 },
-                indicator = {
-                    PullToRefreshDefaults.LoadingIndicator(
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .padding(top = topPadding + LoadingIndicatorTokens.OverlayTopSpacing),
-                        isRefreshing = manualRefreshing,
-                        state = pullToRefreshState,
-                    )
-                },
                 modifier = Modifier
                     .fillMaxSize(),
+                contentPadding = PaddingValues(top = topPadding),
             ) {
                 Box(
                     modifier = Modifier

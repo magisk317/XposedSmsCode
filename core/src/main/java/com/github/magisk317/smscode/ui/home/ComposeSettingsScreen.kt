@@ -26,9 +26,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,6 +69,7 @@ import com.github.magisk317.smscode.common.utils.AppPreferences
 import com.github.magisk317.smscode.common.utils.XLog
 import io.github.magisk317.xposed.permission.PermissionBridge
 import io.github.magisk317.uikit.foundation.LoadingIndicatorTokens
+import io.github.magisk317.uikit.surface.AppPullToRefresh
 import io.github.magisk317.uikit.foundation.LocalSnackbarHostState
 import io.github.magisk317.uikit.common.DismissibleSnackbarHost
 import io.github.magisk317.uikit.foundation.PolygonMorphLoadingIndicator
@@ -627,7 +625,6 @@ internal fun ComposeSettingsScreenBody(
         actualLoading = isActive && shouldShowInitialLoading && !settingsDataLoaded,
         minDurationMillis = LoadingIndicatorTokens.MIN_VISIBLE_DURATION_MILLIS,
     )
-    val pullToRefreshState = rememberPullToRefreshState()
     val autoInputEnabled = rememberPrefBoolean(PrefConst.KEY_ENABLE_AUTO_INPUT_CODE, true)
     val autoUpdateEnabled = rememberPrefBoolean(PrefConst.KEY_AUTO_UPDATE_ON_START, true)
     val moduleEnabled = rememberPrefBoolean(PrefConst.KEY_ENABLE, true)
@@ -657,23 +654,16 @@ internal fun ComposeSettingsScreenBody(
             WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() +
                 if (isCompact) Const.BOTTOM_SPACE_HEIGHT.dp else 0.dp
 
-        PullToRefreshBox(
-            state = pullToRefreshState,
+        AppPullToRefresh(
             isRefreshing = manualRefreshing,
             onRefresh = {
                 scope.launch { runManualRefresh() }
             },
-            indicator = {
-                PullToRefreshDefaults.LoadingIndicator(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = listPadding.calculateTopPadding() + LoadingIndicatorTokens.OverlayTopSpacing),
-                    isRefreshing = manualRefreshing,
-                    state = pullToRefreshState,
-                )
-            },
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxSize(),
+            contentPadding = PaddingValues(
+                top = listPadding.calculateTopPadding(),
+            ),
         ) {
             if (showLoading && !manualRefreshing) {
                 Box(modifier = Modifier.fillMaxSize()) {
