@@ -3,9 +3,11 @@
 本日志记录了项目重构后的主要变更。
 
 ---
-## [v3.3.6] - 2026-09-22
+## [v3.3.6] - 2026-09-23
 - 版本：`versionCode 130` / `versionName 3.3.6`。
-- 待补充。
+- `[ui]` 概览与设置页改用共享 ui-kit 组件。
+- `[ui]` 下拉刷新与列表回顶对齐共享 ui-kit。
+- `[deps]` Miuix 升级至 0.9.4。
 
 > Full Changelog: https://gitlab.com/magisk3171/XposedSmsCode/-/compare/v3.3.5...v3.3.6
 

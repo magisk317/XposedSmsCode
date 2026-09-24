@@ -1,0 +1,5 @@
+- Updated to 3.3.6 (130).
+- Overview and settings pages adopt shared ui-kit primitives.
+- Pull-to-refresh and scroll-to-top aligned with the shared ui-kit.
+- Miuix updated to 0.9.4.
+- https://gitlab.com/magisk3171/XposedSmsCode/-/releases
