@@ -82,6 +82,7 @@ object XposedRuntimeInstaller {
                     AnonymousInstallationId.PREFERENCE_KEY,
                     "",
                 ),
+                suppressedResultValues = setOf("skip"),
             ),
         )
         installHookBridge()

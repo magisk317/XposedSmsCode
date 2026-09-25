@@ -82,6 +82,9 @@ class SmsCodeApplication : Application() {
                 projectId = "83955172",
                 projectName = "XposedSmsCode",
                 environment = if (BuildConfig.DEBUG) "debug" else "release",
+                // Skip dominates this service (~81% of every span): an intercept check that found
+                // nothing to do. Dropping it keeps ok / error / fallback readable.
+                suppressedResultValues = setOf("skip"),
             ),
             TELEMETRY_PREFS_NAME,
         )
