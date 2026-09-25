@@ -79,6 +79,7 @@ class SmsCodeApplication : Application() {
                 },
                 serviceName = "xposedsmscode",
                 serviceVersion = BuildConfig.VERSION_NAME,
+                serviceCommit = BuildConfig.COMMIT_HASH,
                 projectId = "83955172",
                 projectName = "XposedSmsCode",
                 environment = if (BuildConfig.DEBUG) "debug" else "release",
