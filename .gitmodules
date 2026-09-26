@@ -4,9 +4,11 @@
 [submodule "magisk-ui-kit"]
 	path = magisk-ui-kit
 	url = https://gitlab.com/magisk3171/shared/magisk-ui-kit.git
+	branch = main
 [submodule "build-logic"]
 	path = build-logic
 	url = https://gitlab.com/magisk3171/shared/magisk-build-logic.git
+	branch = main
 [submodule "smscode-rules"]
 	path = smscode/rules
 	url = https://gitlab.com/magisk3171/shared/magisk-smscode-rules.git
