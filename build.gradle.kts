@@ -73,6 +73,16 @@ subprojects {
         dependencies {
             "detektPlugins"(catalog.detekt.rules.ktlint)
         }
+        // detekt CLI whitelists JVM targets and 2.0.0-alpha.6 caps at 26, so the
+        // analysis target must not exceed that ceiling even though we emit Java 27
+        // bytecode (the compile target tracks the Gradle daemon JVM, which can be
+        // newer than the bytecode we emit). Revisit when detekt ships V27 support.
+        tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
+            jvmTarget.set(minOf(catalog.versions.javaBytecode.get().toInt(), 26).toString())
+        }
+        tasks.withType<dev.detekt.gradle.DetektCreateBaselineTask>().configureEach {
+            jvmTarget.set(minOf(catalog.versions.javaBytecode.get().toInt(), 26).toString())
+        }
     }
 
     if (enableKover) {
