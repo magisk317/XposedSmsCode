@@ -9,6 +9,7 @@ ksp = "2.3.12"
 kotlinx-serialization = "1.11.0"
 coroutines = "1.11.0"
 kotlinx-collections-immutable = "0.5.2"
+kotlinx-datetime = "0.8.0"
 activity-compose = "1.13.0"
 adaptive = "1.3.0"
 androidx-annotation = "1.11.0"
@@ -46,14 +47,11 @@ firebase-bom = "34.19.0"
 google-services = "4.5.0"
 coil3 = "3.6.3"
 koin = "4.2.2"
-hilt = "2.59.2"
 miuix = "0.9.4"
 billing = "9.1.0"
 kermit = "2.2.0"
 timber = "5.0.1"
-gson = "2.14.0"
 jakarta-mail = "2.0.2"
-guava = "33.6.0-jre"
 conscrypt = "2.7.0"
 asm = "9.10.1"
 bouncycastle = "1.84"
@@ -69,19 +67,20 @@ play-feature-delivery = "2.1.0"
 play-services-auth = "22.0.0"
 play-services-code-scanner = "16.1.0"
 hiddenapibypass = "6.1"
-hyperisland-kit = "0.4.4"
+hyperisland-kit = "0.4.5"
 libsu = "6.0.0"
 markdown = "0.7.16"
 httpclient = "4.5.14"
 metrics-performance = "1.0.0"
-version-catalog-update = "1.1.1"
 miuix-blur = "0.9.4"
 material-kolor = "5.0.1"
 mobile-entitlement = "0.2.1"
 ndk = "30.0.16248370"
-versionCode = "130"
-versionName = "3.3.6"
+versionCode = "131"
+versionName = "3.3.7"
 
+tink = "1.23.0"
+version-catalog-update = "1.1.1"
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity-compose" }
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidx-annotation" }
@@ -139,12 +138,9 @@ detekt-rules-ktlint = { module = "dev.detekt:detekt-rules-ktlint-wrapper", versi
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-auth = { module = "com.google.firebase:firebase-auth" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
-gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 hiddenapibypass = { module = "org.lsposed.hiddenapibypass:hiddenapibypass", version.ref = "hiddenapibypass" }
 hyperisland-kit = { module = "io.github.d4viddf:hyperisland_kit", version.ref = "hyperisland-kit" }
 jakarta-mail = { module = "com.sun.mail:jakarta.mail", version.ref = "jakarta-mail" }
-jdom2 = { module = "org.jdom:jdom2", version.ref = "jdom2" }
-jose4j = { module = "org.bitbucket.b_c:jose4j", version.ref = "jose4j" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-platform" }
 jqwik = { module = "net.jqwik:jqwik", version.ref = "jqwik" }
@@ -156,6 +152,7 @@ koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 kotest-property = { module = "io.kotest:kotest-property", version.ref = "kotest" }
 kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinx-collections-immutable" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "coroutines" }
@@ -203,5 +200,4 @@ kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref =
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-version-catalog-update = { id = "nl.littlerobots.version-catalog-update", version.ref = "version-catalog-update" }
 

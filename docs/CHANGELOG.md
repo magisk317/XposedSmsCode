@@ -3,6 +3,17 @@
 本日志记录了项目重构后的主要变更。
 
 ---
+## [v3.3.7] - 2026-10-08
+- 版本：`versionCode 131` / `versionName 3.3.7`。
+- `[hook]` 重构短信拦截与分发链路。
+- `[core]` 数据持久层与业务逻辑下沉至共享模块。
+- `[ui]` 统一卡片间距并对齐新版 UI 组件。
+- `[build]` 升级 Gradle 9.8.1。
+
+> Full Changelog: https://gitlab.com/magisk3171/XposedSmsCode/-/compare/v3.3.6...v3.3.7
+
+---
+
 ## [v3.3.6] - 2026-10-01
 - 版本：`versionCode 130` / `versionName 3.3.6`。
 - `[fix]` 修复验证码提取（波斯文/阿拉伯文数字、关键词邻近，#267）。
@@ -12,7 +23,7 @@
 
 > Full Changelog: https://gitlab.com/magisk3171/XposedSmsCode/-/compare/v3.3.5...v3.3.6
 
-
+---
 
 ## [v3.3.5] - 2026-09-22
 - 版本：`versionCode 129` / `versionName 3.3.5`。
