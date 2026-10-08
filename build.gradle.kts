@@ -10,20 +10,6 @@ buildscript {
     }
     configurations.all {
         resolutionStrategy {
-            // BEGIN AUTO FORCED DEPENDENCIES (managed by workflow)
-            force("io.netty:netty-codec:5.0.0.Alpha2")
-            force("io.netty:netty-codec-http:5.0.0.Alpha2")
-            force("io.netty:netty-codec-http2:5.0.0.Alpha2")
-            force("io.netty:netty-common:5.0.0.Alpha2")
-            force("io.netty:netty-handler:5.0.0.Alpha2")
-            force("io.netty:netty-handler-proxy:5.0.0.Alpha2")
-            force("org.apache.commons:commons-lang3:3.20.0")
-            force("org.bitbucket.b_c:jose4j:0.9.6")
-            force("org.bouncycastle:bcpkix-jdk18on:1.84")
-            force("org.bouncycastle:bcprov-jdk18on:1.85")
-            force("org.jdom:jdom2:2.0.6.1")
-            // END AUTO FORCED DEPENDENCIES (managed by workflow)
-
             // Java 27 bytecode target: AGP 9.4.1 bundles ASM 9.9 (V26 max) and
             // rejects major 71. ASM 9.10.1 adds V27; force the family here because
             // this is the classpath AGP actually runs on (project-level forces do
@@ -40,11 +26,20 @@ buildscript {
 }
 
 plugins {
-    id("nl.littlerobots.version-catalog-update") version "1.1.0"
+    id("nl.littlerobots.version-catalog-update") version "1.1.1"
     id("magisk.android.application") apply false
     id("magisk.android.library") apply false
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.parcelize) apply false
+    // Pin the KMP plugin versions for the composite build: magisk-ui-kit
+    // requests org.jetbrains.kotlin.multiplatform with the shared catalog
+    // version, but build-logic pulls kotlin-gradle-plugin onto the
+    // composite classpath without a version descriptor - Gradle then
+    // refuses the versioned request ("already on the classpath with an
+    // unknown version"). Declaring both markers here, apply false, is the
+    // same pinning MiPushFramework uses.
+    alias(libs.plugins.kotlin.multiplatform) apply false
+    alias(libs.plugins.android.kotlin.multiplatform.library) apply false
     id("magisk.android.compose") apply false
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.detekt) apply false
@@ -107,21 +102,7 @@ subprojects {
 allprojects {
     configurations.configureEach {
         resolutionStrategy {
-            // BEGIN AUTO FORCED DEPENDENCIES (managed by workflow)
-            force("io.netty:netty-codec:5.0.0.Alpha2")
-            force("io.netty:netty-codec-http:5.0.0.Alpha2")
-            force("io.netty:netty-codec-http2:5.0.0.Alpha2")
-            force("io.netty:netty-common:5.0.0.Alpha2")
-            force("io.netty:netty-handler:5.0.0.Alpha2")
-            force("io.netty:netty-handler-proxy:5.0.0.Alpha2")
-            force("org.apache.commons:commons-lang3:3.20.0")
-            force("org.bitbucket.b_c:jose4j:0.9.6")
-            force("org.bouncycastle:bcpkix-jdk18on:1.84")
-            force("org.bouncycastle:bcprov-jdk18on:1.85")
-            force("org.jdom:jdom2:2.0.6.1")
-            // END AUTO FORCED DEPENDENCIES (managed by workflow)
-
-            // Custom migration overrides for Java 26 compatibility
+            // Custom migration overrides for Java 27 compatibility
             force(catalog.apache.httpclient)
             force("org.ow2.asm:asm:9.10.1")
             force("org.ow2.asm:asm-commons:9.10.1")

@@ -18,8 +18,12 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         gradlePluginPortal()
-        maven("https://jitpack.io")
-        maven("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+        maven("https://jitpack.io") {
+            name = "JitPack"
+            content {
+                includeGroupByRegex("com\\.github\\..*")
+            }
+        }
         maven {
             name = "MagiskMobilePrivate"
             url = uri(
@@ -73,6 +77,7 @@ include(
     ":smscode-core:contract",
     ":smscode-core:rule",
     ":smscode-core:verification",
+    ":smscode-core:db",
     ":magisk-ui-kit",
     ":magisk-ui-kit:billing",
     ":magisk-xposed-kit",
@@ -87,6 +92,7 @@ project(":smscode-core:runtime").projectDir = file("smscode/core/runtime")
 project(":smscode-core:contract").projectDir = file("smscode/core/contract")
 project(":smscode-core:rule").projectDir = file("smscode/core/rule")
 project(":smscode-core:verification").projectDir = file("smscode/core/verification")
+project(":smscode-core:db").projectDir = file("smscode/core/db")
 project(":smscode-core").projectDir = file("smscode/core")
 project(":magisk-xposed-kit:logging").projectDir = file("magisk-xposed-kit/logging")
 project(":magisk-xposed-kit:diagnostics").projectDir = file("magisk-xposed-kit/diagnostics")

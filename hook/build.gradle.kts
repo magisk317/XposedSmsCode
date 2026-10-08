@@ -7,10 +7,10 @@ val appVersionName = libs.versions.versionName.get()
 val appVersionCode = libs.versions.versionCode.get().toInt()
 val gitCommitHash = providers.exec {
     commandLine("git", "-C", projectDir, "rev-parse", "--short", "HEAD")
-}.standardOutput.asText.get().trim()
+}.standardOutput.asText.get().trim().ifEmpty { "unknown" }
 
 android {
-    namespace = "com.github.magisk317.smscode.hook"
+    namespace = "io.github.magisk317.smscode.hook"
     buildFeatures.buildConfig = true
 
     defaultConfig {
@@ -25,6 +25,13 @@ android {
         buildConfigField("int", "MODULE_VERSION", "$appVersionCode")
         buildConfigField("boolean", "ALLOW_CONFLICT_BYPASS", "${findProperty("allowConflictBypass") ?: false}")
     }
+    // Sources live under src/<name>/kotlin. AGP compiles src/<name>/java by default, so
+    // each source set is pointed at the kotlin directory explicitly.
+    sourceSets {
+        listOf("main", "test", "github", "fdroid", "play", "nonPlayBilling").forEach { name ->
+            findByName(name)?.kotlin?.directories?.add("src/$name/kotlin")
+        }
+    }
 }
 
 dependencies {
@@ -34,6 +41,7 @@ dependencies {
     implementation(project(":smscode-core:rule"))
     implementation(project(":smscode-core:contract"))
     implementation(project(":smscode-core:runtime"))
+    implementation(project(":smscode-core:db"))
     implementation(project(":smscode-core:verification"))
     implementation(project(":magisk-xposed-kit"))
     implementation(libs.androidx.core.ktx)

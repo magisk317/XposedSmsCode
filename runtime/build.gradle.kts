@@ -15,7 +15,7 @@ fun buildConfigString(value: String): String =
     "\"${value.replace("\\", "\\\\").replace("\"", "\\\"")}\""
 
 android {
-    namespace = "com.github.magisk317.smscode.runtime"
+    namespace = "io.github.magisk317.smscode.runtime"
 
     buildFeatures {
         buildConfig = true
@@ -52,20 +52,28 @@ android {
             buildConfigField("boolean", "LOG_TO_XPOSED", "true")
         }
     }
+    // Sources live under src/<name>/kotlin. AGP compiles src/<name>/java by default, so
+    // each source set is pointed at the kotlin directory explicitly.
+    sourceSets {
+        listOf("main", "test", "github", "fdroid", "play", "nonPlayBilling").forEach { name ->
+            findByName(name)?.kotlin?.directories?.add("src/$name/kotlin")
+        }
+    }
 }
 
 dependencies {
     implementation(libs.mobile.entitlement.android)
     implementation(project(":magisk-xposed-kit"))
     implementation(project(":smscode-core:contract"))
+    implementation(project(":smscode-core:verification"))
     implementation(project(":smscode-core:hook"))
     implementation(project(":smscode-core:domain"))
     implementation(project(":smscode-core:rule"))
     implementation(project(":smscode-core:runtime"))
+    implementation(project(":smscode-core:db"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.datastore.preferences)
-    implementation(libs.gson)
     // Networking (needed by GithubUpdateChecker)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging.interceptor)
@@ -80,7 +88,7 @@ val verifyNoComposeUiLeak = tasks.register("verifyNoComposeUiLeak") {
     group = "verification"
     description = "Ensure the runtime module does not pick up Compose UI dependencies."
 
-    val sourceRoot = layout.projectDirectory.dir("src/main/java")
+    val sourceRoot = layout.projectDirectory.dir("src/main/kotlin")
     val projectRoot = layout.projectDirectory.asFile
     val bannedRegexes = listOf(
         Regex("""^\s*import\s+androidx\.compose\."""),

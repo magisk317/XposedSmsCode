@@ -3,6 +3,7 @@ plugins {
     id("smscode.android.common")
     id("magisk.app.signing")
     id("magisk.app.packaging")
+    id("magisk.mobile.gate")
     id(libs.plugins.kotlin.parcelize.get().pluginId)
     id("magisk.android.room")
     id("magisk.android.compose")
@@ -52,7 +53,7 @@ android {
 
     val gitCommitHash = providers.exec {
         commandLine("git", "-C", projectDir, "rev-parse", "--short", "HEAD")
-    }.standardOutput.asText.get().trim()
+    }.standardOutput.asText.get().trim().ifEmpty { "unknown" }
 
     defaultConfig {
         applicationId = "com.github.tianma8023.xposed.smscode"
@@ -75,9 +76,18 @@ android {
         }
         getByName("github") {
             buildConfigField("String", "MOBILE_ENTITLEMENT_CHANNEL", "\"sideload\"")
+            buildConfigField("boolean", "ENABLE_MOBILE_ENTITLEMENT", "true")
         }
         getByName("fdroid") {
             buildConfigField("String", "MOBILE_ENTITLEMENT_CHANNEL", "\"sideload\"")
+            buildConfigField("boolean", "ENABLE_MOBILE_ENTITLEMENT", "true")
+    // Sources live under src/<name>/kotlin. AGP compiles src/<name>/java by default, so
+    // each source set is pointed at the kotlin directory explicitly.
+    sourceSets {
+        listOf("main", "test", "github", "fdroid", "play", "nonPlayBilling").forEach { name ->
+            findByName(name)?.kotlin?.directories?.add("src/$name/kotlin")
+        }
+    }
         }
     }
 
@@ -127,7 +137,6 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging.interceptor)
     implementation(libs.kotlinx.serialization.json)
-    implementation(libs.gson)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.material.icons.core)

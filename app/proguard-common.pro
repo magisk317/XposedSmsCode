@@ -7,7 +7,7 @@
 # Loaded reflectively by LSPosed via META-INF/xposed/java_init.list.
 # Must stay alive under R8; app process code does not reference these classes.
 # ==========================
--keep class com.github.magisk317.smscode.xp.** { *; }
+-keep class io.github.magisk317.smscode.xp.** { *; }
 -keep class io.github.magisk317.xposed.** { *; }
 -keep class io.github.magisk317.smscode.xposed.** { *; }
 
@@ -70,7 +70,7 @@
 -keep class * extends androidx.room.RoomDatabase
 -keep @androidx.room.Entity class * { *; }
 -keep @androidx.room.Dao interface * { *; }
--keep class com.github.magisk317.smscode.data.db.AppDatabase_Impl {
+-keep class io.github.magisk317.smscode.data.db.AppDatabase_Impl {
     public <init>();
 }
 # Room end
