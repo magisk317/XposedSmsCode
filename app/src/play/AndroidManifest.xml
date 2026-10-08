@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Required for Google Play Billing donations in the Play distribution. -->
     <uses-permission android:name="com.android.vending.BILLING" />
@@ -11,6 +12,11 @@
         <package android:name="com.android.vending" />
     </queries>
 
-    <application android:networkSecurityConfig="@xml/network_security_config" />
+    <application android:networkSecurityConfig="@xml/network_security_config">
+        <!-- Play distribution ships without the activation gate. -->
+        <activity
+            android:name="io.github.magisk317.smscode.entitlement.MobileEntitlementActivity"
+            tools:node="remove" />
+    </application>
 
 </manifest>
