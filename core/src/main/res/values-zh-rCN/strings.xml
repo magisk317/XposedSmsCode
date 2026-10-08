@@ -203,8 +203,6 @@
     <string name="pref_share_log_summary">保存日志包用于调试</string>
     <string name="pref_verbose_log_mode_title">详细日志</string>
     <string name="pref_verbose_log_mode_summary">打印详细运行日志</string>
-    <string name="pref_enable_analytics_title">统计数据</string>
-    <string name="pref_enable_analytics_summary">允许开发者匿名分析通道使用情况、成功率、崩溃等技术细节</string>
     <string name="pref_runtime_log_retention_days_title">日志保留天数</string>
     <plurals name="pref_runtime_log_retention_days_summary">
         <item quantity="other">按天轮转，保留最近 %1$d 天日志</item>
@@ -496,9 +494,13 @@
     <string name="mobile_entitlement_paused">已暂停</string>
     <string name="mobile_entitlement_expires">到期时间：%1$s</string>
     <string name="mobile_entitlement_issued_at">激活时间：%1$s</string>
+    <string name="mobile_entitlement_last_confirmed_at">最近确认时间：%1$s</string>
     <string name="mobile_entitlement_device_id">激活 ID：%1$s</string>
     <string name="mobile_entitlement_copy">复制</string>
     <string name="mobile_entitlement_copied">已复制到剪贴板</string>
+    <string name="mobile_entitlement_copy_link">复制激活链接</string>
+    <string name="mobile_entitlement_link_copied">跳转链接复制成功</string>
+    <string name="mobile_entitlement_jump_failed_copied">无法打开 Telegram，已复制跳转链接，请手动发送给机器人</string>
     <string name="mobile_entitlement_renew_due">可以更新激活状态。</string>
     <string name="mobile_entitlement_refresh">刷新状态</string>
     <string name="mobile_entitlement_activate_telegram">跳转 Telegram</string>

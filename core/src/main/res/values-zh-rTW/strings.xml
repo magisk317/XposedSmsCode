@@ -200,8 +200,6 @@
     <string name="pref_share_log_summary">儲存日誌包用於除錯</string>
     <string name="pref_verbose_log_mode_title">詳細日誌</string>
     <string name="pref_verbose_log_mode_summary">列印詳細運行日誌</string>
-    <string name="pref_enable_analytics_title">統計資料</string>
-    <string name="pref_enable_analytics_summary">允許開發者匿名分析通道使用情況、成功率、崩潰等技術細節</string>
     <string name="pref_runtime_log_retention_days_title">日誌保留天數</string>
     <plurals name="pref_runtime_log_retention_days_summary">
         <item quantity="other">按天輪轉，保留最近 %1$d 天日誌</item>
@@ -492,6 +490,9 @@
     <string name="mobile_entitlement_renew_due">可以更新啟用狀態。</string>
     <string name="mobile_entitlement_refresh">重新整理狀態</string>
     <string name="mobile_entitlement_activate_telegram">跳轉 Telegram</string>
+    <string name="mobile_entitlement_copy_link">複製啟用連結</string>
+    <string name="mobile_entitlement_link_copied">跳轉連結複製成功</string>
+    <string name="mobile_entitlement_jump_failed_copied">無法開啟 Telegram，已複製跳轉連結，請手動傳送給機器人</string>
     <string name="mobile_entitlement_activate_google">透過 Google 啟用</string>
     <string name="mobile_entitlement_telegram_required">透過 Google 啟用還需要加入官方 Telegram 頻道。</string>
     <string name="mobile_entitlement_open_telegram">開啟 Telegram</string>

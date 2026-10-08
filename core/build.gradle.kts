@@ -11,11 +11,11 @@ val allowConflictBypass = findProperty("allowConflictBypass")
     ?: false
 
 android {
-    namespace = "com.github.magisk317.smscode.core"
+    namespace = "io.github.magisk317.smscode.core"
 
     val gitCommitHash = providers.exec {
         commandLine("git", "-C", projectDir, "rev-parse", "--short", "HEAD")
-    }.standardOutput.asText.get().trim()
+    }.standardOutput.asText.get().trim().ifEmpty { "unknown" }
 
     defaultConfig {
         buildConfigField("int", "VERSION_CODE", libs.versions.versionCode.get())
@@ -35,8 +35,12 @@ android {
     }
 
     sourceSets {
+        listOf("main", "test", "play").forEach { name ->
+            getByName(name).kotlin.directories.add("src/$name/kotlin")
+        }
         listOf("github", "fdroid").forEach { flavor ->
-            getByName(flavor).kotlin.directories.add("src/nonPlayBilling/java")
+            getByName(flavor).kotlin.directories.add("src/$flavor/kotlin")
+            getByName(flavor).kotlin.directories.add("src/nonPlayBilling/kotlin")
         }
     }
 }
@@ -50,6 +54,7 @@ dependencies {
     implementation(project(":smscode-core:domain"))
     implementation(project(":smscode-core:rule"))
     implementation(project(":smscode-core:runtime"))
+    api(project(":smscode-core:db"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.material.icons.core)
@@ -72,8 +77,8 @@ val verifyNoRuntimeStorageImplLeak = tasks.register("verifyNoRuntimeStorageImplL
     group = "verification"
     description = "Ensure the core module does not directly depend on runtime storage/update implementation types."
 
-    val sourceRoot = layout.projectDirectory.dir("src/main/java")
-    val recordSourceRoot = layout.projectDirectory.dir("src/main/java/com/github/magisk317/smscode/ui/record")
+    val sourceRoot = layout.projectDirectory.dir("src/main/kotlin")
+    val recordSourceRoot = layout.projectDirectory.dir("src/main/kotlin/io/github/magisk317/smscode/ui/record")
     val projectRoot = layout.projectDirectory.asFile
     val bannedRegexes = listOf(
         Regex("""^\s*import\s+com\.github\.magisk317\.smscode\.runtime\.Runtime\w*Facade\b"""),

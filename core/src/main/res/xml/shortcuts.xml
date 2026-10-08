@@ -7,7 +7,7 @@
         android:shortcutShortLabel="@string/smscode_records">
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetClass="com.github.magisk317.smscode.ui.home.LauncherActivity"
+            android:targetClass="io.github.magisk317.smscode.ui.home.LauncherActivity"
             android:targetPackage="com.github.tianma8023.xposed.smscode">
             <extra android:name="extra_action" android:value="smscode_records"/>
         </intent>
@@ -22,7 +22,7 @@
         android:shortcutShortLabel="@string/tab_settings">
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetClass="com.github.magisk317.smscode.ui.home.LauncherActivity"
+            android:targetClass="io.github.magisk317.smscode.ui.home.LauncherActivity"
             android:targetPackage="com.github.tianma8023.xposed.smscode">
             <extra android:name="extra_action" android:value="smscode_settings"/>
         </intent>
