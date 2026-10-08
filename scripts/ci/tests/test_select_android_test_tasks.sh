@@ -15,9 +15,10 @@ bash "$selector" /dev/null "$tmp_dir/rootBuild" > "$tmp_dir/out"; assert_contain
 printf 'impact\ndocs/ci.md\n' > "$tmp_dir/docs"
 bash "$selector" /dev/null "$tmp_dir/docs" > "$tmp_dir/out"; [[ ! -s "$tmp_dir/out" ]] || exit 1
 printf 'full\n' > "$tmp_dir/full"
-bash "$selector" /dev/null "$tmp_dir/full" > "$tmp_dir/out"; assert_contains ':runtime:check' "$tmp_dir/out"; assert_contains ':magisk-ui-kit:testDebugUnitTest' "$tmp_dir/out"
+bash "$selector" /dev/null "$tmp_dir/full" > "$tmp_dir/out"; assert_contains ':runtime:check' "$tmp_dir/out"; assert_contains ':magisk-ui-kit:testAndroidHostTest' "$tmp_dir/out"
 printf 'impact\nmagisk-ui-kit/src/main.kt\n' > "$tmp_dir/kit"
 bash "$selector" /dev/null "$tmp_dir/kit" > "$tmp_dir/out"
-assert_contains ':magisk-ui-kit:testDebugUnitTest' "$tmp_dir/out"
+assert_contains ':magisk-ui-kit:testAndroidHostTest' "$tmp_dir/out"
+assert_contains ':magisk-ui-kit:jvmTest' "$tmp_dir/out"
 assert_contains ':magisk-ui-kit:billing:testDebugUnitTest' "$tmp_dir/out"
 echo 'XposedSmsCode selector tests passed'

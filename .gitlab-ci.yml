@@ -131,7 +131,13 @@ android:test:
       when: never
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH'
     - when: never
-  needs: []
+  # Publish first: wait for the Play beta publish (optional, so this
+  # stage still runs when the publish job is absent) instead of
+  # consuming the release runner in parallel.
+  needs:
+    - job: android:ci:play-beta
+      artifacts: false
+      optional: true
   script:
     - |
       set -euo pipefail
@@ -192,7 +198,13 @@ android:detekt:
   tags:
     - $XPOSED_GITLAB_LINUX_ARM64_RUNNER_TAG
   allow_failure: true
-  needs: []
+  # Publish first: wait for the Play beta publish (optional, so this
+  # stage still runs when the publish job is absent) instead of
+  # consuming the release runner in parallel.
+  needs:
+    - job: android:ci:play-beta
+      artifacts: false
+      optional: true
   artifacts:
     name: "XposedSmsCode-detekt-$CI_COMMIT_REF_SLUG"
     when: always
@@ -292,6 +304,11 @@ android:ci:play-beta-bundle:
   stage: release-build
   tags:
     - $XPOSED_GITLAB_LINUX_ARM64_RUNNER_TAG
+  # The release build is self-contained (keystore and google-services.json
+  # come from CI variables, assets from the repository), so the publish chain
+  # must not wait for the build/package stages: Play publishing keeps
+  # priority over the quality stage.
+  needs: []
   rules:
     - if: '$CI_COMMIT_BRANCH == "beta" && $CI_PIPELINE_SOURCE == "push" && $MAGISK_ANDROID_RELEASE_PUBLISH_PLAY == "true" && $RELEASE_KEYSTORE != "" && $STORE_PASSWORD != "" && $KEY_ALIAS != "" && $KEY_PASSWORD != "" && $ANDROID_PUBLISHER_CREDENTIALS != ""'
     - if: '$CI_COMMIT_BRANCH == "beta" && $CI_PIPELINE_SOURCE == "schedule" && $CI_COMMIT_AUTHOR =~ /Renovate317@users.noreply/ && $MAGISK_ANDROID_RELEASE_PUBLISH_PLAY == "true" && $RELEASE_KEYSTORE != "" && $STORE_PASSWORD != "" && $KEY_ALIAS != "" && $KEY_PASSWORD != "" && $ANDROID_PUBLISHER_CREDENTIALS != ""'
@@ -331,7 +348,7 @@ android:ci:play-beta:
     - if: '$CI_COMMIT_BRANCH == "beta" && $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_AUTHOR =~ /Renovate317@users.noreply/ && $MAGISK_ANDROID_RELEASE_PUBLISH_PLAY == "true" && $ANDROID_PUBLISHER_CREDENTIALS != ""'
       when: on_success
     - if: '$CI_COMMIT_BRANCH == "beta" && $CI_PIPELINE_SOURCE == "push" && $MAGISK_ANDROID_RELEASE_PUBLISH_PLAY == "true" && $ANDROID_PUBLISHER_CREDENTIALS != ""'
-      when: manual
+      when: on_success
       allow_failure: true
     - if: '$CI_COMMIT_BRANCH == "beta" && $CI_PIPELINE_SOURCE == "schedule" && $CI_COMMIT_AUTHOR =~ /Renovate317@users.noreply/ && $MAGISK_ANDROID_RELEASE_PUBLISH_PLAY == "true" && $ANDROID_PUBLISHER_CREDENTIALS != ""'
       when: on_success
@@ -377,6 +394,9 @@ telegram:release:
   variables:
     MAGISK_TELEGRAM_PROJECT_TAG: "📌 #XposedSmsCode"
     MAGISK_TELEGRAM_PROJECT_NAME: "XposedSmsCode"
+    # Release notifications stay in the legacy room/topic with the rolling
+    # pin; the project-level TG_CHAT_ID only retargets telegram:ci.
+    TG_CHAT_ID: "-1003532345372"
   needs:
     - job: android:release:github-apk
       artifacts: true
