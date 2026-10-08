@@ -52,6 +52,7 @@ import io.github.magisk317.uikit.surface.AppCard
 import io.github.magisk317.uikit.surface.AppCircularProgressIndicator
 import io.github.magisk317.uikit.surface.AppIcon
 import io.github.magisk317.uikit.surface.AppIconButton
+import io.github.magisk317.uikit.surface.AppOutlinedIconButton
 import io.github.magisk317.uikit.surface.AppPrimaryButton
 import io.github.magisk317.uikit.surface.AppScaffold
 import io.github.magisk317.uikit.surface.AppSecondaryButton
@@ -389,28 +390,16 @@ private fun MobileEntitlementScreen(
                         }
                         AppText(text = stringResource(R.string.mobile_entitlement_activate_telegram))
                     }
-                    AppIconButton(
+                    AppOutlinedIconButton(
                         onClick = ::copyBotLink,
                         enabled = busyAction == null && pendingBotUrl != null,
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .border(
-                                width = 1.dp,
-                                color = appColor(AppColorRole.Outline),
-                                shape = CircleShape,
-                            )
-                            .background(
-                                color = appColor(AppColorRole.SurfaceContainer),
-                                shape = CircleShape,
-                            ),
+                        modifier = Modifier.size(40.dp),
                     ) {
                         AppIcon(
                             imageVector = Icons.Default.ContentCopy,
                             contentDescription = stringResource(
                                 R.string.mobile_entitlement_copy_link,
                             ),
-                            tint = appColor(AppColorRole.OnSurface),
                         )
                     }
                 }
