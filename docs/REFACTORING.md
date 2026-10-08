@@ -25,7 +25,7 @@
 - 主项目专属 Xposed Android 层。
 - 承载 libxposed entry、hook 宿主适配、`XposedRuntimeInstaller`、`CorePrefsBridge` 和项目专属 hooks/actions。
 - 可依赖 `runtime` gateway/实现与共享 `smscode-core:hook`，但不得反向依赖 `app` 或 UI `core`。
-- 反射入口类名保持 `com.github.magisk317.smscode.xp.LibXposedEntry`，由 app 中的 metadata 引用并随最终 APK 合并。
+- 反射入口类名保持 `io.github.magisk317.smscode.xp.LibXposedEntry`，由 app 中的 metadata 引用并随最终 APK 合并。
 
 ### `runtime`
 
@@ -65,7 +65,7 @@
 - `core` 是 UI/展示层，不得被当作底层 contract 模块继续塞共享业务逻辑。
 - `core` 不得直接引用 runtime 的 facade、DB/update/store 实现类；实现绑定只能在 `app` composition root。
 - `runtime` 不得引入 Compose/UI API。
-- `hook` 不得依赖 `app`/`core`；`app` 不得承载 `com.github.magisk317.smscode.xp` 生产源码。
+- `hook` 不得依赖 `app`/`core`；`app` 不得承载 `io.github.magisk317.smscode.xp` 生产源码。
 - 可复用短信策略应优先下沉到 `smscode-core:verification` 或 `smscode-core:hook`，主项目 `hook` 只保留项目专属 Android/Xposed 宿主适配。
 
 ## 构建治理
@@ -87,7 +87,7 @@
   并禁止 `smscode-core:*` 依赖主项目或 `magisk-ui-kit`。
 - `runtime:verifyNoComposeUiLeak`: 禁止 runtime 源码引入 Compose / UI API。
 - `core:verifyNoRuntimeStorageImplLeak`: 禁止 core 直接绑定任意 `Runtime*Facade`，并禁止存储、更新和 feature internals；UI 只能消费 runtime gateway/model。
-- `app:verifyNoLocalVerificationEngine`: 禁止 app 重新引入共享验证码引擎基础设施，也禁止 `app` 拥有 `com.github.magisk317.smscode.xp` 生产源码；Xposed entry/runtime 必须位于 `hook`。
+- `app:verifyNoLocalVerificationEngine`: 禁止 app 重新引入共享验证码引擎基础设施，也禁止 `app` 拥有 `io.github.magisk317.smscode.xp` 生产源码；Xposed entry/runtime 必须位于 `hook`。
 - `scripts/checks/verify_shared_submodule_compat.sh`: 验证根边界、`smscode-core` domain 单测、
   verification detekt、hook/runtime lint、`core` 和 `app:check` 的兼容链路。
 
