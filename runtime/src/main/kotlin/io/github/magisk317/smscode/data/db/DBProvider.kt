@@ -1,4 +1,4 @@
-package com.github.magisk317.smscode.data.db
+package io.github.magisk317.smscode.data.db
 
 import android.content.ContentProvider
 import android.content.ContentValues
@@ -11,14 +11,16 @@ import android.os.Binder
 import android.os.Bundle
 import androidx.core.net.toUri
 import kotlinx.coroutines.runBlocking
-import com.github.magisk317.smscode.common.constant.PrefConst
+import io.github.magisk317.smscode.common.constant.PrefConst
+import io.github.magisk317.smscode.runtime.common.record.CodeRecordChannel
+import io.github.magisk317.smscode.runtime.common.record.CodeRecordTrimPolicy
 import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
-import com.github.magisk317.smscode.common.utils.ProviderCallerGuard
-import com.github.magisk317.smscode.common.utils.ProviderIpcTokenGate
-import com.github.magisk317.smscode.data.db.entity.AppInfo
-import com.github.magisk317.smscode.data.db.entity.SmsCodeRule
-import com.github.magisk317.smscode.data.db.entity.SmsMsg
-import com.github.magisk317.smscode.runtime.bridge.HookRuntimeGateClaimResult
+import io.github.magisk317.smscode.common.utils.ProviderCallerGuard
+import io.github.magisk317.smscode.common.utils.ProviderIpcTokenGate
+import io.github.magisk317.smscode.db.entity.AppInfo
+import io.github.magisk317.smscode.db.entity.SmsCodeRule
+import io.github.magisk317.smscode.db.entity.SmsMsg
+import io.github.magisk317.smscode.runtime.bridge.HookRuntimeGateClaimResult
 import io.github.magisk317.smscode.runtime.common.diagnostics.ActivationDiagnosticsStore
 import io.github.magisk317.smscode.runtime.contract.ipc.RuntimeStateProviderContract
 import io.github.magisk317.smscode.runtime.common.utils.SharedRuntimeGate
@@ -503,7 +505,7 @@ class DBProvider : ContentProvider() {
     /**
      * Inserts an auto-input attempt row on behalf of a hook process that cannot
      * open the module's private Room file across UIDs. Field names mirror the
-     * [com.github.magisk317.smscode.data.db.entity.AutoInputEvent] columns.
+     * [io.github.magisk317.smscode.db.entity.AutoInputEvent] columns.
      *
      * `record_id` is optional: the hook side has no provider endpoint to resolve
      * a fingerprint into a record id (see AutoInputAction), so it is typically
@@ -715,30 +717,36 @@ class DBProvider : ContentProvider() {
     }
 
     private fun trimOldRecordsIfNeeded(ctx: Context, smsMsg: SmsMsg) {
-        val isCodeSms = !smsMsg.smsCode.isNullOrBlank()
-        val limitKey = when (smsMsg.msgType) {
-            SmsMsg.MSG_TYPE_APP_NOTIFY -> PrefConst.KEY_HISTORY_LIMIT_APP_NOTIFY
-            SmsMsg.MSG_TYPE_CALL_NOTIFY -> PrefConst.KEY_HISTORY_LIMIT_CALL_NOTIFY
-            SmsMsg.MSG_TYPE_SMS -> if (isCodeSms) PrefConst.KEY_HISTORY_LIMIT_CODE else PrefConst.KEY_HISTORY_LIMIT_PLAIN_SMS
-            else -> PrefConst.KEY_HISTORY_LIMIT_CODE
-        }
+        val channel = channelOf(smsMsg)
         val limit = runBlocking {
-            AppPreferencesDataStore.getString(ctx, limitKey, "0")
-        }.toIntOrNull() ?: 0
-        if (limit <= 0) return
-
-        val all = db.queryAllSmsMsg()
-        val matching = all.asSequence()
-            .filter { record ->
-                record.msgType == smsMsg.msgType &&
-                    (smsMsg.msgType != SmsMsg.MSG_TYPE_SMS || (!record.smsCode.isNullOrBlank()) == isCodeSms)
-            }
-            .sortedBy { it.date }
-            .toList()
-        if (matching.size < limit) return
-        val deleteCount = matching.size - limit + 1
-        db.removeSmsMsgList(matching.take(deleteCount))
+            CodeRecordTrimPolicy.resolveLimit(
+                readString = { key, default -> AppPreferencesDataStore.getString(ctx, key, default) },
+                limitKey = CodeRecordTrimPolicy.limitKeyFor(channel, limitKeys),
+            )
+        }
+        val outdated = CodeRecordTrimPolicy.selectOutdated(
+            records = db.queryAllSmsMsg(),
+            incomingChannel = channel,
+            limit = limit,
+            channelOf = ::channelOf,
+            dateOf = { it.date },
+        )
+        if (outdated.isNotEmpty()) db.removeSmsMsgList(outdated)
     }
+
+    private fun channelOf(record: SmsMsg): CodeRecordChannel = when (record.msgType) {
+        SmsMsg.MSG_TYPE_APP_NOTIFY -> CodeRecordChannel.APP_NOTIFY
+        SmsMsg.MSG_TYPE_CALL_NOTIFY -> CodeRecordChannel.CALL_NOTIFY
+        SmsMsg.MSG_TYPE_SMS -> if (!record.smsCode.isNullOrBlank()) CodeRecordChannel.SMS_CODE else CodeRecordChannel.SMS_PLAIN
+        else -> CodeRecordChannel.SMS_CODE
+    }
+
+    private val limitKeys = CodeRecordTrimPolicy.LimitKeys(
+        appNotify = PrefConst.KEY_HISTORY_LIMIT_APP_NOTIFY,
+        callNotify = PrefConst.KEY_HISTORY_LIMIT_CALL_NOTIFY,
+        codeSms = PrefConst.KEY_HISTORY_LIMIT_CODE,
+        plainSms = PrefConst.KEY_HISTORY_LIMIT_PLAIN_SMS,
+    )
 
     companion object {
         private const val PATH_SMS_MSG = "sms_msg"
@@ -865,7 +873,7 @@ class DBProvider : ContentProvider() {
         /**
          * Notify-only signal URI for hook-side prefs cache invalidation.
          * Not backed by a table: writers call [notifyPrefsCacheChanged]; the hook process
-         * registers a ContentObserver and clears [com.github.magisk317.smscode.common.utils.HookPrefsReader].
+         * registers a ContentObserver and clears [io.github.magisk317.smscode.common.utils.HookPrefsReader].
          */
         fun prefsCacheContentUri(context: Context): Uri =
             prefsCacheContentUriString(context.packageName).toUri()

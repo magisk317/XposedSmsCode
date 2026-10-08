@@ -1,15 +1,15 @@
-package com.github.magisk317.smscode.data.db
+package io.github.magisk317.smscode.data.db
 
 import android.content.Context
 import androidx.room.withTransaction
-import com.github.magisk317.smscode.data.db.dao.AppInfoDao
-import com.github.magisk317.smscode.data.db.dao.AutoInputEventDao
-import com.github.magisk317.smscode.data.db.dao.SmsCodeRuleDao
-import com.github.magisk317.smscode.data.db.dao.SmsMsgDao
-import com.github.magisk317.smscode.data.db.entity.AppInfo
-import com.github.magisk317.smscode.data.db.entity.AutoInputEvent
-import com.github.magisk317.smscode.data.db.entity.SmsCodeRule
-import com.github.magisk317.smscode.data.db.entity.SmsMsg
+import io.github.magisk317.smscode.db.dao.AppInfoDao
+import io.github.magisk317.smscode.db.dao.AutoInputEventDao
+import io.github.magisk317.smscode.db.dao.SmsCodeRuleDao
+import io.github.magisk317.smscode.db.dao.SmsMsgDao
+import io.github.magisk317.smscode.db.entity.AppInfo
+import io.github.magisk317.smscode.db.entity.AutoInputEvent
+import io.github.magisk317.smscode.db.entity.SmsCodeRule
+import io.github.magisk317.smscode.db.entity.SmsMsg
 import io.github.magisk317.smscode.rule.utils.CodeRecordSimilarityUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow

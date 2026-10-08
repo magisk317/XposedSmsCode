@@ -1,4 +1,4 @@
-package com.github.magisk317.smscode.data.db
+package io.github.magisk317.smscode.data.db
 
 import android.content.Context
 import android.database.sqlite.SQLiteException
@@ -6,24 +6,24 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.github.magisk317.smscode.forwarder.entity.ForwardFilterRule
-import com.github.magisk317.smscode.forwarder.database.dao.RuleDao
-import com.github.magisk317.smscode.forwarder.database.dao.SenderDao
-import com.github.magisk317.smscode.forwarder.database.ext.ConvertersDate
-import com.github.magisk317.smscode.forwarder.database.ext.ConvertersSenderList
-import com.github.magisk317.smscode.forwarder.entity.Rule
-import com.github.magisk317.smscode.forwarder.entity.Sender
-import com.github.magisk317.smscode.data.db.dao.AppInfoDao
-import com.github.magisk317.smscode.data.db.dao.AutoInputEventDao
-import com.github.magisk317.smscode.data.db.dao.ForwardFilterRuleDao
-import com.github.magisk317.smscode.data.db.dao.NotifyRouteRuleDao
-import com.github.magisk317.smscode.data.db.dao.SmsCodeRuleDao
-import com.github.magisk317.smscode.data.db.dao.SmsMsgDao
-import com.github.magisk317.smscode.data.db.entity.AppInfo
-import com.github.magisk317.smscode.data.db.entity.AutoInputEvent
-import com.github.magisk317.smscode.data.db.entity.NotifyRouteRule
-import com.github.magisk317.smscode.data.db.entity.SmsCodeRule
-import com.github.magisk317.smscode.data.db.entity.SmsMsg
+import io.github.magisk317.smscode.db.entity.ForwardFilterRule
+import io.github.magisk317.smscode.db.dao.RuleDao
+import io.github.magisk317.smscode.db.dao.SenderDao
+import io.github.magisk317.smscode.db.ext.ConvertersDate
+import io.github.magisk317.smscode.db.ext.ConvertersSenderList
+import io.github.magisk317.smscode.db.entity.Rule
+import io.github.magisk317.smscode.db.entity.Sender
+import io.github.magisk317.smscode.db.dao.AppInfoDao
+import io.github.magisk317.smscode.db.dao.AutoInputEventDao
+import io.github.magisk317.smscode.db.dao.ForwardFilterRuleDao
+import io.github.magisk317.smscode.db.dao.NotifyRouteRuleDao
+import io.github.magisk317.smscode.db.dao.SmsCodeRuleDao
+import io.github.magisk317.smscode.db.dao.SmsMsgDao
+import io.github.magisk317.smscode.db.entity.AppInfo
+import io.github.magisk317.smscode.db.entity.AutoInputEvent
+import io.github.magisk317.smscode.db.entity.NotifyRouteRule
+import io.github.magisk317.smscode.db.entity.SmsCodeRule
+import io.github.magisk317.smscode.db.entity.SmsMsg
 import io.github.magisk317.smscode.xposed.utils.XLog
 
 @Database(entities = [
@@ -35,7 +35,7 @@ import io.github.magisk317.smscode.xposed.utils.XLog
     ForwardFilterRule::class,
     Sender::class,
     Rule::class
-], version = 21, exportSchema = false)
+], version = 22, exportSchema = false)
 @TypeConverters(ConvertersDate::class, ConvertersSenderList::class)
 abstract class AppDatabase : RoomDatabase() {
 
@@ -415,6 +415,31 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_21_22 = object : androidx.room.migration.Migration(21, 22) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                execSqlSafely(
+                    db = db,
+                    sql = "ALTER TABLE sms_msg ADD COLUMN contact_name TEXT NOT NULL DEFAULT ''",
+                    migration = "21_22",
+                )
+                execSqlSafely(
+                    db = db,
+                    sql = "ALTER TABLE sms_msg ADD COLUMN phone_area TEXT NOT NULL DEFAULT ''",
+                    migration = "21_22",
+                )
+                execSqlSafely(
+                    db = db,
+                    sql = "ALTER TABLE sms_msg ADD COLUMN session_key TEXT NOT NULL DEFAULT ''",
+                    migration = "21_22",
+                )
+                execSqlSafely(
+                    db = db,
+                    sql = "ALTER TABLE app_info ADD COLUMN forwarding_configured INTEGER NOT NULL DEFAULT 0",
+                    migration = "21_22",
+                )
+            }
+        }
+
         private fun execSqlSafely(
             db: androidx.sqlite.db.SupportSQLiteDatabase,
             sql: String,
@@ -455,6 +480,7 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_18_19,
                     MIGRATION_19_20,
                     MIGRATION_20_21,
+                    MIGRATION_21_22,
                 )
                 .enableMultiInstanceInvalidation()
                 .build().also { instance = it }
