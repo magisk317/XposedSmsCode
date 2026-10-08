@@ -8,7 +8,6 @@
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
  
@@ -19,7 +18,7 @@
     </queries>
 
     <application
-        android:name="com.github.magisk317.smscode.ui.app.SmsCodeApplication"
+        android:name="io.github.magisk317.smscode.ui.app.SmsCodeApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -32,7 +31,7 @@
         tools:ignore="GoogleAppIndexingWarning,UnusedAttribute">
 
         <receiver
-            android:name="com.github.magisk317.smscode.receiver.SecretCodeReceiver"
+            android:name="io.github.magisk317.smscode.receiver.SecretCodeReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.provider.Telephony.SECRET_CODE" />
@@ -43,7 +42,7 @@
         </receiver>
 
         <activity
-            android:name="com.github.magisk317.smscode.ui.home.LauncherActivity"
+            android:name="io.github.magisk317.smscode.ui.home.LauncherActivity"
             android:enabled="true"
             android:exported="true"
             android:theme="@android:style/Theme.NoDisplay">
@@ -57,7 +56,7 @@
         </activity>
 
         <activity
-            android:name="com.github.magisk317.smscode.ui.home.MainActivity"
+            android:name="io.github.magisk317.smscode.ui.home.MainActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
@@ -87,17 +86,17 @@
         </activity>
 
         <activity
-            android:name="com.github.magisk317.smscode.entitlement.MobileEntitlementActivity"
+            android:name="io.github.magisk317.smscode.entitlement.MobileEntitlementActivity"
             android:exported="false" />
 
         <provider
-            android:name="com.github.magisk317.smscode.data.db.DBProvider"
+            android:name="io.github.magisk317.smscode.data.db.DBProvider"
             android:authorities="${applicationId}.db.provider"
             android:exported="true"
             tools:ignore="ExportedContentProvider" />
 
         <provider
-            android:name="com.github.magisk317.smscode.data.log.RuntimeLogProvider"
+            android:name="io.github.magisk317.smscode.data.log.RuntimeLogProvider"
             android:authorities="${applicationId}.runtime-log.provider"
             android:exported="true"
             tools:ignore="ExportedContentProvider" />
@@ -119,33 +118,33 @@
         </provider>
 
         <receiver
-            android:name="com.github.magisk317.smscode.xp.hook.code.AutoCancelReceiver"
+            android:name="io.github.magisk317.smscode.xp.hook.code.AutoCancelReceiver"
             android:exported="false" />
 
         <receiver
-            android:name="com.github.magisk317.smscode.xp.hook.code.CopyCodeReceiver"
+            android:name="io.github.magisk317.smscode.xp.hook.code.CopyCodeReceiver"
             android:exported="false" />
 
         <receiver
-            android:name="com.github.magisk317.smscode.receiver.CodeNotificationReceiver"
+            android:name="io.github.magisk317.smscode.receiver.CodeNotificationReceiver"
             android:exported="true"
             tools:ignore="ExportedReceiver" />
 
         <receiver
-            android:name="com.github.magisk317.smscode.receiver.AutoInputResultReceiver"
+            android:name="io.github.magisk317.smscode.receiver.AutoInputResultReceiver"
             android:exported="true"
             tools:ignore="ExportedReceiver">
             <intent-filter>
-                <action android:name="com.github.magisk317.smscode.ACTION_AUTO_INPUT_RESULT" />
+                <action android:name="io.github.magisk317.smscode.ACTION_AUTO_INPUT_RESULT" />
             </intent-filter>
         </receiver>
 
         <receiver
-            android:name="com.github.magisk317.smscode.receiver.KillSelfControlReceiver"
+            android:name="io.github.magisk317.smscode.receiver.KillSelfControlReceiver"
             android:exported="true"
             tools:ignore="ExportedReceiver">
             <intent-filter>
-                <action android:name="com.github.magisk317.smscode.ACTION_KILL_SELF" />
+                <action android:name="io.github.magisk317.smscode.ACTION_KILL_SELF" />
             </intent-filter>
         </receiver>
     </application>

@@ -5,7 +5,7 @@
 
     <application android:usesCleartextTraffic="false">
         <service
-            android:name="com.github.magisk317.smscode.service.AutoInputAccessibilityService"
+            android:name="io.github.magisk317.smscode.service.AutoInputAccessibilityService"
             android:exported="false"
             android:label="@string/accessibility_auto_input_service_label"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">

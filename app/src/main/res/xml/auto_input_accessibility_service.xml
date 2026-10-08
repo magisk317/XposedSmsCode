@@ -6,4 +6,4 @@
     android:canRetrieveWindowContent="true"
     android:description="@string/accessibility_auto_input_service_description"
     android:notificationTimeout="100"
-    android:settingsActivity="com.github.magisk317.smscode.ui.home.MainActivity" />
+    android:settingsActivity="io.github.magisk317.smscode.ui.home.MainActivity" />
