@@ -1,5 +1,6 @@
 package io.github.magisk317.smscode.ui.record
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -42,6 +43,7 @@ import io.github.magisk317.uikit.surface.AppTopBar
 import io.github.magisk317.uikit.surface.DoubleTapToTopOverlay
 import io.github.magisk317.uikit.surface.ScrollToTopFAB
 import io.github.magisk317.uikit.surface.chromeSurfaceColor
+import io.github.magisk317.uikit.surface.pageSurfaceColor
 import io.github.magisk317.uikit.surface.rememberUiKitGlassTopBar
 import io.github.magisk317.uikit.surface.uiKitSurfaceGlassSample
 import io.github.magisk317.uikit.theme.LocalUiKitSurfaceBlur
@@ -91,7 +93,12 @@ internal fun CodeRecordScreenMiuix(
     val topPadding = (measuredTopHeight + headerOffset).coerceAtLeast(0.dp)
     val bottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 80.dp
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    // Paint the page with the same surface as the chrome. Without it the window backdrop
+    // (#242424 in dark) shows through: it appears as a seam between the title bar and the tab
+    // strip (both painted with the black Miuix surface) and it matches the `surfaceContainer`
+    // record cards, so the cards could not be told apart from the page. Black page + grey cards
+    // is how MiuixScaffold pages such as MiPush look.
+    Box(modifier = Modifier.fillMaxSize().background(pageSurfaceColor())) {
         Box(
             modifier = Modifier
                 .fillMaxSize()

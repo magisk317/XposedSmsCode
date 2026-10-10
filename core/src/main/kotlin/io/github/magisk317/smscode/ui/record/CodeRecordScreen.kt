@@ -894,7 +894,6 @@ private fun RecordSplitColumn(
     AppSurface(
         modifier = modifier,
         shape = appShape(AppShapeRole.Large),
-        tonalElevation = 2.dp,
         color = Color.Transparent,
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
