@@ -16,11 +16,11 @@ buildscript {
             // not reach the plugin classpath). Deliberately outside the managed
             // block: the dependency-force workflow rewrites that block wholesale
             // and would drop the comment on its next run.
-            force("org.ow2.asm:asm:9.10.1")
-            force("org.ow2.asm:asm-analysis:9.10.1")
-            force("org.ow2.asm:asm-commons:9.10.1")
-            force("org.ow2.asm:asm-tree:9.10.1")
-            force("org.ow2.asm:asm-util:9.10.1")
+            force("org.ow2.asm:asm:9.11")
+            force("org.ow2.asm:asm-analysis:9.11")
+            force("org.ow2.asm:asm-commons:9.11")
+            force("org.ow2.asm:asm-tree:9.11")
+            force("org.ow2.asm:asm-util:9.11")
         }
     }
 }
@@ -48,7 +48,6 @@ plugins {
 }
 
 val catalog = libs
-val forcedKotlinVersion = libs.versions.kotlin.get()
 val enableKover = providers.gradleProperty("enableKover")
     .map { it.toBooleanStrictOrNull() ?: false }
     .getOrElse(false) ||
@@ -97,21 +96,6 @@ subprojects {
         configureDetekt()
     }
 
-}
-
-allprojects {
-    configurations.configureEach {
-        resolutionStrategy {
-            // Custom migration overrides for Java 27 compatibility
-            force(catalog.apache.httpclient)
-            force("org.ow2.asm:asm:9.10.1")
-            force("org.ow2.asm:asm-commons:9.10.1")
-            force("org.ow2.asm:asm-tree:9.10.1")
-            force("org.ow2.asm:asm-util:9.10.1")
-            force("org.ow2.asm:asm-analysis:9.10.1")
-            force("org.jetbrains.kotlin:kotlin-metadata-jvm:$forcedKotlinVersion")
-        }
-    }
 }
 
 val mainModuleDependencyViolations = objects.listProperty(String::class.java)
