@@ -229,6 +229,15 @@ object HookPrefsReader : HookPrefsAccess {
     }
 
     override fun mobileAutomationAllowed(context: Context): Boolean {
+        // Play distributions ship the gate off: the app publishes an
+        // always-allowed snapshot and no signed lease is ever issued, so the
+        // hook boundary must not demand one. MobileEntitlementGate forces
+        // enforcement on every cross-process decision, so the only correct
+        // short-circuit is before it - the same one the app process takes in
+        // AutoInputAccessibilityService.
+        if (!BuildConfig.ENABLE_MOBILE_ENTITLEMENT) {
+            return true
+        }
         val state = MobileEntitlementGate.read(getRemotePrefs())
         return MobileEntitlementGate.isAllowed(state, mobileEntitlementPolicy)
     }

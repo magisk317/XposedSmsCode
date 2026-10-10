@@ -269,6 +269,14 @@ class SmsCodeApplication : Application() {
             "handleXposedServiceBound() called: framework=$frameworkName version=$frameworkVersion provider=${remotePrefsProvider != null}",
         )
         AppPreferencesDataStore.setRemotePrefsProvider(remotePrefsProvider)
+        // Publishes attempted before the service bound are marked pending rather
+        // than dropped. The provider is live now, so flush them; otherwise the
+        // hook process keeps reading a mirror written before the last change.
+        if (AppPreferencesDataStore.hasPendingRemotePrefsPublish()) {
+            applicationScope.launch {
+                HookPreferenceMirror.publish(this@SmsCodeApplication)
+            }
+        }
         ModuleUtils.setRuntimeActivated(true)
         ModuleActivationStore.markActivated(this)
         ActivationDiagnosticsStore.recordServiceBind(

@@ -1,5 +1,13 @@
 plugins {
     id("magisk.android.library")
+    // Carries the distribution flavors so the app's flavor selects this module's
+    // variant and, through it, :runtime's. Without the dimension the strategy
+    // below would pin :runtime to its github variant even in a play build,
+    // silently re-arming the activation gate the play flavor ships off.
+    id("smscode.android.common")
+    // Carries the distribution identity (gate flag + channel) the hook process
+    // reports with its diagnostics attributes.
+    id("magisk.mobile.gate")
     id("kotlin-parcelize")
 }
 
