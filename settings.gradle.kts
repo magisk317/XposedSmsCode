@@ -1,6 +1,54 @@
+import java.io.File
 import org.gradle.api.credentials.HttpHeaderCredentials
 import org.gradle.api.initialization.resolve.RepositoriesMode
 import org.gradle.authentication.http.HttpHeaderAuthentication
+
+/**
+ * Detect which auth header the given GitLab token validates under.
+ * Classic PATs / project tokens / OAuth tokens all work with `Authorization: Bearer`,
+ * while some legacy setups only accept `Private-Token`.
+ */
+fun resolveGitlabAuthHeader(token: String): Pair<String, String> {
+    val cacheFile = File(System.getProperty("user.home"), ".gradle/gitlab_auth_header_cache")
+    val key = token.hashCode().toString()
+    runCatching {
+        if (cacheFile.exists()) {
+            cacheFile.readLines()
+                .firstOrNull { it.startsWith("$key=") }
+                ?.substringAfter("=")
+                ?.let { name ->
+                    val value = if (name == "Authorization") "Bearer $token" else token
+                    return name to value
+                }
+        }
+    }
+    val probeUrl = "https://gitlab.com/api/v4/projects/85187820/packages/maven/" +
+        "com/magisk317/mobile/entitlement-android/0.3.0/entitlement-android-0.3.0.pom"
+    val candidates = listOf("Authorization" to "Bearer $token", "Private-Token" to token)
+    var chosen: Pair<String, String>? = null
+    for ((name, value) in candidates) {
+        val ok = runCatching {
+            (java.net.URL(probeUrl).openConnection() as java.net.HttpURLConnection).let { conn ->
+                conn.requestMethod = "HEAD"
+                conn.setRequestProperty(name, value)
+                conn.connectTimeout = 4000
+                conn.readTimeout = 4000
+                val code = conn.responseCode
+                conn.disconnect()
+                code != 401
+            }
+        }.getOrElse { false }
+        if (ok) { chosen = name to value; break }
+    }
+    val result = chosen ?: ("Authorization" to "Bearer $token")
+    runCatching {
+        cacheFile.parentFile?.mkdirs()
+        val kept = runCatching { cacheFile.readLines() }.getOrElse { emptyList() }
+            .filter { !it.startsWith("$key=") } + listOf("$key=${result.first}")
+        cacheFile.writeText(kept.takeLast(20).joinToString("\n"))
+    }
+    return result
+}
 
 pluginManagement {
     includeBuild("build-logic")
@@ -34,6 +82,8 @@ dependencyResolutionManagement {
             val jobToken = System.getenv("CI_JOB_TOKEN")
             val deployToken = System.getenv("GITLAB_DEPLOY_TOKEN")
             val privateToken = System.getenv("GITLAB_TOKEN")
+                ?: System.getenv("GITLAB_PRIVATE_TOKEN")
+                ?: providers.gradleProperty("gitlab.token").orNull
             if (!jobToken.isNullOrBlank()) {
                 credentials(HttpHeaderCredentials::class) {
                     name = "Job-Token"
@@ -51,9 +101,10 @@ dependencyResolutionManagement {
                     create<HttpHeaderAuthentication>("header")
                 }
             } else if (!privateToken.isNullOrBlank()) {
+                val (headerName, headerValue) = resolveGitlabAuthHeader(privateToken)
                 credentials(HttpHeaderCredentials::class) {
-                    name = "Private-Token"
-                    value = privateToken
+                    name = headerName
+                    value = headerValue
                 }
                 authentication {
                     create<HttpHeaderAuthentication>("header")
