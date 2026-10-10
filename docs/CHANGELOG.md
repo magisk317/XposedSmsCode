@@ -3,6 +3,17 @@
 本日志记录了项目重构后的主要变更。
 
 ---
+## [v3.3.8] - 2026-10-10
+- 版本：`versionCode 132` / `versionName 3.3.8`。
+- `[fix]` 修复数据库升级迁移与历史表结构兼容问题。
+- `[fix]` 消除重建数据表时转发规则被级联清空的隐患。
+- `[ui]` 修复 Miuix 主题下记录页阴影圈与背景渲染。
+- `[build]` 升级基础依赖并优化构建流水线。
+
+> Full Changelog: https://gitlab.com/magisk3171/XposedSmsCode/-/compare/v3.3.7...v3.3.8
+
+---
+
 ## [v3.3.7] - 2026-10-08
 - 版本：`versionCode 131` / `versionName 3.3.7`。
 - `[hook]` 重构短信拦截与分发链路。
