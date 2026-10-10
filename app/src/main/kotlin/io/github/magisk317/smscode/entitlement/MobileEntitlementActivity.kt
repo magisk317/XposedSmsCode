@@ -38,10 +38,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.draw.clip
 import io.github.magisk317.uikit.common.AppSnackbarHost
 import io.github.magisk317.uikit.common.AppSnackbarHostState
+import com.magisk317.mobile.entitlement.MobileEntitlementChallenge
 import com.magisk317.mobile.entitlement.MobileEntitlementCoordinator
 import com.magisk317.mobile.entitlement.MobileEntitlementStatus
 import io.github.magisk317.smscode.common.constant.Const
@@ -56,6 +58,7 @@ import io.github.magisk317.uikit.surface.AppOutlinedIconButton
 import io.github.magisk317.uikit.surface.AppPrimaryButton
 import io.github.magisk317.uikit.surface.AppScaffold
 import io.github.magisk317.uikit.surface.AppSecondaryButton
+import io.github.magisk317.uikit.surface.AppTextButton
 import io.github.magisk317.uikit.surface.AppTextField
 import io.github.magisk317.uikit.surface.AppTopBar
 import io.github.magisk317.uikit.surface.SectionColumn
@@ -102,6 +105,7 @@ private fun MobileEntitlementScreen(
     var busyAction by remember { mutableStateOf<ActivationAction?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
     var pendingBotUrl by remember { mutableStateOf<String?>(null) }
+    var qqChallenge by remember { mutableStateOf<MobileEntitlementChallenge?>(null) }
     val snackbarHostState = remember { AppSnackbarHostState() }
     val tokenState = rememberSaveableTextFieldState()
     val tokenInputTransformation = InputTransformation {
@@ -138,6 +142,17 @@ private fun MobileEntitlementScreen(
         }
     }
 
+    fun copyWithToast(label: String, value: String) {
+        copyPlainText(context, label, value)
+        android.widget.Toast
+            .makeText(
+                context,
+                context.getString(R.string.mobile_entitlement_copied),
+                android.widget.Toast.LENGTH_SHORT,
+            )
+            .show()
+    }
+
     fun openTelegram(url: String) {
         runCatching {
             context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
@@ -166,9 +181,32 @@ private fun MobileEntitlementScreen(
                 }
                 XLog.w("Mobile entitlement Telegram challenge received id=%s", challenge.id.take(8))
                 pendingBotUrl = challenge.botUrl
-                openTelegram(challenge.botUrl)
+                val url = challenge.botUrl
+                if (url.isNullOrBlank()) {
+                    message = context.getString(R.string.mobile_entitlement_qq_entry_missing)
+                } else {
+                    openTelegram(url)
+                }
             }.onFailure {
                 XLog.e("Mobile entitlement Telegram activation failed", it)
+                message = it.message ?: it.javaClass.simpleName
+            }
+            busyAction = null
+        }
+    }
+
+    fun startQQActivation() {
+        scope.launch {
+            busyAction = ActivationAction.QQ
+            message = null
+            XLog.w("Mobile entitlement QQ activation started")
+            runCatching {
+                qqChallenge = withContext(Dispatchers.IO) {
+                    MobileEntitlementCoordinator.createQQChallenge(context)
+                }
+            }.onFailure {
+                XLog.e("Mobile entitlement QQ activation failed", it)
+                qqChallenge = null
                 message = it.message ?: it.javaClass.simpleName
             }
             busyAction = null
@@ -365,6 +403,57 @@ private fun MobileEntitlementScreen(
                 }
             }
 
+            qqChallenge?.let { challenge ->
+                AppCard(modifier = Modifier.fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            AppText(
+                                text = stringResource(R.string.mobile_entitlement_qq_title),
+                                role = AppTextRole.Subtitle,
+                            )
+                            AppTextButton(
+                                text = stringResource(R.string.mobile_entitlement_qq_dismiss),
+                                onClick = { qqChallenge = null },
+                            )
+                        }
+                        challenge.activationCode?.let { code ->
+                            EntitlementCopyRow(
+                                label = stringResource(R.string.mobile_entitlement_qq_code_label),
+                                value = code,
+                                monospace = true,
+                                onCopy = ::copyWithToast,
+                            )
+                        }
+                        challenge.qqBotId?.let { botId ->
+                            EntitlementCopyRow(
+                                label = stringResource(R.string.mobile_entitlement_qq_bot_label),
+                                value = botId,
+                                onCopy = ::copyWithToast,
+                            )
+                        }
+                        challenge.qqGroupId?.let { groupId ->
+                            EntitlementCopyRow(
+                                label = stringResource(R.string.mobile_entitlement_qq_group_label),
+                                value = groupId,
+                                onCopy = ::copyWithToast,
+                            )
+                        }
+                        AppText(
+                            text = stringResource(R.string.mobile_entitlement_qq_instructions),
+                            role = AppTextRole.BodySmall,
+                            color = appColor(AppColorRole.OnSurfaceVariant),
+                        )
+                    }
+                }
+            }
+
             val currentEvaluation = evaluation
             val showActivationActions = currentEvaluation == null ||
                 currentEvaluation.status != MobileEntitlementStatus.ACTIVE ||
@@ -403,6 +492,21 @@ private fun MobileEntitlementScreen(
                         )
                     }
                 }
+                AppSecondaryButton(
+                    onClick = ::startQQActivation,
+                    enabled = busyAction == null,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    if (busyAction == ActivationAction.QQ) {
+                        AppCircularProgressIndicator(
+                            modifier = Modifier
+                                .padding(end = 8.dp)
+                                .size(18.dp),
+                            strokeWidth = 2.dp,
+                        )
+                    }
+                    AppText(text = stringResource(R.string.mobile_entitlement_activate_qq))
+                }
             }
             AppSecondaryButton(
                 onClick = { refreshStatus(force = true) },
@@ -440,6 +544,41 @@ private enum class ActivationAction {
     REFRESH,
     TOKEN,
     TELEGRAM,
+    QQ,
+}
+
+@Composable
+private fun EntitlementCopyRow(
+    label: String,
+    value: String,
+    onCopy: (String, String) -> Unit,
+    monospace: Boolean = false,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f, fill = false)) {
+            AppText(
+                text = label,
+                role = AppTextRole.BodySmall,
+                color = appColor(AppColorRole.OnSurfaceVariant),
+            )
+            AppText(
+                text = value,
+                role = AppTextRole.Subtitle,
+                fontFamily = if (monospace) FontFamily.Monospace else null,
+            )
+        }
+        AppIconButton(onClick = { onCopy(label, value) }) {
+            AppIcon(
+                imageVector = Icons.Default.ContentCopy,
+                contentDescription = stringResource(R.string.mobile_entitlement_copy),
+                modifier = Modifier.padding(start = 4.dp),
+            )
+        }
+    }
 }
 
 private fun copyPlainText(context: Context, label: String, text: String) {

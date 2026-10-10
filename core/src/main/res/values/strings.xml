@@ -510,6 +510,14 @@
     <string name="mobile_entitlement_renew_due">Activation status can be updated.</string>
     <string name="mobile_entitlement_refresh">Refresh status</string>
     <string name="mobile_entitlement_activate_telegram">Open Telegram</string>
+    <string name="mobile_entitlement_activate_qq">QQ activation</string>
+    <string name="mobile_entitlement_qq_title">QQ activation</string>
+    <string name="mobile_entitlement_qq_code_label">Activation code</string>
+    <string name="mobile_entitlement_qq_bot_label">Bot QQ number</string>
+    <string name="mobile_entitlement_qq_group_label">Auth group number</string>
+    <string name="mobile_entitlement_qq_instructions">Copy the activation code and send it to the bot in a private chat, or post it in the auth group. The bot replies with a one-time token — paste it above to finish.</string>
+    <string name="mobile_entitlement_qq_dismiss">Dismiss</string>
+    <string name="mobile_entitlement_qq_entry_missing">The server did not return a QQ entry. Please retry.</string>
     <string name="mobile_entitlement_activate_google">Activate with Google</string>
     <string name="mobile_entitlement_telegram_required">Google activation also requires Telegram channel membership.</string>
     <string name="mobile_entitlement_open_telegram">Open Telegram</string>
@@ -520,9 +528,9 @@
     <string name="mobile_entitlement_challenge_expired">The activation request expired.</string>
     <string name="mobile_entitlement_error">Request failed: %1$s</string>
     <string name="mobile_entitlement_activation_token_label">One-time activation token</string>
-    <string name="mobile_entitlement_activation_token_hint">Enter the 32-character token returned by Telegram</string>
+    <string name="mobile_entitlement_activation_token_hint">Enter the 32-character one-time token</string>
     <string name="mobile_entitlement_activation_token_confirm">Activate with token</string>
-    <string name="mobile_entitlement_activation_token_get_hint">Tap “Open Telegram”, then paste the one-time token returned by the bot.</string>
+    <string name="mobile_entitlement_activation_token_get_hint">Tap “Open Telegram” or “QQ activation”, then paste the one-time token returned by the bot.</string>
     <string name="mobile_entitlement_activation_token_invalid">Enter a valid 32-character one-time token</string>
     <string name="mobile_entitlement_activation_token_used">The activation token has been consumed and is not saved or reusable.</string>
     <string name="mobile_entitlement_or">Or</string>

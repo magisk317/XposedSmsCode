@@ -504,6 +504,14 @@
     <string name="mobile_entitlement_renew_due">可以更新激活状态。</string>
     <string name="mobile_entitlement_refresh">刷新状态</string>
     <string name="mobile_entitlement_activate_telegram">跳转 Telegram</string>
+    <string name="mobile_entitlement_activate_qq">QQ 激活</string>
+    <string name="mobile_entitlement_qq_title">QQ 激活</string>
+    <string name="mobile_entitlement_qq_code_label">激活码</string>
+    <string name="mobile_entitlement_qq_bot_label">机器人 QQ 号</string>
+    <string name="mobile_entitlement_qq_group_label">鉴权群群号</string>
+    <string name="mobile_entitlement_qq_instructions">复制激活码，私聊机器人发送，或在鉴权群内发送；机器人会返回一次性令牌，粘贴到上方输入框即可完成激活。</string>
+    <string name="mobile_entitlement_qq_dismiss">关闭</string>
+    <string name="mobile_entitlement_qq_entry_missing">服务端未返回 QQ 入口信息，请重试。</string>
     <string name="mobile_entitlement_activate_google">通过 Google 激活</string>
     <string name="mobile_entitlement_telegram_required">Google 激活还需要加入官方 Telegram 频道。</string>
     <string name="mobile_entitlement_open_telegram">打开 Telegram</string>
@@ -514,9 +522,9 @@
     <string name="mobile_entitlement_challenge_expired">激活请求已过期。</string>
     <string name="mobile_entitlement_error">请求失败：%1$s</string>
     <string name="mobile_entitlement_activation_token_label">一次性激活令牌</string>
-    <string name="mobile_entitlement_activation_token_hint">请输入 Telegram 返回的 32 位一次性激活令牌</string>
+    <string name="mobile_entitlement_activation_token_hint">请输入 32 位一次性激活令牌</string>
     <string name="mobile_entitlement_activation_token_confirm">使用令牌激活</string>
-    <string name="mobile_entitlement_activation_token_get_hint">点击“跳转 Telegram”，复制机器人返回的一次性令牌后粘贴到这里。</string>
+    <string name="mobile_entitlement_activation_token_get_hint">点击“跳转 Telegram”或“QQ 激活”，复制机器人返回的一次性令牌后粘贴到这里。</string>
     <string name="mobile_entitlement_activation_token_invalid">请输入有效的 32 位一次性激活令牌</string>
     <string name="mobile_entitlement_activation_token_used">一次性激活令牌已消费，不会保存或重复使用。</string>
     <string name="mobile_entitlement_or">或者</string>
