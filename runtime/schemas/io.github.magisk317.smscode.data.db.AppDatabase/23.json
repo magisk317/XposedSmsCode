@@ -1,0 +1,811 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 23,
+    "identityHash": "85758ea23689339c93f411cb436df225",
+    "entities": [
+      {
+        "tableName": "sms_code_rule",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`company` TEXT, `code_keyword` TEXT NOT NULL, `code_regex` TEXT NOT NULL, `id` INTEGER PRIMARY KEY AUTOINCREMENT)",
+        "fields": [
+          {
+            "fieldPath": "company",
+            "columnName": "company",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "codeKeyword",
+            "columnName": "code_keyword",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "codeRegex",
+            "columnName": "code_regex",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sms_code_rule_company_code_keyword_code_regex",
+            "unique": true,
+            "columnNames": [
+              "company",
+              "code_keyword",
+              "code_regex"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_sms_code_rule_company_code_keyword_code_regex` ON `${TABLE_NAME}` (`company`, `code_keyword`, `code_regex`)"
+          }
+        ]
+      },
+      {
+        "tableName": "sms_msg",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `sender` TEXT, `body` TEXT, `date` INTEGER NOT NULL, `processed_time` INTEGER NOT NULL DEFAULT 0, `company` TEXT, `sms_code` TEXT, `package_name` TEXT, `notify_channel_id` TEXT NOT NULL DEFAULT '', `sim_slot` INTEGER NOT NULL DEFAULT -1, `sub_id` INTEGER NOT NULL DEFAULT 0, `contact_name` TEXT NOT NULL DEFAULT '', `phone_area` TEXT NOT NULL DEFAULT '', `forward_status` INTEGER NOT NULL, `forward_target` TEXT, `forward_message` TEXT, `forward_time` INTEGER NOT NULL, `msg_type` INTEGER NOT NULL DEFAULT 0, `call_type` INTEGER NOT NULL DEFAULT 0, `session_key` TEXT NOT NULL DEFAULT '')",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "sender",
+            "columnName": "sender",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "body",
+            "columnName": "body",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "date",
+            "columnName": "date",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "processedTime",
+            "columnName": "processed_time",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "company",
+            "columnName": "company",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "smsCode",
+            "columnName": "sms_code",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "packageName",
+            "columnName": "package_name",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "notifyChannelId",
+            "columnName": "notify_channel_id",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
+          },
+          {
+            "fieldPath": "simSlot",
+            "columnName": "sim_slot",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "-1"
+          },
+          {
+            "fieldPath": "subId",
+            "columnName": "sub_id",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "contactName",
+            "columnName": "contact_name",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
+          },
+          {
+            "fieldPath": "phoneArea",
+            "columnName": "phone_area",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
+          },
+          {
+            "fieldPath": "forwardStatus",
+            "columnName": "forward_status",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "forwardTarget",
+            "columnName": "forward_target",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "forwardMessage",
+            "columnName": "forward_message",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "forwardTime",
+            "columnName": "forward_time",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "msgType",
+            "columnName": "msg_type",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "callType",
+            "columnName": "call_type",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "sessionKey",
+            "columnName": "session_key",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sms_msg_sender_body_date_msg_type",
+            "unique": true,
+            "columnNames": [
+              "sender",
+              "body",
+              "date",
+              "msg_type"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_sms_msg_sender_body_date_msg_type` ON `${TABLE_NAME}` (`sender`, `body`, `date`, `msg_type`)"
+          },
+          {
+            "name": "index_sms_msg_pkg_type_channel_date",
+            "unique": false,
+            "columnNames": [
+              "package_name",
+              "msg_type",
+              "notify_channel_id",
+              "date"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sms_msg_pkg_type_channel_date` ON `${TABLE_NAME}` (`package_name`, `msg_type`, `notify_channel_id`, `date`)"
+          },
+          {
+            "name": "index_sms_msg_type_session_key",
+            "unique": false,
+            "columnNames": [
+              "msg_type",
+              "session_key"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sms_msg_type_session_key` ON `${TABLE_NAME}` (`msg_type`, `session_key`)"
+          }
+        ]
+      },
+      {
+        "tableName": "app_info",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`package_name` TEXT NOT NULL, `label` TEXT, `blocked` INTEGER NOT NULL, `forwarding` INTEGER NOT NULL DEFAULT 0, `forwarding_configured` INTEGER NOT NULL DEFAULT 0, `notify_template` TEXT NOT NULL DEFAULT '', PRIMARY KEY(`package_name`))",
+        "fields": [
+          {
+            "fieldPath": "packageName",
+            "columnName": "package_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "label",
+            "columnName": "label",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "blocked",
+            "columnName": "blocked",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "forwarding",
+            "columnName": "forwarding",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "forwardingConfigured",
+            "columnName": "forwarding_configured",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "notifyTemplate",
+            "columnName": "notify_template",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "package_name"
+          ]
+        }
+      },
+      {
+        "tableName": "auto_input_event",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `record_id` INTEGER, `package_name` TEXT, `code_length` INTEGER NOT NULL, `attempt_at` INTEGER NOT NULL, `success` INTEGER, `fail_reason` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recordId",
+            "columnName": "record_id",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "packageName",
+            "columnName": "package_name",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "codeLength",
+            "columnName": "code_length",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "attemptAt",
+            "columnName": "attempt_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "success",
+            "columnName": "success",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "failReason",
+            "columnName": "fail_reason",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_auto_input_attempt_at",
+            "unique": false,
+            "columnNames": [
+              "attempt_at"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_auto_input_attempt_at` ON `${TABLE_NAME}` (`attempt_at`)"
+          },
+          {
+            "name": "index_auto_input_record",
+            "unique": false,
+            "columnNames": [
+              "record_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_auto_input_record` ON `${TABLE_NAME}` (`record_id`)"
+          }
+        ]
+      },
+      {
+        "tableName": "notify_route_rule",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `scope` INTEGER NOT NULL, `package_name` TEXT NOT NULL, `sender_id` INTEGER NOT NULL, `update_time` INTEGER NOT NULL DEFAULT 0)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "scope",
+            "columnName": "scope",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "packageName",
+            "columnName": "package_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "senderId",
+            "columnName": "sender_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updateTime",
+            "columnName": "update_time",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_notify_route_rule_scope_package_sender",
+            "unique": true,
+            "columnNames": [
+              "scope",
+              "package_name",
+              "sender_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_notify_route_rule_scope_package_sender` ON `${TABLE_NAME}` (`scope`, `package_name`, `sender_id`)"
+          },
+          {
+            "name": "index_notify_route_rule_package_scope",
+            "unique": false,
+            "columnNames": [
+              "package_name",
+              "scope"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_notify_route_rule_package_scope` ON `${TABLE_NAME}` (`package_name`, `scope`)"
+          },
+          {
+            "name": "index_notify_route_rule_sender_scope",
+            "unique": false,
+            "columnNames": [
+              "sender_id",
+              "scope"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_notify_route_rule_sender_scope` ON `${TABLE_NAME}` (`sender_id`, `scope`)"
+          }
+        ]
+      },
+      {
+        "tableName": "forward_filter_rule",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `msg_type` TEXT NOT NULL, `scope_type` TEXT NOT NULL, `scope_key` TEXT NOT NULL, `sender_id` INTEGER NOT NULL DEFAULT 0, `policy` TEXT NOT NULL, `match_mode` TEXT NOT NULL, `pattern` TEXT NOT NULL, `enabled` INTEGER NOT NULL DEFAULT 1, `update_time` INTEGER NOT NULL DEFAULT 0)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "msgType",
+            "columnName": "msg_type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "scopeType",
+            "columnName": "scope_type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "scopeKey",
+            "columnName": "scope_key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "senderId",
+            "columnName": "sender_id",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "policy",
+            "columnName": "policy",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "matchMode",
+            "columnName": "match_mode",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pattern",
+            "columnName": "pattern",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "enabled",
+            "columnName": "enabled",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "1"
+          },
+          {
+            "fieldPath": "updateTime",
+            "columnName": "update_time",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_forward_filter_rule_unique",
+            "unique": true,
+            "columnNames": [
+              "msg_type",
+              "scope_type",
+              "scope_key",
+              "sender_id",
+              "policy",
+              "match_mode",
+              "pattern"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_forward_filter_rule_unique` ON `${TABLE_NAME}` (`msg_type`, `scope_type`, `scope_key`, `sender_id`, `policy`, `match_mode`, `pattern`)"
+          },
+          {
+            "name": "index_forward_filter_rule_msg_scope_key",
+            "unique": false,
+            "columnNames": [
+              "msg_type",
+              "scope_type",
+              "scope_key"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_forward_filter_rule_msg_scope_key` ON `${TABLE_NAME}` (`msg_type`, `scope_type`, `scope_key`)"
+          },
+          {
+            "name": "index_forward_filter_rule_msg_scope_sender",
+            "unique": false,
+            "columnNames": [
+              "msg_type",
+              "scope_type",
+              "sender_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_forward_filter_rule_msg_scope_sender` ON `${TABLE_NAME}` (`msg_type`, `scope_type`, `sender_id`)"
+          }
+        ]
+      },
+      {
+        "tableName": "Sender",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `type` INTEGER NOT NULL DEFAULT 1, `name` TEXT NOT NULL DEFAULT '', `json_setting` TEXT NOT NULL DEFAULT '', `status` INTEGER NOT NULL DEFAULT 1, `time` INTEGER NOT NULL, `receive_code` INTEGER NOT NULL DEFAULT 1, `receive_non_code` INTEGER NOT NULL DEFAULT 0, `receive_app_notify` INTEGER NOT NULL DEFAULT 1, `receive_call_notify` INTEGER NOT NULL DEFAULT 0, `active_schedule_json` TEXT NOT NULL DEFAULT '', `priority` INTEGER NOT NULL DEFAULT 0, `custom_template` TEXT NOT NULL DEFAULT '')",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "1"
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
+          },
+          {
+            "fieldPath": "jsonSetting",
+            "columnName": "json_setting",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "1"
+          },
+          {
+            "fieldPath": "time",
+            "columnName": "time",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "receiveCode",
+            "columnName": "receive_code",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "1"
+          },
+          {
+            "fieldPath": "receiveNonCode",
+            "columnName": "receive_non_code",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "receiveAppNotify",
+            "columnName": "receive_app_notify",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "1"
+          },
+          {
+            "fieldPath": "receiveCallNotify",
+            "columnName": "receive_call_notify",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "activeScheduleJson",
+            "columnName": "active_schedule_json",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
+          },
+          {
+            "fieldPath": "priority",
+            "columnName": "priority",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "customTemplate",
+            "columnName": "custom_template",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "Rule",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `type` TEXT NOT NULL DEFAULT 'sms', `filed` TEXT NOT NULL DEFAULT 'transpond_all', `check` TEXT NOT NULL DEFAULT 'is', `value` TEXT NOT NULL DEFAULT '', `sender_id` INTEGER NOT NULL DEFAULT 0, `sms_template` TEXT NOT NULL DEFAULT '', `regex_replace` TEXT NOT NULL DEFAULT '', `sim_slot` TEXT NOT NULL DEFAULT 'ALL', `status` INTEGER NOT NULL DEFAULT 1, `time` INTEGER NOT NULL, `sender_list` TEXT NOT NULL DEFAULT '', `sender_logic` TEXT NOT NULL DEFAULT 'ALL', `silent_period_start` INTEGER NOT NULL DEFAULT 0, `silent_period_end` INTEGER NOT NULL DEFAULT 0, `silent_day_of_week` TEXT NOT NULL DEFAULT '', `title` TEXT NOT NULL DEFAULT '', FOREIGN KEY(`sender_id`) REFERENCES `Sender`(`id`) ON UPDATE CASCADE ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'sms'"
+          },
+          {
+            "fieldPath": "filed",
+            "columnName": "filed",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'transpond_all'"
+          },
+          {
+            "fieldPath": "check",
+            "columnName": "check",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'is'"
+          },
+          {
+            "fieldPath": "value",
+            "columnName": "value",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
+          },
+          {
+            "fieldPath": "senderId",
+            "columnName": "sender_id",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "smsTemplate",
+            "columnName": "sms_template",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
+          },
+          {
+            "fieldPath": "regexReplace",
+            "columnName": "regex_replace",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
+          },
+          {
+            "fieldPath": "simSlot",
+            "columnName": "sim_slot",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'ALL'"
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "1"
+          },
+          {
+            "fieldPath": "time",
+            "columnName": "time",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "senderList",
+            "columnName": "sender_list",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
+          },
+          {
+            "fieldPath": "senderLogic",
+            "columnName": "sender_logic",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'ALL'"
+          },
+          {
+            "fieldPath": "silentPeriodStart",
+            "columnName": "silent_period_start",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "silentPeriodEnd",
+            "columnName": "silent_period_end",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "silentDayOfWeek",
+            "columnName": "silent_day_of_week",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_Rule_id",
+            "unique": true,
+            "columnNames": [
+              "id"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_Rule_id` ON `${TABLE_NAME}` (`id`)"
+          },
+          {
+            "name": "index_Rule_sender_id",
+            "unique": false,
+            "columnNames": [
+              "sender_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_Rule_sender_id` ON `${TABLE_NAME}` (`sender_id`)"
+          },
+          {
+            "name": "index_Rule_sender_list",
+            "unique": false,
+            "columnNames": [
+              "sender_list"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_Rule_sender_list` ON `${TABLE_NAME}` (`sender_list`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "Sender",
+            "onDelete": "CASCADE",
+            "onUpdate": "CASCADE",
+            "columns": [
+              "sender_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '85758ea23689339c93f411cb436df225')"
+    ]
+  }
+}
