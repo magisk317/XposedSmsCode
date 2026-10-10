@@ -70,8 +70,8 @@ metrics-performance = "1.0.0"
 miuix-blur = "0.9.4"
 material-kolor = "5.0.1"
 mobile-entitlement = "0.3.0"
-versionCode = "132"
-versionName = "3.3.8"
+versionCode = "133"
+versionName = "3.3.9"
 
 version-catalog-update = "1.1.1"
 [libraries]

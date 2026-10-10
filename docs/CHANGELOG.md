@@ -3,6 +3,13 @@
 本日志记录了项目重构后的主要变更。
 
 ---
+## [v3.3.9] - Unreleased
+- 版本：`versionCode 133` / `versionName 3.3.9`。
+- 下一轮开发占位，发布前补充具体变更。
+
+> Full Changelog: https://gitlab.com/magisk3171/XposedSmsCode/-/compare/v3.3.8...v3.3.9
+
+---
 ## [v3.3.8] - 2026-10-10
 - 版本：`versionCode 132` / `versionName 3.3.8`。
 - `[fix]` 修复数据库升级迁移与历史表结构兼容问题。
