@@ -53,6 +53,11 @@ variables:
   MAGISK_CI_TOOLKIT_REPOSITORY: "https://gitlab.com/magisk3171/shared/magisk-ci-toolkit.git"
   MAGISK_CI_TOOLKIT_REF: "v1"
   MAGISK_CANCEL_OLDER_MR_PIPELINES: "true"
+  # Cancel the merged MR's own merge_request_event pipeline from the push
+  # pipeline that lands the merge. GitLab has no cancel-on-merge hook and
+  # native auto_cancel never fires on a ref that receives no new pipeline,
+  # so the MR pipeline would otherwise run the quality stage on merged code.
+  MAGISK_CANCEL_MERGED_MR_PIPELINES: "true"
   GIT_DEPTH: "0"
   GIT_SUBMODULE_STRATEGY: recursive
   GIT_SUBMODULE_DEPTH: "0"
@@ -394,9 +399,9 @@ telegram:release:
   variables:
     MAGISK_TELEGRAM_PROJECT_TAG: "📌 #XposedSmsCode"
     MAGISK_TELEGRAM_PROJECT_NAME: "XposedSmsCode"
-    # Release notifications stay in the legacy room/topic with the rolling
-    # pin; the project-level TG_CHAT_ID only retargets telegram:ci.
-    TG_CHAT_ID: "-1003532345372"
+    # Use TG_RELEASE_CHAT_ID instead of TG_CHAT_ID so that the project-level
+    # TG_CHAT_ID (which retargets CI to the new room) does NOT override this.
+    TG_RELEASE_CHAT_ID: "-1003532345372"
   needs:
     - job: android:release:github-apk
       artifacts: true
@@ -422,6 +427,8 @@ telegram:ci:
     MAGISK_TELEGRAM_PROJECT_TAG: "📌 #XposedSmsCode"
     MAGISK_TELEGRAM_PROJECT_NAME: "XposedSmsCode"
     MAGISK_TELEGRAM_CI_BRANCH: "beta"
+    # CI builds are informational; no need to pin in the new CI room.
+    MAGISK_TELEGRAM_PIN: "false"
   needs:
     - job: android:build
       artifacts: true
