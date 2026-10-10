@@ -431,19 +431,23 @@ private fun MobileEntitlementScreen(
                                 onCopy = ::copyWithToast,
                             )
                         }
-                        challenge.qqBotId?.let { botId ->
-                            EntitlementCopyRow(
-                                label = stringResource(R.string.mobile_entitlement_qq_bot_label),
-                                value = botId,
-                                onCopy = ::copyWithToast,
-                            )
-                        }
-                        challenge.qqGroupId?.let { groupId ->
-                            EntitlementCopyRow(
-                                label = stringResource(R.string.mobile_entitlement_qq_group_label),
-                                value = groupId,
-                                onCopy = ::copyWithToast,
-                            )
+                        AppSecondaryButton(
+                            onClick = {
+                                runCatching {
+                                    context.startActivity(
+                                        Intent(Intent.ACTION_VIEW, Uri.parse(Const.QQ_CHANNEL_URL)),
+                                    )
+                                }.onFailure { error ->
+                                    XLog.w(
+                                        "Mobile entitlement QQ channel jump failed: %s",
+                                        error.message,
+                                    )
+                                    message = error.message ?: error.javaClass.simpleName
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            AppText(stringResource(R.string.mobile_entitlement_qq_join_channel))
                         }
                         AppText(
                             text = stringResource(R.string.mobile_entitlement_qq_instructions),

@@ -513,9 +513,8 @@
     <string name="mobile_entitlement_activate_qq">QQ activation</string>
     <string name="mobile_entitlement_qq_title">QQ activation</string>
     <string name="mobile_entitlement_qq_code_label">Activation code</string>
-    <string name="mobile_entitlement_qq_bot_label">Bot QQ number</string>
-    <string name="mobile_entitlement_qq_group_label">Auth group number</string>
-    <string name="mobile_entitlement_qq_instructions">Copy the activation code and send it to the bot in a private chat, or post it in the auth group. The bot replies with a one-time token — paste it above to finish.</string>
+    <string name="mobile_entitlement_qq_join_channel">Join QQ channel</string>
+    <string name="mobile_entitlement_qq_instructions">Copy the activation code, join the QQ channel, find the bot there and DM it the code. The bot replies with a one-time token — paste it above to finish.</string>
     <string name="mobile_entitlement_qq_dismiss">Dismiss</string>
     <string name="mobile_entitlement_qq_entry_missing">The server did not return a QQ entry. Please retry.</string>
     <string name="mobile_entitlement_activate_google">Activate with Google</string>

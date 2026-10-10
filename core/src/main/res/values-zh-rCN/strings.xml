@@ -507,9 +507,8 @@
     <string name="mobile_entitlement_activate_qq">QQ 激活</string>
     <string name="mobile_entitlement_qq_title">QQ 激活</string>
     <string name="mobile_entitlement_qq_code_label">激活码</string>
-    <string name="mobile_entitlement_qq_bot_label">机器人 QQ 号</string>
-    <string name="mobile_entitlement_qq_group_label">鉴权群群号</string>
-    <string name="mobile_entitlement_qq_instructions">复制激活码，私聊机器人发送，或在鉴权群内发送；机器人会返回一次性令牌，粘贴到上方输入框即可完成激活。</string>
+    <string name="mobile_entitlement_qq_join_channel">加入 QQ 频道</string>
+    <string name="mobile_entitlement_qq_instructions">复制激活码，加入 QQ 频道后在频道内找到机器人，私聊发送激活码；机器人会返回一次性令牌，粘贴到上方输入框即可完成激活。</string>
     <string name="mobile_entitlement_qq_dismiss">关闭</string>
     <string name="mobile_entitlement_qq_entry_missing">服务端未返回 QQ 入口信息，请重试。</string>
     <string name="mobile_entitlement_activate_google">通过 Google 激活</string>
