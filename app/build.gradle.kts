@@ -70,26 +70,9 @@ android {
         buildConfigField("String", "MOBILE_ENTITLEMENT_SIGNING_PUBLIC_JWK", buildConfigString(mobileEntitlementSigningPublicJwk))
     }
 
-    productFlavors {
-        getByName("play") {
-            buildConfigField("String", "MOBILE_ENTITLEMENT_CHANNEL", "\"play\"")
-        }
-        getByName("github") {
-            buildConfigField("String", "MOBILE_ENTITLEMENT_CHANNEL", "\"sideload\"")
-            buildConfigField("boolean", "ENABLE_MOBILE_ENTITLEMENT", "true")
-        }
-        getByName("fdroid") {
-            buildConfigField("String", "MOBILE_ENTITLEMENT_CHANNEL", "\"sideload\"")
-            buildConfigField("boolean", "ENABLE_MOBILE_ENTITLEMENT", "true")
-    // Sources live under src/<name>/kotlin. AGP compiles src/<name>/java by default, so
-    // each source set is pointed at the kotlin directory explicitly.
-    sourceSets {
-        listOf("main", "test", "github", "fdroid", "play", "nonPlayBilling").forEach { name ->
-            findByName(name)?.kotlin?.directories?.add("src/$name/kotlin")
-        }
-    }
-        }
-    }
+    // MOBILE_ENTITLEMENT_CHANNEL and ENABLE_MOBILE_ENTITLEMENT come from the
+    // magisk.mobile.gate plugin so the app and the library modules the hook
+    // process runs from cannot drift apart.
 
     buildFeatures {
         buildConfig = true
@@ -99,6 +82,11 @@ android {
     sourceSets {
         getByName("main") {
             assets.directories.add(generatedSmsCodeRulesAssetsDir.get().asFile.absolutePath)
+        }
+        // Sources live under src/<name>/kotlin. AGP compiles src/<name>/java by default, so
+        // each source set is pointed at the kotlin directory explicitly.
+        listOf("main", "test", "github", "fdroid", "play", "nonPlayBilling").forEach { name ->
+            findByName(name)?.kotlin?.directories?.add("src/$name/kotlin")
         }
     }
     packaging {
