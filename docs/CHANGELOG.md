@@ -3,6 +3,13 @@
 本日志记录了项目重构后的主要变更。
 
 ---
+## [v3.3.10] - Unreleased
+- 版本：`versionCode 134` / `versionName 3.3.10`。
+- 下一轮开发占位，发布前补充具体变更。
+
+> Full Changelog: https://gitlab.com/magisk3171/XposedSmsCode/-/compare/v3.3.9...v3.3.10
+
+---
 ## [v3.3.9] - 2026-10-12
 - 版本：`versionCode 133` / `versionName 3.3.9`。
 - `[feat]` 新增 QQ 频道激活入口，简化激活页面交互。

@@ -1,0 +1,3 @@
+- Updated to 3.3.10 (134).
+- Development build; release notes will be updated before publishing.
+- https://gitlab.com/magisk3171/XposedSmsCode/-/releases
