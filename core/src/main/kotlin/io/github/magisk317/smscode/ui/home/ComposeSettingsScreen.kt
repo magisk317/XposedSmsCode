@@ -450,8 +450,7 @@ internal fun ComposeSettingsScreenBody(
     fun saveRuntimeLogBundle() {
         val blockReason = LogBundleExporter.checkPreExport(verboseLogEnabled.value)
         if (blockReason != null) {
-            val resId = context.resources.getIdentifier(blockReason, "string", context.packageName)
-            val message = if (resId != 0) context.getString(resId) else blockReason
+            val message = io.github.magisk317.uikit.preference.resolveLogExportBlockMessage(context, blockReason)
             scope.launch { snackbarHostState.showSnackbar(message) }
             return
         }
