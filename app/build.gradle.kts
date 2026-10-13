@@ -51,17 +51,12 @@ android {
         localeFilters.addAll(listOf("en", "zh-rCN", "zh-rTW"))
     }
 
-    val gitCommitHash = providers.exec {
-        commandLine("git", "-C", projectDir, "rev-parse", "--short", "HEAD")
-    }.standardOutput.asText.get().trim().ifEmpty { "unknown" }
-
     defaultConfig {
         applicationId = "com.github.tianma8023.xposed.smscode"
         versionCode = versionCodeInt
         versionName = versionNameStr
 
         buildConfigField("String", "LOG_TAG", "\"smscode\"")
-        buildConfigField("String", "COMMIT_HASH", "\"$gitCommitHash\"")
         buildConfigField("int", "MODULE_VERSION", "$versionCodeInt")
         buildConfigField("boolean", "ALLOW_CONFLICT_BYPASS", allowConflictBypass.toString())
         buildConfigField("String", "B_DOWNLOAD_URL", "\"$relayDownloadUrl\"")

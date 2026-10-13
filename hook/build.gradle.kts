@@ -13,9 +13,6 @@ plugins {
 
 val appVersionName = libs.versions.versionName.get()
 val appVersionCode = libs.versions.versionCode.get().toInt()
-val gitCommitHash = providers.exec {
-    commandLine("git", "-C", projectDir, "rev-parse", "--short", "HEAD")
-}.standardOutput.asText.get().trim().ifEmpty { "unknown" }
 
 android {
     namespace = "io.github.magisk317.smscode.hook"
@@ -26,7 +23,6 @@ android {
 
         // Keep hook diagnostics and module compatibility checks on the app's catalog version.
         buildConfigField("String", "LOG_TAG", "\"smscode\"")
-        buildConfigField("String", "COMMIT_HASH", "\"$gitCommitHash\"")
         buildConfigField("String", "APPLICATION_ID", "\"com.github.tianma8023.xposed.smscode\"")
         buildConfigField("String", "VERSION_NAME", "\"$appVersionName\"")
         buildConfigField("int", "VERSION_CODE", "$appVersionCode")
