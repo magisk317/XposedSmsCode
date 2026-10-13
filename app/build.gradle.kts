@@ -117,6 +117,7 @@ dependencies {
     implementation(project(":smscode-core:verification"))
     implementation(project(":smscode-core:hook"))
     implementation(project(":magisk-xposed-kit"))
+    implementation(project(":magisk-xposed-kit:logging"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)

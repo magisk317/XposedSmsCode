@@ -71,6 +71,7 @@ dependencies {
     implementation(libs.mobile.entitlement.android)
     implementation(project(":magisk-xposed-kit"))
     implementation(project(":magisk-xposed-kit:entitlement"))
+    implementation(project(":magisk-xposed-kit:logging"))
     implementation(project(":smscode-core:contract"))
     implementation(project(":smscode-core:verification"))
     implementation(project(":smscode-core:hook"))
