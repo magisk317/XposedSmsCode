@@ -7,7 +7,7 @@ import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import io.github.magisk317.smscode.runtime.RuntimeStorageFacade
 import io.github.magisk317.smscode.runtime.common.autoinput.AutoInputResultProcessor
 import io.github.magisk317.smscode.xposed.hook.system.SystemInputInjectorHook
-import io.github.magisk317.smscode.xposed.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -29,7 +29,7 @@ object AutoInputResultHandler {
             }
         }.onFailure { error ->
             XLog.w(
-                "AutoInput result worker rejected: %s",
+                message = "AutoInput result worker rejected: %s",
                 error.message ?: error.javaClass.simpleName,
             )
             MagiskOtel.event(
@@ -88,7 +88,7 @@ object AutoInputResultHandler {
             }
             is AutoInputResultProcessor.ValidationResult.RejectedToken -> {
                 XLog.w(
-                    "Diag AutoInputResultReceiver rejected token: attemptId=%d expectedEmpty=%s receivedEmpty=%s",
+                    message = "Diag AutoInputResultReceiver rejected token: attemptId=%d expectedEmpty=%s receivedEmpty=%s",
                     validation.result.attemptId,
                     validation.expectedTokenEmpty,
                     validation.receivedTokenEmpty,
@@ -128,7 +128,7 @@ object AutoInputResultHandler {
                         )
                     }.onFailure { error ->
                         XLog.w(
-                            "AutoInput result upsert failed: %s",
+                            message = "AutoInput result upsert failed: %s",
                             error.message ?: error.javaClass.simpleName,
                         )
                     }.getOrDefault(0L)
@@ -136,7 +136,7 @@ object AutoInputResultHandler {
             )
         }.onFailure { error ->
             XLog.w(
-                "AutoInput result persist failed: %s",
+                message = "AutoInput result persist failed: %s",
                 error.message ?: error.javaClass.simpleName,
             )
             MagiskOtel.event(
@@ -169,7 +169,7 @@ object AutoInputResultHandler {
             }
             AutoInputResultProcessor.PersistenceOutcome.STALE -> {
                 XLog.w(
-                    "Diag AutoInputResultReceiver skipped stale result: attemptId=%d success=%s reason=%s",
+                    message = "Diag AutoInputResultReceiver skipped stale result: attemptId=%d success=%s reason=%s",
                     result.attemptId,
                     result.success,
                     result.reason ?: "<none>",
@@ -188,7 +188,7 @@ object AutoInputResultHandler {
             }
             AutoInputResultProcessor.PersistenceOutcome.UPSERTED -> {
                 XLog.i(
-                    "Diag AutoInputResultReceiver recovered stale result via upsert: attemptId=%d success=%s",
+                    message = "Diag AutoInputResultReceiver recovered stale result via upsert: attemptId=%d success=%s",
                     result.attemptId,
                     result.success,
                 )

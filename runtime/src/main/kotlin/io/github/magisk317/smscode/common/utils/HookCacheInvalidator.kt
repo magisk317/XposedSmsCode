@@ -7,6 +7,7 @@ import android.os.Looper
 import io.github.magisk317.smscode.data.db.DBProvider
 import java.util.concurrent.atomic.AtomicBoolean
 import io.github.magisk317.xposed.logging.MagiskOtel
+import io.github.magisk317.xposed.logging.XLog
 
 /**
  * Registers ContentObservers in a hooked process so module-app writes can invalidate
@@ -38,7 +39,7 @@ object HookCacheInvalidator {
             val prefsObs = object : ContentObserver(handler) {
                 override fun onChange(selfChange: Boolean) {
                     HookPrefsReader.invalidateCache()
-                    XLog.d("HookCacheInvalidator: prefs cache cleared")
+                    XLog.d(message = "HookCacheInvalidator: prefs cache cleared")
                     MagiskOtel.event(
                         name = "hook.cache",
                         attributes = mapOf(
@@ -55,7 +56,7 @@ object HookCacheInvalidator {
                 override fun onChange(selfChange: Boolean) {
                     SmsCodeUtils.invalidateRuleCache()
                     SmsCodeUtils.invalidateOfficialRuleCache()
-                    XLog.d("HookCacheInvalidator: rules caches cleared")
+                    XLog.d(message = "HookCacheInvalidator: rules caches cleared")
                     MagiskOtel.event(
                         name = "hook.cache",
                         attributes = mapOf(
@@ -92,13 +93,13 @@ object HookCacheInvalidator {
                     ),
                     statusOk = true,
                 )
-                XLog.i("HookCacheInvalidator: observers registered")
+                XLog.i(message = "HookCacheInvalidator: observers registered")
             }.onFailure { error ->
                 // Unregister partial registration if any.
                 runCatching { appContext.contentResolver.unregisterContentObserver(prefsObs) }
                 runCatching { appContext.contentResolver.unregisterContentObserver(rulesObs) }
                 XLog.w(
-                    "HookCacheInvalidator: register failed: %s",
+                    message = "HookCacheInvalidator: register failed: %s",
                     error.message ?: error.javaClass.simpleName,
                 )
             }

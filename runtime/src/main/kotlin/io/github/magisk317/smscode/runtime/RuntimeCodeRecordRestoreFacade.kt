@@ -2,7 +2,7 @@ package io.github.magisk317.smscode.runtime
 
 import android.content.Context
 import io.github.magisk317.smscode.common.constant.PrefConst
-import io.github.magisk317.smscode.common.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 import io.github.magisk317.smscode.data.db.DBManager
 import io.github.magisk317.smscode.db.entity.SmsMsg
 import io.github.magisk317.smscode.runtime.common.record.CodeRecordFileStore
@@ -39,7 +39,7 @@ object RuntimeCodeRecordRestoreFacade : io.github.magisk317.smscode.runtime.brid
         if (allMsgList.size > PrefConst.MAX_SMS_RECORDS_COUNT_DEFAULT) {
             val outdatedMsgList = allMsgList.subList(PrefConst.MAX_SMS_RECORDS_COUNT_DEFAULT, allMsgList.size)
             dbManager.removeSmsMsgList(outdatedMsgList)
-            XLog.d("Remove outdated code records succeed")
+            XLog.d(message = "Remove outdated code records succeed")
         }
     }
 

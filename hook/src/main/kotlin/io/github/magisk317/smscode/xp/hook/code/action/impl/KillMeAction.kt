@@ -11,7 +11,7 @@ import io.github.magisk317.smscode.runtime.bridge.HookBroadcastContract
 import io.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
 import io.github.magisk317.smscode.runtime.contract.autoinput.AutoInputResultBroadcastContract
 import io.github.magisk317.smscode.xposed.hook.system.SystemInputInjectorHook
-import io.github.magisk317.smscode.xposed.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 import io.github.magisk317.smscode.db.entity.SmsMsg
 import io.github.magisk317.smscode.xp.hook.code.action.CallableAction
 import io.github.magisk317.xposed.logging.MagiskOtel
@@ -57,7 +57,7 @@ class KillMeAction(
             startKillChainIfNeeded()
         } else {
             XLog.w(
-                "KillMeAction: waiting for auto-input result: attemptId=%d timeoutMs=%d",
+                message = "KillMeAction: waiting for auto-input result: attemptId=%d timeoutMs=%d",
                 attemptId,
                 KILL_RESULT_TIMEOUT_MS,
             )
@@ -89,7 +89,7 @@ class KillMeAction(
                     val success = result.success
                     val reason = result.reason.orEmpty().ifBlank { "n/a" }
                     XLog.w(
-                        "KillMeAction: auto-input result received: attemptId=%d success=%s reason=%s",
+                        message = "KillMeAction: auto-input result received: attemptId=%d success=%s reason=%s",
                         resolvedAttemptId,
                         success,
                         reason,
@@ -106,12 +106,12 @@ class KillMeAction(
             mPhoneContext.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
         }.onSuccess {
             XLog.w(
-                "KillMeAction: auto-input result receiver armed: attemptId=%d",
+                message = "KillMeAction: auto-input result receiver armed: attemptId=%d",
                 resolvedAttemptId,
             )
         }.onFailure { error ->
             XLog.w(
-                "KillMeAction: result receiver registration failed: %s",
+                message = "KillMeAction: result receiver registration failed: %s",
                 error.message ?: error.javaClass.simpleName,
             )
             resolveAutoInputWait(success = false, reason = "receiver_register_failed")
@@ -122,7 +122,7 @@ class KillMeAction(
         if (mTimeoutRunnable != null || mWaitResolved) return
         val timeout = Runnable {
             XLog.w(
-                "KillMeAction: auto-input result timeout (%d ms), proceeding with kill",
+                message = "KillMeAction: auto-input result timeout (%d ms), proceeding with kill",
                 KILL_RESULT_TIMEOUT_MS,
             )
             resolveAutoInputWait(success = false, reason = "timeout")
@@ -148,12 +148,12 @@ class KillMeAction(
 
         receiverToUnregister?.let { receiver ->
             runCatching { mPhoneContext.unregisterReceiver(receiver) }
-                .onFailure { XLog.w("KillMeAction: unregister result receiver failed") }
+                .onFailure { XLog.w(message = "KillMeAction: unregister result receiver failed") }
         }
 
         if (shouldStartKillChain) {
             XLog.w(
-                "KillMeAction: auto-input wait resolved: attemptId=%d success=%s reason=%s",
+                message = "KillMeAction: auto-input wait resolved: attemptId=%d success=%s reason=%s",
                 attemptId ?: -1L,
                 success,
                 normalizedReason,
@@ -173,7 +173,7 @@ class KillMeAction(
         }
         if (!shouldStart) return
         XLog.w(
-            "KillMeAction: start kill chain: attemptId=%d success=%s reason=%s",
+            message = "KillMeAction: start kill chain: attemptId=%d success=%s reason=%s",
             attemptId ?: -1L,
             mWaitResolveSuccess,
             mWaitResolveReason,
@@ -199,7 +199,7 @@ class KillMeAction(
             val extraBuffer = NOTIFICATION_CANCEL_BUFFER_MS
             val totalDelay = cancelDelay + extraBuffer
             mHandler.postDelayed({ killMe() }, totalDelay)
-            XLog.w("KillMeAction: waiting for notification auto-cancel (%d ms + %d ms buffer) before kill", cancelDelay, extraBuffer)
+            XLog.w(message = "KillMeAction: waiting for notification auto-cancel (%d ms + %d ms buffer) before kill", cancelDelay, extraBuffer)
         } else {
             killMe()
         }
@@ -223,7 +223,7 @@ class KillMeAction(
         if (requestSelfKillPrimary()) {
             return
         }
-        XLog.w("KillMeAction: provider self-kill failed for process %s", mPhoneContext.packageName)
+        XLog.w(message = "KillMeAction: provider self-kill failed for process %s", mPhoneContext.packageName)
         MagiskOtel.event(
             name = "app.kill",
             attributes = mapOf(
@@ -261,7 +261,7 @@ class KillMeAction(
                 putExtra(HookBroadcastContract.EXTRA_IPC_TOKEN, token)
             }
             mPluginContext.sendBroadcast(intent)
-            XLog.w("KillMeAction primary requested via KillSelfControlReceiver")
+            XLog.w(message = "KillMeAction primary requested via KillSelfControlReceiver")
             MagiskOtel.event(
                 name = "app.kill",
                 attributes = mapOf(
@@ -275,7 +275,7 @@ class KillMeAction(
             )
             true
         } catch (e: Throwable) {
-            XLog.w("KillMeAction primary failed: %s", e.message ?: e.javaClass.simpleName)
+            XLog.w(message = "KillMeAction primary failed: %s", e.message ?: e.javaClass.simpleName)
             MagiskOtel.event(
                 name = "app.kill",
                 attributes = mapOf(

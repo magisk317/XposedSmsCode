@@ -7,7 +7,7 @@ import android.content.pm.PackageManager
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.magisk317.smscode.common.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 import io.github.magisk317.smscode.db.entity.AppInfo
 import io.github.magisk317.smscode.runtime.bridge.UiStorageAccess
 import io.github.magisk317.smscode.runtime.bridge.UiStoreAccess
@@ -183,7 +183,7 @@ class AppConfigViewModel(
                 throw cancelled
             } catch (t: Throwable) {
                 if (!isActive || !refreshGeneration.isCurrent(generation)) return@launch
-                XLog.e("Unified AppConfig load failed", t)
+                XLog.e(message = "Unified AppConfig load failed", t)
                 _events.emit(AppConfigEvent.Error(t))
             } finally {
                 if (refreshGeneration.isCurrent(generation)) {
@@ -207,7 +207,7 @@ class AppConfigViewModel(
             val stats = usageStatsManager.queryAndAggregateUsageStats(startTime, endTime)
             stats?.mapValues { (_, usage) -> usage.totalTimeInForeground }.orEmpty()
         } catch (ignored: Exception) {
-            XLog.e("Failed to load usage stats", ignored)
+            XLog.e(message = "Failed to load usage stats", ignored)
             emptyMap()
         }
     }
@@ -359,7 +359,7 @@ class AppConfigViewModel(
                     }
                 }
             } catch (t: Throwable) {
-                XLog.e("Failed to persist app config: $packageName", t)
+                XLog.e(message = "Failed to persist app config: $packageName", t)
                 _events.emit(AppConfigEvent.Error(t))
             }
         }

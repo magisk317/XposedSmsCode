@@ -68,7 +68,7 @@ import io.github.magisk317.smscode.runtime.bridge.UiNotificationAccess
 import org.koin.compose.koinInject
 import io.github.magisk317.smscode.runtime.common.diagnostics.RuntimeLogStore
 import io.github.magisk317.smscode.common.utils.AppPreferences
-import io.github.magisk317.smscode.common.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 import io.github.magisk317.xposed.permission.PermissionBridge
 import io.github.magisk317.uikit.foundation.LoadingIndicatorTokens
 import io.github.magisk317.uikit.surface.AppPullToRefresh
@@ -342,7 +342,7 @@ internal fun ComposeSettingsScreenBody(
         val data = result.data
         val pickedUri = data?.data ?: data?.clipData?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.uri
         XLog.i(
-            "Backup picker result: code=%d uri=%s clipCount=%d",
+            message = "Backup picker result: code=%d uri=%s clipCount=%d",
             result.resultCode,
             pickedUri?.toString() ?: "<null>",
             data?.clipData?.itemCount ?: 0,
@@ -364,7 +364,7 @@ internal fun ComposeSettingsScreenBody(
         val data = result.data
         val pickedUri = data?.data ?: data?.clipData?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.uri
         XLog.i(
-            "Restore picker result: code=%d uri=%s clipCount=%d",
+            message = "Restore picker result: code=%d uri=%s clipCount=%d",
             result.resultCode,
             pickedUri?.toString() ?: "<null>",
             data?.clipData?.itemCount ?: 0,
@@ -380,14 +380,14 @@ internal fun ComposeSettingsScreenBody(
                     context.contentResolver.takePersistableUriPermission(pickedUri, flagsToPersist)
                 } else {
                     XLog.w(
-                        "Persistable grant not returned by picker: uri=%s flags=0x%x",
+                        message = "Persistable grant not returned by picker: uri=%s flags=0x%x",
                         pickedUri.toString(),
                         dataFlags,
                     )
                 }
             }.onFailure {
                 XLog.w(
-                    "takePersistableUriPermission failed: uri=%s err=%s",
+                    message = "takePersistableUriPermission failed: uri=%s err=%s",
                     pickedUri.toString(),
                     it.message ?: it.javaClass.simpleName,
                 )
@@ -396,9 +396,9 @@ internal fun ComposeSettingsScreenBody(
             // when Activity lifecycle transitions around document picker return.
             restoreUri = pickedUri
             showRestoreDialog = true
-            XLog.i("Restore confirm dialog requested directly: uri=%s", pickedUri.toString())
+            XLog.i(message = "Restore confirm dialog requested directly: uri=%s", pickedUri.toString())
         } else if (result.resultCode == android.app.Activity.RESULT_OK) {
-            XLog.w("Restore picker returned OK but uri is null")
+            XLog.w(message = "Restore picker returned OK but uri is null")
         }
     }
 
@@ -523,7 +523,7 @@ internal fun ComposeSettingsScreenBody(
             // An empty list means the service is already in the requested state, so no su round trip.
             val commands = PermissionBridge.accessibilityCommands(currentServices, component, enable)
             commands.isEmpty() || PermissionBridge.runRoot(commands) { message ->
-                XLog.w("Root accessibility toggle: %s", message)
+                XLog.w(message = "Root accessibility toggle: %s", message)
             }
         }
     }

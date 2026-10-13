@@ -24,7 +24,7 @@ import io.github.magisk317.smscode.db.entity.AutoInputEvent
 import io.github.magisk317.smscode.db.entity.NotifyRouteRule
 import io.github.magisk317.smscode.db.entity.SmsCodeRule
 import io.github.magisk317.smscode.db.entity.SmsMsg
-import io.github.magisk317.smscode.xposed.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 
 @Database(entities = [
     SmsCodeRule::class,
@@ -700,7 +700,7 @@ abstract class AppDatabase : RoomDatabase() {
             try {
                 db.execSQL(sql)
             } catch (e: SQLiteException) {
-                XLog.w("Room migration %s skipped SQL: %s (%s)", migration, sql, e.message ?: "unknown")
+                XLog.w(message = "Room migration %s skipped SQL: %s (%s)", migration, sql, e.message ?: "unknown")
             }
         }
 

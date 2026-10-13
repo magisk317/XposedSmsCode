@@ -13,7 +13,7 @@ import io.github.magisk317.smscode.common.utils.SmsCodeUtils
 import io.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
 import io.github.magisk317.smscode.db.entity.SmsMsg
 import io.github.magisk317.smscode.rule.utils.SmsCodeParsedMetadataResolver
-import io.github.magisk317.smscode.xposed.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 import io.github.magisk317.smscode.verification.ObservedInboxScanRecord
 import io.github.magisk317.smscode.runtime.verification.ObservedSmsHandler as SharedObservedSmsHandler
 import io.github.magisk317.smscode.runtime.verification.SmsCodePostParseCoordinator
@@ -143,14 +143,14 @@ internal class ObservedSmsHandler(
     private fun backfillExistingSimRouting(record: ObservedInboxScanRecord): Boolean {
         val backfillSimSlot = resolveBackfillSimSlot(record.simSlot, record.subId)
         if (backfillSimSlot < 0 && record.subId <= 0) {
-            XLog.d("Diag SMS routing backfill skip: sms_id=%d reason=no_routing", record.smsId)
+            XLog.d(message = "Diag SMS routing backfill skip: sms_id=%d reason=no_routing", record.smsId)
             return false
         }
         return runCatching {
             val timestamp = if (record.date > 0) record.date else currentTimeMillis()
             val existing = queryExistingSmsRouting(record, timestamp) ?: run {
                 XLog.d(
-                    "Diag SMS routing backfill skip: sms_id=%d reason=no_existing timestamp=%d simSlot=%d subId=%d",
+                    message = "Diag SMS routing backfill skip: sms_id=%d reason=no_existing timestamp=%d simSlot=%d subId=%d",
                     record.smsId,
                     timestamp,
                     backfillSimSlot,
@@ -162,7 +162,7 @@ internal class ObservedSmsHandler(
             val shouldUpdateSubId = existing.subId <= 0 && record.subId > 0
             if (!shouldUpdateSimSlot && !shouldUpdateSubId) {
                 XLog.d(
-                    "Diag SMS routing backfill skip: sms_id=%d reason=existing_has_routing oldSlot=%d oldSubId=%d",
+                    message = "Diag SMS routing backfill skip: sms_id=%d reason=existing_has_routing oldSlot=%d oldSubId=%d",
                     record.smsId,
                     existing.simSlot,
                     existing.subId,
@@ -178,7 +178,7 @@ internal class ObservedSmsHandler(
             )
             XLog.log(
                 Log.INFO,
-                LogRoute.SMS_HOOK,
+                LogRoute.SMS_HOOK.id,
                 false,
                 false,
                 "Diag SMS routing backfill: sms_id=%d record_id=%d rows=%d oldSlot=%d oldSubId=%d newSlot=%d newSubId=%d",
@@ -191,7 +191,7 @@ internal class ObservedSmsHandler(
                 newSubId,
             )
             XLog.d(
-                "Diag SMS routing backfill match: sms_id=%d record_id=%d mode=%s deltaMs=%d rawSlot=%d rawSubId=%d",
+                message = "Diag SMS routing backfill match: sms_id=%d record_id=%d mode=%s deltaMs=%d rawSlot=%d rawSubId=%d",
                 record.smsId,
                 existing.id,
                 existing.matchMode,
@@ -202,7 +202,7 @@ internal class ObservedSmsHandler(
             rows > 0
         }.onFailure {
             XLog.w(
-                "Diag SMS routing backfill failed: sms_id=%d err=%s",
+                message = "Diag SMS routing backfill failed: sms_id=%d err=%s",
                 record.smsId,
                 it.message ?: it.javaClass.simpleName,
             )
@@ -258,7 +258,7 @@ internal class ObservedSmsHandler(
             }
             if (timeFallbackMatches.size > 1) {
                 XLog.d(
-                    "Diag SMS routing backfill skip: sms_id=%d reason=ambiguous_time_fallback candidates=%d",
+                    message = "Diag SMS routing backfill skip: sms_id=%d reason=ambiguous_time_fallback candidates=%d",
                     record.smsId,
                     timeFallbackMatches.size,
                 )

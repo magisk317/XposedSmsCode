@@ -14,7 +14,7 @@ import io.github.magisk317.smscode.runtime.verification.AutoInputAccessibilityRe
 import io.github.magisk317.smscode.common.constant.PrefConst
 import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import io.github.magisk317.smscode.xposed.hook.system.SystemInputInjectorHook
-import io.github.magisk317.smscode.xposed.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 import io.github.magisk317.xposed.logging.MagiskOtel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -24,14 +24,14 @@ class AutoInputAccessibilityService : AccessibilityService() {
     private var receiverRegistered = false
     override fun onCreate() {
         super.onCreate()
-        XLog.d("Accessibility lifecycle create: %s", accessibilityStateSnapshot())
+        XLog.d(message = "Accessibility lifecycle create: %s", accessibilityStateSnapshot())
         emitA11y(stage = "create")
     }
 
     private val autoInputReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (!isMobileAutomationAllowed()) {
-                XLog.i("Mobile entitlement gate skipped accessibility auto-input")
+                XLog.i(message = "Mobile entitlement gate skipped accessibility auto-input")
                 return
             }
             AutoInputAccessibilityRequestHandler.handle(
@@ -50,18 +50,18 @@ class AutoInputAccessibilityService : AccessibilityService() {
         super.onServiceConnected()
         registerAutoInputReceiver()
         XLog.d(
-            "Accessibility lifecycle connected: %s %s",
+            message = "Accessibility lifecycle connected: %s %s",
             accessibilityStateSnapshot(),
             accessibilityServiceInfoSummary(),
         )
-        XLog.d("Accessibility auto input service connected")
+        XLog.d(message = "Accessibility auto input service connected")
         emitA11y(stage = "connected")
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
         val shouldRebind = super.onUnbind(intent)
         XLog.d(
-            "Accessibility lifecycle unbind: action=%s shouldRebind=%s %s %s",
+            message = "Accessibility lifecycle unbind: action=%s shouldRebind=%s %s %s",
             intent?.action.orEmpty().ifBlank { "<none>" },
             shouldRebind,
             accessibilityStateSnapshot(),
@@ -73,7 +73,7 @@ class AutoInputAccessibilityService : AccessibilityService() {
     override fun onRebind(intent: Intent?) {
         super.onRebind(intent)
         XLog.d(
-            "Accessibility lifecycle rebind: action=%s %s",
+            message = "Accessibility lifecycle rebind: action=%s %s",
             intent?.action.orEmpty().ifBlank { "<none>" },
             accessibilityStateSnapshot(),
         )
@@ -81,12 +81,12 @@ class AutoInputAccessibilityService : AccessibilityService() {
 
     override fun onDestroy() {
         XLog.d(
-            "Accessibility lifecycle destroy start: %s %s",
+            message = "Accessibility lifecycle destroy start: %s %s",
             accessibilityStateSnapshot(),
             accessibilityServiceInfoSummary(),
         )
         unregisterAutoInputReceiver()
-        XLog.d("Accessibility auto input service destroyed")
+        XLog.d(message = "Accessibility auto input service destroyed")
         emitA11y(stage = "destroy")
         super.onDestroy()
     }
@@ -94,12 +94,12 @@ class AutoInputAccessibilityService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) = Unit
 
     override fun onInterrupt() {
-        XLog.d("Accessibility lifecycle interrupt: %s", accessibilityStateSnapshot())
+        XLog.d(message = "Accessibility lifecycle interrupt: %s", accessibilityStateSnapshot())
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         XLog.d(
-            "Accessibility lifecycle task removed: action=%s %s",
+            message = "Accessibility lifecycle task removed: action=%s %s",
             rootIntent?.action.orEmpty().ifBlank { "<none>" },
             accessibilityStateSnapshot(),
         )
@@ -108,7 +108,7 @@ class AutoInputAccessibilityService : AccessibilityService() {
 
     private fun registerAutoInputReceiver() {
         if (receiverRegistered) {
-            XLog.d("Accessibility receiver register skipped: already registered")
+            XLog.d(message = "Accessibility receiver register skipped: already registered")
             return
         }
         val filter = IntentFilter(SystemInputInjectorHook.resolveActionAutoInput()).apply {
@@ -122,7 +122,7 @@ class AutoInputAccessibilityService : AccessibilityService() {
                 ContextCompat.RECEIVER_EXPORTED,
             )
             receiverRegistered = true
-            XLog.d("Accessibility receiver registered: priority=%d", RECEIVER_PRIORITY_ACCESSIBILITY)
+            XLog.d(message = "Accessibility receiver registered: priority=%d", RECEIVER_PRIORITY_ACCESSIBILITY)
         } catch (exception: SecurityException) {
             logReceiverRegisterFailure(exception)
             throw exception
@@ -134,21 +134,21 @@ class AutoInputAccessibilityService : AccessibilityService() {
 
     private fun logReceiverRegisterFailure(throwable: Throwable) {
         XLog.d(
-            "Accessibility receiver register failed: %s",
+            message = "Accessibility receiver register failed: %s",
             throwable.message ?: throwable.javaClass.simpleName,
         )
     }
 
     private fun unregisterAutoInputReceiver() {
         if (!receiverRegistered) {
-            XLog.d("Accessibility receiver unregister skipped: not registered")
+            XLog.d(message = "Accessibility receiver unregister skipped: not registered")
             return
         }
         runCatching { unregisterReceiver(autoInputReceiver) }
-            .onSuccess { XLog.d("Accessibility receiver unregistered") }
+            .onSuccess { XLog.d(message = "Accessibility receiver unregistered") }
             .onFailure { throwable ->
                 XLog.d(
-                    "Accessibility receiver unregister failed: %s",
+                    message = "Accessibility receiver unregister failed: %s",
                     throwable.message ?: throwable.javaClass.simpleName,
                 )
             }
@@ -186,7 +186,7 @@ class AutoInputAccessibilityService : AccessibilityService() {
         autoEnter: Boolean,
     ): AutoInputResult {
         if (!isMobileAutomationAllowed()) {
-            XLog.i("Mobile entitlement gate skipped accessibility execution")
+            XLog.i(message = "Mobile entitlement gate skipped accessibility execution")
             return AutoInputResult(false, "none", "mobile_entitlement", packageName)
         }
         return AutoInputAccessibilityNodeHelper.performAutoInput(rootInActiveWindow, code, autoEnter)

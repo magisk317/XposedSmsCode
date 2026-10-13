@@ -1,5 +1,6 @@
 package io.github.magisk317.smscode.common.utils
 
+import io.github.magisk317.xposed.logging.XLog
 import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import android.content.Context
 import io.github.magisk317.smscode.data.db.DBProvider
@@ -11,7 +12,7 @@ import io.github.magisk317.smscode.data.db.DBProvider
 object HookPreferenceMirror {
     suspend fun publish(context: Context): Boolean {
         if (AppPreferencesDataStore.syncToRemotePrefs(context) != true) {
-            XLog.w("Hook preference publish failed; cache invalidation skipped")
+            XLog.w(message = "Hook preference publish failed; cache invalidation skipped")
             return false
         }
         DBProvider.notifyPrefsCacheChanged(context)

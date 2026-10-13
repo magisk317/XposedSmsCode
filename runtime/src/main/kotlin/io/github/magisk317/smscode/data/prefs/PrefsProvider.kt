@@ -12,7 +12,7 @@ import android.os.Bundle
 import androidx.core.net.toUri
 import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import io.github.magisk317.smscode.common.utils.ProviderCallerGuard
-import io.github.magisk317.smscode.xposed.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 import kotlinx.coroutines.runBlocking
 
 class PrefsProvider : ContentProvider() {
@@ -85,7 +85,7 @@ class PrefsProvider : ContentProvider() {
     private fun isCallerAllowed(ctx: Context): Boolean {
         return ProviderCallerGuard.isCallerAllowed(ctx).also { allowed ->
             if (!allowed) {
-                XLog.w("PrefsProvider: deny caller uid=%d", Binder.getCallingUid())
+                XLog.w(message = "PrefsProvider: deny caller uid=%d", Binder.getCallingUid())
             }
         }
     }

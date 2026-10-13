@@ -3,7 +3,7 @@ package io.github.magisk317.smscode.feature.store
 import android.content.Context
 import io.github.magisk317.smscode.runtime.common.store.JsonEntityFileStore
 import io.github.magisk317.smscode.runtime.common.utils.StorageUtils
-import io.github.magisk317.smscode.xposed.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 import java.io.File
 
 /**

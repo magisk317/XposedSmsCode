@@ -21,7 +21,7 @@ import com.magisk317.mobile.entitlement.MobileEntitlementCoordinator
 import com.magisk317.mobile.entitlement.MobileEntitlementStatus
 import io.github.magisk317.smscode.core.R
 import io.github.magisk317.smscode.common.constant.Const
-import io.github.magisk317.smscode.common.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 import io.github.magisk317.smscode.ui.theme.AppTheme
 import io.github.magisk317.uikit.entitlement.MobileEntitlementBusyAction
 import io.github.magisk317.uikit.entitlement.MobileEntitlementContent
@@ -32,7 +32,7 @@ import kotlinx.coroutines.withContext
 class MobileEntitlementActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        XLog.w("Mobile entitlement activity created")
+        XLog.w(message = "Mobile entitlement activity created")
         setContent {
             // Follow the stored appearance preferences (theme mode + UI kit style) like the
             // main activity: passing explicit values here pinned the page to dark Expressive
@@ -60,7 +60,7 @@ private fun MobileEntitlementRoot(onBack: () -> Unit) {
         scope.launch {
             busyAction = MobileEntitlementBusyAction.REFRESH
             message = null
-            XLog.w("Mobile entitlement refresh started")
+            XLog.w(message = "Mobile entitlement refresh started")
             runCatching {
                 withContext(Dispatchers.IO) {
                     MobileEntitlementCoordinator.refresh(context, force = force)
@@ -68,13 +68,13 @@ private fun MobileEntitlementRoot(onBack: () -> Unit) {
             }.onSuccess {
                 evaluation = it
                 XLog.w(
-                    "Mobile entitlement refresh finished status=%s allowed=%s renewDue=%s",
+                    message = "Mobile entitlement refresh finished status=%s allowed=%s renewDue=%s",
                     it.status,
                     it.automationAllowed,
                     it.renewDue,
                 )
             }.onFailure {
-                XLog.e("Mobile entitlement refresh failed", it)
+                XLog.e(message = "Mobile entitlement refresh failed", it)
                 message = it.message ?: it.javaClass.simpleName
             }
             busyAction = null
@@ -87,7 +87,7 @@ private fun MobileEntitlementRoot(onBack: () -> Unit) {
         }.onFailure { error ->
             // ACTION_VIEW 失败（如设备上 Telegram 未安装或链接无法解析）时，自动把跳转
             // 链接复制到剪贴板：用户可手动发送给机器人，或粘贴到官网激活页兑换令牌。
-            XLog.w("Mobile entitlement Telegram jump failed, link copied: %s", error.message)
+            XLog.w(message = "Mobile entitlement Telegram jump failed, link copied: %s", error.message)
             copyPlainText(context, "bot_url", url)
             message = error.message ?: error.javaClass.simpleName
         }
@@ -97,12 +97,12 @@ private fun MobileEntitlementRoot(onBack: () -> Unit) {
         scope.launch {
             busyAction = MobileEntitlementBusyAction.TELEGRAM
             message = null
-            XLog.w("Mobile entitlement Telegram activation started")
+            XLog.w(message = "Mobile entitlement Telegram activation started")
             runCatching {
                 val challenge = withContext(Dispatchers.IO) {
                     MobileEntitlementCoordinator.createTelegramChallenge(context)
                 }
-                XLog.w("Mobile entitlement Telegram challenge received id=%s", challenge.id.take(8))
+                XLog.w(message = "Mobile entitlement Telegram challenge received id=%s", challenge.id.take(8))
                 val url = challenge.botUrl
                 if (url.isNullOrBlank()) {
                     message = qqEntryMissingText
@@ -110,7 +110,7 @@ private fun MobileEntitlementRoot(onBack: () -> Unit) {
                     openTelegram(url)
                 }
             }.onFailure {
-                XLog.e("Mobile entitlement Telegram activation failed", it)
+                XLog.e(message = "Mobile entitlement Telegram activation failed", it)
                 message = it.message ?: it.javaClass.simpleName
             }
             busyAction = null
@@ -121,13 +121,13 @@ private fun MobileEntitlementRoot(onBack: () -> Unit) {
         scope.launch {
             busyAction = MobileEntitlementBusyAction.CODE
             message = null
-            XLog.w("Mobile entitlement QQ activation started")
+            XLog.w(message = "Mobile entitlement QQ activation started")
             runCatching {
                 qqChallenge = withContext(Dispatchers.IO) {
                     MobileEntitlementCoordinator.createQQChallenge(context)
                 }
             }.onFailure {
-                XLog.e("Mobile entitlement QQ activation failed", it)
+                XLog.e(message = "Mobile entitlement QQ activation failed", it)
                 qqChallenge = null
                 message = it.message ?: it.javaClass.simpleName
             }
@@ -139,7 +139,7 @@ private fun MobileEntitlementRoot(onBack: () -> Unit) {
         scope.launch {
             busyAction = MobileEntitlementBusyAction.TOKEN
             message = null
-            XLog.w("Mobile entitlement token activation started")
+            XLog.w(message = "Mobile entitlement token activation started")
             runCatching {
                 withContext(Dispatchers.IO) {
                     MobileEntitlementCoordinator.activateByToken(context, token)
@@ -148,12 +148,12 @@ private fun MobileEntitlementRoot(onBack: () -> Unit) {
                 evaluation = it
                 qqChallenge = null
                 XLog.w(
-                    "Mobile entitlement token activation success status=%s allowed=%s",
+                    message = "Mobile entitlement token activation success status=%s allowed=%s",
                     it.status,
                     it.automationAllowed,
                 )
             }.onFailure {
-                XLog.e("Mobile entitlement token activation failed", it)
+                XLog.e(message = "Mobile entitlement token activation failed", it)
                 message = it.message ?: it.javaClass.simpleName
             }
             busyAction = null

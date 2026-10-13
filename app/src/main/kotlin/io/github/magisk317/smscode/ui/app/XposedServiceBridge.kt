@@ -5,14 +5,14 @@ import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import io.github.magisk317.smscode.common.utils.HookPreferenceMirror
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedServiceHelper
-import io.github.magisk317.smscode.xposed.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import io.github.magisk317.xposed.logging.MagiskOtel
 
 internal object XposedServiceBridge {
     fun initialize(application: SmsCodeApplication, applicationScope: CoroutineScope) {
-        XLog.i("XposedServiceBridge.initialize() called")
+        XLog.i(message = "XposedServiceBridge.initialize() called")
         runCatching<Unit> {
             XposedServiceHelper.registerListener(
                 object : XposedServiceHelper.OnServiceListener {
@@ -28,7 +28,7 @@ internal object XposedServiceBridge {
                             statusOk = true,
                         )
                         XLog.i(
-                            "XposedServiceBridge.onServiceBind() called: framework=%s version=%s",
+                            message = "XposedServiceBridge.onServiceBind() called: framework=%s version=%s",
                             service.frameworkName,
                             service.frameworkVersion,
                         )
@@ -57,14 +57,14 @@ internal object XposedServiceBridge {
                             ),
                             statusOk = true,
                         )
-                        XLog.w("XposedServiceBridge.onServiceDied() called")
+                        XLog.w(message = "XposedServiceBridge.onServiceDied() called")
                         application.handleXposedServiceDied()
                     }
                 },
             )
-            XLog.i("XposedServiceHelper.registerListener() succeeded")
+            XLog.i(message = "XposedServiceHelper.registerListener() succeeded")
         }.onFailure {
-            XLog.e("XposedServiceHelper.registerListener() failed", it)
+            XLog.e(message = "XposedServiceHelper.registerListener() failed", it)
             application.logXposedServiceBridgeFailure(it)
         }
     }

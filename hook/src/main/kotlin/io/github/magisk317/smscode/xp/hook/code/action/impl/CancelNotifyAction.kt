@@ -5,7 +5,7 @@ import android.content.Context
 import android.os.Bundle
 import io.github.magisk317.smscode.db.entity.SmsMsg
 import io.github.magisk317.smscode.runtime.verification.CodeNotificationActionPayload
-import io.github.magisk317.smscode.xposed.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 import io.github.magisk317.smscode.xp.hook.code.action.CallableAction
 
 class CancelNotifyAction(pluginContext: Context, phoneContext: Context, smsMsg: SmsMsg) :
@@ -27,7 +27,7 @@ class CancelNotifyAction(pluginContext: Context, phoneContext: Context, smsMsg: 
             val manager = mPhoneContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager?
             manager?.let {
                 it.cancel(mNotificationId)
-                XLog.d("Notification auto cancelled")
+                XLog.d(message = "Notification auto cancelled")
             }
         }
     }

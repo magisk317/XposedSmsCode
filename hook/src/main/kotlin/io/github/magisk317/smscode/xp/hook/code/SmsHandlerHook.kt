@@ -11,7 +11,7 @@ import io.github.magisk317.smscode.common.constant.NotificationConst
 import io.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
 import io.github.magisk317.smscode.common.utils.HookPrefsReader
 import io.github.magisk317.smscode.common.utils.SmsBlacklistUtils
-import io.github.magisk317.smscode.xposed.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 import io.github.magisk317.smscode.db.entity.SmsMsg
 import io.github.magisk317.smscode.xp.helper.ModuleConflictArbiter
 import io.github.magisk317.smscode.xp.helper.RelayConflictNoticeHelper
@@ -84,7 +84,7 @@ class SmsHandlerHook : BaseHook() {
 
 
     override fun onLoadPackage(param: LoadParam) {
-        XLog.withRoute(LogRoute.SMS_HOOK) {
+        XLog.withRoute(LogRoute.SMS_HOOK.id) {
             onLoadPackageRouted(param)
         }
     }
@@ -103,7 +103,7 @@ class SmsHandlerHook : BaseHook() {
             )
             if (sharedHookAge != null) {
                 XLog.w(
-                    "SmsHandlerHook shared init skip: pkg=%s process=%s pid=%d ageMs=%d",
+                    message = "SmsHandlerHook shared init skip: pkg=%s process=%s pid=%d ageMs=%d",
                     param.packageName,
                     param.processName,
                     android.os.Process.myPid(),
@@ -119,7 +119,7 @@ class SmsHandlerHook : BaseHook() {
             val hookKey = buildHookInstallKey(param)
             if (!markHookInstalled(hookKey)) {
                 XLog.w(
-                    "SmsHandlerHook already initialized, skip duplicate load: pkg=%s process=%s loader=%s",
+                    message = "SmsHandlerHook already initialized, skip duplicate load: pkg=%s process=%s loader=%s",
                     param.packageName,
                     param.processName,
                     Integer.toHexString(System.identityHashCode(classLoader)),
@@ -131,7 +131,7 @@ class SmsHandlerHook : BaseHook() {
                 )
                 return
             }
-            XLog.i("SmsCode initializing in %s", param.packageName)
+            XLog.i(message = "SmsCode initializing in %s", param.packageName)
             printDeviceInfo()
             try {
                 hookSmsHandler(classLoader)
@@ -141,7 +141,7 @@ class SmsHandlerHook : BaseHook() {
                     stage = "hook_install",
                 )
             } catch (e: Throwable) {
-                XLog.e("Failed to hook SmsHandler", e)
+                XLog.e(message = "Failed to hook SmsHandler", e)
                 emitHandler(
                     result = "error",
                     reason = "install_failed",
@@ -150,21 +150,21 @@ class SmsHandlerHook : BaseHook() {
                     errorClass = e.javaClass.simpleName,
                 )
             }
-            XLog.i("SmsCode initialize completely")
+            XLog.i(message = "SmsCode initialize completely")
         }
     }
 
     private fun printDeviceInfo() {
-        XLog.i("Phone manufacturer: %s", Build.MANUFACTURER)
-        XLog.i("Phone model: %s", Build.MODEL)
-        XLog.i("Android version: %s", Build.VERSION.RELEASE)
+        XLog.i(message = "Phone manufacturer: %s", Build.MANUFACTURER)
+        XLog.i(message = "Phone model: %s", Build.MODEL)
+        XLog.i(message = "Android version: %s", Build.VERSION.RELEASE)
         val xposedVersion = resolveXposedVersion()
         if (xposedVersion != null) {
-            XLog.i("Xposed bridge version: %d", xposedVersion)
+            XLog.i(message = "Xposed bridge version: %d", xposedVersion)
         } else {
-            XLog.i("Xposed bridge version: unknown")
+            XLog.i(message = "Xposed bridge version: unknown")
         }
-        XLog.i("SmsCode version: %s (%d)", BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE)
+        XLog.i(message = "SmsCode version: %s (%d)", BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE)
     }
 
     private fun resolveXposedVersion(): Int? {
@@ -184,7 +184,7 @@ class SmsHandlerHook : BaseHook() {
 
     // Android 14+
     private fun hookConstructor34(classLoader: ClassLoader) {
-        XLog.i("Hooking InboundSmsHandler constructor for android v34+")
+        XLog.i(message = "Hooking InboundSmsHandler constructor for android v34+")
         InboundSmsHookInstaller.installConstructorHook(
             classLoader = classLoader,
             className = SMS_HANDLER_CLASS,
@@ -209,7 +209,7 @@ class SmsHandlerHook : BaseHook() {
         methodName: String,
         param: MethodHookParam,
     ) {
-        XLog.withRoute(LogRoute.SMS_HOOK) {
+        XLog.withRoute(LogRoute.SMS_HOOK.id) {
             val intent = VerificationSmsIntentHookSupport.extractOrBuildSmsIntent(
                 param.args,
                 fallbackAction = Telephony.Sms.Intents.SMS_DELIVER_ACTION,
@@ -218,7 +218,7 @@ class SmsHandlerHook : BaseHook() {
             val pluginContext = getPluginContext()
             if (isVerboseDiagEnabled(pluginContext)) {
                 XLog.d(
-                    "Diag SMS dispatch chain: class=%s owner=%s method=%s action=%s args=%d",
+                    message = "Diag SMS dispatch chain: class=%s owner=%s method=%s action=%s args=%d",
                     className,
                     param.thisObject?.javaClass?.name ?: className,
                     methodName,
@@ -234,7 +234,7 @@ class SmsHandlerHook : BaseHook() {
 
     // Android 10+
     private fun hookDispatchIntent29(classLoader: ClassLoader) {
-        XLog.d("Hooking dispatchIntent() for Android v29+")
+        XLog.d(message = "Hooking dispatchIntent() for Android v29+")
         InboundSmsHookInstaller.installDispatchIntentHook(
             classLoader = classLoader,
             className = SMS_HANDLER_CLASS,
@@ -244,7 +244,7 @@ class SmsHandlerHook : BaseHook() {
     private inner class ConstructorHook : MethodHook() {
         @Throws(Throwable::class)
         override fun afterHookedMethod(param: MethodHookParam) {
-            XLog.withRoute(LogRoute.SMS_HOOK) {
+            XLog.withRoute(LogRoute.SMS_HOOK.id) {
                 try {
                     afterConstructorHandler(param)
                     currentRuntime()?.let { runtime ->
@@ -253,7 +253,7 @@ class SmsHandlerHook : BaseHook() {
                 } catch (e: Throwable) {
                     // Never re-throw inside the telephony process: an escaped exception
                     // kills com.android.phone and takes down SMS for the whole device.
-                    XLog.e("Error occurred in constructor hook", e)
+                    XLog.e(message = "Error occurred in constructor hook", e)
                 }
             }
         }
@@ -274,7 +274,7 @@ class SmsHandlerHook : BaseHook() {
                 channelName,
                 NotificationManager.IMPORTANCE_HIGH,
             )
-            XLog.d("Init notification channel succeed")
+            XLog.d(message = "Init notification channel succeed")
         }
     }
 
@@ -283,7 +283,7 @@ class SmsHandlerHook : BaseHook() {
         if (!HookRuntimeBridge.prefsAccess.showCodeNotification(pluginContext)) return
         mPhoneContext?.let {
             CopyCodeReceiver.registerMe(it)
-            XLog.d("Register copy code receiver")
+            XLog.d(message = "Register copy code receiver")
         }
     }
 
@@ -302,7 +302,7 @@ class SmsHandlerHook : BaseHook() {
         )
         if (observerAge != null) {
             XLog.w(
-                "SmsInboxObserver shared register skip: key=%s pid=%d ageMs=%d",
+                message = "SmsInboxObserver shared register skip: key=%s pid=%d ageMs=%d",
                 observerKey,
                 android.os.Process.myPid(),
                 observerAge,
@@ -353,11 +353,11 @@ class SmsHandlerHook : BaseHook() {
     private inner class DispatchIntentHook(private val mReceiverIndex: Int) : MethodHook() {
         @Throws(Throwable::class)
         override fun beforeHookedMethod(param: MethodHookParam) {
-            XLog.withRoute(LogRoute.SMS_HOOK) {
+            XLog.withRoute(LogRoute.SMS_HOOK.id) {
                 try {
                     beforeDispatchIntentHandler(param, mReceiverIndex)
                 } catch (e: Throwable) {
-                    XLog.e("Error occurred in dispatchIntent() hook, ", e)
+                    XLog.e(message = "Error occurred in dispatchIntent() hook, ", e)
                 }
             }
         }
@@ -368,9 +368,9 @@ class SmsHandlerHook : BaseHook() {
         val action = intent.action
 
         if (BuildConfig.DEBUG) {
-            XLog.d("SmsHandlerHook: Received intent action: $action")
+            XLog.d(message = "SmsHandlerHook: Received intent action: $action")
             intent.extras?.let { bundle ->
-                XLog.d("SmsHandlerHook: Extra keys = %s", bundle.keySet().joinToString(","))
+                XLog.d(message = "SmsHandlerHook: Extra keys = %s", bundle.keySet().joinToString(","))
             }
         }
 
@@ -394,7 +394,7 @@ class SmsHandlerHook : BaseHook() {
                 inboundSmsHandler = param.thisObject,
             )
             XLog.e(
-                "Context is null, parked sms for replay. parked=%s pluginContext: %s, phoneContext: %s",
+                message = "Context is null, parked sms for replay. parked=%s pluginContext: %s, phoneContext: %s",
                 parked,
                 pluginContext,
                 phoneContext,
@@ -420,7 +420,7 @@ class SmsHandlerHook : BaseHook() {
         }
         if (VerificationSmsIntentHookSupport.markDispatchHandled(intent, action)) {
             XLog.d(
-                "Diag SMS dispatch duplicate skip: event_id=%s action=%s source=intent_extra",
+                message = "Diag SMS dispatch duplicate skip: event_id=%s action=%s source=intent_extra",
                 eventId,
                 action,
             )
@@ -433,7 +433,7 @@ class SmsHandlerHook : BaseHook() {
             return
         }
         val pduCount = VerificationSmsIntentHookSupport.getPduCount(intent) {
-            XLog.w("Diag getPduCount failed: %s", it.message ?: "unknown")
+            XLog.w(message = "Diag getPduCount failed: %s", it.message ?: "unknown")
         }
         // Extras first; if the sender omitted them, walk the handler and its arguments
         // for the SIM slot. relay already did this for its forward path, so both hosts
@@ -449,7 +449,7 @@ class SmsHandlerHook : BaseHook() {
             ) ?: routing
         }
         XLog.i(
-            "Diag SMS intent intercepted: event_id=%s action=%s pduCount=%d extras=%s simSlot=%d subId=%d",
+            message = "Diag SMS intent intercepted: event_id=%s action=%s pduCount=%d extras=%s simSlot=%d subId=%d",
             eventId,
             action,
             pduCount,
@@ -493,10 +493,10 @@ class SmsHandlerHook : BaseHook() {
     private fun replayPendingSms(pluginContext: Context, phoneContext: Context) {
         val (ready, expired) = pendingSmsReplay.drainReady()
         if (expired > 0) {
-            XLog.w("Pending sms replay expired %d dispatch(es)", expired)
+            XLog.w(message = "Pending sms replay expired %d dispatch(es)", expired)
         }
         if (ready.isEmpty()) return
-        XLog.i("Replaying %d parked sms dispatch(es)", ready.size)
+        XLog.i(message = "Replaying %d parked sms dispatch(es)", ready.size)
         ready.forEach { entry ->
             runCatching {
                 val outcome = dispatchIntentHandler.handle(
@@ -517,14 +517,14 @@ class SmsHandlerHook : BaseHook() {
                     statusOk = !outcome.inboundBlocked,
                 )
             }.onFailure {
-                XLog.e("Pending sms replay failed: event_id=%s %s", entry.eventId, it.message ?: "unknown")
+                XLog.e(message = "Pending sms replay failed: event_id=%s %s", entry.eventId, it.message ?: "unknown")
             }
         }
     }
 
     private fun scheduleBlacklistDelete(pluginContext: Context, phoneContext: Context, smsMsg: SmsMsg) {
         SMS_OPERATION_EXECUTOR.execute {
-            XLog.withRoute(LogRoute.SMS_HOOK) {
+            XLog.withRoute(LogRoute.SMS_HOOK.id) {
                 runCatching {
                     OperateSmsAction(
                         pluginContext,
@@ -533,7 +533,7 @@ class SmsHandlerHook : BaseHook() {
                         OperateSmsAction.FORCE_DELETE,
                     ).call()
                 }.onFailure {
-                    XLog.w("Diag sms blacklist delete task failed: %s", it.message ?: "unknown")
+                    XLog.w(message = "Diag sms blacklist delete task failed: %s", it.message ?: "unknown")
                 }
             }
         }
@@ -542,14 +542,14 @@ class SmsHandlerHook : BaseHook() {
     private fun ensureRuntimeForDispatch(param: MethodHookParam, receiverIndex: Int): SmsHookRuntimeContext? {
         currentRuntime()?.let { return it }
         XLog.w(
-            "SmsHandlerHook dispatch runtime missing, attempt recovery: owner=%s receiverIndex=%d argCount=%d",
+            message = "SmsHandlerHook dispatch runtime missing, attempt recovery: owner=%s receiverIndex=%d argCount=%d",
             param.thisObject?.javaClass?.name ?: "<none>",
             receiverIndex,
             param.args.size,
         )
         val recovered = resolveDispatchPhoneContext(param, receiverIndex) ?: run {
             XLog.e(
-                "SmsHandlerHook dispatch runtime recovery skipped: no phone context owner=%s receiverIndex=%d argCount=%d",
+                message = "SmsHandlerHook dispatch runtime recovery skipped: no phone context owner=%s receiverIndex=%d argCount=%d",
                 param.thisObject?.javaClass?.name ?: "<none>",
                 receiverIndex,
                 param.args.size,
@@ -558,7 +558,7 @@ class SmsHandlerHook : BaseHook() {
         }
         val recoveredPhoneContext = recovered.context
         XLog.w(
-            "SmsHandlerHook dispatch runtime recovery context: source=%s package=%s process=%s",
+            message = "SmsHandlerHook dispatch runtime recovery context: source=%s package=%s process=%s",
             recovered.source,
             recoveredPhoneContext.packageName,
             recoveredPhoneContext.applicationInfo?.processName ?: recoveredPhoneContext.packageName,
@@ -566,7 +566,7 @@ class SmsHandlerHook : BaseHook() {
         val outcome = constructorInitializer.handle(recoveredPhoneContext)
         if (!outcome.initialized) {
             XLog.e(
-                "SmsHandlerHook dispatch runtime recovery failed: source=%s reason=%s package=%s",
+                message = "SmsHandlerHook dispatch runtime recovery failed: source=%s reason=%s package=%s",
                 recovered.source,
                 outcome.stopReason ?: "unknown",
                 recoveredPhoneContext.packageName,
@@ -576,7 +576,7 @@ class SmsHandlerHook : BaseHook() {
         return currentRuntime().also { runtime ->
             if (runtime != null) {
                 XLog.w(
-                    "SmsHandlerHook dispatch runtime recovered: source=%s package=%s process=%s",
+                    message = "SmsHandlerHook dispatch runtime recovered: source=%s package=%s process=%s",
                     recovered.source,
                     runtime.phoneContext.packageName,
                     runtime.phoneContext.applicationInfo?.processName ?: runtime.phoneContext.packageName,
@@ -612,7 +612,7 @@ class SmsHandlerHook : BaseHook() {
             )
             if (!claim.claimed) {
                 XLog.d(
-                    "Diag SMS dispatch duplicate skip: event_id=%s action=%s source=shared_store ageMs=%d",
+                    message = "Diag SMS dispatch duplicate skip: event_id=%s action=%s source=shared_store ageMs=%d",
                     eventId,
                     action,
                     claim.ageMs ?: 0L,
@@ -621,7 +621,7 @@ class SmsHandlerHook : BaseHook() {
             !claim.claimed
         }.onFailure {
             XLog.w(
-                "Diag SMS dispatch shared dedup failed: event_id=%s action=%s err=%s",
+                message = "Diag SMS dispatch shared dedup failed: event_id=%s action=%s err=%s",
                 eventId,
                 action,
                 it.message ?: it.javaClass.simpleName,
@@ -651,7 +651,7 @@ class SmsHandlerHook : BaseHook() {
             return
         }
         if (!runCatching { HookRuntimeBridge.prefsAccess.mobileAutomationAllowed(pluginContext) }.getOrDefault(false)) {
-            XLog.i("Mobile entitlement gate skipped dispatch-chain side effects")
+            XLog.i(message = "Mobile entitlement gate skipped dispatch-chain side effects")
             return
         }
         val eventId = VerificationSmsIntentHookSupport.ensureEventId(intent)
@@ -670,7 +670,7 @@ class SmsHandlerHook : BaseHook() {
         }
         recordHookHeartbeat("sms_handler_dispatch_chain")
         XLog.w(
-            "Diag SMS dispatch chain block: method=%s reason=%s event_id=%s",
+            message = "Diag SMS dispatch chain block: method=%s reason=%s event_id=%s",
             methodName,
             reason,
             eventId,
@@ -691,7 +691,7 @@ class SmsHandlerHook : BaseHook() {
             )
             if (!blocked) {
                 XLog.w(
-                    "Diag dispatch chain block aborted: cleanup incomplete method=%s event_id=%s",
+                    message = "Diag dispatch chain block aborted: cleanup incomplete method=%s event_id=%s",
                     methodName,
                     eventId,
                 )
@@ -699,7 +699,7 @@ class SmsHandlerHook : BaseHook() {
             }
         } else {
             XLog.w(
-                "Diag dispatch chain block fallback: receiver unavailable method=%s event_id=%s",
+                message = "Diag dispatch chain block fallback: receiver unavailable method=%s event_id=%s",
                 methodName,
                 eventId,
             )
@@ -720,7 +720,7 @@ class SmsHandlerHook : BaseHook() {
         )
         if (result.shouldSkip) {
             XLog.d(
-                "Diag dispatch chain block duplicate skip: action=%s reason=%s ageMs=%d",
+                message = "Diag dispatch chain block duplicate skip: action=%s reason=%s ageMs=%d",
                 action,
                 reason,
                 result.ageMs ?: 0L,
@@ -762,7 +762,7 @@ class SmsHandlerHook : BaseHook() {
         synchronized(this) {
             if (suppressionLogged) return
             XLog.w(
-                "SmsHandlerHook suppressed: reason=%s stage=%s package=%s",
+                message = "SmsHandlerHook suppressed: reason=%s stage=%s package=%s",
                 ModuleConflictArbiter.SUPPRESSION_REASON,
                 stage,
                 ModuleConflictArbiter.TARGET_RELAY_PACKAGE,
@@ -781,7 +781,7 @@ class SmsHandlerHook : BaseHook() {
                 mPluginContext?.let({ ctx -> HookRuntimeBridge.hookProcessInit?.invoke(ctx) })
                 HookPrefsReader.installSnapshot(mPhoneContext)
             } catch (e: Exception) {
-                XLog.e("Create plugin context failed: %s", e)
+                XLog.e(message = "Create plugin context failed: %s", e)
             }
         }
         return mPluginContext

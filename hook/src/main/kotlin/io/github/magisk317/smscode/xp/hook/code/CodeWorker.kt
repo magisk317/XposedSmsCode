@@ -11,7 +11,7 @@ import io.github.magisk317.smscode.db.entity.SmsMsg
 import io.github.magisk317.smscode.runtime.verification.CodeWorker as SharedCodeWorker
 import io.github.magisk317.smscode.runtime.verification.SmsCodePostParseCoordinator
 import io.github.magisk317.smscode.runtime.verification.SmsParseActionRunner
-import io.github.magisk317.smscode.xposed.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 import io.github.magisk317.smscode.xp.hook.code.action.impl.KillMeAction
 import io.github.magisk317.smscode.xp.hook.code.action.impl.SmsParseAction
 import java.util.concurrent.TimeUnit
@@ -69,7 +69,7 @@ class CodeWorker(
     ) {
         val autoInputDelayMs = plan.autoInputDelayMs
         if (autoInputDelayMs == null) {
-            XLog.w("KillMe enabled but auto-input disabled, skip KillMeAction")
+            XLog.w(message = "KillMe enabled but auto-input disabled, skip KillMeAction")
             return
         }
         val notificationAutoCancelDelayMs = plan.notificationPlan?.autoCancelDelayMs

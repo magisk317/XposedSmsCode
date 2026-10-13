@@ -15,7 +15,7 @@ import io.github.magisk317.smscode.runtime.verification.HostSmsCodeActionWiring
 import io.github.magisk317.smscode.runtime.verification.NotificationDispatchGuard
 import io.github.magisk317.smscode.runtime.verification.SmsCodePostParseCoordinator
 import io.github.magisk317.smscode.runtime.verification.SmsCodeActionDispatcher as SharedSmsCodeActionDispatcher
-import io.github.magisk317.smscode.xposed.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 import java.util.concurrent.ScheduledExecutorService
 
 object SmsCodeActionDispatcher {
@@ -167,7 +167,7 @@ object SmsCodeActionDispatcher {
         delayMs: Long,
     ): Boolean {
         if (!mobileAutomationAllowed(pluginContext)) {
-            XLog.i("Mobile entitlement gate skipped auto-input dispatch")
+            XLog.i(message = "Mobile entitlement gate skipped auto-input dispatch")
             return false
         }
         return AutoInputDispatchGuard.claim(

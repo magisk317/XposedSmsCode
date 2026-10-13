@@ -1,5 +1,6 @@
 package io.github.magisk317.smscode.common.utils
 
+import io.github.magisk317.xposed.logging.XLog
 import android.content.Context
 import android.content.SharedPreferences
 import io.github.magisk317.smscode.runtime.BuildConfig
@@ -95,7 +96,7 @@ object HookPrefsReader : HookPrefsAccess {
         return runCatching { provider.invoke() }.getOrElse { t ->
             if (!remoteProviderLogged) {
                 remoteProviderLogged = true
-                XLog.w("HookPrefsReader: remote prefs provider failed", t)
+                XLog.w(message = "HookPrefsReader: remote prefs provider failed", t)
             }
             null
         }
@@ -112,12 +113,12 @@ object HookPrefsReader : HookPrefsAccess {
 
     private fun logRemoteTraceOnce(key: String, state: String) {
         if (remoteTraceLoggedKeys.add(key)) {
-            XLog.w("Diag remote prefs: key=%s state=%s", key, state)
+            XLog.w(message = "Diag remote prefs: key=%s state=%s", key, state)
         }
     }
 
     private fun logPrefsSourceError(message: String, error: Throwable) {
-        XLog.w("HookPrefsReader: %s", message, error)
+        XLog.w(message = "HookPrefsReader: %s", message, error)
     }
 
     /**
@@ -135,7 +136,7 @@ object HookPrefsReader : HookPrefsAccess {
 
     private fun logFallbackOnce(key: String, source: String) {
         if (fallbackTraceLoggedKeys.add("$key@$source")) {
-            XLog.w("Diag prefs fallback: key=%s source=%s (remote provider unreachable)", key, source)
+            XLog.w(message = "Diag prefs fallback: key=%s source=%s (remote provider unreachable)", key, source)
         }
     }
 
@@ -305,7 +306,7 @@ object HookPrefsReader : HookPrefsAccess {
         val defaultValue = false
         val trace = readBooleanWithTrace(PrefConst.KEY_COPY_TO_CLIPBOARD, defaultValue)
         XLog.w(
-            "Diag pref copy_to_clipboard: value=%s source=%s default=%s",
+            message = "Diag pref copy_to_clipboard: value=%s source=%s default=%s",
             trace.value,
             trace.source,
             defaultValue,
@@ -470,7 +471,7 @@ object HookPrefsReader : HookPrefsAccess {
         val trace = readStringWithTrace(PrefConst.KEY_IPC_TOKEN, "")
         if (trace.value.isBlank() || trace.source != "provider") {
             XLog.w(
-                "Diag pref ipc_token: blank=%s source=%s",
+                message = "Diag pref ipc_token: blank=%s source=%s",
                 trace.value.isBlank(),
                 trace.source,
             )

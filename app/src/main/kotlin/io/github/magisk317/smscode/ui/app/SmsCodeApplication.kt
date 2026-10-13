@@ -27,7 +27,7 @@ import io.github.magisk317.smscode.xposed.runtime.CoreLogSinkHolder
 import io.github.magisk317.smscode.xposed.runtime.CoreRuntime
 import io.github.magisk317.smscode.runtime.common.utils.StorageUtils
 import io.github.magisk317.smscode.xposed.runtime.CoreRuntimeAccess
-import io.github.magisk317.smscode.xposed.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 import io.github.magisk317.xposed.logging.DefaultLogSanitizer
 import io.github.magisk317.smscode.di.appModule
 import io.github.magisk317.smscode.di.billingModule
@@ -269,7 +269,7 @@ class SmsCodeApplication : Application() {
         frameworkVersion: String?,
     ) {
         XLog.i(
-            "handleXposedServiceBound() called: framework=$frameworkName version=$frameworkVersion provider=${remotePrefsProvider != null}",
+            message = "handleXposedServiceBound() called: framework=$frameworkName version=$frameworkVersion provider=${remotePrefsProvider != null}",
         )
         AppPreferencesDataStore.setRemotePrefsProvider(remotePrefsProvider)
         // Publishes attempted before the service bound are marked pending rather
@@ -289,7 +289,7 @@ class SmsCodeApplication : Application() {
             verboseLogging = readVerboseLogMode(),
         )
         XLog.i(
-            "Xposed service connected: framework=%s version=%s",
+            message = "Xposed service connected: framework=%s version=%s",
             frameworkName ?: "unknown",
             frameworkVersion ?: "unknown",
         )
@@ -314,7 +314,7 @@ class SmsCodeApplication : Application() {
             context = this,
             verboseLogging = readVerboseLogMode(),
         )
-        XLog.w("Xposed service disconnected")
+        XLog.w(message = "Xposed service disconnected")
         MagiskOtel.event(
             name = "app.lifecycle",
             attributes = mapOf(
@@ -329,7 +329,7 @@ class SmsCodeApplication : Application() {
     }
 
     internal fun logXposedServiceBridgeFailure(throwable: Throwable) {
-        XLog.w("Failed to register Xposed service listener: %s", throwable.message ?: "unknown")
+        XLog.w(message = "Failed to register Xposed service listener: %s", throwable.message ?: "unknown")
         MagiskOtel.event(
             name = "app.lifecycle",
             attributes = mapOf(

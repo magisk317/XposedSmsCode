@@ -26,7 +26,7 @@ import io.github.magisk317.smscode.runtime.contract.ipc.RuntimeStateProviderCont
 import io.github.magisk317.smscode.runtime.common.utils.SharedRuntimeGate
 import io.github.magisk317.smscode.runtime.common.utils.StorageUtils
 import io.github.magisk317.smscode.runtime.contract.record.SmsMsgCursorContract
-import io.github.magisk317.smscode.xposed.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 import java.util.Locale
 
 class DBProvider : ContentProvider() {
@@ -537,7 +537,7 @@ class DBProvider : ContentProvider() {
         val ctx = context ?: return false
         return ProviderCallerGuard.isCallerAllowed(ctx).also { allowed ->
             if (!allowed) {
-                XLog.w("DBProvider: deny caller uid=%d", Binder.getCallingUid())
+                XLog.w(message = "DBProvider: deny caller uid=%d", Binder.getCallingUid())
             }
         }
     }
@@ -907,7 +907,7 @@ class DBProvider : ContentProvider() {
                 appContext.contentResolver.notifyChange(prefsCacheContentUri(appContext), null)
             }.onFailure { error ->
                 XLog.w(
-                    "notifyPrefsCacheChanged failed: %s",
+                    message = "notifyPrefsCacheChanged failed: %s",
                     error.message ?: error.javaClass.simpleName,
                 )
             }
@@ -923,7 +923,7 @@ class DBProvider : ContentProvider() {
                 appContext.contentResolver.notifyChange(rulesCacheContentUri(appContext), null)
             }.onFailure { error ->
                 XLog.w(
-                    "notifyRulesCacheChanged failed: %s",
+                    message = "notifyRulesCacheChanged failed: %s",
                     error.message ?: error.javaClass.simpleName,
                 )
             }

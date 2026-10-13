@@ -6,7 +6,7 @@ import android.net.Uri
 import android.os.Bundle
 import io.github.magisk317.smscode.common.utils.HookPrefsReader
 import io.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
-import io.github.magisk317.smscode.xposed.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 import io.github.magisk317.smscode.db.entity.AppInfo
 import io.github.magisk317.smscode.db.entity.SmsMsg
 import io.github.magisk317.smscode.feature.store.EntityStoreManager
@@ -90,7 +90,7 @@ class AutoInputAction(
             insertedUri?.lastPathSegment?.toLongOrNull()
         }.onFailure { error ->
             XLog.w(
-                "Insert auto input attempt failed: %s",
+                message = "Insert auto input attempt failed: %s",
                 error.message ?: error.javaClass.simpleName,
             )
         }.getOrNull() ?: attemptId
@@ -108,7 +108,7 @@ class AutoInputAction(
                 ).any { it.packageName == pkg && it.blocked }
             },
             fallbackLogger = { pkg, blocked ->
-                XLog.d("AutoInput fallback file check: pkg=%s blocked=%s", pkg, blocked)
+                XLog.d(message = "AutoInput fallback file check: pkg=%s blocked=%s", pkg, blocked)
             },
         )
     }
@@ -123,9 +123,9 @@ class AutoInputAction(
             },
         )
         return blocked?.also {
-            XLog.d("AutoInput provider check: pkg=%s blocked=%s", packageName, it)
+            XLog.d(message = "AutoInput provider check: pkg=%s blocked=%s", packageName, it)
         } ?: run {
-            XLog.w("AutoInput provider check failed: pkg=%s err=provider_query_failed", packageName)
+            XLog.w(message = "AutoInput provider check failed: pkg=%s err=provider_query_failed", packageName)
             null
         }
     }

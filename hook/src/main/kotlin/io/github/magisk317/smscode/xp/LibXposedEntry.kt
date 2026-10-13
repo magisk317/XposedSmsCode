@@ -14,7 +14,7 @@ import io.github.magisk317.smscode.xposed.hook.permission.PermissionGranterHook
 import io.github.magisk317.smscode.xposed.hook.system.SystemInputInjectorHook
 import io.github.magisk317.xposed.HookEnv
 import io.github.magisk317.xposed.LibXposedHookApi
-import io.github.magisk317.smscode.xposed.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 import io.github.magisk317.xposed.BaseHook
 import io.github.magisk317.xposed.BaseLibXposedEntry
 import io.github.magisk317.xposed.logging.MagiskOtel
@@ -48,19 +48,19 @@ class LibXposedEntry : BaseLibXposedEntry {
             val sensitiveLog = prefs?.getBoolean("pref_sensitive_debug_log_mode", false)
             val enabled = prefs?.getBoolean("pref_enable", false)
             XLog.w(
-                "Hook remotePrefs: prefs=%s sensitiveLog=%s enabled=%s keys=%s",
+                message = "Hook remotePrefs: prefs=%s sensitiveLog=%s enabled=%s keys=%s",
                 prefs != null,
                 sensitiveLog,
                 enabled,
                 prefs?.all?.keys?.size,
             )
         }.onFailure {
-            XLog.e("Hook remotePrefs failed", it)
+            XLog.e(message = "Hook remotePrefs failed", it)
         }
         try {
             XLog.setLogLevel(RuntimeBuildConfig.LOG_LEVEL)
         } catch (t: Throwable) {
-            XLog.e("", t)
+            XLog.e(message = "", t)
         }
         MagiskOtel.event(
             name = "hook.load",

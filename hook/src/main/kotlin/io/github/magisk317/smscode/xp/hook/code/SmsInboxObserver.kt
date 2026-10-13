@@ -6,7 +6,7 @@ import io.github.magisk317.smscode.common.utils.SmsCodeUtils
 import io.github.magisk317.smscode.runtime.common.utils.StringUtils
 import io.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
 import io.github.magisk317.smscode.xposed.hook.telephony.SmsInboxObserver as SharedSmsInboxObserver
-import io.github.magisk317.smscode.xposed.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 
@@ -26,7 +26,7 @@ internal class SmsInboxObserver(
         phoneContext = phoneContext,
         actionExecutor = queryExecutor,
         roleStateLogger = { eventId ->
-            XLog.w("Diag observer sms role: event_id=%s", eventId)
+            XLog.w(message = "Diag observer sms role: event_id=%s", eventId)
         },
     )
 

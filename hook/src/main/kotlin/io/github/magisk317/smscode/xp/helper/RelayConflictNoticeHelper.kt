@@ -11,7 +11,7 @@ import io.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
 import io.github.magisk317.smscode.xp.hook.code.helper.InputHelper
 import io.github.magisk317.smscode.runtime.verification.ConflictNotificationHelper
 import io.github.magisk317.smscode.verification.RecentEventIdTracker
-import io.github.magisk317.smscode.xposed.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 
 object RelayConflictNoticeHelper {
     private const val MAX_TRACKED_EVENT_IDS = 64
@@ -28,13 +28,13 @@ object RelayConflictNoticeHelper {
 
     fun notifyConflictOnSms(pluginContext: Context, phoneContext: Context, eventId: String) {
         if (!markNotified(eventId)) {
-            XLog.w("Relay conflict notice deduped: event_id=%s", eventId)
+            XLog.w(message = "Relay conflict notice deduped: event_id=%s", eventId)
             return
         }
         showConflictNotification(pluginContext, phoneContext)
         showConflictToast(pluginContext, phoneContext)
         XLog.w(
-            "Relay conflict notice sent: event_id=%s package=%s bypass=%s",
+            message = "Relay conflict notice sent: event_id=%s package=%s bypass=%s",
             eventId,
             ModuleConflictArbiter.TARGET_RELAY_PACKAGE,
             BuildConfig.ALLOW_CONFLICT_BYPASS,

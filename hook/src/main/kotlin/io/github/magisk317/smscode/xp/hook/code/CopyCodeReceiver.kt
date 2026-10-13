@@ -11,7 +11,7 @@ import io.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
 import io.github.magisk317.smscode.runtime.verification.CodeNotificationActionHandler
 import io.github.magisk317.smscode.runtime.verification.CodeNotificationActionPayload
 import io.github.magisk317.smscode.xposed.hook.telephony.CopyCodeReceiverRegistrar
-import io.github.magisk317.smscode.xposed.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 import io.github.magisk317.xposed.logging.MagiskOtel
 
 /**

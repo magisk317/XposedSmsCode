@@ -6,14 +6,14 @@ import android.content.Intent
 import android.os.Process
 import io.github.magisk317.smscode.common.constant.PrefConst
 import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
-import io.github.magisk317.smscode.xposed.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 import kotlinx.coroutines.runBlocking
 import io.github.magisk317.xposed.logging.MagiskOtel
 
 class KillSelfControlReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != ACTION_KILL_SELF) {
-            XLog.w("KillSelfControlReceiver: ignored unexpected action=%s", intent.action.orEmpty())
+            XLog.w(message = "KillSelfControlReceiver: ignored unexpected action=%s", intent.action.orEmpty())
             MagiskOtel.event(
                 name = "app.kill",
                 attributes = mapOf(
@@ -33,7 +33,7 @@ class KillSelfControlReceiver : BroadcastReceiver() {
         }
         val token = intent.getStringExtra(EXTRA_IPC_TOKEN).orEmpty()
         if (expectedToken.isBlank() || token.isBlank() || token != expectedToken) {
-            XLog.w("KillSelfControlReceiver: rejected kill request due to invalid token")
+            XLog.w(message = "KillSelfControlReceiver: rejected kill request due to invalid token")
             MagiskOtel.event(
                 name = "app.kill",
                 attributes = mapOf(
@@ -51,7 +51,7 @@ class KillSelfControlReceiver : BroadcastReceiver() {
         val delayMs = normalizeDelayMs(intent.getLongExtra(EXTRA_DELAY_MS, DEFAULT_DELAY_MS))
         val processName = context.applicationInfo?.processName ?: context.packageName
         XLog.w(
-            "KillSelfControlReceiver: kill self requested, delay=%dms pid=%d process=%s",
+            message = "KillSelfControlReceiver: kill self requested, delay=%dms pid=%d process=%s",
             delayMs,
             Process.myPid(),
             processName,
@@ -75,7 +75,7 @@ class KillSelfControlReceiver : BroadcastReceiver() {
                 // ignore
             }
             XLog.w(
-                "KillSelfControlReceiver: killing pid=%d process=%s",
+                message = "KillSelfControlReceiver: killing pid=%d process=%s",
                 Process.myPid(),
                 processName,
             )

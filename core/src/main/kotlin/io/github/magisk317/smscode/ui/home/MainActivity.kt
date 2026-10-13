@@ -51,7 +51,7 @@ import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import io.github.magisk317.smscode.runtime.common.utils.FrameworkCompatibilityMonitor
 import io.github.magisk317.smscode.runtime.bridge.UiPrefsAccess
 import io.github.magisk317.smscode.runtime.bridge.UiUpdateAccess
-import io.github.magisk317.smscode.common.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 import io.github.magisk317.smscode.common.utils.AppPreferences
 import io.github.magisk317.smscode.common.utils.xscPackageActions
 import io.github.magisk317.smscode.runtime.common.utils.StringUtils
@@ -111,7 +111,7 @@ class MainActivity : ComponentActivity() {
     @Suppress("CyclomaticComplexMethod")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        XLog.w("MainActivity.onCreate() called pid=%d", android.os.Process.myPid())
+        XLog.w(message = "MainActivity.onCreate() called pid=%d", android.os.Process.myPid())
         applyEdgeToEdge(this)
         playUpdateDelegate.onCreate(this) {
             xscPackageActions.openPlayStoreOrGithub(this)?.let(::enqueueSnackbar)
@@ -203,7 +203,7 @@ class MainActivity : ComponentActivity() {
                 try {
                     if (BuildConfig.ALLOW_CONFLICT_BYPASS) {
                         XLog.w(
-                            "Relay conflict guard bypassed by build flag allowConflictBypass=true",
+                            message = "Relay conflict guard bypassed by build flag allowConflictBypass=true",
                         )
                     } else if (TransitionConst.isRelayInstalled(context)) {
                         blockingStartupDialog = BlockingStartupDialog.RelayConflict
@@ -273,7 +273,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                             XLog.i(
-                                "Sms code test result delivered in MainActivity: code=%s matchedRule=%s",
+                                message = "Sms code test result delivered in MainActivity: code=%s matchedRule=%s",
                                 if (prefsAccess.isSensitiveDebugLogMode(context)) {
                                     StringUtils.escape(event.code)
                                 } else {

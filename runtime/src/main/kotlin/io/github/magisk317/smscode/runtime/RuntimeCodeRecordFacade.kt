@@ -2,7 +2,7 @@ package io.github.magisk317.smscode.runtime
 
 import android.content.Context
 import android.net.Uri
-import io.github.magisk317.smscode.common.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 import io.github.magisk317.smscode.data.db.DBManager
 import io.github.magisk317.smscode.db.entity.SmsMsg
 import io.github.magisk317.smscode.runtime.bridge.UiCodeRecordAccess
@@ -87,7 +87,7 @@ object RuntimeCodeRecordFacade : UiCodeRecordAccess {
                 }
             }
             true
-        }.onFailure { XLog.e("Export code records failed", it) }
+        }.onFailure { XLog.e(message = "Export code records failed", it) }
             .getOrDefault(false)
         emitRecord(
             result = if (ok) "ok" else "error",

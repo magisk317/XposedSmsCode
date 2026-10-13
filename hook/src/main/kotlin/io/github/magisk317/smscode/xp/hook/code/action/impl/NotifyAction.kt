@@ -17,7 +17,7 @@ import io.github.magisk317.smscode.xp.hook.code.CopyCodeReceiver
 import io.github.magisk317.smscode.xp.hook.code.action.CallableAction
 import io.github.magisk317.smscode.xp.hook.code.VerificationSmsMsg
 import io.github.magisk317.smscode.xp.hook.code.toVerificationMessage
-import io.github.magisk317.smscode.xposed.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 
 /**
  * 显示验证码通知
@@ -50,7 +50,7 @@ class NotifyAction(
     )
 
     override fun action(): Bundle? {
-        XLog.i("NotifyAction.action() called: enabled=%s smsCode=%s", enabled, mSmsMsg.smsCode)
+        XLog.i(message = "NotifyAction.action() called: enabled=%s smsCode=%s", enabled, mSmsMsg.smsCode)
         // Resolve the phone-owned channel (creating or rotating as needed) before the diagnostics
         // check runs, so the check inspects the channel that will really be posted into.
         val phoneChannelId = phoneOwned.resolveChannelId().channelId
@@ -94,7 +94,7 @@ class NotifyAction(
             return resultBundle(delivered = true, reason = outcome.id)
         }
         XLog.w(
-            "Phone-owned notification not accepted (reason=%s), falling back to app-owned",
+            message = "Phone-owned notification not accepted (reason=%s), falling back to app-owned",
             outcome.id,
         )
 
@@ -111,12 +111,12 @@ class NotifyAction(
             )
             if (appResult.success) return resultBundle(delivered = true, reason = APP_OWNED_REASON)
             XLog.w(
-                "App-owned code notification also failed (reason=%s)",
+                message = "App-owned code notification also failed (reason=%s)",
                 appResult.reason,
             )
         } else {
             XLog.w(
-                "Skipping app-owned fallback: POST_NOTIFICATIONS is not granted to %s",
+                message = "Skipping app-owned fallback: POST_NOTIFICATIONS is not granted to %s",
                 modulePackageName(),
             )
         }

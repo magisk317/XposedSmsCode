@@ -29,7 +29,7 @@ import io.github.magisk317.smscode.runtime.RuntimeBackupRule
 import io.github.magisk317.smscode.runtime.RuntimeBackupSmsRecord
 import io.github.magisk317.smscode.runtime.bridge.UiBackupAccess
 import io.github.magisk317.smscode.runtime.bridge.UiStorageAccess
-import io.github.magisk317.smscode.common.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 import io.github.magisk317.smscode.runtime.common.utils.StorageUtils
 import io.github.magisk317.smscode.runtime.common.utils.StringUtils
 import io.github.magisk317.smscode.runtime.common.utils.BrowserUtils
@@ -319,14 +319,14 @@ class SettingsViewModel(
             )
             true
         }.onFailure {
-            XLog.e("Failed to set launcher icon visible=$visible", it)
+            XLog.e(message = "Failed to set launcher icon visible=$visible", it)
         }.getOrElse { false }
     }
 
     fun performSmsCodeTest(msgBody: String) {
         viewModelScope.launch {
             val result = try {
-                XLog.i("Sms code test start: length=%d", msgBody.length)
+                XLog.i(message = "Sms code test start: length=%d", msgBody.length)
                 withContext(Dispatchers.IO) {
                     if (TextUtils.isEmpty(msgBody)) {
                         null
@@ -344,7 +344,7 @@ class SettingsViewModel(
                     }
                 }
             } catch (e: Exception) {
-                XLog.e("Sms code test failed", e)
+                XLog.e(message = "Sms code test failed", e)
                 e.printStackTrace()
                 null
             }
@@ -360,7 +360,7 @@ class SettingsViewModel(
             } else {
                 StringUtils.summarizeCode(code)
             }
-            XLog.i("Sms code test finished: code=%s", safeCode)
+            XLog.i(message = "Sms code test finished: code=%s", safeCode)
             _eventsFlow.tryEmit(SettingsEvent.SmsCodeTestResult(code, matchedRuleLabel))
         }
     }
@@ -421,7 +421,7 @@ class SettingsViewModel(
             val context = getApplication<Application>()
             try {
                 XLog.i(
-                    "Backup start: uri=%s includeConfig=%s includeRules=%s includeRecords=%s includeDatabase=%s",
+                    message = "Backup start: uri=%s includeConfig=%s includeRules=%s includeRecords=%s includeDatabase=%s",
                     uri.toString(),
                     includeConfig,
                     includeRules,
@@ -473,7 +473,7 @@ class SettingsViewModel(
                 }
 
                 XLog.i(
-                    "Backup payload prepared: rules=%d records=%d prefs=%d",
+                    message = "Backup payload prepared: rules=%d records=%d prefs=%d",
                     rules.size,
                     records?.size ?: 0,
                     prefs?.size ?: 0,
@@ -489,10 +489,10 @@ class SettingsViewModel(
                         includeDatabase = includeDatabase,
                     )
                 }
-                XLog.i("Backup finished: result=%s", result.name)
+                XLog.i(message = "Backup finished: result=%s", result.name)
                 _eventsFlow.tryEmit(SettingsEvent.BackupResultEvent(result == RuntimeBackupExportResult.SUCCESS))
             } catch (e: Exception) {
-                XLog.e("Backup failed", e)
+                XLog.e(message = "Backup failed", e)
                 _eventsFlow.tryEmit(SettingsEvent.BackupResultEvent(false))
             }
         }
@@ -509,7 +509,7 @@ class SettingsViewModel(
             val context = getApplication<Application>()
             try {
                 XLog.i(
-                    "Restore start: uri=%s restoreConfig=%s restoreRules=%s restoreRecords=%s restoreDatabase=%s",
+                    message = "Restore start: uri=%s restoreConfig=%s restoreRules=%s restoreRecords=%s restoreDatabase=%s",
                     uri.toString(),
                     restoreConfig,
                     restoreRules,
@@ -520,7 +520,7 @@ class SettingsViewModel(
                     backup.importRuleList(context, uri, BuildConfig.VERSION_NAME)
                 }
                 XLog.i(
-                    "Restore import result=%s rules=%d records=%d prefs=%d warning=%s",
+                    message = "Restore import result=%s rules=%d records=%d prefs=%d warning=%s",
                     importResult.result.name,
                     importResult.rules.size,
                     importResult.records?.size ?: 0,
@@ -537,7 +537,7 @@ class SettingsViewModel(
                             }
                             if (restoreRules || restoreRecords) {
                                 XLog.i(
-                                    "Restore database enabled: skip logical restore rules=%s records=%s",
+                                    message = "Restore database enabled: skip logical restore rules=%s records=%s",
                                     restoreRules,
                                     restoreRecords,
                                 )
@@ -548,11 +548,11 @@ class SettingsViewModel(
                         }
                         if (restoreConfig) restorePreferences(context, importResult.preferences.orEmpty())
                     }
-                    XLog.i("Restore apply finished")
+                    XLog.i(message = "Restore apply finished")
                 }
                 _eventsFlow.tryEmit(SettingsEvent.RestoreResultEvent(importResult))
             } catch (e: Exception) {
-                    XLog.e("Restore failed", e)
+                    XLog.e(message = "Restore failed", e)
                     // Return failed event
                     _eventsFlow.tryEmit(
                         SettingsEvent.RestoreResultEvent(
@@ -575,7 +575,7 @@ class SettingsViewModel(
     private suspend fun restoreRecords(context: Context, records: List<RuntimeBackupSmsRecord>) {
         val dbManager = storage.dbManager(context)
         if (records.isEmpty()) {
-            XLog.w("Restore records skipped: empty list")
+            XLog.w(message = "Restore records skipped: empty list")
             return
         }
         val beforeCount = dbManager.queryAllSmsMsg().size
@@ -601,7 +601,7 @@ class SettingsViewModel(
         dbManager.addSmsMsgList(entities)
         val afterCount = dbManager.queryAllSmsMsg().size
         XLog.i(
-            "Restore records finished: requested=%d before=%d after=%d delta=%d",
+            message = "Restore records finished: requested=%d before=%d after=%d delta=%d",
             records.size,
             beforeCount,
             afterCount,
@@ -617,14 +617,14 @@ class SettingsViewModel(
                 if (key == PrefConst.KEY_MOBILE_ENTITLEMENT_TOKEN ||
                     key == PrefConst.KEY_MOBILE_ENTITLEMENT_AUTOMATION_ALLOWED
                 ) {
-                    XLog.w("Restore preference skipped: entitlement state is runtime-derived")
+                    XLog.w(message = "Restore preference skipped: entitlement state is runtime-derived")
                     continue
                 }
                 if (rawValue == null) continue
                 val coerced = coerceRestoreValue(key, rawValue)
                 if (!coerced.shouldWrite) {
                     XLog.w(
-                        "Restore preference skipped: key=%s raw=%s expectedType=%s",
+                        message = "Restore preference skipped: key=%s raw=%s expectedType=%s",
                         key,
                         rawValue,
                         coerced.type.name,
@@ -659,7 +659,7 @@ class SettingsViewModel(
             is PreferenceCommitResult.Persisted -> {
                 result.postCommitFailures.forEach { failure ->
                     XLog.e(
-                        "Restore preference post-commit hook failed: hook=%s error=%s",
+                        message = "Restore preference post-commit hook failed: hook=%s error=%s",
                         failure.hookName,
                         failure.error.message ?: failure.error.javaClass.simpleName,
                     )

@@ -6,7 +6,7 @@ import android.net.Uri
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.magisk317.smscode.common.utils.XLog
+import io.github.magisk317.xposed.logging.XLog
 import io.github.magisk317.smscode.db.entity.SmsMsg
 import io.github.magisk317.smscode.runtime.bridge.UiCodeRecordAccess
 import kotlinx.collections.immutable.ImmutableList
@@ -90,7 +90,7 @@ class CodeRecordViewModel(
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (t: Throwable) {
-                XLog.e("Code record stream failed", t)
+                XLog.e(message = "Code record stream failed", t)
             }
         }
     }
@@ -127,7 +127,7 @@ class CodeRecordViewModel(
             try {
                 codeRecord.removeRecords(getApplication(), smsMsgList)
             } catch (ignored: Throwable) {
-                XLog.e("Error occurs when remove SMS records", ignored)
+                XLog.e(message = "Error occurs when remove SMS records", ignored)
             }
         }
     }
@@ -137,7 +137,7 @@ class CodeRecordViewModel(
             try {
                 codeRecord.restoreRecords(getApplication(), smsMsgList)
             } catch (ignored: Throwable) {
-                XLog.e("Error occurs when restore SMS records", ignored)
+                XLog.e(message = "Error occurs when restore SMS records", ignored)
             }
         }
     }
@@ -152,7 +152,7 @@ class CodeRecordViewModel(
                 }
                 // We might want an event for success/failure
             } catch (ignored: Throwable) {
-                XLog.e("Export records failed", ignored)
+                XLog.e(message = "Export records failed", ignored)
             } finally {
                 _loading.value = false
             }
