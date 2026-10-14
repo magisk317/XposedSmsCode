@@ -230,7 +230,8 @@ security:gitleaks:
 
 android:release:guard:
   extends: .magisk_android_release_guard
-  stage: release
+  stage: build
+  needs: []
   tags:
     - $XPOSED_GITLAB_LINUX_ARM64_RUNNER_TAG
 
@@ -242,7 +243,7 @@ android:release:github-apk:
     MAGISK_ANDROID_RELEASE_APK_TASKS: ":app:assembleGithubRelease"
     MAGISK_ANDROID_RELEASE_GRADLE_EXTRA_ARGS: "-PbuildSplits"
   resource_group: xposed-android-release-apk
-  stage: release
+  stage: build
   needs:
     - job: android:release:guard
       artifacts: false
@@ -257,7 +258,7 @@ android:release:github-apk:
 android:release:play-bundle:
   extends: .magisk_android_release_aab
   resource_group: xposed-android-release-play
-  stage: release
+  stage: build
   rules:
     - if: '$CI_COMMIT_TAG =~ /^v[0-9]+[.][0-9]+[.][0-9]+$/ && $MAGISK_ANDROID_RELEASE_PUBLISH_PLAY == "true"'
     - when: never
@@ -306,7 +307,7 @@ android:release:play:
 android:ci:play-beta-bundle:
   extends: .magisk_android_base
   resource_group: xposed-android-release-play
-  stage: release
+  stage: build
   tags:
     - $XPOSED_BUNDLE_RUNNER_TAG
   # The release build is self-contained (keystore and google-services.json
