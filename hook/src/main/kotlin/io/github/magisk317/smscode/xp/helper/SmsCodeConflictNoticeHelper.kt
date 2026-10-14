@@ -13,7 +13,7 @@ import io.github.magisk317.smscode.runtime.verification.ConflictNotificationHelp
 import io.github.magisk317.smscode.verification.RecentEventIdTracker
 import io.github.magisk317.xposed.logging.XLog
 
-object RelayConflictNoticeHelper {
+object SmsCodeConflictNoticeHelper {
     private const val MAX_TRACKED_EVENT_IDS = 64
     private val notifiedEventIds = RecentEventIdTracker(MAX_TRACKED_EVENT_IDS)
 
