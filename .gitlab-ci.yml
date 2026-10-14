@@ -37,15 +37,7 @@ default:
 
 stages:
   - build
-  - package
-  - release-validate
-  - release-build
-  # sync must precede release-publish: android:release:github declares
-  # `needs: sync:github`, and `needs` may only target the same or an
-  # earlier stage. With sync missing, GitLab rejects the whole config.
-  - sync
-  - release-publish
-  - notify
+  - release
   - quality
   - maintenance
 
@@ -238,7 +230,7 @@ security:gitleaks:
 
 android:release:guard:
   extends: .magisk_android_release_guard
-  stage: release-validate
+  stage: release
   tags:
     - $XPOSED_GITLAB_LINUX_ARM64_RUNNER_TAG
 
@@ -250,7 +242,7 @@ android:release:github-apk:
     MAGISK_ANDROID_RELEASE_APK_TASKS: ":app:assembleGithubRelease"
     MAGISK_ANDROID_RELEASE_GRADLE_EXTRA_ARGS: "-PbuildSplits"
   resource_group: xposed-android-release-apk
-  stage: release-build
+  stage: release
   needs:
     - job: android:release:guard
       artifacts: false
@@ -265,7 +257,7 @@ android:release:github-apk:
 android:release:play-bundle:
   extends: .magisk_android_release_aab
   resource_group: xposed-android-release-play
-  stage: release-build
+  stage: release
   rules:
     - if: '$CI_COMMIT_TAG =~ /^v[0-9]+[.][0-9]+[.][0-9]+$/ && $MAGISK_ANDROID_RELEASE_PUBLISH_PLAY == "true"'
     - when: never
@@ -286,7 +278,7 @@ android:release:play-bundle:
 android:release:gitlab:
   extends: .magisk_android_gitlab_release
   resource_group: xposed-android-release-publish
-  stage: release-publish
+  stage: release
   tags:
     - $XPOSED_GITLAB_LINUX_ARM64_RUNNER_TAG
   needs:
@@ -299,7 +291,7 @@ android:release:gitlab:
 android:release:play:
   extends: .magisk_android_publish_play
   resource_group: xposed-android-release-play
-  stage: release-publish
+  stage: release
   rules:
     - if: '$CI_COMMIT_TAG =~ /^v[0-9]+[.][0-9]+[.][0-9]+$/ && $RELEASE_OWNER == "gitlab" && $MAGISK_ANDROID_RELEASE_PUBLISH_PLAY == "true" && $ANDROID_PUBLISHER_CREDENTIALS != ""'
     - when: never
@@ -314,7 +306,7 @@ android:release:play:
 android:ci:play-beta-bundle:
   extends: .magisk_android_base
   resource_group: xposed-android-release-play
-  stage: release-build
+  stage: release
   tags:
     - $XPOSED_BUNDLE_RUNNER_TAG
   # The release build is self-contained (keystore and google-services.json
@@ -354,7 +346,7 @@ android:ci:play-beta-bundle:
 android:ci:play-beta:
   extends: .magisk_android_base
   resource_group: xposed-android-release-play
-  stage: release-publish
+  stage: release
   tags:
     - $XPOSED_BUILD_RUNNER_TAG
   rules:
@@ -391,7 +383,7 @@ android:ci:play-beta:
 android:release:modules-repo:
   extends: .magisk_android_publish_modules_repo
   resource_group: xposed-android-release-publish
-  stage: release-publish
+  stage: release
   tags:
     - $XPOSED_GITLAB_LINUX_ARM64_RUNNER_TAG
   needs:
@@ -400,7 +392,7 @@ android:release:modules-repo:
 
 telegram:release:
   extends: .magisk_telegram_release
-  stage: release-publish
+  stage: release
   allow_failure: true
   tags:
     - $XPOSED_GITLAB_LINUX_ARM64_RUNNER_TAG
@@ -420,7 +412,7 @@ telegram:ci:
   extends:
     - .magisk_telegram_ci
     - .xposed_signed_android_rules
-  stage: notify
+  stage: release
   allow_failure: true
   rules:
     - if: '$CI_COMMIT_BRANCH == "beta" && $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_AUTHOR =~ /Renovate317@users.noreply/ && $RELEASE_KEYSTORE != "" && $STORE_PASSWORD != "" && $KEY_ALIAS != "" && $KEY_PASSWORD != ""'
@@ -452,7 +444,7 @@ renovate:gitlab:
 
 sync:github:
   extends: .magisk_utility_base
-  stage: sync
+  stage: release
   tags:
     - $XPOSED_GITLAB_LINUX_ARM64_RUNNER_TAG
   needs:
@@ -485,7 +477,7 @@ sync:github:
 android:release:github:
   extends: .magisk_android_release_github
   resource_group: xposed-android-release-publish
-  stage: release-publish
+  stage: release
   tags:
     - $XPOSED_GITLAB_LINUX_ARM64_RUNNER_TAG
   variables:
