@@ -1,6 +1,7 @@
 package io.github.magisk317.smscode.xp.hook.code
 
 import android.content.Context
+import io.github.magisk317.smscode.xp.hook.SmsHookRuntimeContext
 import io.github.magisk317.smscode.common.utils.HookPrefsReader
 import io.github.magisk317.smscode.xp.helper.ModuleConflictArbiter
 import io.github.magisk317.smscode.xp.helper.SmsCodeConflictNoticeHelper

@@ -9,7 +9,6 @@ import android.provider.Telephony
 import io.github.magisk317.smscode.hook.BuildConfig
 import io.github.magisk317.smscode.common.constant.NotificationConst
 import io.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
-import io.github.magisk317.smscode.common.utils.HookPrefsReader
 import io.github.magisk317.smscode.common.utils.SmsBlacklistUtils
 import io.github.magisk317.xposed.logging.XLog
 import io.github.magisk317.smscode.db.entity.SmsMsg
@@ -25,6 +24,8 @@ import io.github.magisk317.smscode.xposed.hook.telephony.InboundSmsBlocker
 import io.github.magisk317.smscode.xposed.hook.telephony.SmsRoutingProbeResolver
 import io.github.magisk317.smscode.xposed.hook.telephony.InboundSmsHookClaim
 import io.github.magisk317.smscode.xposed.hook.telephony.InboundSmsHookInstaller
+import io.github.magisk317.smscode.xp.hook.SmsHookRuntimeContext
+import io.github.magisk317.smscode.xp.hook.SmsHookRuntimeSession
 import io.github.magisk317.smscode.xp.hook.code.action.impl.OperateSmsAction
 import io.github.magisk317.smscode.runtime.common.sim.SmsRoutingIntentExtras
 import io.github.magisk317.smscode.runtime.verification.PendingSmsReplayQueue
@@ -44,22 +45,22 @@ import java.util.concurrent.Executors
  */
 class SmsHandlerHook : BaseHook() {
 
-    private var mPhoneContext: Context? = null
-    private var mPluginContext: Context? = null
+    private val runtimeSession = SmsHookRuntimeSession(SMSCODE_PACKAGE)
     private var smsInboxObserver: SmsInboxObserver? = null
     private val inboundSmsBlocker = InboundSmsBlocker(SMS_HANDLER_CLASS)
+    private val smsOperationExecutor = Executors.newSingleThreadExecutor()
     private val constructorInitializer = createXscConstructorInitializer(
-        runtimeInitializer = ::initializeRuntime,
-        notificationChannelInitializer = { initNotificationChannel() },
-        copyCodeRegistrar = { registerCopyCodeReceiver() },
-        heartbeatRecorder = ::recordHookHeartbeat,
+        runtimeInitializer = runtimeSession::initialize,
+        notificationChannelInitializer = { runtime -> initNotificationChannel(runtime) },
+        copyCodeRegistrar = { runtime -> registerCopyCodeReceiver(runtime) },
+        heartbeatRecorder = { source -> runtimeSession.recordHeartbeat(source) },
         suppressionLogger = ::logSuppressedOnce,
         inboxObserverRegistrar = ::registerSmsInboxObserver,
     )
     private val pendingSmsReplay = PendingSmsReplayQueue()
 
     private val dispatchIntentHandler = SmsDispatchIntentHandler(
-        runtimeResolver = ::recordHeartbeat,
+        runtimeResolver = runtimeSession::recordHeartbeat,
         suppressionLogger = ::logSuppressedOnce,
         blacklistDeleteScheduler = ::scheduleBlacklistDelete,
         inboundBlocker = { inboundSmsHandler, receiver, reason, eventId ->
@@ -78,8 +79,8 @@ class SmsHandlerHook : BaseHook() {
         // Release resources owned by the old module ClassLoader before libxposed hot reload.
         smsInboxObserver?.unregister()
         smsInboxObserver = null
-        SMS_OPERATION_EXECUTOR.shutdownNow()
-        mPhoneContext?.let { CopyCodeReceiver.unregisterMe(it) }
+        smsOperationExecutor.shutdownNow()
+        runtimeSession.currentOrResolve()?.let { CopyCodeReceiver.unregisterMe(it.phoneContext) }
     }
 
 
@@ -185,10 +186,11 @@ class SmsHandlerHook : BaseHook() {
     // Android 14+
     private fun hookConstructor34(classLoader: ClassLoader) {
         XLog.i(message = "Hooking InboundSmsHandler constructor for android v34+")
-        InboundSmsHookInstaller.installConstructorHook(
+        val result = InboundSmsHookInstaller.installConstructorHook(
             classLoader = classLoader,
             className = SMS_HANDLER_CLASS,
         ) { param -> ConstructorHook().afterHookedMethod(param) }
+        logInstallResult("constructor", result)
     }
 
     private fun hookDispatchIntent(classloader: ClassLoader) {
@@ -215,7 +217,7 @@ class SmsHandlerHook : BaseHook() {
                 fallbackAction = Telephony.Sms.Intents.SMS_DELIVER_ACTION,
             )
             val action = intent?.action ?: VerificationSmsIntentHookSupport.extractIntentAction(param.args)
-            val pluginContext = getPluginContext()
+            val pluginContext = runtimeSession.currentOrResolve()?.pluginContext
             if (isVerboseDiagEnabled(pluginContext)) {
                 XLog.d(
                     message = "Diag SMS dispatch chain: class=%s owner=%s method=%s action=%s args=%d",
@@ -235,10 +237,34 @@ class SmsHandlerHook : BaseHook() {
     // Android 10+
     private fun hookDispatchIntent29(classLoader: ClassLoader) {
         XLog.d(message = "Hooking dispatchIntent() for Android v29+")
-        InboundSmsHookInstaller.installDispatchIntentHook(
+        val result = InboundSmsHookInstaller.installDispatchIntentHook(
             classLoader = classLoader,
             className = SMS_HANDLER_CLASS,
         ) { param, receiverIndex -> DispatchIntentHook(receiverIndex).beforeHookedMethod(param) }
+        logInstallResult("dispatchIntent", result)
+    }
+
+    /**
+     * Minimal install diagnostics shared with the relay host: a target miss means the ROM
+     * does not carry the expected class or method, which is the one install failure the
+     * installer can see and the hook itself cannot recover from.
+     */
+    private fun logInstallResult(target: String, result: InboundSmsHookInstaller.Result) {
+        if (!result.classFound) {
+            XLog.w(message = "SmsHandlerHook install miss: target=%s class not found", target)
+            return
+        }
+        if (result.hookedMethodCount == 0) {
+            XLog.w(message = "SmsHandlerHook install miss: target=%s no method hooked", target)
+            return
+        }
+        if (result.hookedMethodCount > 1) {
+            XLog.i(
+                message = "SmsHandlerHook install overloads: target=%s count=%d",
+                target,
+                result.hookedMethodCount,
+            )
+        }
     }
 
     private inner class ConstructorHook : MethodHook() {
@@ -247,7 +273,7 @@ class SmsHandlerHook : BaseHook() {
             XLog.withRoute(LogRoute.SMS_HOOK.id) {
                 try {
                     afterConstructorHandler(param)
-                    currentRuntime()?.let { runtime ->
+                    runtimeSession.currentOrResolve()?.let { runtime ->
                         replayPendingSms(runtime.pluginContext, runtime.phoneContext)
                     }
                 } catch (e: Throwable) {
@@ -264,27 +290,23 @@ class SmsHandlerHook : BaseHook() {
         constructorInitializer.handle(context)
     }
 
-    private fun initNotificationChannel() {
+    private fun initNotificationChannel(runtime: SmsHookRuntimeContext) {
         val channelId = NotificationConst.CHANNEL_ID_SMSCODE_NOTIFICATION
-        val channelName = getPluginContext()?.getString(R.string.hook_smscode_channel) ?: ""
-        mPhoneContext?.let {
-            HookRuntimeBridge.notificationAccess.createNotificationChannel(
-                it,
-                channelId,
-                channelName,
-                NotificationManager.IMPORTANCE_HIGH,
-            )
-            XLog.d(message = "Init notification channel succeed")
-        }
+        val channelName = runtime.pluginContext.getString(R.string.hook_smscode_channel)
+        HookRuntimeBridge.notificationAccess.createNotificationChannel(
+            runtime.phoneContext,
+            channelId,
+            channelName,
+            NotificationManager.IMPORTANCE_HIGH,
+        )
+        XLog.d(message = "Init notification channel succeed")
     }
 
-    private fun registerCopyCodeReceiver() {
-        val pluginContext = mPluginContext ?: return
+    private fun registerCopyCodeReceiver(runtime: SmsHookRuntimeContext) {
+        val pluginContext = runtime.pluginContext
         if (!HookRuntimeBridge.prefsAccess.showCodeNotification(pluginContext)) return
-        mPhoneContext?.let {
-            CopyCodeReceiver.registerMe(it)
-            XLog.d(message = "Register copy code receiver")
-        }
+        CopyCodeReceiver.registerMe(runtime.phoneContext)
+        XLog.d(message = "Register copy code receiver")
     }
 
     private fun registerSmsInboxObserver(runtime: SmsHookRuntimeContext) {
@@ -310,44 +332,6 @@ class SmsHandlerHook : BaseHook() {
             return
         }
         smsInboxObserver = SmsInboxObserver(pluginContext, phoneContext).also { it.register() }
-    }
-
-    private fun initializeRuntime(phoneContext: Context): SmsHookRuntimeContext? {
-        if (mPhoneContext == null) {
-            mPhoneContext = phoneContext
-        }
-        val pluginContext = getPluginContext() ?: return null
-        return SmsHookRuntimeContext(
-            phoneContext = mPhoneContext ?: phoneContext,
-            pluginContext = pluginContext,
-        )
-    }
-
-    private fun currentRuntime(): SmsHookRuntimeContext? {
-        val phoneContext = mPhoneContext ?: return null
-        val pluginContext = getPluginContext() ?: return null
-        return SmsHookRuntimeContext(
-            phoneContext = phoneContext,
-            pluginContext = pluginContext,
-        )
-    }
-
-    private fun recordHeartbeat(source: String): SmsHookRuntimeContext? {
-        val runtime = currentRuntime() ?: return null
-        recordHookHeartbeat(source)
-        return runtime
-    }
-
-    private fun recordHookHeartbeat(source: String) {
-        val runtime = currentRuntime() ?: return
-        HookRuntimeBridge.contentProviderAccess.recordHookHeartbeat(
-            context = runtime.pluginContext,
-            packageName = runtime.phoneContext.packageName,
-            processName = runtime.phoneContext.applicationInfo?.processName ?: runtime.phoneContext.packageName,
-            source = source,
-            verboseLogging = HookRuntimeBridge.prefsAccess.isVerboseLogMode(runtime.pluginContext),
-            route = LogRoute.SMS_HOOK.id,
-        )
     }
 
     private inner class DispatchIntentHook(private val mReceiverIndex: Int) : MethodHook() {
@@ -418,7 +402,7 @@ class SmsHandlerHook : BaseHook() {
             )
             return
         }
-        if (VerificationSmsIntentHookSupport.markDispatchHandled(intent, action)) {
+        if (VerificationSmsIntentHookSupport.markDispatchHandled(intent, action, DISPATCH_HANDLER_KEY)) {
             XLog.d(
                 message = "Diag SMS dispatch duplicate skip: event_id=%s action=%s source=intent_extra",
                 eventId,
@@ -523,7 +507,7 @@ class SmsHandlerHook : BaseHook() {
     }
 
     private fun scheduleBlacklistDelete(pluginContext: Context, phoneContext: Context, smsMsg: SmsMsg) {
-        SMS_OPERATION_EXECUTOR.execute {
+        smsOperationExecutor.execute {
             XLog.withRoute(LogRoute.SMS_HOOK.id) {
                 runCatching {
                     OperateSmsAction(
@@ -540,7 +524,7 @@ class SmsHandlerHook : BaseHook() {
     }
 
     private fun ensureRuntimeForDispatch(param: MethodHookParam, receiverIndex: Int): SmsHookRuntimeContext? {
-        currentRuntime()?.let { return it }
+        runtimeSession.currentOrResolve()?.let { return it }
         XLog.w(
             message = "SmsHandlerHook dispatch runtime missing, attempt recovery: owner=%s receiverIndex=%d argCount=%d",
             param.thisObject?.javaClass?.name ?: "<none>",
@@ -573,7 +557,7 @@ class SmsHandlerHook : BaseHook() {
             )
             return null
         }
-        return currentRuntime().also { runtime ->
+        return runtimeSession.currentOrResolve().also { runtime ->
             if (runtime != null) {
                 XLog.w(
                     message = "SmsHandlerHook dispatch runtime recovered: source=%s package=%s process=%s",
@@ -629,12 +613,6 @@ class SmsHandlerHook : BaseHook() {
         }.getOrDefault(false)
     }
 
-    private fun senderHash(sender: String?): String {
-        val value = sender.orEmpty()
-        if (value.isBlank()) return "none"
-        return Integer.toHexString(value.hashCode())
-    }
-
     @Suppress("ReturnCount")
     private fun maybeBlockFromDispatchChain(
         methodName: String,
@@ -668,7 +646,7 @@ class SmsHandlerHook : BaseHook() {
         if (shouldSkipDispatchChainBlock(evaluation.smsMsg, action, reason)) {
             return
         }
-        recordHookHeartbeat("sms_handler_dispatch_chain")
+        runtimeSession.recordHeartbeat("sms_handler_dispatch_chain")
         XLog.w(
             message = "Diag SMS dispatch chain block: method=%s reason=%s event_id=%s",
             methodName,
@@ -677,7 +655,7 @@ class SmsHandlerHook : BaseHook() {
         )
         // CodeWorker.parse() is async: only does toast/notification/clipboard side effects.
         // The block decision was already made above. Don't block the dispatch chain.
-        SMS_OPERATION_EXECUTOR.execute {
+        smsOperationExecutor.execute {
             CodeWorker(pluginContext, phoneContext, intent, eventId).parse()
         }
         val inbound = param.thisObject ?: return
@@ -771,22 +749,6 @@ class SmsHandlerHook : BaseHook() {
         }
     }
 
-    private fun getPluginContext(): Context? {
-        if (mPluginContext == null) {
-            try {
-                mPluginContext = mPhoneContext?.createPackageContext(
-                    SMSCODE_PACKAGE,
-                    Context.CONTEXT_IGNORE_SECURITY,
-                )
-                mPluginContext?.let({ ctx -> HookRuntimeBridge.hookProcessInit?.invoke(ctx) })
-                HookPrefsReader.installSnapshot(mPhoneContext)
-            } catch (e: Exception) {
-                XLog.e(message = "Create plugin context failed: %s", e)
-            }
-        }
-        return mPluginContext
-    }
-
     private fun isVerboseDiagEnabled(context: Context?): Boolean {
         if (context == null) return false
         return runCatching { HookRuntimeBridge.prefsAccess.isVerboseLogMode(context) }.getOrDefault(false)
@@ -798,7 +760,7 @@ class SmsHandlerHook : BaseHook() {
         private const val TELEPHONY_PACKAGE = "com.android.internal.telephony"
         private const val SMS_HANDLER_CLASS = "$TELEPHONY_PACKAGE.InboundSmsHandler"
         private val SMSCODE_PACKAGE = BuildConfig.APPLICATION_ID
-        private val SMS_OPERATION_EXECUTOR = Executors.newSingleThreadExecutor()
+        private const val DISPATCH_HANDLER_KEY = "sms_handler"
         private val installedHookKeys = Collections.synchronizedSet(mutableSetOf<String>())
         private val dispatchChainBlockDeduplicator = SmsDispatchChainBlockDeduplicator()
 

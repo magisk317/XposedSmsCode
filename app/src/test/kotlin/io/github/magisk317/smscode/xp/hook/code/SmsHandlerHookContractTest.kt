@@ -17,7 +17,7 @@ class SmsHandlerHookContractTest {
         val contextGuardIndex = method.indexOf("if (pluginContext == null || phoneContext == null)")
         val runtimeRecoveryIndex = method.indexOf("ensureRuntimeForDispatch(param, receiverIndex)")
         val sharedDedupIndex = method.indexOf("shouldSkipDispatchBySharedDedup")
-        val markHandledIndex = method.indexOf("markDispatchHandled(intent, action)")
+        val markHandledIndex = method.indexOf("markDispatchHandled(intent, action, DISPATCH_HANDLER_KEY)")
 
         assertTrue(contextGuardIndex >= 0, "dispatch hook must guard missing runtime contexts")
         assertTrue(runtimeRecoveryIndex >= 0, "dispatch hook must recover runtime context before parsing")
