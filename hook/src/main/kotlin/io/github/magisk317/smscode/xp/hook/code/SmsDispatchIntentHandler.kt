@@ -5,7 +5,7 @@ import android.content.Intent
 import io.github.magisk317.smscode.common.utils.HookPrefsReader
 import io.github.magisk317.smscode.db.entity.SmsMsg
 import io.github.magisk317.smscode.xp.helper.ModuleConflictArbiter
-import io.github.magisk317.smscode.xp.helper.RelayConflictNoticeHelper
+import io.github.magisk317.smscode.xp.helper.SmsCodeConflictNoticeHelper
 import io.github.magisk317.smscode.verification.DispatchGateDecision
 import io.github.magisk317.smscode.runtime.verification.SmsDispatchIntentProcessor as SharedSmsDispatchIntentProcessor
 import io.github.magisk317.smscode.runtime.verification.SmsDispatchIntentHandler as SharedSmsDispatchIntentHandler
@@ -30,7 +30,7 @@ internal class SmsDispatchIntentHandler(
         },
     private val conflictNotifier: (Context, Context, String, String) -> Unit =
         { pluginContext, phoneContext, eventId, _ ->
-            RelayConflictNoticeHelper.notifyConflictOnSms(pluginContext, phoneContext, eventId)
+            SmsCodeConflictNoticeHelper.notifyConflictOnSms(pluginContext, phoneContext, eventId)
         },
     private val suppressionLogger: (String) -> Unit = {},
     private val blacklistDeleteScheduler: (Context, Context, SmsMsg) -> Unit = { _, _, _ -> },

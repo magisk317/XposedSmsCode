@@ -96,7 +96,7 @@ class SmsHandlerHookContractTest {
             .substringBefore("private fun shouldSkipDispatchChainBlock")
         val eventIdIndex = method.indexOf("ensureEventId(intent)")
         val suppressIndex = method.indexOf("ModuleConflictArbiter.shouldSuppressByRelay")
-        val notifyIndex = method.indexOf("RelayConflictNoticeHelper.notifyConflictOnSms")
+        val notifyIndex = method.indexOf("SmsCodeConflictNoticeHelper.notifyConflictOnSms")
 
         assertTrue(eventIdIndex >= 0, "dispatch-chain suppression must have a stable event id")
         assertTrue(suppressIndex >= 0, "dispatch-chain conflict suppression guard must remain")

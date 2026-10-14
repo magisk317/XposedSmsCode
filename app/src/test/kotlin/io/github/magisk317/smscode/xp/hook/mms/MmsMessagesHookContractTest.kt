@@ -16,7 +16,7 @@ class MmsMessagesHookContractTest {
         // behaviour to protect is the binding itself: relay arbitration and the
         // conflict notification must both stay wired.
         val suppressIndex = source.indexOf("ModuleConflictArbiter.shouldSuppressByRelay")
-        val notifyIndex = source.indexOf("RelayConflictNoticeHelper.notifyConflictOnSms")
+        val notifyIndex = source.indexOf("SmsCodeConflictNoticeHelper.notifyConflictOnSms")
 
         assertTrue(suppressIndex >= 0, "MMS conflict suppression guard must remain")
         assertTrue(notifyIndex >= 0, "MMS conflict suppression must notify the user")

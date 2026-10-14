@@ -5,7 +5,7 @@ import android.content.Intent
 import io.github.magisk317.smscode.hook.BuildConfig
 import io.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
 import io.github.magisk317.smscode.xp.helper.ModuleConflictArbiter
-import io.github.magisk317.smscode.xp.helper.RelayConflictNoticeHelper
+import io.github.magisk317.smscode.xp.helper.SmsCodeConflictNoticeHelper
 import io.github.magisk317.smscode.xp.hook.code.CodeWorker
 import io.github.magisk317.smscode.xp.hook.code.SmsBlockEvaluator
 import io.github.magisk317.smscode.xposed.hook.telephony.BlockEvaluation
@@ -37,7 +37,7 @@ private object XscMmsEntryPointHost : MmsEntryPointHookHost {
     }
 
     override fun onConflictNotice(pluginContext: Context, hostContext: Context, eventId: String) {
-        RelayConflictNoticeHelper.notifyConflictOnSms(pluginContext, hostContext, eventId)
+        SmsCodeConflictNoticeHelper.notifyConflictOnSms(pluginContext, hostContext, eventId)
     }
 
     override fun evaluateBlock(

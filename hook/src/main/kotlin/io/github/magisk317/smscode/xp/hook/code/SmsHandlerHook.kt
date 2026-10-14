@@ -14,7 +14,7 @@ import io.github.magisk317.smscode.common.utils.SmsBlacklistUtils
 import io.github.magisk317.xposed.logging.XLog
 import io.github.magisk317.smscode.db.entity.SmsMsg
 import io.github.magisk317.smscode.xp.helper.ModuleConflictArbiter
-import io.github.magisk317.smscode.xp.helper.RelayConflictNoticeHelper
+import io.github.magisk317.smscode.xp.helper.SmsCodeConflictNoticeHelper
 import io.github.magisk317.smscode.hook.R
 import io.github.magisk317.smscode.runtime.verification.SmsDispatchChainBlockDeduplicator
 import io.github.magisk317.smscode.xposed.helper.SmsHookContextRecovery
@@ -657,7 +657,7 @@ class SmsHandlerHook : BaseHook() {
         val eventId = VerificationSmsIntentHookSupport.ensureEventId(intent)
         if (ModuleConflictArbiter.shouldSuppressByRelay(phoneContext, "SmsHandlerHook#$methodName")) {
             logSuppressedOnce("dispatchChain:$methodName")
-            RelayConflictNoticeHelper.notifyConflictOnSms(pluginContext, phoneContext, eventId)
+            SmsCodeConflictNoticeHelper.notifyConflictOnSms(pluginContext, phoneContext, eventId)
             return
         }
         val evaluation = SmsBlockEvaluator.evaluate(pluginContext, intent, eventId, "dispatch_chain") ?: return

@@ -3,7 +3,7 @@ package io.github.magisk317.smscode.xp.hook.code
 import android.content.Context
 import io.github.magisk317.smscode.common.utils.HookPrefsReader
 import io.github.magisk317.smscode.xp.helper.ModuleConflictArbiter
-import io.github.magisk317.smscode.xp.helper.RelayConflictNoticeHelper
+import io.github.magisk317.smscode.xp.helper.SmsCodeConflictNoticeHelper
 import io.github.magisk317.smscode.runtime.verification.SmsHookConstructorInitializer
 
 /**
@@ -20,7 +20,7 @@ internal fun createXscConstructorInitializer(
     inboxObserverRegistrar: (SmsHookRuntimeContext) -> Unit,
 ): SmsHookConstructorInitializer<SmsHookRuntimeContext> = SmsHookConstructorInitializer(
     runtimeInitializer = runtimeInitializer,
-    conflictNoticeChannelInitializer = RelayConflictNoticeHelper::initNotificationChannel,
+    conflictNoticeChannelInitializer = SmsCodeConflictNoticeHelper::initNotificationChannel,
     conflictSuppressor = { context, source ->
         ModuleConflictArbiter.shouldSuppressByRelay(context, source)
     },
