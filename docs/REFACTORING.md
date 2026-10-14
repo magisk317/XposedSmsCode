@@ -39,12 +39,22 @@
 ### `smscode-core`
 
 - 继续作为验证码主链和跨项目公共能力的唯一共享实现来源。
-- 当前 Gradle 子模块为 `contract`、`domain`、`hook`、`rule`、`runtime`、`verification`。
+- 当前 Gradle 子模块为 `contract`、`db`、`domain`、`hook`、`rule`、`runtime`、`verification`。
 - `contract` 放接口、DTO、跨进程/跨模块契约。
 - `domain` 放领域模型和值对象。
 - `hook` 放共享 hook infra、libxposed 适配、系统输入与 fallback policy。
 - `runtime` 放日志、备份、规则目录、更新、包环境等可复用运行时能力。
 - `verification` 放短信分发、解析、通知、自动输入、去重等共享策略。
+- `db` 放跨项目共享的 Room 数据层（验证码记录/规则实体、DAO 与 schema 迁移；xinyi v32->v33 迁移时将数据层统一到本模块）。
+
+### `smscode-core:hook` 宿主契约（2026-10-15）
+
+- `HookHostCapabilities`（`io.github.magisk317.smscode.xposed.hook`，smscode-core 0273466 引入）是共享 hook 层消费的唯一宿主能力契约；域 hooks（转发主链、保活、验证偏好）不进入契约。
+- 本仓经 `hook` 模块 `XscHookHostCapabilities`（`io.github.magisk317.smscode.xp.hook.helper`）实现契约；`SmsHookBridgeHelper` + `SmsHookRuntimeSession` 负责 hook 生命周期（`@Volatile` 字段 + `synchronized` resolve/heartbeat 注入），已移除 per-hook runtime context 对象。
+- xinyi-relay 为对等参考实现（`modules/hook/entry` 的 `XinyiHookHostCapabilities` + 同名 `SmsHookRuntimeSession`）。
+- 派发标记为三参：`VerificationSmsIntentHookSupport.markDispatchHandled(intent, action, DISPATCH_HANDLER_KEY)`，本仓 `DISPATCH_HANDLER_KEY = "sms_handler"`，与 xinyi 对齐。
+- 契约测试位于 `app/src/test/kotlin/io/github/magisk317/smscode/xp/hook/code/`（`SmsHandlerHookContractTest`、`MmsMessagesHookContractTest`），固定"先标记 handled 再解析"的顺序与适配器接线。
+- 契约变更必须同批同步两仓适配器，并 bump 所有消费 `smscode-core:hook` 的父仓 gitlink。
 
 ### `smscode-rules`
 
@@ -56,8 +66,8 @@
 
 - `app -> core, hook, runtime, smscode-core:*`（最终 composition/packaging root）
 - `core -> runtime` 的公开 UI gateway/model、`magisk-ui-kit` 与共享领域模型；不得绑定 runtime facade 实现
-- `hook -> runtime, smscode-core:hook, magisk-xposed-kit`
-- `runtime -> smscode-core:domain, smscode-core:runtime, smscode-core:hook`
+- `hook -> runtime, magisk-xposed-kit, smscode-core:*`（`smscode-core` 全部 7 个模块）
+- `runtime -> smscode-core:*`（`smscode-core` 全部 7 个模块）
 - `smscode-rules` 不参与 Kotlin 依赖图，只作为 APK assets 输入。
 
 约束：
@@ -71,6 +81,7 @@
 ## 构建治理
 
 - 统一通过 `build-logic` convention plugin 提供 distribution flavor 和打包规则。
+- 跨仓共享子模块 pin 矩阵（build-logic / magisk-ui-kit / magisk-xposed-kit / smscode-core / smscode-rules 的统一 sha）以 AGENTS.md「Cross-Repo Submodule Pin Matrix」一节为唯一真源；任何子模块源仓推进后，按该矩阵同批 bump 全部消费方父仓。
 - 当前主线 distribution flavor：
   - `play`: Play AAB 发布渠道，禁用 APK assemble。
   - `github`: GitHub APK 发布渠道。
