@@ -345,7 +345,7 @@ android:ci:play-beta-bundle:
       - play-release.env
 
 android:ci:play-beta:
-  extends: .magisk_android_base
+  extends: .magisk_utility_base
   resource_group: xposed-android-release-play
   stage: release
   interruptible: false
