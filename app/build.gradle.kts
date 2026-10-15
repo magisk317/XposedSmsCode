@@ -80,7 +80,7 @@ android {
         }
         // Sources live under src/<name>/kotlin. AGP compiles src/<name>/java by default, so
         // each source set is pointed at the kotlin directory explicitly.
-        listOf("main", "test", "github", "fdroid", "play", "nonPlayBilling").forEach { name ->
+        listOf("main", "test", "github", "fdroid", "play").forEach { name ->
             findByName(name)?.kotlin?.directories?.add("src/$name/kotlin")
         }
     }
