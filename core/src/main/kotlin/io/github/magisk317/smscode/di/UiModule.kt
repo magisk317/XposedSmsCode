@@ -22,7 +22,10 @@ val uiModule = module {
 
     single {
         val context = androidContext()
-        val isCiOrDebug = BuildConfig.DEBUG || BuildConfig.VERSION_NAME.contains("-202") || BuildConfig.VERSION_NAME.contains("-test") || BuildConfig.VERSION_NAME.contains("-ci")
+        val isCiOrDebug = BuildConfig.DEBUG ||
+            BuildConfig.VERSION_NAME.contains("-202") ||
+            BuildConfig.VERSION_NAME.contains("-test") ||
+            BuildConfig.VERSION_NAME.contains("-ci")
 
         val sources = if (isCiOrDebug) {
             listOf(

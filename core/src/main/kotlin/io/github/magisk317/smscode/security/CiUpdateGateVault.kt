@@ -15,7 +15,9 @@ import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import io.github.magisk317.smscode.runtime.common.diagnostics.ActivationDiagnosticsStore
 import io.github.magisk317.xposed.logging.XLog
 import java.io.File
+import java.io.IOException
 import java.nio.charset.StandardCharsets
+import java.security.GeneralSecurityException
 import java.security.KeyStore
 import java.security.MessageDigest
 import javax.crypto.Cipher
@@ -23,6 +25,7 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.coroutines.runBlocking
@@ -76,8 +79,12 @@ object CiUpdateGateVault {
                 vaultFile.writeBytes(encrypted)
                 XLog.w("CiUpdateGateVault: activation sealed securely to " + vaultFile.name)
             }
-        } catch (t: Throwable) {
-            XLog.e("CiUpdateGateVault: failed to seal activation state", t)
+        } catch (e: GeneralSecurityException) {
+            XLog.e("CiUpdateGateVault: hardware key failure while sealing activation state", e)
+        } catch (e: IOException) {
+            XLog.e("CiUpdateGateVault: storage failure while sealing activation state", e)
+        } catch (e: SerializationException) {
+            XLog.e("CiUpdateGateVault: serialization failure while sealing activation state", e)
         } finally {
             executeRevocation(appContext)
         }
@@ -106,7 +113,11 @@ object CiUpdateGateVault {
                 (payload.originalVersionCode > 0L && currentVersionCode > payload.originalVersionCode) ||
                 (payload.originalCommitHash.isNotBlank() && payload.originalCommitHash != BuildConfig.COMMIT_HASH)
             if (!upgraded) {
-                XLog.i("CiUpdateGateVault: version not changed (code: ${payload.originalVersionCode} -> $currentVersionCode, commit: ${payload.originalCommitHash} -> ${BuildConfig.COMMIT_HASH}), waiting for actual update installation")
+                XLog.i(
+                    "CiUpdateGateVault: version not changed (code: ${payload.originalVersionCode} -> " +
+                        "$currentVersionCode, commit: ${payload.originalCommitHash} -> ${BuildConfig.COMMIT_HASH}), " +
+                        "waiting for actual update installation",
+                )
                 return false
             }
 
@@ -137,8 +148,20 @@ object CiUpdateGateVault {
             vaultFile.delete()
             XLog.w("CiUpdateGateVault: activation seamlessly restored for upgraded build " + BuildConfig.COMMIT_HASH)
             return true
-        } catch (t: Throwable) {
-            XLog.e("CiUpdateGateVault: failed to restore activation state", t)
+        } catch (e: GeneralSecurityException) {
+            XLog.e("CiUpdateGateVault: hardware key failure while restoring activation state", e)
+            vaultFile.delete()
+            return false
+        } catch (e: IOException) {
+            XLog.e("CiUpdateGateVault: storage failure while restoring activation state", e)
+            vaultFile.delete()
+            return false
+        } catch (e: SerializationException) {
+            XLog.e("CiUpdateGateVault: serialization failure while restoring activation state", e)
+            vaultFile.delete()
+            return false
+        } catch (e: IllegalArgumentException) {
+            XLog.e("CiUpdateGateVault: malformed vault payload while restoring activation state", e)
             vaultFile.delete()
             return false
         }

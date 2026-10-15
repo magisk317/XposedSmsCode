@@ -419,7 +419,10 @@ class MainActivity : ComponentActivity() {
                             val updateController = koinInject<AppUpdateController>()
                             LaunchedEffect(Unit) {
                                 // 每次冷启动进入主界面时检测更新：对于 CI/调试版本直接以强制弹窗模式呈现，不可关闭或稍后
-                                val isCiOrDebug = BuildConfig.DEBUG || BuildConfig.VERSION_NAME.contains("-202") || BuildConfig.VERSION_NAME.contains("-test") || BuildConfig.VERSION_NAME.contains("-ci")
+                                val isCiOrDebug = BuildConfig.DEBUG ||
+            BuildConfig.VERSION_NAME.contains("-202") ||
+            BuildConfig.VERSION_NAME.contains("-test") ||
+            BuildConfig.VERSION_NAME.contains("-ci")
                                 updateController.check(userInitiated = isCiOrDebug)
                             }
                             AppUpdateDialog(
