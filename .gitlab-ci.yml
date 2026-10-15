@@ -194,6 +194,24 @@ android:build:
     expire_in: 14 days
     paths:
       - app/build/outputs/apk/**/debug/*.apk
+      - ci-dist/app-ci.apk
+  # A job-level after_script replaces the one inherited from
+  # .magisk_android_base, so the otel export is restated here before staging.
+  after_script:
+    - |
+      set +e
+      if [ -x "${MAGISK_CI_TOOLKIT_DIR:-}/ci/otel_export.sh" ]; then
+        bash "$MAGISK_CI_TOOLKIT_DIR/ci/otel_export.sh" "ci.job"           "magisk.toolkit_ref=${MAGISK_CI_TOOLKIT_REF:-}"           "magisk.span_source=android_base_after_script"
+      else
+        echo "otel: helper missing, skip"
+      fi
+    # The universal APK name embeds the build timestamp, while
+    # GitLabCiArtifactUpdateSource can only fetch artifacts by exact path
+    # (no glob), so stage a stable copy for the in-app update check.
+    - |
+      set -euo pipefail
+      mkdir -p ci-dist
+      cp app/build/outputs/apk/github/debug/universal_*.apk ci-dist/app-ci.apk
 
 android:detekt:
   extends:
