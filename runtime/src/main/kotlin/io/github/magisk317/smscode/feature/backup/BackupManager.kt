@@ -9,6 +9,10 @@ import io.github.magisk317.smscode.runtime.BuildConfig
 import io.github.magisk317.smscode.runtime.common.backup.BackupDatabaseHooks
 import io.github.magisk317.smscode.runtime.common.backup.BackupManagerConfig
 import io.github.magisk317.smscode.runtime.common.backup.BackupManagerCore
+import io.github.magisk317.smscode.runtime.contract.backup.BackupImportResult
+import io.github.magisk317.smscode.runtime.contract.backup.BackupRule
+import io.github.magisk317.smscode.runtime.contract.backup.BackupSmsRecord
+import io.github.magisk317.smscode.runtime.contract.backup.ExportResult
 import java.io.File
 
 object BackupManager {
