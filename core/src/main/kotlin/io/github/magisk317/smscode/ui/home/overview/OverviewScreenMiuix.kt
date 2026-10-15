@@ -1,12 +1,18 @@
 package io.github.magisk317.smscode.ui.home
 
+import io.github.magisk317.uikit.update.AppUpdateController
+import io.github.magisk317.uikit.update.AppUpdateDialog
+import org.koin.compose.koinInject
+
 import android.os.Build
 import androidx.annotation.StringRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
@@ -17,21 +23,27 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.magisk317.smscode.core.R
 import io.github.magisk317.uikit.R as UiKitR
-import io.github.magisk317.uikit.surface.AppCard
+import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 import io.github.magisk317.uikit.surface.DoubleTapToTopOverlay
 import io.github.magisk317.uikit.surface.ScrollToTopFAB
 import io.github.magisk317.uikit.surface.rememberUiKitGlassTopBar
@@ -39,18 +51,16 @@ import io.github.magisk317.uikit.surface.uiKitSurfaceGlassSample
 import io.github.magisk317.uikit.theme.LocalUiKitSurfaceBlur
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.BasicComponent
+import top.yukonga.miuix.kmp.basic.Card as AppCard
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold as MiuixScaffold
 import top.yukonga.miuix.kmp.basic.TopAppBar as MiuixTopAppBar
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
 /**
  * Miuix implementation of the Overview page. Follows KernelSU `HomeMiuix`
- * and MiPush `OverviewMiuix` composition model: page-owned miuix `Scaffold` +
- * collapsing `TopAppBar` driven by `MiuixScrollBehavior`.
- * Quick return-to-top: double-tap the bar title strip or use the FAB that
- * appears once the body has scrolled away from the top.
+ * and MiPush `OverviewMiuix` composition model: page-owned `MiuixScaffold` +
+ * collapsing top bar. Quick return-to-top: double-tap the bar title strip
+ * or use the FAB that appears once the body has scrolled away from the top.
  */
 @Composable
 internal fun OverviewScreenMiuix(
@@ -62,7 +72,10 @@ internal fun OverviewScreenMiuix(
     val scrollScope = rememberCoroutineScope()
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val bottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 80.dp
-    val unknown = stringResource(id = R.string.unknown)
+    val unknown = stringResource(id = UiKitR.string.unknown)
+
+    val updateController = koinInject<AppUpdateController>()
+    val hasUpdate by updateController.hasUpdate.collectAsState()
 
     val topGlass = rememberUiKitGlassTopBar()
     val glassOn = LocalUiKitSurfaceBlur.current.usesBackdrop
@@ -114,9 +127,11 @@ internal fun OverviewScreenMiuix(
 
                     AppCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                            MiuixInfoRow(
+                            MiuixActionRow(
                                 label = UiKitR.string.uikit_version_name,
                                 value = state.appVersionName.ifBlank { unknown },
+                                hasBadge = false,
+                                onClick = { updateController.check(userInitiated = true) },
                             )
                             MiuixInfoRow(
                                 label = UiKitR.string.uikit_version_code,
@@ -221,12 +236,23 @@ private fun MiuixInfoRow(@StringRes label: Int, value: String) {
 private fun MiuixActionRow(
     @StringRes label: Int,
     value: String,
+    hasBadge: Boolean = false,
     onClick: (() -> Unit)?,
 ) {
     BasicComponent(
         modifier = Modifier.fillMaxWidth(),
         title = stringResource(label),
         summary = value,
+        endActions = if (hasBadge) {
+            {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.error),
+                )
+            }
+        } else null,
         onClick = onClick ?: {},
     )
 }

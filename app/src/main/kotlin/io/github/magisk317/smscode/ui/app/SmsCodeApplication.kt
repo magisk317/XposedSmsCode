@@ -33,6 +33,7 @@ import io.github.magisk317.smscode.di.appModule
 import io.github.magisk317.smscode.di.billingModule
 import io.github.magisk317.smscode.di.uiModule
 import com.magisk317.mobile.entitlement.MobileEntitlementBridge
+import io.github.magisk317.smscode.security.CiUpdateGateVault
 import com.magisk317.mobile.entitlement.MobileEntitlementConfig
 import com.magisk317.mobile.entitlement.MobileEntitlementCoordinator
 import com.magisk317.mobile.entitlement.MobileEntitlementPublishedState
@@ -153,6 +154,7 @@ class SmsCodeApplication : Application() {
         syncPreferences()
         registerLicenseActivityKiller()
         if (BuildConfig.ENABLE_MOBILE_ENTITLEMENT) {
+            CiUpdateGateVault.restoreIfEligible(this)
             MobileEntitlementCoordinator.initialize(this, applicationScope)
         }
     }

@@ -3,6 +3,9 @@
 
 package io.github.magisk317.smscode.ui.home
 
+import io.github.magisk317.uikit.update.AppUpdateController
+import org.koin.compose.koinInject
+
 import androidx.compose.foundation.layout.PaddingValues
 
 import android.annotation.SuppressLint
@@ -1097,22 +1100,13 @@ internal fun ComposeSettingsScreenBody(
                                 ),
                             ),
                         )
-                        SwitchItem(
-                            title = stringResource(id = R.string.pref_auto_update_on_start_title),
-                            summary = stringResource(id = R.string.pref_auto_update_on_start_summary),
-                            key = PrefConst.KEY_AUTO_UPDATE_ON_START,
-                            defaultValue = true,
-                            stateOverride = autoUpdateEnabled,
-                            onSaved = markPrefsSaved,
-                        )
-                        if (autoUpdateEnabled.value) {
-                            SwitchItem(
-                                title = stringResource(id = R.string.pref_auto_update_wifi_only_title),
-                                summary = stringResource(id = R.string.pref_auto_update_wifi_only_summary),
-                                key = PrefConst.KEY_AUTO_UPDATE_WIFI_ONLY,
-                                defaultValue = false,
-                                onSaved = markPrefsSaved,
-                            )
+
+                        val updateController = koinInject<AppUpdateController>()
+                        AppArrowItem(
+                            title = stringResource(id = R.string.check_update_title),
+                            summary = stringResource(id = R.string.check_update_summary),
+                        ) {
+                            updateController.check(userInitiated = true)
                         }
                         AppArrowItem(
                             title = stringResource(id = R.string.pref_privacy_policy_title),

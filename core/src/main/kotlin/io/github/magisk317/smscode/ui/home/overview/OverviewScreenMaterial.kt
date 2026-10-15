@@ -21,6 +21,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,7 +42,9 @@ import io.github.magisk317.uikit.surface.rememberUiKitGlassTopBar
 import io.github.magisk317.uikit.surface.uiKitSurfaceGlassSample
 import io.github.magisk317.uikit.theme.LocalUiKitSurfaceBlur
 import io.github.magisk317.uikit.theme.spacing
+import io.github.magisk317.uikit.update.AppUpdateController
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 
 /**
  * Expressive/Material implementation of the Overview page. Follows KernelSU
@@ -59,6 +63,9 @@ internal fun OverviewScreenMaterial(
     val scrollScope = rememberCoroutineScope()
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val bottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 80.dp
+
+    val updateController = koinInject<AppUpdateController>()
+    val hasUpdate by updateController.hasUpdate.collectAsState()
 
     val topGlass = rememberUiKitGlassTopBar()
     val glassOn = LocalUiKitSurfaceBlur.current.usesBackdrop
@@ -113,6 +120,8 @@ internal fun OverviewScreenMaterial(
                         frameworkType = state.frameworkType,
                         frameworkVersion = state.frameworkVersion,
                         interactive = true,
+                        hasUpdateBadge = false,
+                        onVersionClick = { updateController.check(userInitiated = true) },
                         onRootHint = if (state.hasRootAccess) null else actions.onRootHintClick,
                     )
 

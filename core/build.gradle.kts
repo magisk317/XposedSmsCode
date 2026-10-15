@@ -43,6 +43,7 @@ android {
 dependencies {
     implementation(project(":runtime"))
     api(project(":magisk-ui-kit"))
+    api(project(":magisk-ui-kit:update"))
     implementation(project(":magisk-xposed-kit:logging"))
     implementation(project(":magisk-xposed-kit:diagnostics"))
     implementation(project(":magisk-xposed-kit:permission"))

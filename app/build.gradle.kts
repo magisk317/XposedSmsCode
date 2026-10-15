@@ -105,6 +105,7 @@ dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     implementation(project(":core"))
     implementation(project(":magisk-ui-kit"))
+    implementation(project(":magisk-ui-kit:update"))
     implementation(project(":hook"))
     implementation(project(":runtime"))
     implementation(project(":smscode-core:domain"))
