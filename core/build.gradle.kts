@@ -35,7 +35,7 @@ android {
         }
         listOf("github", "fdroid").forEach { flavor ->
             getByName(flavor).kotlin.directories.add("src/$flavor/kotlin")
-            getByName(flavor).kotlin.directories.add("src/nonPlayBilling/kotlin")
+            getByName(flavor).kotlin.directories.add("src/nonPlay/kotlin")
         }
     }
 }
