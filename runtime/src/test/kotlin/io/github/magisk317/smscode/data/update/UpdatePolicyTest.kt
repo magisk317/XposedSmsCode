@@ -9,14 +9,6 @@ import org.junit.jupiter.api.Test
 class UpdatePolicyTest {
 
     @Test
-    fun shouldRunAutoCheck_respectsWifiConstraint() {
-        assertTrue(UpdatePolicy.shouldRunAutoCheck(enabled = true, wifiOnly = false, onWifi = false))
-        assertTrue(UpdatePolicy.shouldRunAutoCheck(enabled = true, wifiOnly = true, onWifi = true))
-        assertFalse(UpdatePolicy.shouldRunAutoCheck(enabled = true, wifiOnly = true, onWifi = false))
-        assertFalse(UpdatePolicy.shouldRunAutoCheck(enabled = false, wifiOnly = false, onWifi = true))
-    }
-
-    @Test
     fun resolveStartupTarget_prefersPlayWhenInstalledFromPlay() {
         assertEquals(UpdatePolicy.StartupTarget.PLAY, UpdatePolicy.resolveStartupTarget(installedFromPlay = true))
         assertEquals(UpdatePolicy.StartupTarget.GITHUB, UpdatePolicy.resolveStartupTarget(installedFromPlay = false))

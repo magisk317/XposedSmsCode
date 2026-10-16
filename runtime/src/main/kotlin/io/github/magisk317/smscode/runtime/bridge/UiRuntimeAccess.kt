@@ -109,7 +109,6 @@ interface UiUpdateAccess {
     fun canRequestPackageInstalls(context: Context): Boolean
     fun buildUnknownSourceSettingsIntent(context: Context): Intent
     fun installApk(context: Context, apkFile: File): Result<Unit>
-    fun shouldRunAutoCheck(enabled: Boolean, wifiOnly: Boolean, onWifi: Boolean): Boolean
     fun resolveStartupTarget(installedFromPlay: Boolean): RuntimeStartupTarget
     fun shouldSkipGithubCheckOnStartup(
         installedFromPlay: Boolean,

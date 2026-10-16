@@ -70,7 +70,9 @@ import io.github.magisk317.uikit.theme.UpdateSystemBars
 import io.github.magisk317.uikit.theme.applyEdgeToEdge
 import io.github.magisk317.uikit.common.AppSnackbarHost
 import io.github.magisk317.uikit.foundation.LocalSnackbarHostState
-import io.github.magisk317.smscode.ui.home.update.FlavorPlayUpdateDelegate
+import io.github.magisk317.uikit.update.FlavorPlayUpdateDelegate
+import io.github.magisk317.uikit.update.UpdatePlayPolicy
+import io.github.magisk317.uikit.update.WifiState
 import java.util.Locale
 import io.github.magisk317.uikit.shell.PlayUpdateDelegate
 import io.github.magisk317.smscode.ui.nav.SmsCodeNavHost
@@ -418,12 +420,8 @@ class MainActivity : ComponentActivity() {
                         if (shouldShowRegularUi) {
                             val updateController = koinInject<AppUpdateController>()
                             LaunchedEffect(Unit) {
-                                // 每次冷启动进入主界面时检测更新：对于 CI/调试版本直接以强制弹窗模式呈现，不可关闭或稍后
-                                val isCiOrDebug = BuildConfig.DEBUG ||
-            BuildConfig.VERSION_NAME.contains("-202") ||
-            BuildConfig.VERSION_NAME.contains("-test") ||
-            BuildConfig.VERSION_NAME.contains("-ci")
-                                updateController.check(userInitiated = isCiOrDebug)
+                                // 冷启动静默检测更新：后台不打扰用户，强制更新照常弹窗
+                                updateController.check(userInitiated = false)
                             }
                             AppUpdateDialog(
                                 controller = updateController,
@@ -662,8 +660,8 @@ class MainActivity : ComponentActivity() {
                 PrefConst.KEY_AUTO_UPDATE_WIFI_ONLY,
                 false,
             )
-            val onWifi = xscPackageActions.isOnWifi(this@MainActivity)
-            if (!updateAccess.shouldRunAutoCheck(enabled, wifiOnly, onWifi)) return@launch
+            val onWifi = WifiState.isOnWifi(this@MainActivity)
+            if (!UpdatePlayPolicy.shouldRunAutoCheck(enabled, wifiOnly, onWifi)) return@launch
 
             requestPlayUpdateInternal(silentIfNoUpdate = true, fallbackOnQueryFailure = false)
         }
@@ -727,7 +725,7 @@ class MainActivity : ComponentActivity() {
                 PrefConst.KEY_AUTO_UPDATE_WIFI_ONLY,
                 false,
             )
-            val onWifi = xscPackageActions.isOnWifi(this)
+            val onWifi = WifiState.isOnWifi(this)
             if (
                 updateAccess.shouldSkipGithubCheckOnStartup(
                     installedFromPlay = installedFromPlay,

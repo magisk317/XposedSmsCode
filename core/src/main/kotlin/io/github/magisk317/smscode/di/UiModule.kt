@@ -27,8 +27,19 @@ val uiModule = module {
             BuildConfig.VERSION_NAME.contains("-test") ||
             BuildConfig.VERSION_NAME.contains("-ci")
 
-        val sources = if (isCiOrDebug) {
-            listOf(
+        val isPlayFlavor = BuildConfig.HAS_BILLING
+
+        val sources = when {
+            // Play flavor: version is owned by Play, no CI source
+            isPlayFlavor -> listOf(
+                GitLabReleaseUpdateSource("magisk3171/XposedSmsCode"),
+                GitHubReleaseUpdateSource(
+                    repository = "magisk317/XposedSmsCode",
+                    gitlabProjectPath = "magisk3171/XposedSmsCode",
+                ),
+            )
+
+            isCiOrDebug -> listOf(
                 GitLabCiArtifactUpdateSource(
                     projectPath = "magisk3171/XposedSmsCode",
                     branch = "beta",
@@ -38,10 +49,13 @@ val uiModule = module {
                 ),
                 GitLabReleaseUpdateSource("magisk3171/XposedSmsCode"),
             )
-        } else {
-            listOf(
+
+            else -> listOf(
                 GitLabReleaseUpdateSource("magisk3171/XposedSmsCode"),
-                GitHubReleaseUpdateSource("magisk317/XposedSmsCode"),
+                GitHubReleaseUpdateSource(
+                    repository = "magisk317/XposedSmsCode",
+                    gitlabProjectPath = "magisk3171/XposedSmsCode",
+                ),
             )
         }
 

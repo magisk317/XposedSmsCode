@@ -188,6 +188,9 @@ android:build:
       :app:assembleGithubDebug
       -PbuildSplits
       -PminifyDebug
+    # Bind artifact versionCode to the pipeline iid so the in-app
+    # update check sees a monotonically increasing version axis.
+    MAGISK_GRADLE_ARGS: "--warning-mode all -PversionCode=$CI_PIPELINE_IID"
   artifacts:
     name: "XposedSmsCode-debug-$CI_COMMIT_REF_SLUG"
     when: always

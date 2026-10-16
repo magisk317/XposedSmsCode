@@ -8,7 +8,6 @@ import io.github.magisk317.smscode.data.update.UpgradeInstaller
 import io.github.magisk317.smscode.runtime.bridge.UiUpdateAccess
 import io.github.magisk317.smscode.runtime.common.update.ApkSecurityVerifier
 import io.github.magisk317.smscode.runtime.common.update.GithubUpdateChecker
-import io.github.magisk317.smscode.runtime.common.update.UpdateCoordinator
 import io.github.magisk317.smscode.runtime.common.update.UpdatePolicy
 import io.github.magisk317.smscode.runtime.contract.update.GithubUpdateConfig
 import java.io.File
@@ -70,10 +69,6 @@ object RuntimeUpdateFacade : UiUpdateAccess {
         UpgradeInstaller.buildUnknownSourceSettingsIntent(context)
 
     override fun installApk(context: Context, apkFile: File): Result<Unit> = UpgradeInstaller.installApk(context, apkFile)
-
-    override fun shouldRunAutoCheck(enabled: Boolean, wifiOnly: Boolean, onWifi: Boolean): Boolean {
-        return UpdatePolicy.shouldRunAutoCheck(enabled, wifiOnly, onWifi)
-    }
 
     override fun resolveStartupTarget(installedFromPlay: Boolean): RuntimeStartupTarget {
         return when (UpdatePolicy.resolveStartupTarget(installedFromPlay)) {
