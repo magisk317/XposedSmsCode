@@ -381,6 +381,17 @@ android:ci:play-beta:
   needs:
     - job: android:ci:play-beta-bundle
       artifacts: true
+  # .magisk_utility_base ships the image only, and this job runs
+  # release/publish_play.sh from the toolkit, so resolve the toolkit here with
+  # the same contract .magisk_linux_base uses. bash/curl/python3/jq/openssl are
+  # pre-baked into utility:3.24; only the toolkit checkout was missing.
+  variables:
+    MAGISK_CI_TOOLKIT_DIR: "$CI_PROJECT_DIR/.magisk-ci-toolkit"
+  before_script:
+    - |
+      set -euo pipefail
+      chmod +x scripts/resolve_ci_toolkit.sh
+      bash scripts/resolve_ci_toolkit.sh >/dev/null
   script:
     - |
       set -euo pipefail
