@@ -69,9 +69,14 @@ val uiModule = module {
             checker = checker,
             downloader = downloader,
             fileProviderAuthority = "${context.packageName}.files",
-            onForceUpdateDetected = {
-                // 门禁逻辑：一旦检测到 CI 强制更新，封存激活并熔断功能，向 Hook 进程发送拒止通知
-                CiUpdateGateVault.sealAndRevoke(context)
+            onForceUpdateDetected = if (isCiOrDebug) {
+                {
+                    // 门禁逻辑：一旦检测到 CI 强制更新，封存激活并熔断功能，向 Hook 进程发送拒止通知
+                    CiUpdateGateVault.sealAndRevoke(context)
+                }
+            } else {
+                // Release 遇强更只弹提示，不自毁
+                {}
             },
         )
     }

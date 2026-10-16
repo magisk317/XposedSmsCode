@@ -153,9 +153,17 @@ class SmsCodeApplication : Application() {
         importPendingCodeRecords()
         syncPreferences()
         registerLicenseActivityKiller()
+        val isCiOrDebug = BuildConfig.DEBUG ||
+            BuildConfig.VERSION_NAME.contains("-202") ||
+            BuildConfig.VERSION_NAME.contains("-test") ||
+            BuildConfig.VERSION_NAME.contains("-ci")
         if (BuildConfig.ENABLE_MOBILE_ENTITLEMENT) {
-            CiUpdateGateVault.restoreIfEligible(this)
+            // entitlement 100% 保留：任何分发形态都初始化激活协调器
             MobileEntitlementCoordinator.initialize(this, applicationScope)
+        }
+        // vault 恢复仅限 CI/调试：Release 不自带解封路径，被封用户需重新激活
+        if (isCiOrDebug) {
+            CiUpdateGateVault.restoreIfEligible(this)
         }
     }
 
