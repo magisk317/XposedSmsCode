@@ -46,7 +46,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            buildConfigField("int", "LOG_LEVEL", "4")
+            buildConfigField("int", "LOG_LEVEL", "5")
             buildConfigField("boolean", "LOG_TO_XPOSED", "true")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
