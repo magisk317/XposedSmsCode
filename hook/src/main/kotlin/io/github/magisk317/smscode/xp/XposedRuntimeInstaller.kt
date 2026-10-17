@@ -71,6 +71,10 @@ object XposedRuntimeInstaller {
         } else {
             true
         }
+        // The hook process has no local preference file of its own. Installing the snapshot here
+        // (rather than only on the first SMS) gives every preference read a persistent fallback
+        // as soon as one provider hit has been recorded.
+        HookPrefsReader.installSnapshot(hookApp)
         MagiskOtel.configureIfAbsent(
             MagiskOtel.Config(
                 enabled = otelEnabled,
@@ -79,10 +83,17 @@ object XposedRuntimeInstaller {
                 projectId = "83955172",
                 projectName = "XposedSmsCode",
                 environment = if (BuildConfig.DEBUG) "debug" else "release",
+                // Captured once here, but the provider below is what actually keeps the value
+                // alive: at hook-install time the remote prefs provider is often not bound yet,
+                // and freezing "" here used to drop service.instance.id for the whole process
+                // (v3.3.10 measured 0% coverage while commit/device attributes stayed at 100%).
                 serviceInstanceId = HookPrefsReader.getStringPreference(
                     AnonymousInstallationId.PREFERENCE_KEY,
                     "",
                 ),
+                serviceInstanceIdProvider = {
+                    HookPrefsReader.getStringPreference(AnonymousInstallationId.PREFERENCE_KEY, "")
+                },
                 serviceCommit = BuildConfig.COMMIT_HASH,
                 deviceAttributes =
                     mapOf(
