@@ -2,7 +2,7 @@ plugins {
     id("magisk.android.library")
     id("magisk.android.compose")
     alias(libs.plugins.kotlin.serialization)
-    id("smscode.android.common")
+    id("xsc.android.common")
 }
 
 val allowConflictBypass = findProperty("allowConflictBypass")
@@ -33,7 +33,7 @@ android {
         listOf("main", "test", "play").forEach { name ->
             getByName(name).kotlin.directories.add("src/$name/kotlin")
         }
-        listOf("github", "fdroid").forEach { flavor ->
+        listOf("github").forEach { flavor ->
             getByName(flavor).kotlin.directories.add("src/$flavor/kotlin")
             getByName(flavor).kotlin.directories.add("src/nonPlay/kotlin")
         }

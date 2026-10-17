@@ -1,10 +1,10 @@
 plugins {
     id("magisk.android.library")
     // The hook process reads preferences from this module, so it must carry the
-    // distribution flavors (smscode.android.common) and the gate flag
+    // distribution flavors (xsc.android.common) and the gate flag
     // (magisk.mobile.gate) the app decides with. Without them the hook boundary
     // would enforce the signed lease on every distribution, play included.
-    id("smscode.android.common")
+    id("xsc.android.common")
     id("magisk.mobile.gate")
     id(libs.plugins.kotlin.serialization.get().pluginId)
     id(libs.plugins.kotlin.parcelize.get().pluginId)
@@ -61,7 +61,7 @@ android {
     // Sources live under src/<name>/kotlin. AGP compiles src/<name>/java by default, so
     // each source set is pointed at the kotlin directory explicitly.
     sourceSets {
-        listOf("main", "test", "github", "fdroid", "play").forEach { name ->
+        listOf("main", "test", "github", "play").forEach { name ->
             findByName(name)?.kotlin?.directories?.add("src/$name/kotlin")
         }
     }
@@ -82,9 +82,6 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.datastore.preferences)
-    // Networking (needed by GithubUpdateChecker)
-    implementation(libs.okhttp)
-    implementation(libs.okhttp.logging.interceptor)
     // Database (Room)
     implementation(libs.timber)
     testImplementation(libs.junit.jupiter)

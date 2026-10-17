@@ -84,8 +84,9 @@
 - 跨仓共享子模块 pin 矩阵（build-logic / magisk-ui-kit / magisk-xposed-kit / smscode-core / smscode-rules 的统一 sha）以 AGENTS.md「Cross-Repo Submodule Pin Matrix」一节为唯一真源；任何子模块源仓推进后，按该矩阵同批 bump 全部消费方父仓。
 - 当前主线 distribution flavor：
   - `play`: Play AAB 发布渠道（发布线出 AAB；本地检查仍可用 `assemblePlayDebug`）。
-  - `github`: GitHub APK 发布渠道。
-  - `fdroid`: F-Droid 构建渠道，禁 HTTP webhook、无计费；与 `github` 共享 `src/nonPlay` 源集。
+  - `github`: GitHub APK 发布渠道；与已暂停的 `fdroid` 共享 `src/nonPlay` 源集。
+  - `fdroid`: 已暂停（与 xinyi-relay 对齐）；恢复点为 `build-logic/.../xsc.android.common.gradle.kts`
+    中注释掉的 `FDROID_FLAVOR` 块。
 - 正式发布线已收敛到 libxposed API 102 热重载主路径。
 - `app/src/main/resources/META-INF/xposed/` 是当前 libxposed 元数据来源，包含
   `module.prop`、`java_init.list`、`scope.list`。

@@ -6,17 +6,11 @@ import android.net.Uri
 import io.github.magisk317.smscode.data.db.AppDatabase
 import io.github.magisk317.smscode.data.db.DBManager
 import io.github.magisk317.smscode.db.entity.SmsMsg
-import io.github.magisk317.smscode.runtime.RuntimeApkVerificationResult
 import io.github.magisk317.smscode.runtime.RuntimeBackupExportResult
 import io.github.magisk317.smscode.runtime.RuntimeBackupImportResult
 import io.github.magisk317.smscode.runtime.RuntimeBackupRule
 import io.github.magisk317.smscode.runtime.RuntimeBackupSmsRecord
-import io.github.magisk317.smscode.runtime.RuntimeStartupTarget
-import io.github.magisk317.smscode.runtime.RuntimeUpgradeApkAsset
-import io.github.magisk317.smscode.runtime.RuntimeUpgradeCheckResult
-import io.github.magisk317.smscode.runtime.RuntimeUpgradeDownloadProgress
 import kotlinx.coroutines.flow.Flow
-import java.io.File
 import io.github.magisk317.smscode.data.repository.RoomSmsCodeRuleRepository
 
 /**
@@ -86,39 +80,4 @@ interface UiNotificationAccess {
 interface UiPrefsAccess {
     suspend fun isSensitiveDebugLogMode(context: Context): Boolean
     suspend fun getSimSlotRemark(context: Context, simSlot: Int): String
-}
-
-/** App update: GitHub check/download/install + Play flow decisions. */
-interface UiUpdateAccess {
-    suspend fun fetchUpgradeInfo(): RuntimeUpgradeCheckResult
-    fun isNewer(current: String, latest: String): Boolean
-    fun isNewer(current: Long, latest: Long): Boolean
-    fun selectBestApkForDevice(apks: List<RuntimeUpgradeApkAsset>): RuntimeUpgradeApkAsset?
-    suspend fun download(
-        context: Context,
-        versionCode: Long,
-        asset: RuntimeUpgradeApkAsset,
-        onProgress: (RuntimeUpgradeDownloadProgress) -> Unit,
-    ): File
-    fun verifyDownloadedApk(
-        context: Context,
-        apkFile: File,
-        expectedSha256: String,
-        expectedSigningCertSha256: String,
-    ): RuntimeApkVerificationResult
-    fun canRequestPackageInstalls(context: Context): Boolean
-    fun buildUnknownSourceSettingsIntent(context: Context): Intent
-    fun installApk(context: Context, apkFile: File): Result<Unit>
-    fun resolveStartupTarget(installedFromPlay: Boolean): RuntimeStartupTarget
-    fun shouldSkipGithubCheckOnStartup(
-        installedFromPlay: Boolean,
-        autoCheckEnabled: Boolean,
-        wifiOnly: Boolean,
-        onWifi: Boolean,
-    ): Boolean
-    fun shouldSkipIgnoredVersion(
-        respectIgnoredVersion: Boolean,
-        ignoredVersion: String,
-        latestVersion: String,
-    ): Boolean
 }

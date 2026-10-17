@@ -221,23 +221,6 @@
     <string name="pref_auto_update_on_start_summary">應用啟動時執行一次更新策略</string>
     <string name="pref_auto_update_wifi_only_title">僅 Wi-Fi 自動檢查更新</string>
     <string name="pref_auto_update_wifi_only_summary">僅在 Wi-Fi 下執行啟動更新檢查</string>
-    <string name="github_update_dialog_title">發現新版本</string>
-    <string name="github_update_dialog_message">檢測到版本 %1$s，可前往下載。</string>
-    <string name="github_update_ignore_this_version">此版本不再提示</string>
-    <string name="github_update_download">去下載</string>
-    <string name="update_download_in_progress_title">正在下載更新</string>
-    <string name="update_download_failed_title">下載失敗</string>
-    <string name="update_download_completed_title">下載完成</string>
-    <string name="update_download_completed_message">新版本已就緒，可繼續安裝。</string>
-    <string name="update_download_progress_text">%1$d%%（%2$s / %3$s）</string>
-    <string name="update_download_cancel">取消下載</string>
-    <string name="update_install">安裝</string>
-    <string name="update_retry">重試</string>
-    <string name="update_unknown_source_title">允許安裝未知來源應用</string>
-    <string name="update_unknown_source_message">請先允許本應用安裝未知來源應用，再點擊「安裝」。</string>
-    <string name="update_open_settings">去設定</string>
-    <string name="update_security_check_failed">安全校驗失敗：%1$s</string>
-    <string name="app_already_newest">當前已是最新版本。</string>
     <!-- preference others end -->
 
     <!-- preference about -->
@@ -417,7 +400,6 @@
     <!-- check update -->
     <string name="check_update_title">檢查更新</string>
     <string name="check_update_summary">點擊檢查更新</string>
-    <string name="check_update_failed">檢測更新失敗。</string>
     <!-- check update end -->
 
 

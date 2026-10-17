@@ -226,23 +226,6 @@
     <string name="pref_auto_update_on_start_summary">Run update strategy once when app starts</string>
     <string name="pref_auto_update_wifi_only_title">Wi-Fi only for auto update</string>
     <string name="pref_auto_update_wifi_only_summary">Only run startup update check on Wi-Fi</string>
-    <string name="github_update_dialog_title">New version found</string>
-    <string name="github_update_dialog_message">Version %1$s is available. Download now?</string>
-    <string name="github_update_ignore_this_version">Ignore this version</string>
-    <string name="github_update_download">Download</string>
-    <string name="update_download_in_progress_title">Downloading update</string>
-    <string name="update_download_failed_title">Download failed</string>
-    <string name="update_download_completed_title">Download completed</string>
-    <string name="update_download_completed_message">Ready to install the new version.</string>
-    <string name="update_download_progress_text">%1$d%% (%2$s / %3$s)</string>
-    <string name="update_download_cancel">Cancel download</string>
-    <string name="update_install">Install</string>
-    <string name="update_retry">Retry</string>
-    <string name="update_unknown_source_title">Allow install unknown apps</string>
-    <string name="update_unknown_source_message">Please allow this app to install unknown apps, then tap Install again.</string>
-    <string name="update_open_settings">Open settings</string>
-    <string name="update_security_check_failed">Security check failed: %1$s</string>
-    <string name="app_already_newest">Current version is the latest.</string>
     <!-- preference others end -->
 
     <!-- preference about -->
@@ -430,7 +413,6 @@
     <!-- check update -->
     <string name="check_update_title">Check for updates</string>
     <string name="check_update_summary">Tap to check updates</string>
-    <string name="check_update_failed">Check update failed.</string>
     <!-- check update end -->
 
 
