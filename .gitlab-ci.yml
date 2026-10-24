@@ -118,16 +118,21 @@ android:check:
   script:
     - |
       set -euo pipefail
-      mapfile -t selected_tasks < <(
-        python3 "$MAGISK_CI_TOOLKIT_DIR/ci/select_gradle_tasks.py" \
+      # The selector itself can fail (bad config, broken toolkit checkout). A command
+      # substitution keeps its exit status, unlike `mapfile < <(...)`, which would leave
+      # an empty list and let this job report success without running a single test.
+      if ! selected="$(python3 "$MAGISK_CI_TOOLKIT_DIR/ci/select_gradle_tasks.py" \
           --root "$CI_PROJECT_DIR" \
           --toolkit "$MAGISK_CI_TOOLKIT_DIR" \
-          --config "$CI_PROJECT_DIR/scripts/config/android-test-tasks.json"
-      )
-      if ((${#selected_tasks[@]} == 0)); then
+          --config "$CI_PROJECT_DIR/scripts/config/android-test-tasks.json")"; then
+        echo "the test task selector failed; refusing to report a passing job with no tests" >&2
+        exit 1
+      fi
+      if [[ -z "$selected" ]]; then
         echo "No Android test tasks selected for this change."
         exit 0
       fi
+      mapfile -t selected_tasks <<< "$selected"
       bash "$MAGISK_CI_TOOLKIT_DIR/gradle/run_gradle_with_retry.sh" \
         ${MAGISK_GRADLE_ARGS:---warning-mode all} "${selected_tasks[@]}" -PenableKover=true
 
@@ -157,16 +162,21 @@ android:test:
   script:
     - |
       set -euo pipefail
-      mapfile -t selected_tasks < <(
-        python3 "$MAGISK_CI_TOOLKIT_DIR/ci/select_gradle_tasks.py" \
+      # The selector itself can fail (bad config, broken toolkit checkout). A command
+      # substitution keeps its exit status, unlike `mapfile < <(...)`, which would leave
+      # an empty list and let this job report success without running a single test.
+      if ! selected="$(python3 "$MAGISK_CI_TOOLKIT_DIR/ci/select_gradle_tasks.py" \
           --root "$CI_PROJECT_DIR" \
           --toolkit "$MAGISK_CI_TOOLKIT_DIR" \
-          --config "$CI_PROJECT_DIR/scripts/config/android-test-tasks.json"
-      )
-      if ((${#selected_tasks[@]} == 0)); then
+          --config "$CI_PROJECT_DIR/scripts/config/android-test-tasks.json")"; then
+        echo "the test task selector failed; refusing to report a passing job with no tests" >&2
+        exit 1
+      fi
+      if [[ -z "$selected" ]]; then
         echo "No Android test tasks selected for this change."
         exit 0
       fi
+      mapfile -t selected_tasks <<< "$selected"
       bash "$MAGISK_CI_TOOLKIT_DIR/gradle/run_gradle_with_retry.sh" \
         ${MAGISK_GRADLE_ARGS:---warning-mode all} "${selected_tasks[@]}" -PenableKover=true
   artifacts:
