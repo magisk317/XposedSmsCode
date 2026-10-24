@@ -124,6 +124,11 @@ jobs:
     if: always() && needs.build-debug.result == 'success'
     runs-on: ubuntu-26.04
     timeout-minutes: 40
+    # Standing policy, same as MiPushFramework: test results feed code changes afterwards
+    # and never gate the build or the publish path. Being the last job is not the same as
+    # being unable to block anything, so the flag states it. A failure still shows here as
+    # a red job with a warning; the run stays green.
+    continue-on-error: true
     env:
       GRADLE_OPTS: -Dorg.gradle.warning.mode=all
     steps:
@@ -156,18 +161,34 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mapfile -t selected_tasks < <(
+          # Command substitution, not `mapfile < <(...)`: the process-substitution form
+          # drops the selector's exit status, so a dead selector (toolkit unresolved,
+          # config unreadable) leaves an empty array and the step's own guard below
+          # reports "no tasks selected" -- a green job that ran nothing at all.
+          if ! selected="$(
             python3 "${MAGISK_CI_TOOLKIT_DIR:-.magisk-ci-toolkit}/ci/select_gradle_tasks.py" \
               --root "$PWD" \
               --toolkit "${MAGISK_CI_TOOLKIT_DIR:-.magisk-ci-toolkit}" \
               --config scripts/config/android-test-tasks.json
-          )
-          if ((${#selected_tasks[@]} == 0)); then
+          )"; then
+            echo "::error::the test task selector failed; refusing to report a passing job with no tests"
+            exit 1
+          fi
+          mapfile -t selected_tasks <<< "$selected"
+          if [[ ${#selected_tasks[@]} -eq 0 || -z "${selected_tasks[0]}" ]]; then
             echo "No Android test tasks selected for this change."
             exit 0
           fi
-          bash "${MAGISK_CI_TOOLKIT_DIR:-.magisk-ci-toolkit}/gradle/run_gradle_with_retry.sh" \
-            --warning-mode all "${selected_tasks[@]}" -PenableKover=true
+          printf 'selected tasks: %s\n' "${selected_tasks[*]}"
+          # In-shell budget: a stall must end as a step failure the job-level
+          # continue-on-error can swallow, not as a cancelled job, which it cannot absorb.
+          rc=0
+          timeout --kill-after=60s 25m bash "${MAGISK_CI_TOOLKIT_DIR:-.magisk-ci-toolkit}/gradle/run_gradle_with_retry.sh" \
+            --warning-mode all "${selected_tasks[@]}" -PenableKover=true || rc=$?
+          if [ "$rc" -eq 124 ] || [ "$rc" -eq 137 ]; then
+            echo "::warning::tests exceeded their 25m budget (exit $rc). The run stays green by policy, but this is not a passing test run: find the task that stopped producing output."
+          fi
+          exit "$rc"
       - name: Upload Kover Report
         if: always()
         uses: actions/upload-artifact@v7
