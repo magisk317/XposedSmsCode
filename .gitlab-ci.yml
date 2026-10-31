@@ -1,29 +1,29 @@
 include:
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "ec2530a5864fa5c86d89b260a04e1bb7cd36ea0d"
+    ref: "7d66c3214ee5ed0064903c8796bd43706f893338"
     file: /.gitlab/ci/android.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "ec2530a5864fa5c86d89b260a04e1bb7cd36ea0d"
+    ref: "7d66c3214ee5ed0064903c8796bd43706f893338"
     file: /.gitlab/ci/android-release.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "ec2530a5864fa5c86d89b260a04e1bb7cd36ea0d"
+    ref: "7d66c3214ee5ed0064903c8796bd43706f893338"
     file: /.gitlab/ci/telegram.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "ec2530a5864fa5c86d89b260a04e1bb7cd36ea0d"
+    ref: "7d66c3214ee5ed0064903c8796bd43706f893338"
     file: /.gitlab/ci/renovate.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "ec2530a5864fa5c86d89b260a04e1bb7cd36ea0d"
+    ref: "7d66c3214ee5ed0064903c8796bd43706f893338"
     file: /.gitlab/ci/cancel-mr-pipelines.yml
   # Utility-job anchor (alpine, pinned): the GitHub mirror and the README-badge
   # job extend it instead of pinning their own image.
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "ec2530a5864fa5c86d89b260a04e1bb7cd36ea0d"
+    ref: "7d66c3214ee5ed0064903c8796bd43706f893338"
     file: /.gitlab/ci/utility.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "ec2530a5864fa5c86d89b260a04e1bb7cd36ea0d"
+    ref: "7d66c3214ee5ed0064903c8796bd43706f893338"
     file: /.gitlab/ci/github-sync.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "ec2530a5864fa5c86d89b260a04e1bb7cd36ea0d"
+    ref: "7d66c3214ee5ed0064903c8796bd43706f893338"
     file: /.gitlab/ci/readme-badges.yml
 
 workflow:
@@ -49,7 +49,7 @@ stages:
 
 variables:
   MAGISK_CI_TOOLKIT_REPOSITORY: "https://gitlab.com/magisk3171/shared/magisk-ci-toolkit.git"
-  MAGISK_CI_TOOLKIT_REF: "ec2530a5864fa5c86d89b260a04e1bb7cd36ea0d"
+  MAGISK_CI_TOOLKIT_REF: "7d66c3214ee5ed0064903c8796bd43706f893338"
   MAGISK_CANCEL_OLDER_MR_PIPELINES: "true"
   # All Android jobs (test/detekt/build/bundle/publish) read this tag, which
   # both the arm64 and the Debian ct101 amd64 group runners carry. GitLab
@@ -152,9 +152,8 @@ android:test:
       when: never
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH'
     - when: never
-  # Publish first: wait for the Play beta publish (optional, so this
-  # stage still runs when the publish job is absent) instead of
-  # consuming the release runner in parallel.
+  # Wait for automatic Renovate delivery when present; the optional manual
+  # Play action on human beta pipelines does not block this quality job.
   needs:
     - job: android:ci:publish-play
       artifacts: false
@@ -197,19 +196,11 @@ android:build:
   extends:
     - .magisk_android_build
     - .xposed_signed_android_rules
+    # Last so its job-level rules win over the anchors above; the shared
+    # anchor skips MR/renovate/schedule pipelines and gates on signing creds.
+    - .magisk_android_build_rules
   tags:
     - $XPOSED_BUILD_RUNNER_TAG
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: never
-    # Job-level rules replace the ones inherited via extends, so the renovate
-    # exclusion from .xposed_android_rules must be restated here. Without it
-    # every renovate branch push burned a full android:build on the shared
-    # arm64 runner, duplicating what the MR pipeline already verifies.
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH =~ /^renovate\//'
-      when: never
-    - if: '$CI_COMMIT_BRANCH && $RELEASE_KEYSTORE != "" && $STORE_PASSWORD != "" && $KEY_ALIAS != "" && $KEY_PASSWORD != ""'
-    - when: never
   variables:
     MAGISK_IS_CI_BUILD: "true"
     MAGISK_ANDROID_BUILD_TASKS: >-
@@ -286,9 +277,8 @@ android:detekt:
   tags:
     - $XPOSED_TEST_RUNNER_TAG
   allow_failure: true
-  # Publish first: wait for the Play beta publish (optional, so this
-  # stage still runs when the publish job is absent) instead of
-  # consuming the release runner in parallel.
+  # Wait for automatic Renovate delivery when present; the optional manual
+  # Play action on human beta pipelines does not block this quality job.
   needs:
     - job: android:ci:publish-play
       artifacts: false
@@ -323,20 +313,20 @@ android:release:apk:
   # so downstream jobs reuse this version decision instead of re-deriving it.
   extends: .magisk_android_release_apk
   variables:
-    MAGISK_ANDROID_RELEASE_APK_TASKS: ":app:assembleGithubRelease"
-    MAGISK_ANDROID_RELEASE_GRADLE_EXTRA_ARGS: "-PbuildSplits"
+    MAGISK_ANDROID_RELEASE_APK_TASKS: ":app:assembleGithubRelease :app:assembleGithubDebug"
+    MAGISK_ANDROID_RELEASE_APK_BUILD_TYPES: "release debug"
+    MAGISK_ANDROID_RELEASE_MAX_APK_BYTES: "52428800"
+    MAGISK_ANDROID_RELEASE_ALLOW_NON_DEBUGGABLE_DEBUG: "true"
+    MAGISK_ANDROID_RELEASE_GRADLE_EXTRA_ARGS: "-PbuildSplits -PminifyDebug"
   resource_group: xposed-android-release-apk
   stage: build
   needs:
     - job: android:release:guard
       artifacts: false
   artifacts:
+    # Only the name is job-specific; when/expire_in/paths inherit the shared
+    # .magisk_android_release_apk defaults (mapping.txt included there).
     name: "XposedSmsCode-release-apks-$CI_COMMIT_TAG"
-    when: always
-    expire_in: 30 days
-    paths:
-      - app/build/outputs/apk/**/release/*.apk
-      - play-release.env
 
 android:release:aab:
   extends: .magisk_android_release_aab
@@ -352,12 +342,8 @@ android:release:aab:
     - job: android:release:guard
       artifacts: false
   artifacts:
+    # Only the name is job-specific; the rest inherits .magisk_android_release_aab.
     name: "XposedSmsCode-release-bundle-$CI_COMMIT_TAG"
-    when: always
-    expire_in: 30 days
-    paths:
-      - app/build/outputs/bundle/**/*.aab
-      - app/build/outputs/mapping/**/mapping.txt
 
 android:release:gitlab:
   extends: .magisk_android_gitlab_release
@@ -370,7 +356,6 @@ android:release:gitlab:
       artifacts: true
     - job: android:release:aab
       artifacts: true
-      optional: true
 
 android:release:publish-play:
   extends: .magisk_android_publish_play
@@ -384,25 +369,24 @@ android:release:publish-play:
   tags:
     - $XPOSED_GITLAB_LINUX_ARM64_RUNNER_TAG
   needs:
+    - job: android:release:apk
+      artifacts: true
     - job: android:release:aab
       artifacts: true
 
 android:ci:aab:
-  extends: .magisk_android_base
+  extends:
+    - .magisk_android_base
+    - .magisk_android_ci_aab_rules
   resource_group: xposed-android-release-play
   stage: build
   tags:
     - $XPOSED_BUNDLE_RUNNER_TAG
   # The release build is self-contained (keystore and google-services.json
-  # come from CI variables, assets from the repository), so the publish chain
-  # must not wait for the build/package stages: Play publishing keeps
-  # priority over the quality stage.
+  # come from CI variables, assets from the repository), so beta bundle
+  # production must not wait for other build/package jobs. Packaging, followed
+  # by Renovate's automatic delivery when applicable, keeps priority over quality.
   needs: []
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "beta" && $CI_PIPELINE_SOURCE == "push" && $MAGISK_ANDROID_RELEASE_PUBLISH_PLAY == "true" && $RELEASE_KEYSTORE != "" && $STORE_PASSWORD != "" && $KEY_ALIAS != "" && $KEY_PASSWORD != "" && $ANDROID_PUBLISHER_CREDENTIALS != ""'
-    - if: '$CI_COMMIT_BRANCH == "beta" && $CI_PIPELINE_SOURCE == "schedule" && $CI_COMMIT_AUTHOR =~ /Renovate317@users.noreply/ && $MAGISK_ANDROID_RELEASE_PUBLISH_PLAY == "true" && $RELEASE_KEYSTORE != "" && $STORE_PASSWORD != "" && $KEY_ALIAS != "" && $KEY_PASSWORD != "" && $ANDROID_PUBLISHER_CREDENTIALS != ""'
-      when: on_success
-    - when: never
   variables:
     # Play tracks require a signed, non-debuggable AAB, so this internal diagnostic
     # artifact deliberately uses bundlePlayRelease while keeping the CI log channel.
@@ -432,21 +416,14 @@ android:ci:aab:
       - play-release.env
 
 android:ci:publish-play:
-  extends: .magisk_utility_base
+  extends:
+    - .magisk_utility_base
+    - .magisk_android_ci_publish_play_rules
   resource_group: xposed-android-release-play
   stage: release
   interruptible: false
   tags:
     - $XPOSED_BUILD_RUNNER_TAG
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "beta" && $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_AUTHOR =~ /Renovate317@users.noreply/ && $MAGISK_ANDROID_RELEASE_PUBLISH_PLAY == "true" && $ANDROID_PUBLISHER_CREDENTIALS != ""'
-      when: on_success
-    - if: '$CI_COMMIT_BRANCH == "beta" && $CI_PIPELINE_SOURCE == "push" && $MAGISK_ANDROID_RELEASE_PUBLISH_PLAY == "true" && $ANDROID_PUBLISHER_CREDENTIALS != ""'
-      when: on_success
-      allow_failure: true
-    - if: '$CI_COMMIT_BRANCH == "beta" && $CI_PIPELINE_SOURCE == "schedule" && $CI_COMMIT_AUTHOR =~ /Renovate317@users.noreply/ && $MAGISK_ANDROID_RELEASE_PUBLISH_PLAY == "true" && $ANDROID_PUBLISHER_CREDENTIALS != ""'
-      when: on_success
-    - when: never
   needs:
     - job: android:ci:aab
       artifacts: true
@@ -489,38 +466,36 @@ android:release:modules-repo:
   needs:
     - job: android:release:apk
       artifacts: true
+    - job: android:release:aab
+      artifacts: true
 
 telegram:release:
   extends: .magisk_telegram_release
   stage: release
-  allow_failure: true
+  allow_failure: false
   tags:
     - $XPOSED_GITLAB_LINUX_ARM64_RUNNER_TAG
   variables:
     MAGISK_TELEGRAM_PROJECT_TAG: "📌 #XposedSmsCode"
     MAGISK_TELEGRAM_PROJECT_NAME: "XposedSmsCode"
+    MAGISK_TELEGRAM_RELEASE_EXPECTED_ARTIFACT_COUNT: "2"
+    MAGISK_TELEGRAM_RELEASE_ARTIFACT_CAPTION: "📦 XposedSmsCode $CI_COMMIT_TAG · arm64-v8a · release + debug"
     # Use TG_RELEASE_CHAT_ID instead of TG_CHAT_ID so that the project-level
     # TG_CHAT_ID (which retargets CI to the new room) does NOT override this.
     TG_RELEASE_CHAT_ID: "-1003532345372"
   needs:
     - job: android:release:apk
       artifacts: true
-    - job: android:release:gitlab
-      artifacts: false
+    - job: android:release:aab
+      artifacts: true
 
 telegram:ci:
   extends:
     - .magisk_telegram_ci
     - .xposed_signed_android_rules
+    - .magisk_telegram_ci_delivery_rules
   stage: release
   allow_failure: true
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "beta" && $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_AUTHOR =~ /Renovate317@users.noreply/ && $RELEASE_KEYSTORE != "" && $STORE_PASSWORD != "" && $KEY_ALIAS != "" && $KEY_PASSWORD != ""'
-      when: on_success
-    - if: '$CI_COMMIT_BRANCH == "beta" && $CI_PIPELINE_SOURCE == "push" && $RELEASE_KEYSTORE != "" && $STORE_PASSWORD != "" && $KEY_ALIAS != "" && $KEY_PASSWORD != ""'
-      when: manual
-      allow_failure: true
-    - when: never
   tags:
     - $XPOSED_GITLAB_LINUX_ARM64_RUNNER_TAG
   variables:
@@ -559,6 +534,10 @@ sync:github:
   needs:
     - job: android:release:guard
       optional: true
+    - job: android:release:apk
+      artifacts: true
+    - job: android:release:aab
+      artifacts: true
   variables:
     # Written out rather than reused from MAGISK_ANDROID_RELEASE_GITHUB_REPOSITORY:
     # the mirror target is its own contract and must not follow a release setting.
@@ -572,15 +551,16 @@ android:release:github:
     - $XPOSED_GITLAB_LINUX_ARM64_RUNNER_TAG
   variables:
     # Must stay job-level: the toolkit template pins the same key at job level
-    # ("*arm64-v8a*.apk") and job variables outrank the global variables block,
+    # ("*_release.apk") and job variables outrank the global variables block,
     # so a global override here would be silently ignored.
-    MAGISK_ANDROID_RELEASE_GITHUB_ASSET_PATTERN: "*.apk"
+    MAGISK_ANDROID_RELEASE_GITHUB_ASSET_PATTERN: "*_release.apk"
   needs:
     - job: android:release:apk
       artifacts: true
-    # The GitHub release must wait for the mirror push, otherwise it would
-    # create the tag at the GitHub default-branch HEAD before it exists.
+    # The GitHub release must wait for both Android artifacts and the mirror push.
     - job: sync:github
+    - job: android:release:aab
+      artifacts: true
 
 # Scheduled/manual README badge sync (replaces the retired GitHub workflow).
 sync:readme-badges:
@@ -588,4 +568,4 @@ sync:readme-badges:
     - .magisk_utility_base
     - .magisk_readme_badges
   tags:
-    - $XPOSED_GITLAB_LINUX_AMD64_RUNNER_TAG
+    - $XPOSED_GITLAB_LINUX_ARM64_RUNNER_TAG
