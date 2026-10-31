@@ -13,6 +13,7 @@ import androidx.core.net.toUri
 import kotlinx.coroutines.runBlocking
 import io.github.magisk317.smscode.common.constant.PrefConst
 import io.github.magisk317.smscode.runtime.common.record.CodeRecordChannel
+import io.github.magisk317.smscode.runtime.BuildConfig as RuntimeBuildConfig
 import io.github.magisk317.smscode.runtime.common.record.CodeRecordTrimPolicy
 import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import io.github.magisk317.smscode.common.utils.ProviderCallerGuard
@@ -774,7 +775,13 @@ class DBProvider : ContentProvider() {
         private val CALL_TYPES = (0..6).toSet()
         private val DATE_SORT_REGEX = Regex("""date (asc|desc)(?: limit ([1-9]\d{0,3}))?""")
 
-        fun authority(context: Context): String = "${context.packageName}.db.provider"
+        // The authority must come from the MODULE id (runtime BuildConfig), never
+        // context.packageName: hook processes pass the HOOKED app's context, whose
+        // packageName is the scope app (com.android.phone etc.) — an authority that
+        // does not exist, so every cross-process heartbeat/gate call silently
+        // no-ops (2026-10-31: last_hook_at_ms stayed 0, the app showed 未激活).
+        fun authority(@Suppress("UNUSED_PARAMETER") context: Context): String =
+            "${RuntimeBuildConfig.APPLICATION_ID}.db.provider"
 
         fun smsMsgContentUri(context: Context): Uri =
             "content://${context.packageName}.db.provider/$PATH_SMS_MSG".toUri()
