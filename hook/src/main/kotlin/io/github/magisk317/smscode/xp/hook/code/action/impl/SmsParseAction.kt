@@ -5,7 +5,7 @@ import android.content.Intent
 import io.github.magisk317.smscode.common.utils.HookPrefsReader
 import io.github.magisk317.smscode.common.utils.SmsCodeUtils
 import io.github.magisk317.smscode.runtime.common.utils.StringUtils
-import io.github.magisk317.smscode.db.entity.SmsMsg
+import io.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
 import io.github.magisk317.smscode.verification.SmsDuplicateCheckResult
 import io.github.magisk317.smscode.rule.utils.SmsCodeParsedMetadataResolver

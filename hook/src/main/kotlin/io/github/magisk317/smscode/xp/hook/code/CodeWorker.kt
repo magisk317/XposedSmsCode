@@ -7,7 +7,7 @@ import io.github.magisk317.smscode.runtime.BuildConfig as RuntimeBuildConfig
 import io.github.magisk317.smscode.hook.BuildConfig
 import io.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
 import io.github.magisk317.smscode.common.utils.HookPrefsReader
-import io.github.magisk317.smscode.db.entity.SmsMsg
+import io.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.smscode.runtime.verification.CodeWorker as SharedCodeWorker
 import io.github.magisk317.smscode.runtime.verification.SmsCodePostParseCoordinator
 import io.github.magisk317.smscode.runtime.verification.SmsParseActionRunner

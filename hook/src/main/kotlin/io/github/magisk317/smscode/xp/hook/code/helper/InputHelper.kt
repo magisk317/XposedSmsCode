@@ -2,7 +2,7 @@ package io.github.magisk317.smscode.xp.hook.code.helper
 
 import android.content.Context
 import io.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
-import io.github.magisk317.smscode.xposed.helper.LocalInputActions
+import io.github.magisk317.xposed.capability.helper.LocalInputActions
 
 /** Thin delegate; implementation lives in core [LocalInputActions]. */
 object InputHelper {

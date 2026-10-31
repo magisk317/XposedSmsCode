@@ -9,7 +9,7 @@ import io.github.magisk317.smscode.common.utils.ProviderIpcTokenGate
 import io.github.magisk317.smscode.common.utils.RuntimeDiagnosticsBridge
 import io.github.magisk317.smscode.runtime.common.diagnostics.RuntimeLogStore
 import io.github.magisk317.smscode.data.db.DBProvider
-import io.github.magisk317.smscode.db.entity.SmsMsg
+import io.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.smscode.verification.SmsDuplicateCheckResult
 import io.github.magisk317.smscode.verification.resolveSmsDuplicateCheck
 import io.github.magisk317.smscode.data.log.RuntimeLogProvider
@@ -26,12 +26,12 @@ import io.github.magisk317.xposed.logging.DefaultLogSanitizer
 import io.github.magisk317.xposed.logging.MagiskLogPolicy
 import io.github.magisk317.xposed.logging.MagiskOtel
 import io.github.magisk317.xposed.logging.AnonymousInstallationId
-import io.github.magisk317.smscode.xposed.runtime.CoreHookPolicy
-import io.github.magisk317.smscode.xposed.runtime.CoreHookPolicyHolder
-import io.github.magisk317.smscode.xposed.runtime.CoreLogSink
-import io.github.magisk317.smscode.xposed.runtime.CoreLogSinkHolder
-import io.github.magisk317.smscode.xposed.runtime.CoreRuntime
-import io.github.magisk317.smscode.xposed.runtime.CoreRuntimeAccess
+import io.github.magisk317.xposed.capability.runtime.CoreHookPolicy
+import io.github.magisk317.xposed.capability.runtime.CoreHookPolicyHolder
+import io.github.magisk317.xposed.capability.runtime.CoreLogSink
+import io.github.magisk317.xposed.capability.runtime.CoreLogSinkHolder
+import io.github.magisk317.xposed.capability.runtime.CoreRuntime
+import io.github.magisk317.xposed.capability.runtime.CoreRuntimeAccess
 import io.github.magisk317.xposed.logging.XposedLogClient
 
 @SuppressLint("LogNotTimber", "PrivateApi", "StaticFieldLeak")

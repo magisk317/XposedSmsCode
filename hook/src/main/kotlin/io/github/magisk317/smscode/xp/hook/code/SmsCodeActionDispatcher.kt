@@ -3,7 +3,7 @@ package io.github.magisk317.smscode.xp.hook.code
 import android.content.Context
 import android.os.Handler
 import io.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
-import io.github.magisk317.smscode.db.entity.SmsMsg
+import io.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.smscode.xp.hook.code.action.impl.AutoInputAction
 import io.github.magisk317.smscode.xp.hook.code.action.impl.CopyToClipboardAction
 import io.github.magisk317.smscode.xp.hook.code.action.impl.NotifyAction

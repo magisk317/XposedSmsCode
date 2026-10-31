@@ -1,7 +1,7 @@
 package io.github.magisk317.smscode.xp.hook.code
 
 import android.os.Parcelable
-import io.github.magisk317.smscode.db.entity.SmsMsg
+import io.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.smscode.verification.SmsMessage
 import kotlinx.parcelize.Parcelize
 

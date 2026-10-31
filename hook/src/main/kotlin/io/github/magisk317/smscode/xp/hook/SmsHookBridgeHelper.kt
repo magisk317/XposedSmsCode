@@ -3,7 +3,7 @@ package io.github.magisk317.smscode.xp.hook
 import android.content.Context
 import io.github.magisk317.smscode.common.utils.HookPrefsReader
 import io.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
-import io.github.magisk317.smscode.runtime.contract.logging.LogRoute
+import io.github.magisk317.xposed.runtime.contract.logging.LogRoute
 import io.github.magisk317.xposed.logging.XLog
 
 internal object SmsHookBridgeHelper {

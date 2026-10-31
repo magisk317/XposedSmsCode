@@ -6,7 +6,7 @@ import android.widget.Toast
 import io.github.magisk317.smscode.hook.R
 import io.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
 import io.github.magisk317.smscode.xp.hook.code.helper.InputHelper
-import io.github.magisk317.smscode.db.entity.SmsMsg
+import io.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.smscode.runtime.verification.ToastActionHelper
 import io.github.magisk317.smscode.xp.hook.code.action.RunnableAction
 import io.github.magisk317.smscode.xp.hook.code.toVerificationMessage

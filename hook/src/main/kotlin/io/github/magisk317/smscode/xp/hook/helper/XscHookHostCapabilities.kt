@@ -5,8 +5,8 @@ import io.github.magisk317.smscode.common.utils.SmsCodeUtils
 import io.github.magisk317.smscode.hook.BuildConfig
 import io.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
 import io.github.magisk317.smscode.runtime.common.utils.StringUtils
-import io.github.magisk317.smscode.runtime.contract.logging.LogRoute
-import io.github.magisk317.smscode.xposed.hook.HookHostCapabilities
+import io.github.magisk317.xposed.runtime.contract.logging.LogRoute
+import io.github.magisk317.smscode.xposed.hook.telephony.SmsHookCapabilities
 
 /**
  * XSC 侧的统一宿主能力适配器。
@@ -16,7 +16,7 @@ import io.github.magisk317.smscode.xposed.hook.HookHostCapabilities
  * hookProcessInit），本对象把这层差异收敛在一处，使 XSC 与 xinyi-relay
  * 消费同一份契约。
  */
-internal object XscHookHostCapabilities : HookHostCapabilities {
+internal object XscHookHostCapabilities : SmsHookCapabilities {
     override fun isVerboseLogMode(context: Context): Boolean =
         BuildConfig.DEBUG || BuildConfig.IS_CI_BUILD
 

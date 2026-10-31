@@ -7,8 +7,8 @@ import android.os.Bundle
 import io.github.magisk317.smscode.common.utils.HookPrefsReader
 import io.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
 import io.github.magisk317.xposed.logging.XLog
-import io.github.magisk317.smscode.db.entity.AppInfo
-import io.github.magisk317.smscode.db.entity.SmsMsg
+import io.github.magisk317.smscode.data.db.entity.AppInfo
+import io.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.smscode.feature.store.EntityStoreManager
 import io.github.magisk317.smscode.feature.store.EntityType
 import io.github.magisk317.smscode.runtime.verification.AutoInputActionHelper

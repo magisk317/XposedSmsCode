@@ -10,8 +10,8 @@ import io.github.magisk317.smscode.xp.hook.telephony.SmsProviderHook
 import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface.ModuleLoadedParam
-import io.github.magisk317.smscode.xposed.hook.permission.PermissionGranterHook
-import io.github.magisk317.smscode.xposed.hook.system.SystemInputInjectorHook
+import io.github.magisk317.xposed.capability.permission.PermissionGranterHook
+import io.github.magisk317.xposed.capability.system.SystemInputInjectorHook
 import io.github.magisk317.xposed.HookEnv
 import io.github.magisk317.xposed.LibXposedHookApi
 import io.github.magisk317.xposed.logging.XLog
@@ -21,6 +21,8 @@ import io.github.magisk317.xposed.logging.MagiskOtel
 
 class LibXposedEntry : BaseLibXposedEntry {
 
+    // libxposed instantiates this constructor reflectively, so nothing in the module ever
+    // calls it -- "unused"/"UnusedParameter" silence the IDE inspection, not a compiler warning.
     @Suppress("unused", "UnusedParameter")
     constructor(xposed: XposedInterface, loadedParam: ModuleLoadedParam) : super(xposed, loadedParam)
     constructor() : super()

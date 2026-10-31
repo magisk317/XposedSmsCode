@@ -2,7 +2,7 @@ package io.github.magisk317.smscode.xp.hook.code.action
 
 import android.content.Context
 import android.os.Bundle
-import io.github.magisk317.smscode.db.entity.SmsMsg
+import io.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.smscode.runtime.verification.SmsCodeCallableAction
 
 /**

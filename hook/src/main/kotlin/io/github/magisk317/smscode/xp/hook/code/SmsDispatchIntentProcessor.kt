@@ -3,7 +3,7 @@ package io.github.magisk317.smscode.xp.hook.code
 import android.content.Context
 import android.content.Intent
 import io.github.magisk317.smscode.common.utils.SmsBlacklistUtils
-import io.github.magisk317.smscode.db.entity.SmsMsg
+import io.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.smscode.verification.BlacklistMatchResult
 import io.github.magisk317.smscode.runtime.verification.SmsDispatchIntentProcessor as SharedSmsDispatchIntentProcessor
 import io.github.magisk317.smscode.runtime.verification.SmsHandlerDispatchDecision

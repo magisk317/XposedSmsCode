@@ -10,7 +10,7 @@ import io.github.magisk317.smscode.hook.R
 import io.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
 import io.github.magisk317.smscode.xp.hook.code.CodeNotificationBroadcastContract
 import io.github.magisk317.smscode.runtime.verification.CodeNotificationDeliveryHelper
-import io.github.magisk317.smscode.db.entity.SmsMsg
+import io.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.smscode.runtime.verification.NotifyActionHelper
 import io.github.magisk317.smscode.runtime.verification.PhoneOwnedNotificationDispatcher
 import io.github.magisk317.smscode.xp.hook.code.CopyCodeReceiver

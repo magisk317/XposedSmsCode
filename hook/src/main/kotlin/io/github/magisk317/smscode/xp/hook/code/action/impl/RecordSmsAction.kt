@@ -6,7 +6,7 @@ import android.content.Context
 import android.database.Cursor
 import android.os.Bundle
 import io.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
-import io.github.magisk317.smscode.db.entity.SmsMsg
+import io.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.smscode.runtime.verification.RecordSmsActionHelper
 import io.github.magisk317.smscode.runtime.verification.RecordSmsInsertResultHelper
 import io.github.magisk317.smscode.xp.hook.code.action.CallableAction
@@ -39,7 +39,9 @@ class RecordSmsAction(
             withFileLock = { _, _, block -> block() },
             shouldSkipByDedup = { _, _ -> false },
             primaryInserter = { smsMsg -> insertPrimary(smsMsg.raw) },
-            fallbackExporter = { smsMsg -> HookRuntimeBridge.codeRecordAccess.exportToFile(mPluginContext, smsMsg.raw) },
+            // The helper reports the fallback outcome itself; a second event here would
+            // double-count the same failure (insert_failed + export_file_failed).
+            fallbackExporter = { smsMsg -> HookRuntimeBridge.codeRecordAccess.exportToFile(mPluginContext, smsMsg.raw, emitDiagnostics = false) },
         ).run()
     }
 
@@ -61,10 +63,6 @@ class RecordSmsAction(
                 put("sim_slot", smsMsg.simSlot)
                 put("sub_id", smsMsg.subId)
                 put("msg_type", smsMsg.msgType)
-                put("forward_status", smsMsg.forwardStatus)
-                put("forward_target", smsMsg.forwardTarget)
-                put("forward_message", smsMsg.forwardMessage)
-                put("forward_time", smsMsg.forwardTime)
                 put("deduplicate", deduplicateEnabled ?: HookRuntimeBridge.prefsAccess.deduplicateSms(mPluginContext))
             }
 

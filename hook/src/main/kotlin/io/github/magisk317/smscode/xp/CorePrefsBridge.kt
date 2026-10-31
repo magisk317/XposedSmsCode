@@ -2,8 +2,8 @@ package io.github.magisk317.smscode.xp
 
 import android.content.SharedPreferences
 import io.github.magisk317.smscode.common.utils.HookPrefsReader
-import io.github.magisk317.smscode.xposed.prefs.CorePrefs
-import io.github.magisk317.smscode.xposed.prefs.CorePrefsAccess
+import io.github.magisk317.xposed.capability.prefs.CorePrefs
+import io.github.magisk317.xposed.capability.prefs.CorePrefsAccess
 
 object CorePrefsBridge {
     fun installRemote(remotePrefsProvider: () -> SharedPreferences?) {

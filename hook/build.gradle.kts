@@ -44,6 +44,8 @@ android {
 }
 
 dependencies {
+    implementation(project(":magisk-xposed-kit:runtime"))
+    implementation(project(":magisk-xposed-kit:contract"))
     implementation(project(":runtime"))
     implementation(project(":smscode-core:hook"))
     implementation(project(":smscode-core:domain"))
@@ -53,6 +55,8 @@ dependencies {
     implementation(project(":smscode-core:db"))
     implementation(project(":smscode-core:verification"))
     implementation(project(":magisk-xposed-kit"))
+    implementation(project(":magisk-xposed-kit:capability"))
+    implementation(project(":magisk-xposed-kit:runtime"))
     implementation(project(":magisk-xposed-kit:logging"))
     implementation(libs.androidx.core.ktx)
     compileOnly(libs.libxposed.api)

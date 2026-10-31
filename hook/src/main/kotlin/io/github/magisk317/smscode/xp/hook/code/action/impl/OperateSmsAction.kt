@@ -3,7 +3,7 @@ package io.github.magisk317.smscode.xp.hook.code.action.impl
 import android.content.Context
 import android.os.Bundle
 import androidx.annotation.IntDef
-import io.github.magisk317.smscode.db.entity.SmsMsg
+import io.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.smscode.common.utils.HookPrefsReader
 import io.github.magisk317.smscode.xp.hook.code.action.CallableAction
 import io.github.magisk317.smscode.xp.hook.code.toVerificationMessage

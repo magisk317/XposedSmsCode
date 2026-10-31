@@ -8,7 +8,7 @@ import io.github.magisk317.smscode.xp.helper.SmsCodeConflictNoticeHelper
 import io.github.magisk317.smscode.xp.hook.code.CodeWorker
 import io.github.magisk317.smscode.xp.hook.code.SmsBlockEvaluator
 import io.github.magisk317.smscode.xp.hook.helper.XscHookHostCapabilities
-import io.github.magisk317.smscode.xposed.hook.HookHostCapabilities
+import io.github.magisk317.smscode.xposed.hook.telephony.SmsHookCapabilities
 import io.github.magisk317.smscode.xposed.hook.telephony.BlockEvaluation
 import io.github.magisk317.smscode.xposed.hook.telephony.MmsEntryPointHook
 import io.github.magisk317.smscode.xposed.hook.telephony.MmsEntryPointHookHost
@@ -24,7 +24,7 @@ import io.github.magisk317.smscode.xposed.hook.telephony.MmsEntryPointHookHost
 private object XscMmsEntryPointHost : MmsEntryPointHookHost {
     override val applicationId: String = BuildConfig.APPLICATION_ID
 
-    override val capabilities: HookHostCapabilities = XscHookHostCapabilities
+    override val capabilities: SmsHookCapabilities = XscHookHostCapabilities
 
     override fun shouldSuppressByRelay(context: Context, tag: String): Boolean =
         ModuleConflictArbiter.shouldSuppressByRelay(context, tag)

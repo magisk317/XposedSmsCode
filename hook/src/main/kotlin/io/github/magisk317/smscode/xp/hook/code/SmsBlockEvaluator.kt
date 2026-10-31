@@ -5,7 +5,7 @@ import android.content.Intent
 import io.github.magisk317.smscode.common.utils.HookPrefsReader
 import io.github.magisk317.smscode.common.utils.SmsBlacklistUtils
 import io.github.magisk317.smscode.common.utils.SmsCodeUtils
-import io.github.magisk317.smscode.db.entity.SmsMsg
+import io.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.smscode.runtime.verification.SmsBlockEvaluator as SharedSmsBlockEvaluator
 
 object SmsBlockEvaluator {

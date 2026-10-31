@@ -11,12 +11,12 @@ import io.github.magisk317.smscode.common.constant.NotificationConst
 import io.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
 import io.github.magisk317.smscode.common.utils.SmsBlacklistUtils
 import io.github.magisk317.xposed.logging.XLog
-import io.github.magisk317.smscode.db.entity.SmsMsg
+import io.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.smscode.xp.helper.ModuleConflictArbiter
 import io.github.magisk317.smscode.xp.helper.SmsCodeConflictNoticeHelper
 import io.github.magisk317.smscode.hook.R
 import io.github.magisk317.smscode.runtime.verification.SmsDispatchChainBlockDeduplicator
-import io.github.magisk317.smscode.xposed.helper.SmsHookContextRecovery
+import io.github.magisk317.xposed.capability.helper.SmsHookContextRecovery
 import io.github.magisk317.smscode.runtime.verification.SmsIntentHookSupport as VerificationSmsIntentHookSupport
 import io.github.magisk317.xposed.HookHelpers
 import io.github.magisk317.xposed.BaseHook
@@ -27,14 +27,14 @@ import io.github.magisk317.smscode.xposed.hook.telephony.InboundSmsHookInstaller
 import io.github.magisk317.smscode.xp.hook.SmsHookRuntimeContext
 import io.github.magisk317.smscode.xp.hook.SmsHookRuntimeSession
 import io.github.magisk317.smscode.xp.hook.code.action.impl.OperateSmsAction
-import io.github.magisk317.smscode.runtime.common.sim.SmsRoutingIntentExtras
+import io.github.magisk317.xposed.runtime.contract.sim.SmsRoutingIntentExtras
 import io.github.magisk317.smscode.runtime.verification.PendingSmsReplayQueue
 import io.github.magisk317.xposed.HookEnv
 import io.github.magisk317.xposed.MethodHook
 import io.github.magisk317.xposed.LoadParam
 import io.github.magisk317.xposed.MethodHookParam
 import io.github.magisk317.xposed.logging.MagiskOtel
-import io.github.magisk317.smscode.runtime.contract.logging.LogRoute
+import io.github.magisk317.xposed.runtime.contract.logging.LogRoute
 import io.github.magisk317.smscode.runtime.verification.SmsDispatchIntentDeduplicator
 import java.lang.reflect.Method
 import java.util.Collections

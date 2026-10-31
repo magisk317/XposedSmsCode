@@ -9,10 +9,10 @@ import android.os.Handler
 import android.os.Looper
 import io.github.magisk317.smscode.runtime.bridge.HookBroadcastContract
 import io.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
-import io.github.magisk317.smscode.runtime.contract.autoinput.AutoInputResultBroadcastContract
-import io.github.magisk317.smscode.xposed.hook.system.SystemInputInjectorHook
+import io.github.magisk317.xposed.runtime.contract.autoinput.AutoInputResultBroadcastContract
+import io.github.magisk317.xposed.capability.system.SystemInputInjectorHook
 import io.github.magisk317.xposed.logging.XLog
-import io.github.magisk317.smscode.db.entity.SmsMsg
+import io.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.smscode.xp.hook.code.action.CallableAction
 import io.github.magisk317.xposed.logging.MagiskOtel
 
