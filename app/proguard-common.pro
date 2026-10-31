@@ -24,6 +24,14 @@
 # LibXposed API is provided at runtime by LSPosed framework (compileOnly dependency).
 -dontwarn io.github.libxposed.api.**
 
+# libxposed-service is the binder surface between the module app and the
+# LSPosed manager: the manager marshals IXposedService / IXposedScopeCallback
+# by interface descriptor, so any R8 rename or removal silently kills the
+# service bind (2026-10-31: IXposedScopeCallback came out as
+# R8\$\$\ and the app stayed "not activated" while the hook
+# side was alive).
+-keep class io.github.libxposed.service.** { *; }
+
 # ==========================
 # jsoup proguard start
 -keeppackagenames org.jsoup.nodes
