@@ -4,7 +4,7 @@ import android.content.Context
 import io.github.magisk317.smscode.common.constant.PrefConst
 import io.github.magisk317.xposed.logging.XLog
 import io.github.magisk317.smscode.data.db.DBManager
-import io.github.magisk317.smscode.db.entity.SmsMsg
+import io.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.smscode.runtime.common.record.CodeRecordFileStore
 import java.io.File
 import kotlinx.coroutines.runBlocking
@@ -20,8 +20,8 @@ object RuntimeCodeRecordRestoreFacade : io.github.magisk317.smscode.runtime.brid
         fileNameFor = { record -> "CodeRecord_" + record.date },
     )
 
-    override fun exportToFile(context: Context, smsMsg: SmsMsg): Boolean {
-        return store.exportToFile(context, smsMsg)
+    override fun exportToFile(context: Context, smsMsg: SmsMsg, emitDiagnostics: Boolean): Boolean {
+        return store.exportToFile(context, smsMsg, emitDiagnostics)
     }
 
     fun importToDatabase(context: Context): Boolean {

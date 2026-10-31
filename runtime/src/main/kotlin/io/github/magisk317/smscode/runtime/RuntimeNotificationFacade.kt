@@ -4,7 +4,7 @@ import android.content.Context
 import io.github.magisk317.smscode.runtime.bridge.HookNotificationAccess
 import io.github.magisk317.smscode.runtime.bridge.UiNotificationAccess
 import io.github.magisk317.smscode.runtime.common.notification.AndroidNotificationPlatformBridge
-import io.github.magisk317.smscode.runtime.contract.notification.NotificationDeliveryDiagnostics
+import io.github.magisk317.xposed.runtime.contract.notification.NotificationDeliveryDiagnostics
 
 object RuntimeNotificationFacade : HookNotificationAccess, UiNotificationAccess {
     private val platform = AndroidNotificationPlatformBridge(recoverDeletedChannels = true)

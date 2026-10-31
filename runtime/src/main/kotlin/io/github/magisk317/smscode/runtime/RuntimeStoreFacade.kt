@@ -1,7 +1,7 @@
 package io.github.magisk317.smscode.runtime
 
 import android.content.Context
-import io.github.magisk317.smscode.db.entity.AppInfo
+import io.github.magisk317.smscode.data.db.entity.AppInfo
 import io.github.magisk317.smscode.feature.store.EntityStoreManager
 import io.github.magisk317.smscode.feature.store.EntityType
 import io.github.magisk317.smscode.runtime.bridge.UiStoreAccess

@@ -162,14 +162,6 @@ object XscPreferenceHooks : AppPreferencesHooks {
                 "20",
             ),
         )
-        editor.putBoolean(
-            PrefConst.KEY_AUTO_UPDATE_ON_START,
-            AppPreferencesDataStore.getBoolean(context, PrefConst.KEY_AUTO_UPDATE_ON_START, true),
-        )
-        editor.putBoolean(
-            PrefConst.KEY_AUTO_UPDATE_WIFI_ONLY,
-            AppPreferencesDataStore.getBoolean(context, PrefConst.KEY_AUTO_UPDATE_WIFI_ONLY, false),
-        )
         editor.putInt(
             PrefConst.KEY_CHOOSE_THEME,
             AppPreferencesDataStore.getInt(context, PrefConst.KEY_CHOOSE_THEME, 0),

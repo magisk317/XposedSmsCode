@@ -3,8 +3,8 @@ package io.github.magisk317.smscode.runtime.bridge
 import android.content.Context
 import android.net.Uri
 import io.github.magisk317.smscode.data.db.DBManager
-import io.github.magisk317.smscode.db.entity.SmsMsg
-import io.github.magisk317.smscode.runtime.contract.notification.NotificationPlatformBridge
+import io.github.magisk317.smscode.data.db.entity.SmsMsg
+import io.github.magisk317.xposed.runtime.contract.notification.NotificationPlatformBridge
 import io.github.magisk317.smscode.verification.SmsDuplicateCheckResult
 import io.github.magisk317.xposed.logging.MagiskOtel
 
@@ -71,7 +71,7 @@ interface HookStorageAccess {
  * Code record export for cross-process file-based IPC.
  */
 interface HookCodeRecordAccess {
-    fun exportToFile(context: Context, smsMsg: SmsMsg): Boolean
+    fun exportToFile(context: Context, smsMsg: SmsMsg, emitDiagnostics: Boolean): Boolean
 }
 
 /**

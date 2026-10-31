@@ -14,6 +14,7 @@ import io.github.magisk317.smscode.runtime.contract.backup.BackupRule
 import io.github.magisk317.smscode.runtime.contract.backup.BackupSmsRecord
 import io.github.magisk317.smscode.runtime.contract.backup.ExportResult
 import java.io.File
+import io.github.magisk317.xposed.logging.XLog
 
 object BackupManager {
 
@@ -28,6 +29,8 @@ object BackupManager {
         beforeDatabaseSnapshot = { context ->
             runCatching {
                 AppDatabase.getInstance(context).openHelper.writableDatabase.execSQL("PRAGMA wal_checkpoint(FULL)")
+            }.onFailure {
+                XLog.w("wal checkpoint before snapshot failed: ${it.message}", it)
             }
         },
         beforeDatabaseRestore = {

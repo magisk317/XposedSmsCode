@@ -5,25 +5,16 @@ import android.database.sqlite.SQLiteException
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.room.TypeConverters
-import io.github.magisk317.smscode.db.entity.ForwardFilterRule
-import io.github.magisk317.smscode.db.dao.RuleDao
-import io.github.magisk317.smscode.db.dao.SenderDao
-import io.github.magisk317.smscode.db.ext.ConvertersDate
-import io.github.magisk317.smscode.db.ext.ConvertersSenderList
-import io.github.magisk317.smscode.db.entity.Rule
-import io.github.magisk317.smscode.db.entity.Sender
-import io.github.magisk317.smscode.db.dao.AppInfoDao
+import io.github.magisk317.smscode.data.db.dao.AppInfoDao
 import io.github.magisk317.smscode.db.dao.AutoInputEventDao
-import io.github.magisk317.smscode.db.dao.ForwardFilterRuleDao
-import io.github.magisk317.smscode.db.dao.NotifyRouteRuleDao
 import io.github.magisk317.smscode.db.dao.SmsCodeRuleDao
-import io.github.magisk317.smscode.db.dao.SmsMsgDao
-import io.github.magisk317.smscode.db.entity.AppInfo
+import io.github.magisk317.smscode.data.db.dao.SmsMsgDao
+import io.github.magisk317.smscode.data.db.entity.AppInfo
 import io.github.magisk317.smscode.db.entity.AutoInputEvent
-import io.github.magisk317.smscode.db.entity.NotifyRouteRule
 import io.github.magisk317.smscode.db.entity.SmsCodeRule
-import io.github.magisk317.smscode.db.entity.SmsMsg
+import io.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.xposed.logging.XLog
 
 @Database(entities = [
@@ -31,22 +22,13 @@ import io.github.magisk317.xposed.logging.XLog
     SmsMsg::class,
     AppInfo::class,
     AutoInputEvent::class,
-    NotifyRouteRule::class,
-    ForwardFilterRule::class,
-    Sender::class,
-    Rule::class
-], version = 24, exportSchema = true)
-@TypeConverters(ConvertersDate::class, ConvertersSenderList::class)
+], version = 25, exportSchema = true)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun smsCodeRuleDao(): SmsCodeRuleDao
     abstract fun smsMsgDao(): SmsMsgDao
     abstract fun appInfoDao(): AppInfoDao
     abstract fun autoInputEventDao(): AutoInputEventDao
-    abstract fun notifyRouteRuleDao(): NotifyRouteRuleDao
-    abstract fun forwardFilterRuleDao(): ForwardFilterRuleDao
-    abstract fun ruleDao(): RuleDao
-    abstract fun senderDao(): SenderDao
 
     companion object {
         private const val DATABASE_NAME = "xsmscode_room.db"
@@ -484,6 +466,63 @@ abstract class AppDatabase : RoomDatabase() {
          * so the database is guaranteed to match the entities, preserving all
          * rows and indices.
          */
+        // One-shot cleanup folded into a single bump from the v3.4.1 tag (schema 24):
+        // the forwarding domain moved to magisk-forward-core's own database and XSC
+        // never forwarded, so the forward config tables, the unused Rule/Sender pair
+        // and the sms_msg forward_* columns all go away in this one migration.
+        private val MIGRATION_24_25 = object : androidx.room.migration.Migration(24, 25) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP TABLE IF EXISTS `notify_route_rule`")
+                db.execSQL("DROP TABLE IF EXISTS `forward_filter_rule`")
+                db.execSQL("DROP TABLE IF EXISTS `Rule`")
+                db.execSQL("DROP TABLE IF EXISTS `Sender`")
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `app_info_new` (" +
+                        "`package_name` TEXT NOT NULL, `label` TEXT, `blocked` INTEGER NOT NULL, " +
+                        "PRIMARY KEY(`package_name`))",
+                )
+                db.execSQL(
+                    "INSERT OR REPLACE INTO `app_info_new` (`package_name`, `label`, `blocked`) " +
+                        "SELECT `package_name`, `label`, `blocked` FROM `app_info`",
+                )
+                db.execSQL("DROP TABLE IF EXISTS `app_info`")
+                db.execSQL("ALTER TABLE `app_info_new` RENAME TO `app_info`")
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `sms_msg_new` (" +
+                        "`id` INTEGER PRIMARY KEY AUTOINCREMENT, `sender` TEXT, `body` TEXT, " +
+                        "`date` INTEGER NOT NULL, `processed_time` INTEGER NOT NULL DEFAULT 0, " +
+                        "`company` TEXT, `sms_code` TEXT, `package_name` TEXT, " +
+                        "`notify_channel_id` TEXT NOT NULL DEFAULT '', `sim_slot` INTEGER NOT NULL DEFAULT -1, " +
+                        "`sub_id` INTEGER NOT NULL DEFAULT 0, `contact_name` TEXT NOT NULL DEFAULT '', " +
+                        "`phone_area` TEXT NOT NULL DEFAULT '', `msg_type` INTEGER NOT NULL DEFAULT 0, " +
+                        "`call_type` INTEGER NOT NULL DEFAULT 0, `session_key` TEXT NOT NULL DEFAULT '')",
+                )
+                db.execSQL(
+                    "INSERT INTO `sms_msg_new` (`id`,`sender`,`body`,`date`,`processed_time`," +
+                        "`company`,`sms_code`,`package_name`,`notify_channel_id`,`sim_slot`," +
+                        "`sub_id`,`contact_name`,`phone_area`,`msg_type`,`call_type`,`session_key`) " +
+                        "SELECT `id`,`sender`,`body`,`date`,`processed_time`,`company`," +
+                        "`sms_code`,`package_name`,`notify_channel_id`,`sim_slot`,`sub_id`," +
+                        "`contact_name`,`phone_area`,`msg_type`,`call_type`,`session_key` " +
+                        "FROM `sms_msg`",
+                )
+                db.execSQL("DROP TABLE IF EXISTS `sms_msg`")
+                db.execSQL("ALTER TABLE `sms_msg_new` RENAME TO `sms_msg`")
+                db.execSQL(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS `index_sms_msg_sender_body_date_msg_type` " +
+                        "ON `sms_msg` (`sender`, `body`, `date`, `msg_type`)",
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_sms_msg_pkg_type_channel_date` ON `sms_msg` " +
+                        "(`package_name`, `msg_type`, `notify_channel_id`, `date`)",
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_sms_msg_type_session_key` " +
+                        "ON `sms_msg` (`msg_type`, `session_key`)",
+                )
+            }
+        }
+
         private val MIGRATION_23_24 = object : androidx.room.migration.Migration(23, 24) {
             override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                 // FKs are enforced during Room migrations; defer checks to commit.
@@ -603,6 +642,7 @@ abstract class AppDatabase : RoomDatabase() {
                 )
                 db.execSQL("DROP TABLE IF EXISTS `Rule_stage`")
             }
+
         }
 
         /**
@@ -659,6 +699,12 @@ abstract class AppDatabase : RoomDatabase() {
          * rule. Stage the child's rows in a constraint-free table, drop it,
          * rebuild the parent, then restore the child from the stage.
          */
+        // v27 strips the forward_* columns from sms_msg: XSC never forwards, the
+        // columns only ever held defaults since the forward-domain removal.
+        // Rebuild instead of DROP COLUMN so the migration stays safe on SQLite
+        // versions older than 3.35.
+
+
         private fun stageTable(db: androidx.sqlite.db.SupportSQLiteDatabase, table: String) {
             if (!tableExists(db, table)) {
                 return
@@ -735,6 +781,7 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_21_22,
                     MIGRATION_22_23,
                     MIGRATION_23_24,
+                    MIGRATION_24_25,
                 )
                 .enableMultiInstanceInvalidation()
                 .build().also { instance = it }
@@ -743,7 +790,9 @@ abstract class AppDatabase : RoomDatabase() {
         @JvmStatic
         fun closeInstance() {
             synchronized(this) {
-                runCatching { instance?.close() }
+                runCatching { instance?.close() }.onFailure {
+                    XLog.w("closeInstance: close failed: ${it.message}", it)
+                }
                 instance = null
             }
         }

@@ -17,12 +17,12 @@ import io.github.magisk317.smscode.runtime.common.record.CodeRecordTrimPolicy
 import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import io.github.magisk317.smscode.common.utils.ProviderCallerGuard
 import io.github.magisk317.smscode.common.utils.ProviderIpcTokenGate
-import io.github.magisk317.smscode.db.entity.AppInfo
+import io.github.magisk317.smscode.data.db.entity.AppInfo
 import io.github.magisk317.smscode.db.entity.SmsCodeRule
-import io.github.magisk317.smscode.db.entity.SmsMsg
+import io.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.smscode.runtime.bridge.HookRuntimeGateClaimResult
-import io.github.magisk317.smscode.runtime.common.diagnostics.ActivationDiagnosticsStore
-import io.github.magisk317.smscode.runtime.contract.ipc.RuntimeStateProviderContract
+import io.github.magisk317.xposed.runtime.state.RuntimeStateStore
+import io.github.magisk317.xposed.runtime.RuntimeStateProviderContract
 import io.github.magisk317.smscode.runtime.common.utils.SharedRuntimeGate
 import io.github.magisk317.smscode.runtime.common.utils.StorageUtils
 import io.github.magisk317.smscode.runtime.contract.record.SmsMsgCursorContract
@@ -94,7 +94,7 @@ class DBProvider : ContentProvider() {
 
             RuntimeStateProviderContract.METHOD_RECORD_HOOK_HEARTBEAT -> {
                 val ok = runCatching {
-                    ActivationDiagnosticsStore.recordHookHeartbeat(
+                    RuntimeStateStore.recordHookHeartbeat(
                         context = ctx,
                         packageName = extras?.getString(RuntimeStateProviderContract.EXTRA_PACKAGE_NAME).orEmpty(),
                         processName = extras?.getString(RuntimeStateProviderContract.EXTRA_PROCESS_NAME).orEmpty(),
@@ -340,9 +340,6 @@ class DBProvider : ContentProvider() {
             if (normalized == "blocked = ?" && !selectionArgs.isNullOrEmpty()) {
                 val blocked = selectionArgs[0] == "1" || selectionArgs[0].equals("true", ignoreCase = true)
                 rows = rows.filter { it.blocked == blocked }
-            } else if (normalized == "forwarding = ?" && !selectionArgs.isNullOrEmpty()) {
-                val forwarding = selectionArgs[0] == "1" || selectionArgs[0].equals("true", ignoreCase = true)
-                rows = rows.filter { it.forwarding == forwarding }
             } else {
                 throw IllegalArgumentException("Unsupported app_info selection: $selection")
             }
@@ -389,8 +386,6 @@ class DBProvider : ContentProvider() {
             "package_name" -> app.packageName
             "label" -> app.label
             "blocked" -> if (app.blocked) 1 else 0
-            "forwarding" -> if (app.forwarding) 1 else 0
-            "notify_template" -> app.notifyTemplate
             else -> null
         }
 
@@ -446,10 +441,6 @@ class DBProvider : ContentProvider() {
             subId = values.getNonNegativeInt("sub_id", existing.subId),
             msgType = values.getAllowedInt("msg_type", SMS_MSG_TYPES, existing.msgType),
             callType = values.getAllowedInt("call_type", CALL_TYPES, existing.callType),
-            forwardStatus = values.getAllowedInt("forward_status", FORWARD_STATUSES, existing.forwardStatus),
-            forwardTarget = values.getBoundedString("forward_target", MAX_FORWARD_TARGET_LENGTH) ?: existing.forwardTarget,
-            forwardMessage = values.getBoundedString("forward_message", MAX_BODY_LENGTH) ?: existing.forwardMessage,
-            forwardTime = values.getNonNegativeLong("forward_time", existing.forwardTime),
         )
         return db.updateSmsMsg(updated)
     }
@@ -481,26 +472,11 @@ class DBProvider : ContentProvider() {
         val boundedPackageName = packageName.take(MAX_PACKAGE_NAME_LENGTH)
         val existing = db.queryAppInfoByPackageName(boundedPackageName) ?: AppInfo(packageName = boundedPackageName)
         val blocked = parseBooleanValue(values, "blocked", existing.blocked)
-        val forwarding = parseBooleanValue(values, "forwarding", existing.forwarding)
         val label = when {
             values?.containsKey("label") == true -> values.getBoundedString("label", MAX_LABEL_LENGTH)
             else -> existing.label
         }
-        val notifyTemplate = when {
-            values?.containsKey("notify_template") == true -> values.getBoundedString(
-                "notify_template",
-                MAX_NOTIFY_TEMPLATE_LENGTH,
-            ).orEmpty()
-            else -> existing.notifyTemplate
-        }
-        return db.upsertAppInfo(
-            existing.copy(
-                label = label,
-                blocked = blocked,
-                forwarding = forwarding,
-                notifyTemplate = notifyTemplate,
-            ),
-        )
+        return db.upsertAppInfo(existing.copy(label = label, blocked = blocked))
     }
 
     private fun parseBooleanValue(values: ContentValues?, key: String, defaultValue: Boolean): Boolean {
@@ -601,10 +577,6 @@ class DBProvider : ContentProvider() {
         subId = getNonNegativeInt("sub_id", 0),
         msgType = getAllowedInt("msg_type", SMS_MSG_TYPES, SmsMsg.MSG_TYPE_SMS),
         callType = getAllowedInt("call_type", CALL_TYPES, 0),
-        forwardStatus = getAllowedInt("forward_status", FORWARD_STATUSES, SmsMsg.FORWARD_STATUS_NONE),
-        forwardTarget = getBoundedString("forward_target", MAX_FORWARD_TARGET_LENGTH),
-        forwardMessage = getBoundedString("forward_message", MAX_BODY_LENGTH),
-        forwardTime = getNonNegativeLong("forward_time", 0L),
     )
 
     private fun ContentValues?.getBoundedString(key: String, maxLength: Int): String? {
@@ -791,22 +763,14 @@ class DBProvider : ContentProvider() {
         private const val MAX_CHANNEL_ID_LENGTH = 255
         private const val MAX_FORWARD_TARGET_LENGTH = 512
         private const val MAX_LABEL_LENGTH = 256
-        private const val MAX_NOTIFY_TEMPLATE_LENGTH = 2048
-        private const val MAX_RUNTIME_GATE_ENTRIES = 4096
+                private const val MAX_RUNTIME_GATE_ENTRIES = 4096
 
         internal val SMS_MSG_COLUMNS = SmsMsgCursorContract.defaultColumns.toSet() + "id"
         internal val SMS_CODE_RULE_COLUMNS = setOf("_id", "id", "company", "code_keyword", "code_regex")
         internal val APP_INFO_COLUMNS = setOf("package_name", "label", "blocked", "forwarding", "notify_template")
         private val SMS_CODE_RULE_DEFAULT_COLUMNS = arrayOf("company", "code_keyword", "code_regex", "_id")
-        private val APP_INFO_DEFAULT_COLUMNS = arrayOf("package_name", "label", "blocked", "forwarding", "notify_template")
+        private val APP_INFO_DEFAULT_COLUMNS = arrayOf("package_name", "label", "blocked")
         private val SMS_MSG_TYPES = setOf(SmsMsg.MSG_TYPE_SMS, SmsMsg.MSG_TYPE_APP_NOTIFY, SmsMsg.MSG_TYPE_CALL_NOTIFY)
-        private val FORWARD_STATUSES = setOf(
-            SmsMsg.FORWARD_STATUS_NONE,
-            SmsMsg.FORWARD_STATUS_SUCCESS,
-            SmsMsg.FORWARD_STATUS_FAILED,
-            SmsMsg.FORWARD_STATUS_PARTIAL,
-            SmsMsg.FORWARD_STATUS_BLOCKED,
-        )
         private val CALL_TYPES = (0..6).toSet()
         private val DATE_SORT_REGEX = Regex("""date (asc|desc)(?: limit ([1-9]\d{0,3}))?""")
 

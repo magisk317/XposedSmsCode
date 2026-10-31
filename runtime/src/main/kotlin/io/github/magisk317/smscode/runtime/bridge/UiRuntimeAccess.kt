@@ -5,8 +5,8 @@ import android.content.Intent
 import android.net.Uri
 import io.github.magisk317.smscode.data.db.AppDatabase
 import io.github.magisk317.smscode.data.db.DBManager
-import io.github.magisk317.smscode.db.entity.SmsMsg
 import io.github.magisk317.smscode.runtime.RuntimeBackupExportResult
+import io.github.magisk317.smscode.runtime.contract.record.SmsMsgRecordData
 import io.github.magisk317.smscode.runtime.RuntimeBackupImportResult
 import io.github.magisk317.smscode.runtime.RuntimeBackupRule
 import io.github.magisk317.smscode.runtime.RuntimeBackupSmsRecord
@@ -42,7 +42,7 @@ interface UiStorageAccess {
 
 /** File-backed entity store (app blocked-config mirror). */
 interface UiStoreAccess {
-    fun persistAppConfigs(context: Context, appConfigs: List<io.github.magisk317.smscode.db.entity.AppInfo>): Boolean
+    fun persistAppConfigs(context: Context, appConfigs: List<io.github.magisk317.smscode.data.db.entity.AppInfo>): Boolean
 }
 
 /** Backup / restore SAF intents and payload import/export. */
@@ -64,11 +64,11 @@ interface UiBackupAccess {
 
 /** SMS code record CRUD + export for the record screen/viewmodel. */
 interface UiCodeRecordAccess {
-    fun recordsFlow(context: Context): Flow<List<SmsMsg>>
-    fun queryRecords(context: Context): List<SmsMsg>
-    suspend fun removeRecords(context: Context, records: List<SmsMsg>)
-    suspend fun restoreRecords(context: Context, records: List<SmsMsg>)
-    fun exportCodeRecords(context: Context, uri: Uri, records: List<SmsMsg>): Boolean
+    fun recordsFlow(context: Context): Flow<List<SmsMsgRecordData>>
+    fun queryRecords(context: Context): List<SmsMsgRecordData>
+    suspend fun removeRecords(context: Context, records: List<SmsMsgRecordData>)
+    suspend fun restoreRecords(context: Context, records: List<SmsMsgRecordData>)
+    fun exportCodeRecords(context: Context, uri: Uri, records: List<SmsMsgRecordData>): Boolean
 }
 
 /** Notification permission/diagnostics for the settings screen. */

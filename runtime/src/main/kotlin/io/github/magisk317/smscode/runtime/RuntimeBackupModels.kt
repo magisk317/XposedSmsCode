@@ -25,10 +25,6 @@ data class RuntimeBackupSmsRecord(
     val subId: Int = 0,
     val msgType: Int = 0,
     val callType: Int = 0,
-    val forwardStatus: Int = 0,
-    val forwardTarget: String? = null,
-    val forwardMessage: String? = null,
-    val forwardTime: Long = 0L,
 )
 
 enum class RuntimeBackupExportResult {
@@ -87,10 +83,6 @@ internal fun RuntimeBackupSmsRecord.toInternal(): BackupSmsRecord {
         subId = subId,
         msgType = msgType,
         callType = callType,
-        forwardStatus = forwardStatus,
-        forwardTarget = forwardTarget,
-        forwardMessage = forwardMessage,
-        forwardTime = forwardTime,
     )
 }
 
@@ -107,10 +99,6 @@ internal fun BackupSmsRecord.toRuntime(): RuntimeBackupSmsRecord {
         subId = subId,
         msgType = msgType,
         callType = callType,
-        forwardStatus = forwardStatus,
-        forwardTarget = forwardTarget,
-        forwardMessage = forwardMessage,
-        forwardTime = forwardTime,
     )
 }
 

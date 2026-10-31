@@ -71,8 +71,12 @@ val magiskIsCiBuild: Boolean = (providers.gradleProperty("isCiBuild").orNull
 }
 
 dependencies {
+    implementation(project(":magisk-xposed-kit:runtime"))
+    implementation(project(":magisk-xposed-kit:contract"))
     implementation(libs.mobile.entitlement.android)
     implementation(project(":magisk-xposed-kit"))
+    implementation(project(":magisk-xposed-kit:capability"))
+    implementation(project(":magisk-xposed-kit:runtime"))
     implementation(project(":magisk-xposed-kit:entitlement"))
     implementation(project(":magisk-xposed-kit:logging"))
     implementation(project(":smscode-core:contract"))

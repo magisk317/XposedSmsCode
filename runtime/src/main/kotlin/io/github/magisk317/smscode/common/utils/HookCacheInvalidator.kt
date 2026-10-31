@@ -96,8 +96,12 @@ object HookCacheInvalidator {
                 XLog.i(message = "HookCacheInvalidator: observers registered")
             }.onFailure { error ->
                 // Unregister partial registration if any.
-                runCatching { appContext.contentResolver.unregisterContentObserver(prefsObs) }
-                runCatching { appContext.contentResolver.unregisterContentObserver(rulesObs) }
+                runCatching { appContext.contentResolver.unregisterContentObserver(prefsObs) }.onFailure {
+                    XLog.w("onChange: unregisterContentObserver failed: ${error.message}", error)
+                }
+                runCatching { appContext.contentResolver.unregisterContentObserver(rulesObs) }.onFailure {
+                    XLog.w("onChange: unregisterContentObserver failed: ${it.message}", it)
+                }
                 XLog.w(
                     message = "HookCacheInvalidator: register failed: %s",
                     error.message ?: error.javaClass.simpleName,

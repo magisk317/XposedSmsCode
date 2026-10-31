@@ -9,7 +9,7 @@ import io.github.magisk317.smscode.runtime.common.prefs.CodeNotificationOwner
 import io.github.magisk317.smscode.common.constant.PrefConst
 import com.magisk317.mobile.entitlement.MobileEntitlementGate
 import io.github.magisk317.xposed.entitlement.MobileHookGateCheck
-import io.github.magisk317.smscode.db.entity.SmsMsg
+import io.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.smscode.runtime.bridge.HookPrefsAccess
 import io.github.magisk317.smscode.runtime.contract.prefs.PrefRead
 import io.github.magisk317.smscode.runtime.contract.prefs.PrefReadResult

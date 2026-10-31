@@ -34,6 +34,7 @@ object PrefRestoreTypeRegistry {
         PrefConst.KEY_ENABLE_ANALYTICS,
         PrefConst.KEY_AUTO_UPDATE_ON_START,
         PrefConst.KEY_AUTO_UPDATE_WIFI_ONLY,
+        PrefConst.KEY_TRACK_CI_BUILDS,
         PrefConst.KEY_PRIVACY_POLICY_ACCEPTED,
         PrefConst.KEY_BACKUP_COMPAT_TIP_SHOWN,
     )
