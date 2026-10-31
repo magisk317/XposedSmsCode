@@ -25,8 +25,27 @@ buildscript {
     }
 }
 
+
+// Java 27 bytecode target, lint side: AGP 9.5.0-rc01's lint-api (32.5.0-rc01)
+// resolves ASM 9.9 (V26 max) on androidLintTool, so lintAnalyze skips every
+// major-71 class with "broken class file?" warnings while the job stays green.
+// The buildscript force above does not reach project configurations; force the
+// same family here until the lint toolchain ships ASM >= 9.10 itself.
+allprojects {
+    configurations.configureEach {
+        if (name == "androidLintTool") {
+            resolutionStrategy {
+                force("org.ow2.asm:asm:9.11.1")
+                force("org.ow2.asm:asm-analysis:9.11.1")
+                force("org.ow2.asm:asm-commons:9.11.1")
+                force("org.ow2.asm:asm-tree:9.11.1")
+                force("org.ow2.asm:asm-util:9.11.1")
+            }
+        }
+    }
+}
 plugins {
-    id("nl.littlerobots.version-catalog-update") version "1.1.1"
+    id("nl.littlerobots.version-catalog-update") version "1.1.2"
     id("magisk.android.application") apply false
     id("magisk.android.library") apply false
     alias(libs.plugins.kotlin.android) apply false
@@ -119,6 +138,13 @@ subprojects {
     pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
         configureDetekt()
     }
+    // Multiplatform modules (the kit's logging/keepalive, magisk-ui-kit and the
+    // desktop modules) matched none of the hooks above, so they got no detekt task at all and
+    // their findings were never computed. Same treatment as the Android modules: analysed, and
+    // non-blocking until each one is measured.
+    pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
+        configureDetekt()
+    }
     pluginManager.withPlugin("org.jetbrains.kotlin.android") {
         configureDetekt()
     }
@@ -192,10 +218,29 @@ val verifyModuleBoundaries = tasks.register("verifyModuleBoundaries") {
     )
 }
 
+tasks.register<Exec>("verifyNoGlobalWarningMute") {
+    group = "verification"
+    description = "Ensure the Kotlin discarded-result diagnostics stay enabled; tolerated failures must be explicit at the call site."
+    workingDir = rootProject.projectDir
+    commandLine("bash", "${rootProject.projectDir}/scripts/verify_no_global_warning_mute.sh")
+}
+
+tasks.register<Exec>("reportGodFiles") {
+    group = "verification"
+    description = "Report large production Kotlin files outside shared-submodule roots."
+    commandLine("bash", "scripts/checks/report_god_files.sh", "--report")
+}
+
+tasks.register<Exec>("verifyGodFileLimits") {
+    group = "verification"
+    description = "Fail when a production Kotlin god file is added, grows, or diverges from its reviewed limit."
+    commandLine("bash", "scripts/checks/report_god_files.sh", "--verify")
+}
+
 tasks.register("check") {
     group = "verification"
     description = "Run root project verification checks."
-    dependsOn(verifyModuleBoundaries)
+    dependsOn(verifyModuleBoundaries, "verifyNoGlobalWarningMute", "verifyGodFileLimits")
 }
 
 tasks.register<Delete>("clean") {
@@ -205,17 +250,3 @@ tasks.register<Delete>("clean") {
 // Maintenance task now automatically hooked via magisk.maintenance plugin
 
 
-// Kotlin 2.5 added the RETURN_VALUE_NOT_USED / _COERCION diagnostics. This
-// codebase intentionally ignores many best-effort `runCatching` results
-// (cleanup paths, probe helpers); disable the two diagnostics here until the
-// call sites are converted to an explicit helper. Revisit in the 2.5 cleanup.
-subprojects {
-    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-        compilerOptions {
-            freeCompilerArgs.addAll(
-                "-Xwarning-level=RETURN_VALUE_NOT_USED:disabled",
-                "-Xwarning-level=RETURN_VALUE_NOT_USED_COERCION:disabled",
-            )
-        }
-    }
-}
