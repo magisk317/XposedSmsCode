@@ -141,11 +141,11 @@ jobs:
     if: needs.release-eligibility.outputs.proceed == 'true'
     permissions:
       contents: write
-    uses: magisk317/magisk-ci-toolkit/.github/workflows/release-android.yml@53268e1ba18fe05dd0f2824502241d83c32523bd
+    uses: magisk317/magisk-ci-toolkit/.github/workflows/release-android.yml@ec2530a5864fa5c86d89b260a04e1bb7cd36ea0d
     with:
       # Must equal the ref above, MAGISK_CI_TOOLKIT_REF and every GitLab
       # include.ref; ci/verify_toolkit_pin.sh in the toolkit checks it.
-      toolkit_ref: 53268e1ba18fe05dd0f2824502241d83c32523bd
+      toolkit_ref: ec2530a5864fa5c86d89b260a04e1bb7cd36ea0d
       release_tag: ${{ inputs.release_tag }}
       package_name: com.github.tianma8023.xposed.smscode
       release_cert_sha256: 027b936e1d82a606d83599548b8b11e49a2c8ae2588c4a9fbe8311e2c54f103a
@@ -210,7 +210,7 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/resolve-ci-toolkit
         with:
-          ref: 53268e1ba18fe05dd0f2824502241d83c32523bd
+          ref: ec2530a5864fa5c86d89b260a04e1bb7cd36ea0d
       - name: Setup Android CI
         uses: ./.magisk-ci-toolkit/.github/actions/setup-android-ci
         with:

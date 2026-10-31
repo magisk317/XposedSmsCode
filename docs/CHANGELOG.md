@@ -4,7 +4,7 @@
 
 ---
 ## [v3.4.2] - 2026-10-31
-- 版本：`versionCode 135` / `versionName 3.4.2`。
+- 版本：`versionCode 136` / `versionName 3.4.2`。
 - `[db]` 单步迁移剥离 sms_msg 的 forward 残留列，移除未用配置表
 - `[refactor]` 共享层命名归位，子模块 pin 对齐
 - `[deps]` 升级 Gradle 9.9.0-rc-1、AGP 9.5.0，共享库 pin 对齐
