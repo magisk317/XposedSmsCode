@@ -3,6 +3,13 @@
 本日志记录了项目重构后的主要变更。
 
 ---
+## [v3.4.3] - 2026-11-01
+- 版本：`versionCode 137` / `versionName 3.4.3`。
+- 下一轮开发占位，发布前补充具体变更。
+
+> Full Changelog: https://gitlab.com/magisk3171/XposedSmsCode/-/compare/v3.4.2...v3.4.3
+
+---
 ## [v3.4.2] - 2026-10-31
 - 版本：`versionCode 136` / `versionName 3.4.2`。
 - `[db]` 单步迁移剥离 sms_msg 的 forward 残留列，移除未用配置表
