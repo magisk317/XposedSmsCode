@@ -200,3 +200,15 @@ smscode-core:* 不反向依赖任何主项目模块；smscode/rules 不进依赖
 | `docs/REFACTORING.md` | 分层论证、边界细则、重构历程、Android 17 兼容性 |
 | `AGENTS.md` | 协作纪律、子模块 pin 矩阵、hook 宿主契约 |
 | `README.md` / `README-EN.md` | 产品说明 |
+
+## Presentation module baseline (2026-10-26)
+
+`:presentation` stays a single module for now: `app` is its only consumer,
+screen domains are already isolated by package (`ui/home`, `ui/record`,
+`ui/smscoderule`), and a Gradle split would churn a shipped module without a
+boundary it does not already have. The enforced guard is `verifyGodFileLimits`
+(scripts/checks/report_god_files.sh): files at or above 900 lines are pinned at
+exact counts in scripts/config/god_file_limits.txt - growth fails the build,
+shrink requires lowering the reviewed entry. Revisit a module split if
+presentation gains a second consumer or the home shell grows another screen
+family.

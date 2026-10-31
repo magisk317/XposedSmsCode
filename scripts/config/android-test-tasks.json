@@ -6,6 +6,7 @@
     ":magisk-ui-kit:testAndroidHostTest",
     ":magisk-ui-kit:jvmTest",
     ":magisk-ui-kit:billing:testDebugUnitTest",
+    ":magisk-ui-kit:update:testGithubDebugUnitTest",
     ":smscode-core:contract:test",
     ":smscode-core:domain:test",
     ":smscode-core:hook:testDebugUnitTest",
@@ -14,7 +15,7 @@
     ":smscode-core:verification:test",
     ":smscode-core:rule:test",
     ":magisk-xposed-kit:testDebugUnitTest",
-    ":magisk-xposed-kit:logging:testDebugUnitTest",
+    ":magisk-xposed-kit:logging:jvmTest",
     ":magisk-xposed-kit:diagnostics:testDebugUnitTest",
     ":app:compileGithubDebugAndroidTestKotlin",
     ":app:compilePlayDebugAndroidTestKotlin",
@@ -23,7 +24,9 @@
     ":runtime:compileGithubDebugAndroidTestKotlin",
     ":runtime:compilePlayDebugAndroidTestKotlin",
     ":app:koverVerifyGithubDebug",
-    ":app:koverHtmlReportGithubDebug"
+    ":app:koverHtmlReportGithubDebug",
+    "verifyModuleBoundaries",
+    "verifyGodFileLimits"
   ],
   "full_paths": [
     "build.gradle*",
@@ -46,12 +49,81 @@
   ],
   "unknown": "full",
   "rules": [
-    {"paths": ["app/*"], "tasks": [":app:check", ":app:compileGithubDebugAndroidTestKotlin", ":app:compilePlayDebugAndroidTestKotlin", ":app:koverVerifyGithubDebug", ":app:koverHtmlReportGithubDebug"]},
-    {"paths": ["presentation/*"], "tasks": [":presentation:check", ":presentation:compilePlayDebugUnitTestKotlin", ":presentation:generatePlayDebugUnitTestStubRFile"]},
-    {"paths": ["runtime/*"], "tasks": [":runtime:check", ":runtime:compileGithubDebugAndroidTestKotlin", ":runtime:compilePlayDebugAndroidTestKotlin"]},
-    {"paths": ["hook/*"], "tasks": [":hook:check", ":hook:compileGithubDebugKotlin"]},
-    {"paths": ["smscode/*"], "tasks": [":smscode-core:contract:test", ":smscode-core:domain:test", ":smscode-core:hook:testDebugUnitTest", ":smscode-core:runtime:testDebugUnitTest", ":smscode-core:verification:detekt", ":smscode-core:verification:test", ":smscode-core:rule:test"]},
-    {"paths": ["magisk-ui-kit/*"], "tasks": [":magisk-ui-kit:testAndroidHostTest", ":magisk-ui-kit:jvmTest", ":magisk-ui-kit:billing:testDebugUnitTest"]},
-    {"paths": ["magisk-xposed-kit/*"], "tasks": [":magisk-xposed-kit:testDebugUnitTest", ":magisk-xposed-kit:logging:testDebugUnitTest", ":magisk-xposed-kit:diagnostics:testDebugUnitTest"]}
+    {
+      "paths": [
+        "app/*"
+      ],
+      "tasks": [
+        ":app:check",
+        ":app:compileGithubDebugAndroidTestKotlin",
+        ":app:compilePlayDebugAndroidTestKotlin",
+        ":app:koverVerifyGithubDebug",
+        ":app:koverHtmlReportGithubDebug"
+      ]
+    },
+    {
+      "paths": [
+        "presentation/*"
+      ],
+      "tasks": [
+        ":presentation:check",
+        ":presentation:compilePlayDebugUnitTestKotlin",
+        ":presentation:generatePlayDebugUnitTestStubRFile"
+      ]
+    },
+    {
+      "paths": [
+        "runtime/*"
+      ],
+      "tasks": [
+        ":runtime:check",
+        ":runtime:compileGithubDebugAndroidTestKotlin",
+        ":runtime:compilePlayDebugAndroidTestKotlin"
+      ]
+    },
+    {
+      "paths": [
+        "hook/*"
+      ],
+      "tasks": [
+        ":hook:check",
+        ":hook:compileGithubDebugKotlin"
+      ]
+    },
+    {
+      "paths": [
+        "smscode/*"
+      ],
+      "tasks": [
+        ":smscode-core:contract:test",
+        ":smscode-core:domain:test",
+        ":smscode-core:hook:testDebugUnitTest",
+        ":smscode-core:runtime:testDebugUnitTest",
+        ":smscode-core:verification:detekt",
+        ":smscode-core:verification:test",
+        ":smscode-core:rule:test"
+      ]
+    },
+    {
+      "paths": [
+        "magisk-ui-kit/*"
+      ],
+      "tasks": [
+        ":magisk-ui-kit:testAndroidHostTest",
+        ":magisk-ui-kit:jvmTest",
+        ":magisk-ui-kit:billing:testDebugUnitTest",
+        ":magisk-ui-kit:update:testGithubDebugUnitTest"
+      ]
+    },
+    {
+      "paths": [
+        "magisk-xposed-kit/*"
+      ],
+      "tasks": [
+        ":magisk-xposed-kit:testDebugUnitTest",
+        ":magisk-xposed-kit:logging:jvmTest",
+        ":magisk-xposed-kit:diagnostics:testDebugUnitTest"
+      ]
+    }
   ]
 }

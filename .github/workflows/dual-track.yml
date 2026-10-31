@@ -7,13 +7,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Manual-only by policy (2026-10-25): automatic triggers are removed so this file
+# can never start on its own. Release automation is driven from the project's
+# primary CI host; runs on this mirror are operator-initiated, and the inputs
+# below are the only way any publishing step turns on.
 on:
-  pull_request:
-  push:
-    branches:
-      - beta
-      - master
-      - main
   workflow_dispatch:
 
 jobs:
@@ -39,4 +37,4 @@ jobs:
       - name: Check CI bootstrap freshness
         run: |
           TOOLKIT_DIR="$(bash scripts/resolve_ci_toolkit.sh)"
-          bash "$TOOLKIT_DIR/codegen/sync_consumer_bootstrap.sh" --check "$PWD" "65505809acb199c24ae9e63df1975cdea2ab494b"
+          bash "$TOOLKIT_DIR/codegen/sync_consumer_bootstrap.sh" --check "$PWD" "53268e1ba18fe05dd0f2824502241d83c32523bd"

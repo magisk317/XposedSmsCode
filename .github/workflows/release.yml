@@ -45,10 +45,11 @@
 # here sends it automatically.
 name: Release
 
+# Manual-only by policy (2026-10-25): automatic triggers are removed so this file
+# can never start on its own. Release automation is driven from the project's
+# primary CI host; runs on this mirror are operator-initiated, and the inputs
+# below are the only way any publishing step turns on.
 on:
-  push:
-    tags:
-      - 'v*.*.*'
   workflow_dispatch:
     inputs:
       release_tag:
@@ -79,7 +80,7 @@ permissions:
 # GitHub Release would exist without the Xposed-Modules-Repo channel tag, and the
 # next run would upload into that mixture.
 concurrency:
-  group: release-${{ inputs.release_tag || github.ref }}
+  group: release-${{ inputs.release_tag }}
   cancel-in-progress: false
 
 jobs:
@@ -111,18 +112,18 @@ jobs:
               publishes=true
               mode='publishing (RELEASE_OWNER=github)'
             fi
-          elif [[ "$EVENT" == "workflow_dispatch" && "$DRY_RUN" == "true" ]]; then
+          elif [[ "$DRY_RUN" == "true" ]]; then
             # A rehearsal writes nothing outside the runner, so it is allowed
             # while GitLab still owns the release.
             proceed=true
             mode="dry run (RELEASE_OWNER=${OWNER:-unset})"
-          elif [[ "$EVENT" == "workflow_dispatch" ]]; then
+          else
+            # Only a dispatch can reach this file, so arriving here means the
+            # operator dispatched a publishing run without owning the release.
             echo "::error::GitHub is not the release owner (RELEASE_OWNER=${OWNER:-unset})."
             echo "   Either set RELEASE_OWNER=github on this repository to publish from here,"
             echo "   or re-run with dry_run checked to rehearse without side effects."
             exit 1
-          else
-            mode="not the owner (RELEASE_OWNER=${OWNER:-unset}); tag ref left unhandled"
           fi
           echo "proceed=$proceed" >> "$GITHUB_OUTPUT"
           echo "publishes=$publishes" >> "$GITHUB_OUTPUT"
@@ -140,11 +141,11 @@ jobs:
     if: needs.release-eligibility.outputs.proceed == 'true'
     permissions:
       contents: write
-    uses: magisk317/magisk-ci-toolkit/.github/workflows/release-android.yml@65505809acb199c24ae9e63df1975cdea2ab494b
+    uses: magisk317/magisk-ci-toolkit/.github/workflows/release-android.yml@53268e1ba18fe05dd0f2824502241d83c32523bd
     with:
       # Must equal the ref above, MAGISK_CI_TOOLKIT_REF and every GitLab
       # include.ref; ci/verify_toolkit_pin.sh in the toolkit checks it.
-      toolkit_ref: 65505809acb199c24ae9e63df1975cdea2ab494b
+      toolkit_ref: 53268e1ba18fe05dd0f2824502241d83c32523bd
       release_tag: ${{ inputs.release_tag }}
       package_name: com.github.tianma8023.xposed.smscode
       release_cert_sha256: 027b936e1d82a606d83599548b8b11e49a2c8ae2588c4a9fbe8311e2c54f103a
@@ -173,10 +174,10 @@ jobs:
       # On a tag push every channel is on, exactly as the old chain behaved. On a
       # dispatch the operator picks; dry_run still turns all of them off inside
       # the chain.
-      publish_github_release: ${{ github.event_name != 'workflow_dispatch' || inputs.publish_github_release }}
-      publish_play: ${{ github.event_name != 'workflow_dispatch' || inputs.publish_play }}
-      publish_modules_repo: ${{ github.event_name != 'workflow_dispatch' || inputs.publish_modules_repo }}
-      dry_run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+      publish_github_release: ${{ inputs.publish_github_release }}
+      publish_play: ${{ inputs.publish_play }}
+      publish_modules_repo: ${{ inputs.publish_modules_repo }}
+      dry_run: ${{ inputs.dry_run }}
       enabled: ${{ needs.release-eligibility.outputs.proceed == 'true' }}
       # Submodules are GitLab-hosted, so the chain needs GITLAB_TOKEN to check
       # them out; it arrives through `secrets: inherit`.
@@ -209,7 +210,7 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/resolve-ci-toolkit
         with:
-          ref: 65505809acb199c24ae9e63df1975cdea2ab494b
+          ref: 53268e1ba18fe05dd0f2824502241d83c32523bd
       - name: Setup Android CI
         uses: ./.magisk-ci-toolkit/.github/actions/setup-android-ci
         with:
@@ -229,7 +230,7 @@ jobs:
             :smscode-core:verification:detekt
             :smscode-core:verification:test
             :magisk-xposed-kit:testDebugUnitTest
-            :magisk-xposed-kit:logging:testDebugUnitTest
+            :magisk-xposed-kit:logging:jvmTest
             :magisk-xposed-kit:diagnostics:testDebugUnitTest
             :app:koverVerifyGithubDebug
             -PenableKover=true

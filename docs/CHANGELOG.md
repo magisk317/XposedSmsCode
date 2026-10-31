@@ -3,6 +3,13 @@
 本日志记录了项目重构后的主要变更。
 
 ---
+## [v3.4.2] - 2026-10-31
+- 数据库清理（24→25 单步迁移）：剥离 sms_msg 的 forward 残留列，移除未使用的配置表。
+- 共享层命名归位与子模块 pin 对齐。
+
+> Full Changelog: https://gitlab.com/magisk3171/XposedSmsCode/-/compare/v3.4.1...v3.4.2
+
+---
 ## [v3.4.1] - 2026-10-24
 - 版本：`versionCode 135` / `versionName 3.4.1`。
 - `[log]` 日志策略随构建类型调整
