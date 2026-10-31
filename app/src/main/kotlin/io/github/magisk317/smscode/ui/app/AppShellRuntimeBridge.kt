@@ -7,7 +7,7 @@ import io.github.magisk317.smscode.runtime.RuntimeCodeRecordRestoreFacade
 import io.github.magisk317.smscode.runtime.RuntimeNotificationFacade
 import io.github.magisk317.smscode.common.utils.HookPrefsReader
 import io.github.magisk317.smscode.common.utils.ProviderIpcTokenGate
-import io.github.magisk317.smscode.db.entity.SmsMsg
+import io.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.smscode.verification.SmsDuplicateCheckResult
 import io.github.magisk317.smscode.verification.resolveSmsDuplicateCheck
 import io.github.magisk317.smscode.runtime.RuntimeStorageFacade

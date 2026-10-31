@@ -8,7 +8,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.magisk317.xposed.logging.XLog
-import io.github.magisk317.smscode.db.entity.AppInfo
+import io.github.magisk317.smscode.data.db.entity.AppInfo
 import io.github.magisk317.smscode.runtime.bridge.UiStorageAccess
 import io.github.magisk317.smscode.runtime.bridge.UiStoreAccess
 import io.github.magisk317.smscode.ui.block.AppInfoHelper

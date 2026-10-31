@@ -7,7 +7,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.magisk317.xposed.logging.XLog
-import io.github.magisk317.smscode.db.entity.SmsMsg
+import io.github.magisk317.smscode.runtime.contract.record.SmsMsgRecordData
 import io.github.magisk317.smscode.runtime.bridge.UiCodeRecordAccess
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Immutable
-data class CodeRecordUiState(val smsList: ImmutableList<SmsMsg> = persistentListOf(), val isLoading: Boolean = false)
+data class CodeRecordUiState(val smsList: ImmutableList<SmsMsgRecordData> = persistentListOf(), val isLoading: Boolean = false)
 
 internal class RecordRequestGeneration {
     private var current = 0L
@@ -40,7 +40,7 @@ class CodeRecordViewModel(
 ) : AndroidViewModel(application) {
 
     private val _loading = MutableStateFlow(false)
-    private val _records = MutableStateFlow<ImmutableList<SmsMsg>>(persistentListOf())
+    private val _records = MutableStateFlow<ImmutableList<SmsMsgRecordData>>(persistentListOf())
     private val _hasRecordSnapshot = MutableStateFlow(false)
     val hasRecordSnapshot: StateFlow<Boolean> = _hasRecordSnapshot.asStateFlow()
     private val _isActive = MutableStateFlow(false)
@@ -122,7 +122,7 @@ class CodeRecordViewModel(
         }
     }
 
-    fun removeSmsMsg(smsMsgList: List<SmsMsg>) {
+    fun removeSmsMsg(smsMsgList: List<SmsMsgRecordData>) {
         viewModelScope.launch {
             try {
                 codeRecord.removeRecords(getApplication(), smsMsgList)
@@ -132,7 +132,7 @@ class CodeRecordViewModel(
         }
     }
 
-    fun restoreSmsMsgList(smsMsgList: List<SmsMsg>) {
+    fun restoreSmsMsgList(smsMsgList: List<SmsMsgRecordData>) {
         viewModelScope.launch {
             try {
                 codeRecord.restoreRecords(getApplication(), smsMsgList)

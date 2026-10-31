@@ -10,24 +10,24 @@ import android.os.Build
 import io.github.magisk317.smscode.runtime.BuildConfig as RuntimeBuildConfig
 import com.github.tianma8023.xposed.smscode.BuildConfig
 import io.github.magisk317.smscode.common.constant.PrefConst
-import io.github.magisk317.smscode.runtime.common.diagnostics.ActivationDiagnosticsStore
+import io.github.magisk317.xposed.runtime.state.RuntimeStateStore
 import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import io.github.magisk317.uikit.entitlement.MobileGate
 import io.github.magisk317.smscode.common.utils.XscPreferenceHooks
 import io.github.magisk317.smscode.common.utils.HookPreferenceMirror
-import io.github.magisk317.smscode.xposed.utils.ModuleActivationStore
-import io.github.magisk317.smscode.xposed.utils.ModuleUtils
+import io.github.magisk317.xposed.capability.utils.ModuleActivationStore
+import io.github.magisk317.xposed.capability.utils.ModuleUtils
 import io.github.magisk317.smscode.common.utils.RuntimeDiagnosticsBridge
 import io.github.magisk317.smscode.runtime.common.diagnostics.RuntimeCrashLogs
 import io.github.magisk317.smscode.runtime.common.diagnostics.RuntimeLogStore
 import io.github.magisk317.smscode.xp.helper.ModuleConflictArbiter
-import io.github.magisk317.smscode.xposed.runtime.CoreHookPolicy
-import io.github.magisk317.smscode.xposed.runtime.CoreHookPolicyHolder
-import io.github.magisk317.smscode.xposed.runtime.CoreLogSink
-import io.github.magisk317.smscode.xposed.runtime.CoreLogSinkHolder
-import io.github.magisk317.smscode.xposed.runtime.CoreRuntime
+import io.github.magisk317.xposed.capability.runtime.CoreHookPolicy
+import io.github.magisk317.xposed.capability.runtime.CoreHookPolicyHolder
+import io.github.magisk317.xposed.capability.runtime.CoreLogSink
+import io.github.magisk317.xposed.capability.runtime.CoreLogSinkHolder
+import io.github.magisk317.xposed.capability.runtime.CoreRuntime
 import io.github.magisk317.smscode.runtime.common.utils.StorageUtils
-import io.github.magisk317.smscode.xposed.runtime.CoreRuntimeAccess
+import io.github.magisk317.xposed.capability.runtime.CoreRuntimeAccess
 import io.github.magisk317.xposed.logging.XLog
 import io.github.magisk317.xposed.logging.MagiskLogPolicy
 import io.github.magisk317.xposed.logging.DefaultLogSanitizer
@@ -53,6 +53,8 @@ import org.koin.core.context.startKoin
 import timber.log.Timber
 import io.github.magisk317.xposed.logging.MagiskOtel
 import io.github.magisk317.xposed.logging.AnonymousInstallationId
+import io.github.magisk317.xposed.logging.getOrCreate
+import io.github.magisk317.xposed.logging.configureForInstallation
 
 @SuppressLint("LogNotTimber")
 class SmsCodeApplication : Application() {
@@ -164,15 +166,13 @@ class SmsCodeApplication : Application() {
         importPendingCodeRecords()
         syncPreferences()
         registerLicenseActivityKiller()
-        val isCiOrDebug = BuildConfig.DEBUG || BuildConfig.IS_CI_BUILD
         if (BuildConfig.ENABLE_MOBILE_ENTITLEMENT) {
             // entitlement 100% 保留：任何分发形态都初始化激活协调器
             MobileEntitlementCoordinator.initialize(this, applicationScope)
         }
-        // vault 恢复仅限 CI/调试：Release 不自带解封路径，被封用户需重新激活
-        if (isCiOrDebug) {
-            CiUpdateGateVault.restoreIfEligible(this)
-        }
+        // 备份只在「版本真的动了、且这个构建自己没有激活」时才花掉，所以 Release 也读：
+        // 这里没有任何收回激活的动作，漏恢复只会让用户白跑一次服务器。
+        CiUpdateGateVault.restoreIfEligible(this)
     }
 
 
@@ -288,7 +288,7 @@ class SmsCodeApplication : Application() {
         }
         ModuleUtils.setRuntimeActivated(true)
         ModuleActivationStore.markActivated(this)
-        ActivationDiagnosticsStore.recordServiceBind(
+        RuntimeStateStore.recordServiceBind(
             context = this,
             frameworkName = frameworkName ?: "unknown",
             frameworkVersion = frameworkVersion ?: "unknown",
@@ -316,7 +316,7 @@ class SmsCodeApplication : Application() {
     internal fun handleXposedServiceDied() {
         AppPreferencesDataStore.setRemotePrefsProvider(null)
         ModuleUtils.setRuntimeActivated(false)
-        ActivationDiagnosticsStore.recordServiceDied(
+        RuntimeStateStore.recordServiceDied(
             context = this,
             verboseLogging = readVerboseLogMode(),
         )
@@ -359,7 +359,9 @@ class SmsCodeApplication : Application() {
                     if (entitlementForegroundPrimed) {
                         if (BuildConfig.ENABLE_MOBILE_ENTITLEMENT) {
                             applicationScope.launch {
-                                runCatching { MobileEntitlementCoordinator.refresh(this@SmsCodeApplication) }
+                                runCatching { MobileEntitlementCoordinator.refresh(this@SmsCodeApplication) }.onFailure {
+                                    XLog.w("entitlement refresh failed: ${it.message}", it)
+                                }
                             }
                         }
                     } else {

@@ -6,7 +6,7 @@ import io.github.magisk317.smscode.common.constant.PrefConst
 import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import io.github.magisk317.smscode.runtime.RuntimeStorageFacade
 import io.github.magisk317.smscode.runtime.common.autoinput.AutoInputResultProcessor
-import io.github.magisk317.smscode.xposed.hook.system.SystemInputInjectorHook
+import io.github.magisk317.xposed.capability.system.SystemInputInjectorHook
 import io.github.magisk317.xposed.logging.XLog
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.ExecutorService

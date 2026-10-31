@@ -53,6 +53,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.magisk317.smscode.presentation.R
+import io.github.magisk317.uikit.R as UiKitR
 import io.github.magisk317.smscode.common.utils.SmsCodeUtils as AppSmsCodeUtils
 import io.github.magisk317.smscode.db.entity.SmsCodeRule
 import io.github.magisk317.smscode.runtime.bridge.UiStorageAccess
@@ -81,6 +82,7 @@ import io.github.magisk317.uikit.text.AppText
 import io.github.magisk317.uikit.text.AppTextRole
 import io.github.magisk317.uikit.theme.AppColorRole
 import io.github.magisk317.uikit.theme.appColor
+import io.github.magisk317.uikit.surface.AppRefreshIcon
 
 private const val BUILTIN_RULE_EDITOR_ID_ALPHANUMERIC = -101L
 private const val BUILTIN_RULE_EDITOR_ID_DIGITS = -102L
@@ -256,7 +258,7 @@ fun SmsCodeRuleListScreen(
             enabled = !officialLoading,
             onClick = { loadOfficialRules(refresh = true) },
         ) {
-            AppIcon(Icons.Filled.Refresh, contentDescription = stringResource(id = R.string.action_refresh))
+            AppRefreshIcon(refreshing = officialLoading, contentDescription = stringResource(id = R.string.action_refresh))
         }
     }
 
@@ -422,7 +424,7 @@ fun SmsCodeRuleEditorScreen(
     val duplicateText = stringResource(id = R.string.rule_duplicated_prompt)
     val confirmLabel = stringResource(id = R.string.confirm)
     val copyLabel = stringResource(id = R.string.action_copy)
-    val rulesSummary = stringResource(id = R.string.pref_code_rules_summary)
+    val rulesSummary = stringResource(id = UiKitR.string.pref_code_rules_summary)
     val builtinSummary = stringResource(id = R.string.builtin_code_rules_summary)
     val builtinKeywordSetting = stringResource(id = R.string.builtin_rule_keyword_setting)
     val builtinTitle = when (builtinRule?.id) {

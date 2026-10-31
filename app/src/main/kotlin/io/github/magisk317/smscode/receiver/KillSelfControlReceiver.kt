@@ -82,7 +82,10 @@ class KillSelfControlReceiver : BroadcastReceiver() {
             try {
                 Process.killProcess(Process.myPid())
             } finally {
-                runCatching { System.exit(0) }
+                runCatching { System.exit(0) }.onFailure {
+                    // The process is already being killed in the line above; there is no
+                    // caller left to hear about a refused exit.
+                }
             }
         }.start()
     }

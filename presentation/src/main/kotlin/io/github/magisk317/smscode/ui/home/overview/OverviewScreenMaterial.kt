@@ -120,7 +120,7 @@ internal fun OverviewScreenMaterial(
                         frameworkType = state.frameworkType,
                         frameworkVersion = state.frameworkVersion,
                         interactive = true,
-                        hasUpdateBadge = false,
+                        hasUpdateBadge = hasUpdate,
                         onVersionClick = { updateController.check(userInitiated = true) },
                         onRootHint = if (state.hasRootAccess) null else actions.onRootHintClick,
                     )

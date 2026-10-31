@@ -3,7 +3,6 @@
 
 package io.github.magisk317.smscode.ui.home
 
-import io.github.magisk317.uikit.update.AppUpdateController
 import org.koin.compose.koinInject
 
 import androidx.compose.foundation.layout.PaddingValues
@@ -58,9 +57,10 @@ import io.github.magisk317.smscode.presentation.BuildConfig
 import io.github.magisk317.xposed.logging.MagiskOtel
 import io.github.magisk317.xposed.diagnostics.DiagnosticBundleNames
 import io.github.magisk317.smscode.presentation.R
+import io.github.magisk317.uikit.R as UiKitR
 import io.github.magisk317.smscode.common.constant.Const
 import io.github.magisk317.smscode.common.constant.PrefConst
-import io.github.magisk317.smscode.runtime.common.diagnostics.ActivationDiagnosticsStore
+import io.github.magisk317.xposed.runtime.state.RuntimeStateStore
 import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import io.github.magisk317.smscode.common.utils.RuntimeDiagnosticsBridge
 import io.github.magisk317.smscode.runtime.common.diagnostics.LogBundleExporter
@@ -488,7 +488,7 @@ internal fun ComposeSettingsScreenBody(
     LaunchedEffect(lifecycleOwner, keepDataActive) {
         if (!keepDataActive) return@LaunchedEffect
         lifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.RESUMED) {
-            isActivated = ActivationDiagnosticsStore.isModuleActivated(context)
+            isActivated = RuntimeStateStore.isModuleActivated(context)
             autoInputAccessibilityEnabled =
                 supportsAccessibilityAutoInput && isAutoInputAccessibilityServiceEnabled(context)
             // Reconcile the notification switch with the real system delivery state:
@@ -507,7 +507,7 @@ internal fun ComposeSettingsScreenBody(
                 HookPreferenceMirror.publish(context)
             }
             delay(1000L)
-            isActivated = ActivationDiagnosticsStore.isModuleActivated(context)
+            isActivated = RuntimeStateStore.isModuleActivated(context)
             autoInputAccessibilityEnabled =
                 supportsAccessibilityAutoInput && isAutoInputAccessibilityServiceEnabled(context)
         }
@@ -548,7 +548,7 @@ internal fun ComposeSettingsScreenBody(
             }.onFailure {
                 scope.launch {
                     snackbarHostState.showSnackbar(
-                        context.getString(R.string.pref_auto_input_accessibility_service_open_failed),
+                        context.getString(UiKitR.string.pref_auto_input_accessibility_service_open_failed),
                     )
                 }
             }
@@ -559,7 +559,7 @@ internal fun ComposeSettingsScreenBody(
         }.onFailure {
             scope.launch {
                 snackbarHostState.showSnackbar(
-                    context.getString(R.string.pref_auto_input_accessibility_service_open_failed),
+                    context.getString(UiKitR.string.pref_auto_input_accessibility_service_open_failed),
                 )
             }
         }
@@ -596,7 +596,7 @@ internal fun ComposeSettingsScreenBody(
         runCatching { notificationSettingsLauncher.launch(intent) }.onFailure {
             scope.launch {
                 snackbarHostState.showSnackbar(
-                    context.getString(R.string.pref_code_notification_owner_permission_settings_hint),
+                    context.getString(UiKitR.string.pref_code_notification_owner_permission_settings_hint),
                 )
             }
         }
@@ -620,7 +620,7 @@ internal fun ComposeSettingsScreenBody(
         } else {
             scope.launch {
                 snackbarHostState.showSnackbar(
-                    context.getString(R.string.pref_code_notification_owner_permission_settings_hint),
+                    context.getString(UiKitR.string.pref_code_notification_owner_permission_settings_hint),
                 )
             }
         }
@@ -653,7 +653,6 @@ internal fun ComposeSettingsScreenBody(
         minDurationMillis = LoadingIndicatorTokens.MIN_VISIBLE_DURATION_MILLIS,
     )
     val autoInputEnabled = rememberPrefBoolean(PrefConst.KEY_ENABLE_AUTO_INPUT_CODE, true)
-    val autoUpdateEnabled = rememberPrefBoolean(PrefConst.KEY_AUTO_UPDATE_ON_START, true)
     val moduleEnabled = rememberPrefBoolean(PrefConst.KEY_ENABLE, true)
     val accordionMode = rememberPrefBoolean(PrefConst.KEY_SETTINGS_ACCORDION_MODE, true)
 
@@ -745,8 +744,8 @@ internal fun ComposeSettingsScreenBody(
                                 markPrefsSaved()
                             }
                         },
-                        moduleTitle = stringResource(id = R.string.pref_enable_title),
-                        moduleSummary = stringResource(id = R.string.pref_enable_summary),
+                        moduleTitle = stringResource(id = UiKitR.string.pref_enable_title),
+                        moduleSummary = stringResource(id = UiKitR.string.pref_enable_summary),
                         themeMode = null,
                         onThemeSelected = null,
                     ) {
@@ -760,15 +759,15 @@ internal fun ComposeSettingsScreenBody(
                         )
                         SwitchItem(
                             title = stringResource(id = R.string.pref_settings_display_mode_title),
-                            summary = stringResource(id = R.string.pref_settings_display_mode_summary),
+                            summary = stringResource(id = UiKitR.string.pref_settings_display_mode_summary),
                             key = PrefConst.KEY_SETTINGS_ACCORDION_MODE,
                             defaultValue = true,
                             stateOverride = accordionMode,
                             onSaved = markPrefsSaved,
                         )
                         SwitchItem(
-                            title = stringResource(id = R.string.pref_show_launcher_icon_title),
-                            summary = stringResource(id = R.string.pref_show_launcher_icon_summary),
+                            title = stringResource(id = UiKitR.string.pref_show_launcher_icon_title),
+                            summary = stringResource(id = UiKitR.string.pref_show_launcher_icon_summary),
                             key = PrefConst.KEY_SHOW_LAUNCHER_ICON,
                             defaultValue = true,
                             stateOverride = launcherIconVisible,
@@ -786,7 +785,7 @@ internal fun ComposeSettingsScreenBody(
                                     }
                                     scope.launch {
                                         snackbarHostState.showSnackbar(
-                                            context.getString(R.string.pref_show_launcher_icon_failed),
+                                            context.getString(UiKitR.string.pref_show_launcher_icon_failed),
                                         )
                                     }
                                 }
@@ -803,8 +802,8 @@ internal fun ComposeSettingsScreenBody(
                         accordionMode = accordionMode.value,
                     ) {
                         SwitchItem(
-                            title = stringResource(id = R.string.pref_copy_to_clipboard_title),
-                            summary = stringResource(id = R.string.pref_copy_to_clipboard_summary),
+                            title = stringResource(id = UiKitR.string.pref_copy_to_clipboard_title),
+                            summary = stringResource(id = UiKitR.string.pref_copy_to_clipboard_summary),
                             key = PrefConst.KEY_COPY_TO_CLIPBOARD,
                             defaultValue = false,
                             onSaved = markPrefsSaved,
@@ -818,16 +817,16 @@ internal fun ComposeSettingsScreenBody(
                             summary = stringResource(id = R.string.pref_smscode_test_summary),
                         ) { showSmsTestDialog = true }
                         AppArrowItem(
-                            title = stringResource(id = R.string.pref_sim_slot1_remark_title),
+                            title = stringResource(id = UiKitR.string.pref_sim_slot1_remark_title),
                             summary = simSlotRemarkSummary(simSlot1Remark),
                         ) { showSimSlotRemarkDialog = 0 }
                         AppArrowItem(
-                            title = stringResource(id = R.string.pref_sim_slot2_remark_title),
+                            title = stringResource(id = UiKitR.string.pref_sim_slot2_remark_title),
                             summary = simSlotRemarkSummary(simSlot2Remark),
                         ) { showSimSlotRemarkDialog = 1 }
                         AppArrowItem(
-                            title = stringResource(id = R.string.pref_code_rules_title),
-                            summary = stringResource(id = R.string.pref_code_rules_summary),
+                            title = stringResource(id = UiKitR.string.pref_code_rules_title),
+                            summary = stringResource(id = UiKitR.string.pref_code_rules_summary),
                         ) {
                             settingsViewModel.openSmsCodeRules()
                         }
@@ -842,8 +841,8 @@ internal fun ComposeSettingsScreenBody(
                     ) {
                         if (supportsAccessibilityAutoInput) {
                             io.github.magisk317.uikit.preference.ActionSwitchItem(
-                                title = stringResource(id = R.string.pref_auto_input_accessibility_service_title),
-                                summary = stringResource(id = R.string.pref_auto_input_accessibility_service_summary),
+                                title = stringResource(id = UiKitR.string.pref_auto_input_accessibility_service_title),
+                                summary = stringResource(id = UiKitR.string.pref_auto_input_accessibility_service_summary),
                                 checked = autoInputAccessibilityEnabled,
                                 onClick = {
                                     scope.launch {
@@ -868,28 +867,28 @@ internal fun ComposeSettingsScreenBody(
                             )
                         }
                         SwitchItem(
-                            title = stringResource(id = R.string.pref_enable_auto_input_code_title),
-                            summary = stringResource(id = R.string.pref_enable_auto_input_code_summary),
+                            title = stringResource(id = UiKitR.string.pref_enable_auto_input_code_title),
+                            summary = stringResource(id = UiKitR.string.pref_enable_auto_input_code_summary),
                             key = PrefConst.KEY_ENABLE_AUTO_INPUT_CODE,
                             defaultValue = true,
                             stateOverride = autoInputEnabled,
                             onSaved = markPrefsSaved,
                         )
                         SwitchItem(
-                            title = stringResource(id = R.string.pref_enable_auto_enter_code_title),
-                            summary = stringResource(id = R.string.pref_enable_auto_enter_code_summary),
+                            title = stringResource(id = UiKitR.string.pref_enable_auto_enter_code_title),
+                            summary = stringResource(id = UiKitR.string.pref_enable_auto_enter_code_summary),
                             key = PrefConst.KEY_ENABLE_AUTO_ENTER_CODE,
                             defaultValue = false,
                             onSaved = markPrefsSaved,
                         )
                         AppArrowItem(
-                            title = stringResource(id = R.string.pref_auto_input_code_delay_title),
-                            summary = stringResource(id = R.string.pref_auto_input_code_delay_summary, autoInputDelay),
+                            title = stringResource(id = UiKitR.string.pref_auto_input_code_delay_title),
+                            summary = stringResource(id = UiKitR.string.pref_auto_input_code_delay_summary, autoInputDelay),
                         ) { showAutoInputDialog = true }
                         AppArrowItem(
-                            title = stringResource(id = R.string.pref_auto_input_code_interval_title),
+                            title = stringResource(id = UiKitR.string.pref_auto_input_code_interval_title),
                             summary = stringResource(
-                                id = R.string.pref_auto_input_code_interval_summary,
+                                id = UiKitR.string.pref_auto_input_code_interval_summary,
                                 autoInputInterval,
                             ),
                         ) { showAutoInputIntervalDialog = true }
@@ -903,8 +902,8 @@ internal fun ComposeSettingsScreenBody(
                         accordionMode = accordionMode.value,
                     ) {
                         SwitchItem(
-                            title = stringResource(id = R.string.pref_show_toast_title),
-                            summary = stringResource(id = R.string.pref_show_toast_summary),
+                            title = stringResource(id = UiKitR.string.pref_show_toast_title),
+                            summary = stringResource(id = UiKitR.string.pref_show_toast_summary),
                             key = PrefConst.KEY_SHOW_TOAST,
                             defaultValue = true,
                             onSaved = markPrefsSaved,
@@ -950,8 +949,8 @@ internal fun ComposeSettingsScreenBody(
                             }
                         }
                         io.github.magisk317.uikit.preference.ActionSwitchItem(
-                            title = stringResource(id = R.string.pref_show_code_notification_title),
-                            summary = stringResource(id = R.string.pref_show_code_notification_summary),
+                            title = stringResource(id = UiKitR.string.pref_show_code_notification_title),
+                            summary = stringResource(id = UiKitR.string.pref_show_code_notification_summary),
                             checked = showCodeNotificationEnabled.value,
                             onClick = {
                                 handleCodeNotificationToggle(!showCodeNotificationEnabled.value)
@@ -960,8 +959,8 @@ internal fun ComposeSettingsScreenBody(
                         )
                         if (showCodeNotificationEnabled.value) {
                             SwitchItem(
-                                title = stringResource(id = R.string.pref_auto_cancel_notification_title),
-                                summary = stringResource(id = R.string.pref_auto_cancel_notification_summary),
+                                title = stringResource(id = UiKitR.string.pref_auto_cancel_notification_title),
+                                summary = stringResource(id = UiKitR.string.pref_auto_cancel_notification_summary),
                                 key = PrefConst.KEY_AUTO_CANCEL_CODE_NOTIFICATION,
                                 defaultValue = PrefConst.AUTO_CANCEL_CODE_NOTIFICATION_DEFAULT,
                                 stateOverride = autoCancelNotificationEnabled,
@@ -970,7 +969,7 @@ internal fun ComposeSettingsScreenBody(
                             )
                             if (autoCancelNotificationEnabled.value) {
                                 AppArrowItem(
-                                    title = stringResource(id = R.string.pref_notification_retention_time_title),
+                                    title = stringResource(id = UiKitR.string.pref_notification_retention_time_title),
                                     summary = notificationRetentionEntryLabel(retentionTime),
                                 ) { showRetentionDialog = true }
                             }
@@ -985,8 +984,8 @@ internal fun ComposeSettingsScreenBody(
                         accordionMode = accordionMode.value,
                     ) {
                         SwitchItem(
-                            title = stringResource(id = R.string.pref_block_sms_title),
-                            summary = stringResource(id = R.string.pref_block_sms_summary),
+                            title = stringResource(id = UiKitR.string.pref_block_sms_title),
+                            summary = stringResource(id = UiKitR.string.pref_block_sms_summary),
                             key = PrefConst.KEY_BLOCK_SMS,
                             defaultValue = false,
                             onSaved = markPrefsSaved,
@@ -1008,21 +1007,21 @@ internal fun ComposeSettingsScreenBody(
                         accordionMode = accordionMode.value,
                     ) {
                         AppArrowItem(
-                            title = stringResource(id = R.string.pref_backup_title),
-                            summary = stringResource(id = R.string.pref_backup_summary),
+                            title = stringResource(id = UiKitR.string.pref_backup_title),
+                            summary = stringResource(id = UiKitR.string.pref_backup_summary),
                         ) { showBackupDialog = true }
                         AppArrowItem(
-                            title = stringResource(id = R.string.pref_restore_title),
-                            summary = stringResource(id = R.string.pref_restore_summary),
+                            title = stringResource(id = UiKitR.string.pref_restore_title),
+                            summary = stringResource(id = UiKitR.string.pref_restore_summary),
                         ) {
                             val intent = backupAccess.getImportRuleListSAFIntent(context)
                             restoreLauncher.launch(intent)
                         }
                         RuntimeLogDiagnosticsItems(
                             labels = RuntimeLogDiagnosticsLabels(
-                                shareLogTitle = stringResource(id = R.string.pref_share_log_title),
-                                shareLogSummary = stringResource(id = R.string.pref_share_log_summary),
-                                retentionTitle = stringResource(id = R.string.pref_runtime_log_retention_days_title),
+                                shareLogTitle = stringResource(id = UiKitR.string.pref_share_log_title),
+                                shareLogSummary = stringResource(id = UiKitR.string.pref_share_log_summary),
+                                retentionTitle = stringResource(id = UiKitR.string.pref_runtime_log_retention_days_title),
                                 retentionSummary = pluralStringResource(
                                     id = R.plurals.pref_runtime_log_retention_days_summary,
                                     count = runtimeLogRetentionDays,
@@ -1100,15 +1099,9 @@ internal fun ComposeSettingsScreenBody(
                             enabled = allowsLogExport,
                         )
 
-                        val updateController = koinInject<AppUpdateController>()
+                        UpdateSettingsSection()
                         AppArrowItem(
-                            title = stringResource(id = R.string.check_update_title),
-                            summary = stringResource(id = R.string.check_update_summary),
-                        ) {
-                            updateController.check(userInitiated = true)
-                        }
-                        AppArrowItem(
-                            title = stringResource(id = R.string.pref_privacy_policy_title),
+                            title = stringResource(id = UiKitR.string.pref_privacy_policy_title),
                             summary = "",
                         ) {
                             BrowserUtils.openWebPage(
@@ -1175,9 +1168,9 @@ internal fun ComposeSettingsScreenBody(
         TextInputDialog(
             title = stringResource(
                 id = if (isFirstSlot) {
-                    R.string.pref_sim_slot1_remark_title
+                    UiKitR.string.pref_sim_slot1_remark_title
                 } else {
-                    R.string.pref_sim_slot2_remark_title
+                    UiKitR.string.pref_sim_slot2_remark_title
                 },
             ),
             initialValue = if (isFirstSlot) simSlot1Remark else simSlot2Remark,
@@ -1216,14 +1209,14 @@ internal fun ComposeSettingsScreenBody(
     }
 
     if (showRuntimeLogRetentionDialog) {
-        val runtimeLogRetentionDaysError = stringResource(id = R.string.pref_runtime_log_retention_days_error)
+        val runtimeLogRetentionDaysError = stringResource(id = UiKitR.string.pref_runtime_log_retention_days_error)
         NonNegativeIntegerInputDialog(
-            title = stringResource(id = R.string.pref_runtime_log_retention_days_title),
+            title = stringResource(id = UiKitR.string.pref_runtime_log_retention_days_title),
             initialValue = runtimeLogRetentionDays,
             errorText = runtimeLogRetentionDaysError,
             onDismiss = { showRuntimeLogRetentionDialog = false },
             minimumValue = PrefConst.RUNTIME_LOG_RETENTION_DAYS_MIN,
-            supportingText = stringResource(id = R.string.pref_runtime_log_retention_days_hint),
+            supportingText = stringResource(id = UiKitR.string.pref_runtime_log_retention_days_hint),
             showClearButton = true,
         ) { days ->
             showRuntimeLogRetentionDialog = false
@@ -1334,7 +1327,7 @@ private fun SettingsDialogs(
     if (showAutoInputDialog) {
         val nonNegativeNumberError = stringResource(id = R.string.pref_number_non_negative_error)
         TextInputDialog(
-            title = stringResource(id = R.string.pref_auto_input_code_delay_title),
+            title = stringResource(id = UiKitR.string.pref_auto_input_code_delay_title),
             initialValue = normalizeNumericInput(autoInputDelay),
             selectAllOnOpen = true,
             onDismiss = { onShowAutoInputDialogChange(false) },
@@ -1357,7 +1350,7 @@ private fun SettingsDialogs(
     if (showAutoInputIntervalDialog) {
         val nonNegativeNumberError = stringResource(id = R.string.pref_number_non_negative_error)
         TextInputDialog(
-            title = stringResource(id = R.string.pref_auto_input_code_interval_title),
+            title = stringResource(id = UiKitR.string.pref_auto_input_code_interval_title),
             initialValue = normalizeNumericInput(autoInputInterval),
             selectAllOnOpen = true,
             onDismiss = { onShowAutoInputIntervalDialogChange(false) },
@@ -1641,7 +1634,7 @@ fun RetentionDialog(
     selectedValue: String,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
-    titleId: Int = R.string.pref_notification_retention_time_title,
+    titleId: Int = UiKitR.string.pref_notification_retention_time_title,
     entriesId: Int = R.array.notification_retention_time_entry_list,
     valuesId: Int = R.array.notification_retention_time_list,
     onConfirm: (String) -> Unit,

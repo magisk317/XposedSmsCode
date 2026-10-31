@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import io.github.magisk317.smscode.presentation.R
+import io.github.magisk317.uikit.R as UiKitR
 import io.github.magisk317.uikit.surface.chromeSurfaceColor
 import io.github.magisk317.uikit.surface.rememberUiKitGlassTopBar
 import io.github.magisk317.uikit.surface.uiKitSurfaceGlassSample
@@ -43,7 +44,7 @@ internal fun ComposeSettingsScreenMiuix(
         topBar = {
             MiuixTopAppBar(
                 modifier = Modifier.uiKitSurfaceGlassSample(topGlass),
-                title = stringResource(id = R.string.pref_general_title),
+                title = stringResource(id = UiKitR.string.pref_general_title),
                 scrollBehavior = scrollBehavior,
                 color = if (glassOn) Color.Transparent else chromeSurfaceColor(),
                 defaultWindowInsetsPadding = true,

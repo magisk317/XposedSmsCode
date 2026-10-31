@@ -49,17 +49,19 @@ android {
 }
 
 dependencies {
+    implementation(project(":magisk-xposed-kit:contract"))
     implementation(libs.okhttp)
     implementation(project(":runtime"))
     api(project(":magisk-ui-kit"))
     api(project(":magisk-ui-kit:update"))
     implementation(project(":magisk-xposed-kit:logging"))
+    implementation(project(":magisk-xposed-kit:runtime"))
     implementation(project(":magisk-xposed-kit:diagnostics"))
     implementation(project(":magisk-xposed-kit:permission"))
     implementation(project(":smscode-core:domain"))
     implementation(project(":smscode-core:rule"))
     implementation(project(":smscode-core:runtime"))
-    api(project(":smscode-core:db"))
+    implementation(project(":smscode-core:db"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.material.icons.core)

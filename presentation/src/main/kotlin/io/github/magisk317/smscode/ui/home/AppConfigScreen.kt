@@ -33,7 +33,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.magisk317.smscode.presentation.R
-import io.github.magisk317.smscode.db.entity.AppInfo
+import io.github.magisk317.smscode.data.db.entity.AppInfo
 import io.github.magisk317.uikit.surface.AppIconImage
 import io.github.magisk317.uikit.surface.AppPullToRefresh
 import io.github.magisk317.uikit.foundation.LoadingIndicatorTokens
@@ -52,6 +52,13 @@ import io.github.magisk317.uikit.text.AppText
 import io.github.magisk317.uikit.text.AppTextRole
 import io.github.magisk317.uikit.theme.AppColorRole
 import io.github.magisk317.uikit.theme.appColor
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
+import io.github.magisk317.uikit.surface.AppConfigScreenMaterial
+import androidx.compose.material.icons.Icons
+import io.github.magisk317.uikit.surface.AppConfigScreenMiuix
 
 private const val APP_LIST_PREFETCH_DISTANCE = 12
 
@@ -261,20 +268,30 @@ fun AppConfigScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         when (currentUiKitStyle()) {
             UiKitStyle.Miuix -> AppConfigScreenMiuix(
+                title = stringResource(R.string.app_config_settings),
+                searchPlaceholder = stringResource(R.string.action_search),
+                backContentDescription = stringResource(R.string.action_back),
                 onBack = onBack,
                 onOpenSettings = { showSettingsMenu = true },
+                actionIcon = Icons.Default.Tune,
                 scrollChromeState = scrollChromeState,
                 searchState = searchState,
                 listState = listState,
+                bottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 80.dp,
                 body = body,
             )
 
             UiKitStyle.Expressive -> AppConfigScreenMaterial(
+                title = stringResource(R.string.app_config_settings),
+                searchPlaceholder = stringResource(R.string.action_search),
+                backContentDescription = stringResource(R.string.action_back),
                 onBack = onBack,
                 onOpenSettings = { showSettingsMenu = true },
+                actionIcon = Icons.Default.Tune,
                 scrollChromeState = scrollChromeState,
                 searchState = searchState,
                 listState = listState,
+                bottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 80.dp,
                 body = body,
             )
         }

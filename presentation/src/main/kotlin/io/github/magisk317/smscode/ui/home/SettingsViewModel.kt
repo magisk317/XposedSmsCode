@@ -448,10 +448,6 @@ class SettingsViewModel(
                                     subId = it.subId,
                                     msgType = it.msgType,
                                     callType = it.callType,
-                                    forwardStatus = it.forwardStatus,
-                                    forwardTarget = it.forwardTarget,
-                                    forwardMessage = it.forwardMessage,
-                                    forwardTime = it.forwardTime,
                                 )
                             }
                     }
@@ -575,7 +571,7 @@ class SettingsViewModel(
         }
         val beforeCount = dbManager.queryAllSmsMsg().size
         val entities = records.map {
-            io.github.magisk317.smscode.db.entity.SmsMsg(
+            io.github.magisk317.smscode.data.db.entity.SmsMsg(
                 sender = it.sender,
                 body = it.body,
                 date = it.date,
@@ -587,10 +583,6 @@ class SettingsViewModel(
                 subId = it.subId,
                 msgType = it.msgType,
                 callType = it.callType,
-                forwardStatus = it.forwardStatus,
-                forwardTarget = it.forwardTarget,
-                forwardMessage = it.forwardMessage,
-                forwardTime = it.forwardTime,
             )
         }
         dbManager.addSmsMsgList(entities)

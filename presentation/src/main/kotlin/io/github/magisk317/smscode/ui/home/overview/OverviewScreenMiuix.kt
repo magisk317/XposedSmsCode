@@ -130,7 +130,7 @@ internal fun OverviewScreenMiuix(
                             MiuixActionRow(
                                 label = UiKitR.string.uikit_version_name,
                                 value = state.appVersionName.ifBlank { unknown },
-                                hasBadge = false,
+                                hasBadge = hasUpdate,
                                 onClick = { updateController.check(userInitiated = true) },
                             )
                             MiuixInfoRow(

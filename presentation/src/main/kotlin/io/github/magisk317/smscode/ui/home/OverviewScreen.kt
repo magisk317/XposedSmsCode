@@ -38,12 +38,12 @@ import androidx.compose.ui.unit.dp
 import io.github.magisk317.smscode.presentation.R
 import io.github.magisk317.smscode.presentation.BuildConfig
 import io.github.magisk317.uikit.R as UiKitR
-import io.github.magisk317.smscode.runtime.contract.diagnostics.ActivationStatusState
+import io.github.magisk317.xposed.runtime.state.RuntimeStatusState
 import io.github.magisk317.smscode.common.constant.Const
 import io.github.magisk317.smscode.common.constant.PrefConst
 import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
-import io.github.magisk317.smscode.runtime.contract.diagnostics.ActivationDiagnosticsSnapshot
-import io.github.magisk317.smscode.runtime.common.diagnostics.ActivationDiagnosticsStore
+import io.github.magisk317.xposed.runtime.state.RuntimeDiagnosticsSnapshot
+import io.github.magisk317.xposed.runtime.state.RuntimeStateStore
 import io.github.magisk317.uikit.entitlement.rememberEntitlementState
 import io.github.magisk317.smscode.common.utils.xscPackageActions
 import io.github.magisk317.smscode.runtime.common.utils.BrowserUtils
@@ -80,7 +80,7 @@ private suspend fun readEntitlementAutomationAllowed(context: Context): Boolean 
     )
 
 internal data class OverviewUiState(
-    val activationStatus: ActivationStatusState,
+    val activationStatus: RuntimeStatusState,
     val mobileAutomationAllowed: Boolean,
     val showEntitlement: Boolean,
     val showStatusDiagnostics: Boolean,
@@ -153,7 +153,7 @@ fun OverviewScreen(
         scope.launch { snackbarHostState.showLatestSnackbar(message) }
     }
 
-    var activationStatus by remember { mutableStateOf(ActivationStatusState()) }
+    var activationStatus by remember { mutableStateOf(RuntimeStatusState()) }
     var frameworkDiagnostics by remember { mutableStateOf(FrameworkDiagnostics()) }
     var hasRootAccessState by remember { mutableStateOf(false) }
     var appVersionState by remember { mutableStateOf<Pair<String, Long>?>(null) }
@@ -167,7 +167,7 @@ fun OverviewScreen(
     LaunchedEffect(context, keepDataActive) {
         if (!keepDataActive) return@LaunchedEffect
         launch {
-            ActivationDiagnosticsStore.observeStatus(context).collect {
+            RuntimeStateStore.observeStatus(context).collect {
                 activationStatus = it
                 hasActivationSnapshot = true
             }
@@ -438,7 +438,7 @@ fun StatusCard(
 
 private fun buildStatusDiagnostics(
     context: android.content.Context,
-    snapshot: ActivationDiagnosticsSnapshot,
+    snapshot: RuntimeDiagnosticsSnapshot,
     runtimeConnected: Boolean,
 ): List<Pair<String, String>> {
     val serviceValue = buildString {

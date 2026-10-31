@@ -1,6 +1,6 @@
 package io.github.magisk317.smscode.ui.app
 
-import io.github.magisk317.smscode.runtime.contract.ipc.IpcTokenMatcher
+import io.github.magisk317.xposed.runtime.ipc.IpcTokenMatcher
 import java.util.concurrent.atomic.AtomicReference
 
 object AppIpcTokenStore {

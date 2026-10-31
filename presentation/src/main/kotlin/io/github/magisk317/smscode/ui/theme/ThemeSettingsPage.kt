@@ -1,5 +1,6 @@
 package io.github.magisk317.smscode.ui.theme
 
+import io.github.magisk317.uikit.theme.ThemeAccent
 import android.os.Build
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -106,14 +107,14 @@ fun ThemeSettingsPage(
                 onExpandedChange = {},
             ) {
                 SettingsChoiceRow(
-                    title = stringResource(R.string.pref_choose_theme_title),
+                    title = stringResource(UiKitR.string.pref_choose_theme_title),
                     summary = themeOptions[selectedTheme],
                     options = themeOptions,
                     selectedIndex = selectedTheme,
                     onSelect = { index -> viewModel.setThemeMode(index) },
                 )
                 SettingsChoiceRow(
-                    title = stringResource(R.string.pref_ui_kit_style_title),
+                    title = stringResource(UiKitR.string.pref_ui_kit_style_title),
                     summary = uiKitStyleOptions[selectedUiKitStyle],
                     options = uiKitStyleOptions,
                     selectedIndex = selectedUiKitStyle,

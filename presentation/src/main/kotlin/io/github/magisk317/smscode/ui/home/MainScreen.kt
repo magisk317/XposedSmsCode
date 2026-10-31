@@ -206,11 +206,12 @@ fun MainScreen(
         val result = performanceRecorder.result(token) ?: return
         if (!shouldEmitTerminalTransition(result, allowMissingFirstFrame)) return
         if (emittedPerformanceTokens.size >= MAX_EMITTED_PERFORMANCE_TOKENS) {
-            emittedPerformanceTokens.iterator().let { iterator ->
-                if (iterator.hasNext()) {
-                    iterator.next()
-                    iterator.remove()
-                }
+            val iterator = emittedPerformanceTokens.iterator()
+            if (iterator.hasNext()) {
+                // Insertion order is eviction order; the entry is bound because advancing the
+                // iterator is the point, not the value it hands back.
+                val eldest = iterator.next()
+                iterator.remove()
             }
         }
         if (!emittedPerformanceTokens.add(token.id)) return

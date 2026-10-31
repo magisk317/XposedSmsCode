@@ -12,26 +12,13 @@
     <!-- general end -->
 
     <!-- preferences general -->
-    <string name="pref_general_title">通用设置</string>
-    <string name="pref_enable_title">主开关</string>
-    <string name="pref_enable_summary">模块已激活</string>
     <string name="pref_settings_display_mode_title">手风琴模式</string>
-    <string name="pref_settings_display_mode_summary">开启：分组可折叠；关闭：全部设置直接展开</string>
-
-    <string name="pref_show_launcher_icon_title">显示桌面图标</string>
-    <string name="pref_show_launcher_icon_summary">在桌面显示应用图标，便于快速打开</string>
-    <string name="pref_show_launcher_icon_failed">切换桌面图标显示状态失败</string>
-    <string name="pref_choose_theme_title">主题</string>
-    <string name="pref_choose_theme_summary">跟随系统、浅色、深色或纯黑</string>
-    <string name="pref_ui_kit_style_title">界面风格</string>
     <string name="ui_kit_style_expressive">Expressive</string>
     <string name="ui_kit_style_miuix">Miuix</string>
     <string name="theme_follow_system">自动 (跟随系统)</string>
     <string name="theme_light">浅色</string>
     <string name="theme_dark">深色</string>
     <string name="theme_black">纯黑</string>
-    <string name="pref_language_title">语言</string>
-    <string name="pref_language_summary">选择语言</string>
     <string name="language_follow_system">系统默认/跟随系统</string>
     <string name="language_en">English</string>
     <string name="language_zh_cn">简体中文</string>
@@ -40,12 +27,6 @@
     <!-- preferences general end -->
 
     <!-- preferences sms code -->
-    <string name="pref_show_toast_title">显示 Toast 提示</string>
-    <string name="pref_show_toast_summary">提取到验证码时显示 Toast 提示</string>
-    <string name="pref_copy_to_clipboard_title">复制到剪切板</string>
-    <string name="pref_copy_to_clipboard_summary">如果提取成功，则将验证码复制到剪贴板</string>
-    <string name="pref_block_sms_title">拦截验证码短信</string>
-    <string name="pref_block_sms_summary">警告！如果提取成功，验证码短信将被拦截，短信应用将无法收到</string>
 
 
 
@@ -54,42 +35,15 @@
     <!-- preferences sms code end -->
 
     <!-- preferences auto-input -->
-    <string name="pref_enable_auto_input_code_title">自动输入验证码</string>
-    <string name="pref_enable_auto_input_code_summary">尝试自动输入验证码</string>
-    <string name="pref_auto_input_accessibility_service_title">无障碍服务状态</string>
-    <string name="pref_auto_input_accessibility_service_summary">辅助查找当前验证码输入框并优先直接填入。</string>
-    <string name="pref_auto_input_accessibility_service_status_enabled">已开启</string>
-    <string name="pref_auto_input_accessibility_service_status_disabled">未开启</string>
-    <string name="pref_auto_input_accessibility_service_open_failed">无法打开无障碍设置</string>
     <string name="pref_number_non_negative_error">请输入大于等于 0 的数字。</string>
     <string name="accessibility_auto_input_service_label">XposedSmsCode</string>
     <string name="accessibility_auto_input_service_description">优先查找当前验证码输入框并直接填入，失败后再回退到模拟按键输入。</string>
-    <string name="pref_enable_auto_enter_code_title">自动确认/回车</string>
-    <string name="pref_enable_auto_enter_code_summary">填充验证码后自动触发回车操作</string>
     <string name="pref_kill_me_title">自动输入后自杀</string>
     <string name="pref_kill_me_summary">自动输入完成后主动结束应用进程，减少后台驻留</string>
-    <string name="pref_auto_input_code_delay_title">自动输入延迟</string>
-    <string name="pref_auto_input_code_delay_summary">延迟 %sms</string>
-    <string name="pref_auto_input_code_interval_title">自动输入间隔</string>
-    <string name="pref_auto_input_code_interval_summary">间隔 %sms</string>
     <!-- preferences auto-input end -->
 
     <!-- preference code notification -->
-    <string name="pref_show_code_notification_title">显示状态栏通知</string>
-    <string name="pref_show_code_notification_summary">提取到验证码时显示状态栏通知（后台不可用时显示为电话服务）</string>
-    <string name="pref_code_notification_owner_title">通知归属</string>
-    <string name="pref_code_notification_owner_summary">当前：%1$s。模块自身会显示为本应用；电话服务在部分场景更稳，但会显示为电话服务。</string>
-    <string name="pref_code_notification_owner_app">模块自身</string>
-    <string name="pref_code_notification_owner_phone">电话服务</string>
-    <string name="pref_code_notification_owner_unselected">未选择</string>
-    <string name="pref_code_notification_owner_permission_denied">通知权限仍未授予，未应用“模块自身”选择。</string>
-    <string name="pref_code_notification_owner_permission_settings_hint">模块自身通知需要通知权限，请在系统通知设置中开启。</string>
-    <string name="pref_code_notification_owner_app_option">模块自身：显示为本应用，但应用被强停后后续行为可能受影响</string>
-    <string name="pref_code_notification_owner_phone_option">电话服务：部分场景更稳，但会显示为电话服务</string>
-    <string name="pref_auto_cancel_notification_title">自动取消通知</string>
-    <string name="pref_auto_cancel_notification_summary">自动取消验证码通知</string>
     <!-- notification retention time -->
-    <string name="pref_notification_retention_time_title">通知保留时间</string>
     <string name="notification_retention_time_5_secs_entry">5 秒</string>
     <string name="notification_retention_time_10_secs_entry">10 秒</string>
     <string name="notification_retention_time_30_secs_entry">30 秒</string>
@@ -100,8 +54,6 @@
     <!-- preference code notification -->
 
     <!-- preference code records -->
-
-    <string name="pref_code_records_title">验证码记录</string>
     <string name="smscode_records">验证码记录</string>
     <string name="prompt_sms_code_copied">验证码已复制: %s</string>
     <string name="action_delete">删除</string>
@@ -121,14 +73,11 @@
     <string name="copy_sms">复制短信</string>
     <string name="delete_sms_action">删除短信</string>
     <string name="prompt_sms_copied">短信已复制</string>
-    <string name="pref_enable_code_records_title">保留验证码记录</string>
 
 
     <plurals name="selected_count">
         <item quantity="other">已选 %d 项</item>
     </plurals>
-    <string name="pref_history_limit_title">历史记录限制</string>
-    <string name="pref_history_limit_title_with_target">历史记录限制（%1$s）</string>
     <string name="record_settings_title_with_target">记录设置（%1$s）</string>
     <string name="record_settings_target_code">验证码记录</string>
 
@@ -159,8 +108,6 @@
     <string name="reset">重置</string>
     <string name="pref_smscode_test_title">验证码短信测试</string>
     <string name="pref_smscode_test_summary">测试是否能正确识别短信中的验证码</string>
-    <string name="pref_sim_slot1_remark_title">SIM1 备注</string>
-    <string name="pref_sim_slot2_remark_title">SIM2 备注</string>
     <string name="pref_sim_slot_remark_summary">这张卡收到短信时在记录里显示。留空则显示 SIM1/SIM2。</string>
     <string name="pref_sim_slot_remark_empty">未设置备注，显示 SIM 名称</string>
 
@@ -199,14 +146,9 @@
 
 
     <!-- preference others -->
-    <string name="pref_share_log_title">保存日志</string>
-    <string name="pref_share_log_summary">保存日志包用于调试</string>
-    <string name="pref_runtime_log_retention_days_title">日志保留天数</string>
     <plurals name="pref_runtime_log_retention_days_summary">
         <item quantity="other">按天轮转，保留最近 %1$d 天日志</item>
     </plurals>
-    <string name="pref_runtime_log_retention_days_hint">单位：天，最小值 1，默认 2。</string>
-    <string name="pref_runtime_log_retention_days_error">请输入大于等于 1 的整数。</string>
     <string name="runtime_log_export_failed">导出失败：%1$s</string>
     <string name="runtime_log_saved">日志已保存</string>
     <string name="runtime_log_share_failed">分享失败：%1$s</string>
@@ -215,28 +157,14 @@
     <string name="runtime_log_clear_confirm_title">清空日志</string>
     <string name="runtime_log_clear_confirm_message">确认要清空所有日志和崩溃文件吗？</string>
     <string name="runtime_log_clear_summary">清空所有运行日志和崩溃文件</string>
-    <string name="pref_log_sanitization_title">脱敏日志</string>
-    <string name="pref_log_sanitization_summary">开启后隐藏日志中的敏感信息</string>
-    <string name="pref_auto_update_on_start_title">启动时自动更新</string>
-    <string name="pref_auto_update_on_start_summary">应用启动时执行一次更新策略</string>
-    <string name="pref_auto_update_wifi_only_title">仅 Wi-Fi 自动检查更新</string>
-    <string name="pref_auto_update_wifi_only_summary">仅在 Wi-Fi 下执行启动更新检查</string>
     <!-- preference others end -->
 
     <!-- preference about -->
-
-
-    <string name="pref_join_telegram_group_title">Telegram</string>
-    <string name="pref_join_telegram_group_summary">点击加入</string>
-    <string name="pref_source_code_title">源代码</string>
     <string name="browser_install_or_enable_prompt">请先安装或启用浏览器</string>
-    <string name="pref_source_code_summary">欢迎 Star</string>
-    <string name="pref_donate_by_alipay_title">打赏感谢</string>
     <string name="alipay_install_prompt">请先安装支付宝</string>
     <string name="alipay_enable_prompt">请先启用支付宝</string>
     <string name="wechat_install_prompt">请先安装微信</string>
     <string name="wechat_enable_prompt">请先启用微信</string>
-    <string name="pref_privacy_policy_title">隐私政策</string>
     <!-- preference about end -->
 
     <!-- auto-input block settings -->
@@ -258,9 +186,6 @@
     <!-- auto-input block settings end -->
 
     <!-- code rules -->
-
-    <string name="pref_code_rules_title">验证码匹配规则</string>
-    <string name="pref_code_rules_summary">为特定短信定制验证码匹配规则</string>
     <string name="rule_company_hint">机构或公司</string>
     <string name="rule_keyword_hint">验证码关键字</string>
     <string name="rule_code_regex_hint">验证码正则表达式</string>
@@ -375,7 +300,6 @@
     <!-- code parsing notification end -->
 
     <!-- faq -->
-    <string name="action_home_faq_title">常见问题</string>
 
     <!-- faq end -->
 
@@ -401,31 +325,15 @@
     <!-- check update -->
     <string name="check_update_title">检查更新</string>
     <string name="check_update_summary">点击检查更新</string>
+    <string name="settings_track_ci_builds_title">检测CI构建</string>
+    <string name="settings_auto_check_on_start_summary">启动应用时自动检查更新。关闭后只有手动检查会触发。</string>
+    <string name="settings_auto_check_wifi_only_summary">自动检查仅在 Wi-Fi 下进行，移动网络不会自行触发检查。</string>
+    <string name="settings_track_ci_builds_summary">开启后同时检测 beta 分支的 CI 构建（可能弹出强制更新）；关闭后只跟随正式版，CI 构建会等到下一个正式版发布后接上。</string>
     <!-- check update end -->
 
 
 
     <!-- faq -->
-    <string-array name="question_list">
-        <item>更新后发现显示模块未激活？</item>
-        <item>Android 15 系统不定期闪退？</item>
-        <item>手机发烫是怎么回事？</item>
-        <item>自动输入不完整，怎么办？</item>
-        <item>模块失效怎么办？</item>
-        <item>短信标记为已读或者删除短信，为什么不生效？</item>
-        <item>这个模块适用的Rom是什么？</item>
-        <item>产品初衷是什么？</item>
-    </string-array>
-    <string-array name="answer_list">
-        <item>重新在模块列表勾选本模块，强行停止本应用并重新打开，或者重启手机。</item>
-        <item>Android 15 引入了新的系统机制，请确保使用最新版 LSPosed 并正确配置作用域。</item>
-        <item>本模块极轻量，如果严重发烫请排查是否与其他模块冲突。</item>
-        <item>自动输入不完整，一般是因为自动输入的过程中焦点被抢占。通常的解决方案是：检查是否有监控剪切板的应用在后台工作(比如fv悬浮球)，然后关闭这些应用对剪贴板的监控，或者关闭本模块的“复制到剪切板”选项。</item>
-        <item>1. 因为使用到ContentProvider，所以需要放在应用控制类软件(黑域、应用管理、绿色守护等)白名单中。\n\n2. 检查模块的组件(ContentProvider)是否被禁用。\n\n3. 检查是否打开验证码安全保护开关(华为，OPPO等国内Rom)。\n\n4. 联系开发者，反馈问题。</item>
-        <item>如果您设备上默认的短信 App 使用的是它自己的短信数据库，而不是系统的短信数据库，那么标记为已读或者删除短信操作可能不会生效。</item>
-        <item>适用于基于 AOSP 的原生类 Rom，在其他重度定制的 Rom 可能运行效果不佳。</item>
-        <item>不做毒瘤，绿色 Android。</item>
-    </string-array>
     <!-- faq end -->
 
     <!-- privacy policy start -->
@@ -483,10 +391,6 @@
     <string name="mobile_entitlement_or">或者</string>
 
     <!-- backup and restore -->
-    <string name="pref_backup_title">备份</string>
-    <string name="pref_backup_summary">导出设置、规则和记录</string>
-    <string name="pref_restore_title">恢复</string>
-    <string name="pref_restore_summary">从备份文件恢复数据</string>
     <string name="dialog_backup_title">备份选择</string>
     <string name="dialog_restore_title">恢复确认</string>
     <string name="dialog_backup_msg">选择要备份的数据：</string>

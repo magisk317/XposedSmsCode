@@ -38,6 +38,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.magisk317.smscode.presentation.R
+import io.github.magisk317.uikit.R as UiKitR
 import io.github.magisk317.uikit.scroll.ScrollChromeState
 import io.github.magisk317.uikit.surface.AppTopBar
 import io.github.magisk317.uikit.surface.DoubleTapToTopOverlay
@@ -158,7 +159,7 @@ internal fun CodeRecordScreenMiuix(
                             AppIconButton(onClick = onOpenSettings) {
                                 AppIcon(
                                     Icons.Default.Tune,
-                                    contentDescription = stringResource(R.string.pref_code_records_title),
+                                    contentDescription = stringResource(UiKitR.string.pref_code_records_title),
                                 )
                             }
                             AppIconButton(onClick = onOpenExport) {

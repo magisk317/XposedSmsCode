@@ -12,26 +12,13 @@
     <!-- general end -->
 
     <!-- preferences general -->
-    <string name="pref_general_title">General</string>
-    <string name="pref_enable_title">Main switch</string>
-    <string name="pref_enable_summary">Module active</string>
     <string name="pref_settings_display_mode_title">Accordion mode</string>
-    <string name="pref_settings_display_mode_summary">On: collapsible groups; Off: show all settings</string>
-
-    <string name="pref_show_launcher_icon_title">Show launcher icon</string>
-    <string name="pref_show_launcher_icon_summary">Show app icon on the home screen for quick access</string>
-    <string name="pref_show_launcher_icon_failed">Failed to switch launcher icon visibility</string>
-    <string name="pref_choose_theme_title">Theme</string>
-    <string name="pref_choose_theme_summary">Follow System, Light, Dark or Pure Black</string>
-    <string name="pref_ui_kit_style_title">UI style</string>
     <string name="ui_kit_style_expressive">Expressive</string>
     <string name="ui_kit_style_miuix">Miuix</string>
     <string name="theme_follow_system">Automatic (Follow System)</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <string name="theme_black">Pure Black</string>
-    <string name="pref_language_title">Language</string>
-    <string name="pref_language_summary">Select language</string>
     <string name="language_follow_system">System Default/跟随系统</string>
     <string name="language_en">English</string>
     <string name="language_zh_cn">简体中文</string>
@@ -40,12 +27,6 @@
     <!-- preferences general end -->
 
     <!-- preferences sms code -->
-    <string name="pref_show_toast_title">Show toast hint</string>
-    <string name="pref_show_toast_summary">Show a toast hint when an SMS code is extracted</string>
-    <string name="pref_copy_to_clipboard_title">Copy to clipboard</string>
-    <string name="pref_copy_to_clipboard_summary">Copy code to clipboard if it\'s extracted</string>
-    <string name="pref_block_sms_title">Block code SMS</string>
-    <string name="pref_block_sms_summary">Warning! Code SMS will be blocked if extract succeed, message app won\'t receive it</string>
 
 
 
@@ -54,42 +35,15 @@
     <!-- preferences sms code end -->
 
     <!-- preferences auto-input -->
-    <string name="pref_enable_auto_input_code_title">Auto input SMS code</string>
-    <string name="pref_enable_auto_input_code_summary">Try to input SMS code automatically</string>
-    <string name="pref_auto_input_accessibility_service_title">Accessibility service status</string>
-    <string name="pref_auto_input_accessibility_service_summary">Helps find the active verification field and fill the code directly.</string>
-    <string name="pref_auto_input_accessibility_service_status_enabled">Enabled</string>
-    <string name="pref_auto_input_accessibility_service_status_disabled">Not enabled</string>
-    <string name="pref_auto_input_accessibility_service_open_failed">Unable to open Accessibility settings</string>
     <string name="pref_number_non_negative_error">Please enter a number greater than or equal to 0.</string>
     <string name="accessibility_auto_input_service_label">XposedSmsCode</string>
     <string name="accessibility_auto_input_service_description">Find the active verification code input box and fill it before falling back to simulated key input.</string>
-    <string name="pref_enable_auto_enter_code_title">Auto-Enter/Submit</string>
-    <string name="pref_enable_auto_enter_code_summary">Automatically trigger Enter after filling the code</string>
     <string name="pref_kill_me_title">Kill app after auto input</string>
     <string name="pref_kill_me_summary">After auto input finishes, kill the app process to reduce background residency</string>
-    <string name="pref_auto_input_code_delay_title">Auto input delay</string>
-    <string name="pref_auto_input_code_delay_summary">Delay %sms</string>
-    <string name="pref_auto_input_code_interval_title">Auto input interval</string>
-    <string name="pref_auto_input_code_interval_summary">Interval %sms</string>
     <!-- preferences auto-input end -->
 
     <!-- preference code notification -->
-    <string name="pref_show_code_notification_title">Show status bar notification</string>
-    <string name="pref_show_code_notification_summary">Show a status bar notification when an SMS code is extracted (shown as Phone Services when background is unavailable)</string>
-    <string name="pref_code_notification_owner_title">Notification owner</string>
-    <string name="pref_code_notification_owner_summary">Current: %1$s. App owner shows your module name; Phone Services may be steadier in some scenarios, but it will be shown as Phone Services.</string>
-    <string name="pref_code_notification_owner_app">App</string>
-    <string name="pref_code_notification_owner_phone">Phone Services</string>
-    <string name="pref_code_notification_owner_unselected">Not selected</string>
-    <string name="pref_code_notification_owner_permission_denied">Notification permission is still not granted. The App owner selection was not applied.</string>
-    <string name="pref_code_notification_owner_permission_settings_hint">App-owned notifications require notification permission. Please enable it in the system notification settings.</string>
-    <string name="pref_code_notification_owner_app_option">App: displayed as this app, but app force-stop may affect follow-up behavior</string>
-    <string name="pref_code_notification_owner_phone_option">Phone Services: steadier in some scenarios, but displayed as Phone Services</string>
-    <string name="pref_auto_cancel_notification_title">Auto cancel notification</string>
-    <string name="pref_auto_cancel_notification_summary">Auto cancel SMS code notification</string>
     <!-- notification retention time -->
-    <string name="pref_notification_retention_time_title">Notification retention time</string>
     <string name="notification_retention_time_5_secs_entry">5 s</string>
     <string name="notification_retention_time_10_secs_entry">10 s</string>
     <string name="notification_retention_time_30_secs_entry">30 s</string>
@@ -99,8 +53,6 @@
     <!-- preference code notification -->
 
     <!-- preference code records -->
-
-    <string name="pref_code_records_title">SMS Code Records</string>
     <string name="smscode_records">Code Records</string>
     <string name="prompt_sms_code_copied">SMS Code copied: %s</string>
     <string name="action_delete">Delete</string>
@@ -121,15 +73,12 @@
     <string name="copy_sms">Copy Message</string>
     <string name="delete_sms_action">Delete SMS</string>
     <string name="prompt_sms_copied">SMS copied</string>
-    <string name="pref_enable_code_records_title">Reserve SMS code records</string>
 
 
     <plurals name="selected_count">
         <item quantity="one">%d selected</item>
         <item quantity="other">%d selected</item>
     </plurals>
-    <string name="pref_history_limit_title">History record limit</string>
-    <string name="pref_history_limit_title_with_target">History record limit (%1$s)</string>
     <string name="record_settings_title_with_target">Record settings (%1$s)</string>
     <string name="record_settings_target_code">Code records</string>
 
@@ -160,8 +109,6 @@
     <string name="reset">Reset</string>
     <string name="pref_smscode_test_title">SMS code test</string>
     <string name="pref_smscode_test_summary">Test whether SMS code can be recognized or not</string>
-    <string name="pref_sim_slot1_remark_title">SIM1 remark</string>
-    <string name="pref_sim_slot2_remark_title">SIM2 remark</string>
     <string name="pref_sim_slot_remark_summary">Shown in records when this SIM receives a message. Leave empty to show SIM 1/SIM 2.</string>
     <string name="pref_sim_slot_remark_empty">No remark, show SIM name</string>
 
@@ -199,15 +146,10 @@
 
 
     <!-- preference others -->
-    <string name="pref_share_log_title">Save logs</string>
-    <string name="pref_share_log_summary">Save log bundle for debugging</string>
-    <string name="pref_runtime_log_retention_days_title">Runtime log retention</string>
     <plurals name="pref_runtime_log_retention_days_summary">
         <item quantity="one">Daily rotation, keep the last %1$d day</item>
         <item quantity="other">Daily rotation, keep the last %1$d days</item>
     </plurals>
-    <string name="pref_runtime_log_retention_days_hint">Retention in days, minimum 1. Default is 2.</string>
-    <string name="pref_runtime_log_retention_days_error">Please enter an integer greater than or equal to 1.</string>
     <string name="runtime_log_export_failed">Export failed: %1$s</string>
     <string name="runtime_log_saved">Logs saved</string>
     <string name="runtime_log_share_failed">Share failed: %1$s</string>
@@ -216,28 +158,14 @@
     <string name="runtime_log_clear_confirm_title">Clear logs</string>
     <string name="runtime_log_clear_confirm_message">Are you sure you want to clear all logs and crash files?</string>
     <string name="runtime_log_clear_summary">Clear all runtime logs and crash files</string>
-    <string name="pref_log_sanitization_title">Sanitize logs</string>
-    <string name="pref_log_sanitization_summary">Hide sensitive information in logs</string>
-    <string name="pref_auto_update_on_start_title">Auto update on launch</string>
-    <string name="pref_auto_update_on_start_summary">Run update strategy once when app starts</string>
-    <string name="pref_auto_update_wifi_only_title">Wi-Fi only for auto update</string>
-    <string name="pref_auto_update_wifi_only_summary">Only run startup update check on Wi-Fi</string>
     <!-- preference others end -->
 
     <!-- preference about -->
-
-
-    <string name="pref_join_telegram_group_title">Telegram</string>
-    <string name="pref_join_telegram_group_summary">Tap to join</string>
-    <string name="pref_source_code_title">Source code</string>
     <string name="browser_install_or_enable_prompt">Please install or enable browser first</string>
-    <string name="pref_source_code_summary">Welcome to star</string>
-    <string name="pref_donate_by_alipay_title">Donation Appreciation</string>
     <string name="alipay_install_prompt">Please install Alipay</string>
     <string name="alipay_enable_prompt">Please enable Alipay</string>
     <string name="wechat_install_prompt">Please install Wechat</string>
     <string name="wechat_enable_prompt">Please enable Wechat</string>
-    <string name="pref_privacy_policy_title">Privacy Policy</string>
     <!-- preference about end -->
 
     <!-- auto-input block settings -->
@@ -259,9 +187,6 @@
     <!-- auto-input block settings end -->
 
     <!-- code rules -->
-
-    <string name="pref_code_rules_title">SMS code match rules</string>
-    <string name="pref_code_rules_summary">Custom code match rules for specific SMS</string>
     <string name="rule_company_hint">Institution or company</string>
     <string name="rule_keyword_hint">Code keyword</string>
     <string name="rule_code_regex_hint">Code regular expression</string>
@@ -377,7 +302,6 @@
     <!-- code parsing notification end -->
 
     <!-- faq -->
-    <string name="action_home_faq_title">FAQ</string>
 
     <!-- faq end -->
 
@@ -409,30 +333,14 @@
     <!-- check update -->
     <string name="check_update_title">Check for updates</string>
     <string name="check_update_summary">Tap to check updates</string>
+    <string name="settings_track_ci_builds_title">Detect CI builds</string>
+    <string name="settings_auto_check_on_start_summary">Check for updates when the app starts. Off means only the manual check runs.</string>
+    <string name="settings_auto_check_wifi_only_summary">Restrict the automatic check to Wi-Fi. Cellular never starts a check on its own.</string>
+    <string name="settings_track_ci_builds_summary">Also probe beta-branch CI builds (a mandatory-update prompt is possible). Off follows official releases only; a CI build then waits for the next release to catch up.</string>
     <!-- check update end -->
 
 
     <!-- faq -->
-    <string-array name="question_list">
-        <item>Module inactive after being updated?</item>
-        <item>Why does Android 15 crash intermittently?</item>
-        <item>Why is the phone heating up?</item>
-        <item>Why is auto input incomplete?</item>
-        <item>What should I do if the module stops working?</item>
-        <item>Why cannot SMS be marked as read or deleted?</item>
-        <item>Which ROM is this module suitable for?</item>
-        <item>What is the original intention of this app?</item>
-    </string-array>
-    <string-array name="answer_list">
-        <item>Re-check this module in the module list, force-stop and reopen this app, or reboot the phone if necessary.</item>
-        <item>Android 15 introduced new system behavior. Use the latest LSPosed and configure its scope correctly.</item>
-        <item>This module is lightweight. If the phone heats up severely, check for conflicts with other modules.</item>
-        <item>Auto input can be incomplete when another app takes focus. Check for clipboard-monitoring apps and disable them, or disable the module\'s Copy to clipboard option.</item>
-        <item>1. Add the app to the allowlist of battery or process managers.\n\n2. Check whether the module components are disabled.\n\n3. Check whether the ROM\'s verification-code protection is enabled.\n\n4. Contact the developer with details.</item>
-        <item>If the default SMS app uses its own database instead of the system SMS database, marking or deleting messages may not work on the device.</item>
-        <item>It is designed for AOSP-based ROMs and may work poorly on heavily customized ROMs.</item>
-        <item>Build a clean, green Android.</item>
-    </string-array>
     <!-- faq end -->
 
     <!-- privacy policy start -->
@@ -489,10 +397,6 @@
     <string name="mobile_entitlement_or">Or</string>
 
     <!-- backup and restore -->
-    <string name="pref_backup_title">Backup</string>
-    <string name="pref_backup_summary">Export settings, rules and records</string>
-    <string name="pref_restore_title">Restore</string>
-    <string name="pref_restore_summary">Restore data from backup file</string>
     <string name="dialog_backup_title">Backup Selection</string>
     <string name="dialog_restore_title">Confirm Restore</string>
     <string name="dialog_backup_msg">Select data to backup:</string>
