@@ -4,6 +4,7 @@ import io.github.magisk317.smscode.common.constant.PrefConst
 import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import android.content.Context
 import io.github.magisk317.smscode.runtime.BuildConfig
+import io.github.magisk317.xposed.runtime.state.RuntimeActivationRule
 import io.github.magisk317.xposed.runtime.state.RuntimeDiagnosticsSnapshot
 import io.github.magisk317.xposed.runtime.state.RuntimeStatusInputs
 import io.github.magisk317.smscode.runtime.common.diagnostics.RuntimeDiagnosticsConfig
@@ -55,6 +56,6 @@ object RuntimeDiagnosticsBridge {
         snapshot: RuntimeDiagnosticsSnapshot,
         inputs: RuntimeStatusInputs,
     ): Boolean {
-        return inputs.runtimeConnected || inputs.hasHookHeartbeat
+        return RuntimeActivationRule.isActivated(inputs)
     }
 }
