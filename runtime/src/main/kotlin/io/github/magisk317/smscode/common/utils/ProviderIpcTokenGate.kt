@@ -1,5 +1,7 @@
 package io.github.magisk317.smscode.common.utils
 
+import io.github.magisk317.xposed.runtime.RuntimeStateProviderClient
+
 import android.content.Context
 import android.net.Uri
 import android.os.Bundle
@@ -25,7 +27,7 @@ import kotlinx.coroutines.runBlocking
  */
 object ProviderIpcTokenGate {
     const val PARAM_IPC_TOKEN = "ipc_token"
-    const val EXTRA_IPC_TOKEN = "ipc_token"
+    const val EXTRA_IPC_TOKEN = RuntimeStateProviderClient.EXTRA_IPC_TOKEN
 
     fun presentedToken(uri: Uri?): String? =
         uri?.getQueryParameter(PARAM_IPC_TOKEN)?.takeIf { it.isNotBlank() }

@@ -4,8 +4,6 @@ import io.github.magisk317.smscode.common.constant.PrefConst
 import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import android.content.Context
 import io.github.magisk317.smscode.runtime.BuildConfig
-import io.github.magisk317.xposed.runtime.state.RuntimeDiagnosticsSnapshot
-import io.github.magisk317.xposed.runtime.state.RuntimeStatusInputs
 import io.github.magisk317.smscode.runtime.common.diagnostics.RuntimeDiagnosticsConfig
 import io.github.magisk317.smscode.runtime.common.diagnostics.RuntimeDiagnosticsInstaller
 import io.github.magisk317.xposed.logging.MagiskLogPolicy
@@ -25,8 +23,6 @@ object RuntimeDiagnosticsBridge {
                 distributionChannel = BuildConfig.MOBILE_ENTITLEMENT_CHANNEL,
                 commitHash = BuildConfig.COMMIT_HASH,
                 logRetentionDaysProvider = ::readConfiguredLogRetentionDays,
-                runtimeConnectedProvider = ModuleUtils::isRuntimeActivated,
-                activationStatusResolver = ::resolveActivationStatus,
                 routeResolver = { io.github.magisk317.smscode.runtime.common.diagnostics.RuntimeLogStore.ROUTE_APP },
             )
         },
@@ -48,13 +44,5 @@ object RuntimeDiagnosticsBridge {
                 MagiskLogPolicy.DEFAULT_LOG_RETENTION_DAYS,
             )
         }.let(MagiskLogPolicy::retentionDays)
-    }
-
-    private fun resolveActivationStatus(
-        context: Context,
-        snapshot: RuntimeDiagnosticsSnapshot,
-        inputs: RuntimeStatusInputs,
-    ): Boolean {
-        return inputs.runtimeConnected || inputs.hasHookHeartbeat
     }
 }

@@ -16,7 +16,6 @@ import io.github.magisk317.uikit.entitlement.MobileGate
 import io.github.magisk317.smscode.common.utils.XscPreferenceHooks
 import io.github.magisk317.smscode.common.utils.HookPreferenceMirror
 import io.github.magisk317.xposed.capability.utils.ModuleActivationStore
-import io.github.magisk317.xposed.capability.utils.ModuleUtils
 import io.github.magisk317.smscode.common.utils.RuntimeDiagnosticsBridge
 import io.github.magisk317.smscode.runtime.common.diagnostics.RuntimeCrashLogs
 import io.github.magisk317.smscode.runtime.common.diagnostics.RuntimeLogStore
@@ -286,7 +285,7 @@ class SmsCodeApplication : Application() {
                 HookPreferenceMirror.publish(this@SmsCodeApplication)
             }
         }
-        ModuleUtils.setRuntimeActivated(true)
+        RuntimeStateStore.setRuntimeConnected(true)
         ModuleActivationStore.markActivated(this)
         RuntimeStateStore.recordServiceBind(
             context = this,
@@ -315,7 +314,7 @@ class SmsCodeApplication : Application() {
 
     internal fun handleXposedServiceDied() {
         AppPreferencesDataStore.setRemotePrefsProvider(null)
-        ModuleUtils.setRuntimeActivated(false)
+        RuntimeStateStore.setRuntimeConnected(false)
         RuntimeStateStore.recordServiceDied(
             context = this,
             verboseLogging = readVerboseLogMode(),

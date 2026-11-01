@@ -4,6 +4,7 @@ import io.github.magisk317.smscode.common.constant.PrefConst
 import io.github.magisk317.smscode.common.utils.HookPreferenceMirror
 import io.github.magisk317.xposed.logging.MagiskOtel
 import io.github.magisk317.xposed.logging.XLog
+import io.github.magisk317.xposed.service.FrameworkHookTargets
 import io.github.magisk317.xposed.service.ServiceState
 import io.github.magisk317.xposed.service.XposedServiceBridge as KitServiceBridge
 import kotlinx.coroutines.CoroutineScope
@@ -56,6 +57,7 @@ internal object XposedServiceBridge {
             bound.service.frameworkName,
             bound.service.frameworkVersion,
         )
+        FrameworkHookTargets.record(application, bound.service)
         application.handleXposedServiceBound(
             remotePrefsProvider = { bound.service.getRemotePreferences(PrefConst.REMOTE_PREFS_GROUP) },
             frameworkName = bound.service.frameworkName,
