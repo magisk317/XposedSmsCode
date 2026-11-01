@@ -23,6 +23,8 @@ import io.github.magisk317.smscode.db.entity.SmsCodeRule
 import io.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.smscode.runtime.bridge.HookRuntimeGateClaimResult
 import io.github.magisk317.xposed.runtime.state.RuntimeStateStore
+import io.github.magisk317.xposed.runtime.RuntimeStateProviderAddress
+import io.github.magisk317.xposed.runtime.RuntimeStateProviderClient
 import io.github.magisk317.xposed.runtime.RuntimeStateProviderContract
 import io.github.magisk317.smscode.runtime.common.utils.SharedRuntimeGate
 import io.github.magisk317.smscode.runtime.common.utils.StorageUtils
@@ -33,21 +35,21 @@ import java.util.Locale
 class DBProvider : ContentProvider() {
     private var mDbManager: DBManager? = null
     private lateinit var uriMatcher: UriMatcher
-    private lateinit var authority: String
+    private lateinit var providerAuthority: String
 
     override fun onCreate(): Boolean {
         val ctx = context ?: return false
         mDbManager = DBManager.get(ctx)
         StorageUtils.repairExternalAppDataPermissions(ctx)
-        authority = "${ctx.packageName}.db.provider"
+        providerAuthority = authority()
         uriMatcher = UriMatcher(UriMatcher.NO_MATCH).apply {
-            addURI(authority, PATH_SMS_MSG, SMS_MSG_DIR)
-            addURI(authority, "$PATH_SMS_MSG/#", SMS_MSG_ID)
-            addURI(authority, PATH_SMS_CODE_RULE, SMS_CODE_RULE_DIR)
-            addURI(authority, "$PATH_SMS_CODE_RULE/#", SMS_CODE_RULE_ID)
-            addURI(authority, PATH_APP_INFO, APP_INFO_DIR)
-            addURI(authority, "$PATH_APP_INFO/*", APP_INFO_ITEM)
-            addURI(authority, PATH_AUTO_INPUT_EVENT, AUTO_INPUT_EVENT_DIR)
+            addURI(providerAuthority, PATH_SMS_MSG, SMS_MSG_DIR)
+            addURI(providerAuthority, "$PATH_SMS_MSG/#", SMS_MSG_ID)
+            addURI(providerAuthority, PATH_SMS_CODE_RULE, SMS_CODE_RULE_DIR)
+            addURI(providerAuthority, "$PATH_SMS_CODE_RULE/#", SMS_CODE_RULE_ID)
+            addURI(providerAuthority, PATH_APP_INFO, APP_INFO_DIR)
+            addURI(providerAuthority, "$PATH_APP_INFO/*", APP_INFO_ITEM)
+            addURI(providerAuthority, PATH_AUTO_INPUT_EVENT, AUTO_INPUT_EVENT_DIR)
         }
         return true
     }
@@ -780,23 +782,22 @@ class DBProvider : ContentProvider() {
         // packageName is the scope app (com.android.phone etc.) — an authority that
         // does not exist, so every cross-process heartbeat/gate call silently
         // no-ops (2026-10-31: last_hook_at_ms stayed 0, the app showed 未激活).
-        fun authority(@Suppress("UNUSED_PARAMETER") context: Context): String =
-            "${RuntimeBuildConfig.APPLICATION_ID}.db.provider"
+        fun authority(): String = RuntimeStateProviderAddress.authorityOf(RuntimeBuildConfig.APPLICATION_ID)
 
-        fun smsMsgContentUri(context: Context): Uri =
-            "content://${context.packageName}.db.provider/$PATH_SMS_MSG".toUri()
+        /** Kept for the callers that pass a context along; the context is not the address. */
+        fun authority(@Suppress("UNUSED_PARAMETER") context: Context): String = authority()
 
-        fun smsCodeRuleContentUri(context: Context): Uri =
-            "content://${context.packageName}.db.provider/$PATH_SMS_CODE_RULE".toUri()
+        fun smsMsgContentUri(@Suppress("UNUSED_PARAMETER") context: Context): Uri =
+            "content://${authority()}/$PATH_SMS_MSG".toUri()
 
-        fun appInfoContentUri(context: Context): Uri =
-            "content://${context.packageName}.db.provider/$PATH_APP_INFO".toUri()
+        fun smsCodeRuleContentUri(@Suppress("UNUSED_PARAMETER") context: Context): Uri =
+            "content://${authority()}/$PATH_SMS_CODE_RULE".toUri()
 
-        fun autoInputEventContentUri(context: Context): Uri =
-            "content://${context.packageName}.db.provider/$PATH_AUTO_INPUT_EVENT".toUri()
+        fun appInfoContentUri(@Suppress("UNUSED_PARAMETER") context: Context): Uri =
+            "content://${authority()}/$PATH_APP_INFO".toUri()
 
-        private fun runtimeStateContentUri(context: Context): Uri =
-            "content://${authority(context)}".toUri()
+        fun autoInputEventContentUri(@Suppress("UNUSED_PARAMETER") context: Context): Uri =
+            "content://${authority()}/$PATH_AUTO_INPUT_EVENT".toUri()
 
         fun claimRuntimeGate(
             context: Context,
@@ -806,30 +807,19 @@ class DBProvider : ContentProvider() {
             maxEntries: Int = RuntimeStateProviderContract.DEFAULT_MAX_ENTRIES,
             token: String? = null,
         ): HookRuntimeGateClaimResult {
-            val extras = Bundle().apply {
-                putStringArrayList(RuntimeStateProviderContract.EXTRA_KEYS, ArrayList(keys))
-                putLong(RuntimeStateProviderContract.EXTRA_WINDOW_MS, windowMs)
-                putInt(RuntimeStateProviderContract.EXTRA_MAX_ENTRIES, maxEntries)
-                if (!token.isNullOrBlank()) {
-                    putString(ProviderIpcTokenGate.EXTRA_IPC_TOKEN, token)
-                }
-            }
-            val result = runCatching {
-                context.contentResolver.call(
-                    runtimeStateContentUri(context),
-                    RuntimeStateProviderContract.METHOD_CLAIM_RUNTIME_GATE,
-                    fileName,
-                    extras,
-                )
-            }.getOrNull()
-            val age = result?.getLong(
-                RuntimeStateProviderContract.RESULT_AGE_MS,
-                RuntimeStateProviderContract.NO_AGE_MS,
-            ) ?: RuntimeStateProviderContract.NO_AGE_MS
+            val claim = RuntimeStateProviderClient.claimRuntimeGate(
+                context = context,
+                applicationId = RuntimeBuildConfig.APPLICATION_ID,
+                fileName = fileName,
+                keys = keys,
+                windowMs = windowMs,
+                maxEntries = maxEntries,
+                token = token,
+            )
             return HookRuntimeGateClaimResult(
-                claimed = result?.getBoolean(RuntimeStateProviderContract.RESULT_CLAIMED, true) ?: true,
-                ageMs = age.takeIf { it >= 0L },
-                blockedKey = result?.getString(RuntimeStateProviderContract.RESULT_BLOCKED_KEY),
+                claimed = claim.claimed,
+                ageMs = claim.ageMs,
+                blockedKey = claim.blockedKey,
             )
         }
 
@@ -841,26 +831,16 @@ class DBProvider : ContentProvider() {
             verboseLogging: Boolean,
             route: String,
             token: String? = null,
-        ): Boolean {
-            val extras = Bundle().apply {
-                putString(RuntimeStateProviderContract.EXTRA_PACKAGE_NAME, packageName)
-                putString(RuntimeStateProviderContract.EXTRA_PROCESS_NAME, processName)
-                putString(RuntimeStateProviderContract.EXTRA_SOURCE, source)
-                putBoolean(RuntimeStateProviderContract.EXTRA_VERBOSE_LOGGING, verboseLogging)
-                putString(RuntimeStateProviderContract.EXTRA_ROUTE, route)
-                if (!token.isNullOrBlank()) {
-                    putString(ProviderIpcTokenGate.EXTRA_IPC_TOKEN, token)
-                }
-            }
-            return runCatching {
-                context.contentResolver.call(
-                    runtimeStateContentUri(context),
-                    RuntimeStateProviderContract.METHOD_RECORD_HOOK_HEARTBEAT,
-                    null,
-                    extras,
-                )?.getBoolean(RuntimeStateProviderContract.RESULT_OK, false) == true
-            }.getOrDefault(false)
-        }
+        ): Boolean = RuntimeStateProviderClient.recordHookHeartbeat(
+            context = context,
+            applicationId = RuntimeBuildConfig.APPLICATION_ID,
+            packageName = packageName,
+            processName = processName,
+            source = source,
+            verboseLogging = verboseLogging,
+            route = route,
+            token = token,
+        )
 
         /**
          * Notify-only signal URI for hook-side prefs cache invalidation.
