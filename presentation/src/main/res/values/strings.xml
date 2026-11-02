@@ -336,7 +336,7 @@
     <string name="settings_track_ci_builds_title">Detect CI builds</string>
     <string name="settings_auto_check_on_start_summary">Check for updates when the app starts. Off means only the manual check runs.</string>
     <string name="settings_auto_check_wifi_only_summary">Restrict the automatic check to Wi-Fi. Cellular never starts a check on its own.</string>
-    <string name="settings_track_ci_builds_summary">Also probe beta-branch CI builds (a mandatory-update prompt is possible). Off follows official releases only; a CI build then waits for the next release to catch up.</string>
+    <string name="settings_track_ci_builds_summary">Also probe beta-branch CI builds. Off follows official releases only; a CI build then waits for the next release to catch up.</string>
     <!-- check update end -->
 
 
