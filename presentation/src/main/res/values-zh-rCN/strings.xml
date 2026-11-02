@@ -328,7 +328,7 @@
     <string name="settings_track_ci_builds_title">检测CI构建</string>
     <string name="settings_auto_check_on_start_summary">启动应用时自动检查更新。关闭后只有手动检查会触发。</string>
     <string name="settings_auto_check_wifi_only_summary">自动检查仅在 Wi-Fi 下进行，移动网络不会自行触发检查。</string>
-    <string name="settings_track_ci_builds_summary">开启后同时检测 beta 分支的 CI 构建（可能弹出强制更新）；关闭后只跟随正式版，CI 构建会等到下一个正式版发布后接上。</string>
+    <string name="settings_track_ci_builds_summary">开启后同时检测 beta 分支的 CI 构建；关闭后只跟随正式版，CI 构建会等到下一个正式版发布后接上。</string>
     <!-- check update end -->
 
 

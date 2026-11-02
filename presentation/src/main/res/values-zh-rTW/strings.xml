@@ -323,7 +323,7 @@
     <string name="settings_track_ci_builds_title">偵測CI建置</string>
     <string name="settings_auto_check_on_start_summary">啟動應用時自動檢查更新。關閉後只有手動檢查會觸發。</string>
     <string name="settings_auto_check_wifi_only_summary">自動檢查僅在 Wi-Fi 下進行，行動網路不會自行觸發檢查。</string>
-    <string name="settings_track_ci_builds_summary">開啟後同時偵測 beta 分支的 CI 建置（可能彈出強制更新）；關閉後只跟隨正式版，CI 建置會等到下一個正式版發布後接上。</string>
+    <string name="settings_track_ci_builds_summary">開啟後同時偵測 beta 分支的 CI 建置；關閉後只跟隨正式版，CI 建置會等到下一個正式版發布後接上。</string>
     <!-- check update end -->
 
 
