@@ -69,7 +69,7 @@ class SmsCodeApplication : Application() {
         MagiskLogPolicy.install(
             // -PminifyDebug makes the debug variant non-debuggable, which clears
             // BuildConfig.DEBUG; the build type still identifies the capture channel.
-            isDebugBuild = BuildConfig.BUILD_TYPE == "debug",
+            isDebugBuild = BuildConfig.DEBUG || BuildConfig.IS_CI_BUILD,
             allowPlaintextLogs = BuildConfig.ALLOW_PLAINTEXT_LOGS,
         )
         RuntimeCrashLogs.install(this)

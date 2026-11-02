@@ -211,6 +211,7 @@ android:build:
     - if: '$CI_COMMIT_BRANCH && $RELEASE_KEYSTORE != "" && $STORE_PASSWORD != "" && $KEY_ALIAS != "" && $KEY_PASSWORD != ""'
     - when: never
   variables:
+    MAGISK_IS_CI_BUILD: "true"
     MAGISK_ANDROID_BUILD_TASKS: >-
       :app:assembleGithubDebug
       -PbuildSplits

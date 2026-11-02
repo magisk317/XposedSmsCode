@@ -200,7 +200,7 @@ object XposedRuntimeInstaller {
         // The hook process is its own JVM: it has to install the same build-derived policy the
         // app installed, because nothing carries it across the process boundary.
         val policy = MagiskLogPolicy.install(
-            isDebugBuild = BuildConfig.BUILD_TYPE == "debug",
+            isDebugBuild = BuildConfig.DEBUG || BuildConfig.IS_CI_BUILD,
             allowPlaintextLogs = BuildConfig.ALLOW_PLAINTEXT_LOGS,
         )
         RuntimeDiagnosticsBridge.ensureInstalled()
