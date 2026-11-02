@@ -3,9 +3,25 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-TOOLKIT_DIR="${MAGISK_CI_TOOLKIT_DIR:-${ROOT_DIR}/.magisk-ci-toolkit}"
+TOOLKIT_DIR_RAW="${MAGISK_CI_TOOLKIT_DIR:-${ROOT_DIR}/.magisk-ci-toolkit}"
+TOOLKIT_PARENT="$(dirname "$TOOLKIT_DIR_RAW")"
+[[ -d "$TOOLKIT_PARENT" ]] || {
+  echo "toolkit parent directory does not exist: $TOOLKIT_PARENT" >&2
+  exit 1
+}
+TOOLKIT_PARENT="$(cd "$TOOLKIT_PARENT" && pwd)"
+TOOLKIT_DIR="${TOOLKIT_PARENT}/$(basename "$TOOLKIT_DIR_RAW")"
 TOOLKIT_REPOSITORY="${MAGISK_CI_TOOLKIT_REPOSITORY:-https://gitlab.com/magisk3171/shared/magisk-ci-toolkit.git}"
 TOOLKIT_REF="${MAGISK_CI_TOOLKIT_REF:-6c91f79ba86c8ca7423c7510a82dbcdd7ad0cf34}"
+TOOLKIT_OWNER_MARKER=.magisk-ci-toolkit-owned
+[[ "$TOOLKIT_DIR" != / && "$TOOLKIT_DIR" != "$ROOT_DIR" ]] || {
+  echo "refusing unsafe toolkit directory: $TOOLKIT_DIR" >&2
+  exit 1
+}
+[[ ! -L "$TOOLKIT_DIR" ]] || {
+  echo "refusing symlink toolkit directory: $TOOLKIT_DIR" >&2
+  exit 1
+}
 # The toolkit lives in a private repository, so an anonymous fetch gets HTTP 401
 # ("could not read Username for 'https://gitlab.com'"). Inject the job token when
 # GitLab CI provides one. Skip injection when the URL already carries credentials
@@ -15,47 +31,126 @@ if [[ -n "${CI_JOB_TOKEN:-}" && "$TOOLKIT_REPOSITORY" == https://gitlab.com/* &&
   TOOLKIT_REPOSITORY_AUTH="${TOOLKIT_REPOSITORY/https:\/\//https:\/\/gitlab-ci-token:${CI_JOB_TOKEN}@}"
 fi
 
-if [[ ! -d "$TOOLKIT_DIR/.git" ]]; then
-  rm -rf -- "$TOOLKIT_DIR"
-  git init --quiet "$TOOLKIT_DIR" >&2
-  git -C "$TOOLKIT_DIR" remote add origin "$TOOLKIT_REPOSITORY_AUTH" >&2
-elif git -C "$TOOLKIT_DIR" remote get-url origin >/dev/null 2>&1; then
+repository_identity() {
+  local url="$1"
+  case "$url" in
+    http://*|https://*)
+      url="${url#*://}"
+      url="${url#*@}"
+      ;;
+  esac
+  printf '%s\n' "${url%/}"
+}
+
+write_owner_marker() {
+  local directory="$1"
+  printf 'managed by scripts/resolve_ci_toolkit.sh\n' > "$directory/$TOOLKIT_OWNER_MARKER"
+}
+
+validate_or_claim_store() {
+  local origin_url
+  [[ -d "$TOOLKIT_DIR" ]] || {
+    echo "toolkit path exists but is not a directory: $TOOLKIT_DIR" >&2
+    exit 1
+  }
+  git -C "$TOOLKIT_DIR" rev-parse --git-dir >/dev/null 2>&1 || {
+    echo "refusing unowned non-Git toolkit directory: $TOOLKIT_DIR" >&2
+    exit 1
+  }
+  origin_url="$(git -C "$TOOLKIT_DIR" remote get-url origin 2>/dev/null || true)"
+  [[ -n "$origin_url" ]] || {
+    echo "refusing toolkit directory without an origin: $TOOLKIT_DIR" >&2
+    exit 1
+  }
+  [[ "$(repository_identity "$origin_url")" == "$(repository_identity "$TOOLKIT_REPOSITORY")" ]] || {
+    echo "refusing toolkit directory owned by a different origin: $TOOLKIT_DIR" >&2
+    exit 1
+  }
+  if [[ ! -f "$TOOLKIT_DIR/$TOOLKIT_OWNER_MARKER" ]]; then
+    write_owner_marker "$TOOLKIT_DIR"
+  fi
   git -C "$TOOLKIT_DIR" remote set-url origin "$TOOLKIT_REPOSITORY_AUTH" >&2
-else
-  git -C "$TOOLKIT_DIR" remote add origin "$TOOLKIT_REPOSITORY_AUTH" >&2
-fi
+}
+
+prepare_candidate() {
+  local candidate="$1"
+  git init --quiet "$candidate" >&2
+  git -C "$candidate" remote add origin "$TOOLKIT_REPOSITORY_AUTH" >&2
+  if git -C "$candidate" fetch --depth 1 origin "$TOOLKIT_REF" >&2     && git -C "$candidate" checkout --detach --force "$TOOLKIT_REF" >&2; then
+    write_owner_marker "$candidate"
+    return 0
+  fi
+  if git -C "$candidate" fetch origin main >&2     && git -C "$candidate" merge-base --is-ancestor "$TOOLKIT_REF" FETCH_HEAD 2>/dev/null     && git -C "$candidate" checkout --detach --force "$TOOLKIT_REF" >&2; then
+    write_owner_marker "$candidate"
+    return 0
+  fi
+  echo "ERROR: pinned toolkit ref $TOOLKIT_REF is not available on main" >&2
+  return 1
+}
+
+remove_owned_store() {
+  local directory="$1"
+  [[ "$directory" != / && "$directory" != "$ROOT_DIR"     && ! -L "$directory" && -f "$directory/$TOOLKIT_OWNER_MARKER" ]] || {
+    echo "refusing to remove unowned toolkit directory: $directory" >&2
+    return 1
+  }
+  rm -rf -- "$directory"
+}
+
+rebuild_toolkit_snapshot() {
+  local candidate backup
+  candidate="$(mktemp -d "${TOOLKIT_PARENT}/.$(basename "$TOOLKIT_DIR").rebuild.XXXXXX")"
+  if ! prepare_candidate "$candidate"; then
+    rm -rf -- "$candidate"
+    return 1
+  fi
+  if [[ ! -e "$TOOLKIT_DIR" ]]; then
+    mv "$candidate" "$TOOLKIT_DIR"
+    return 0
+  fi
+  backup="${TOOLKIT_DIR}.stale.$$"
+  [[ ! -e "$backup" ]] || {
+    echo "toolkit backup path already exists: $backup" >&2
+    rm -rf -- "$candidate"
+    return 1
+  }
+  mv "$TOOLKIT_DIR" "$backup"
+  if ! mv "$candidate" "$TOOLKIT_DIR"; then
+    mv "$backup" "$TOOLKIT_DIR"
+    rm -rf -- "$candidate"
+    return 1
+  fi
+  remove_owned_store "$backup"
+}
 
 # A snapshot store gets poisoned by interleaved shallow pins: each resolver run
 # fetches one depth-1 fragment, the shallow boundaries end up incoherent, and a
 # later fetch records refs without delivering their objects. Some hosts also
 # refuse wants for non-advertised SHAs outright (a rewritten branch). Recover in
 # three steps -- exact-ref shallow fetch, then a full main fetch with containment
-# proved before checkout, then a rebuild from scratch. Never fall back to main or
-# any other moving ref: the pin is the contract (AGENTS.md), and a resolver that
-# quietly checks out a different toolkit than the pipeline included is the worst
-# failure this script can have.
+# proved before checkout, then a resolver-owned replacement built next to the
+# live directory. Never fall back to main or any other moving ref: the pin is the
+# contract (AGENTS.md).
 refresh_toolkit_snapshot() {
-  if git -C "$TOOLKIT_DIR" fetch --depth 1 origin "$TOOLKIT_REF" >&2; then
-    git -C "$TOOLKIT_DIR" checkout --detach --force "$TOOLKIT_REF" >&2
+  if git -C "$TOOLKIT_DIR" fetch --depth 1 origin "$TOOLKIT_REF" >&2 \
+    && git -C "$TOOLKIT_DIR" checkout --detach --force "$TOOLKIT_REF" >&2; then
     return 0
   fi
   if git -C "$TOOLKIT_DIR" fetch origin main >&2 \
-    && git -C "$TOOLKIT_DIR" merge-base --is-ancestor "$TOOLKIT_REF" FETCH_HEAD 2>/dev/null; then
-    git -C "$TOOLKIT_DIR" checkout --detach --force "$TOOLKIT_REF" >&2
+    && git -C "$TOOLKIT_DIR" merge-base --is-ancestor "$TOOLKIT_REF" FETCH_HEAD 2>/dev/null \
+    && git -C "$TOOLKIT_DIR" checkout --detach --force "$TOOLKIT_REF" >&2; then
     return 0
   fi
   echo "WARN: toolkit snapshot incoherent, rebuilding from scratch" >&2
-  rm -rf -- "$TOOLKIT_DIR"
-  git init --quiet "$TOOLKIT_DIR" >&2
-  git -C "$TOOLKIT_DIR" remote add origin "$TOOLKIT_REPOSITORY_AUTH" >&2
-  git -C "$TOOLKIT_DIR" fetch origin main >&2
-  git -C "$TOOLKIT_DIR" merge-base --is-ancestor "$TOOLKIT_REF" FETCH_HEAD || {
-    echo "ERROR: pinned toolkit ref $TOOLKIT_REF is not on main" >&2
-    exit 1
-  }
-  git -C "$TOOLKIT_DIR" checkout --detach --force "$TOOLKIT_REF" >&2
+  rebuild_toolkit_snapshot
 }
-refresh_toolkit_snapshot
+
+if [[ -e "$TOOLKIT_DIR" ]]; then
+  validate_or_claim_store
+  refresh_toolkit_snapshot
+else
+  rebuild_toolkit_snapshot
+fi
 
 if [[ "$TOOLKIT_REF" =~ ^[0-9a-fA-F]{40}$ ]]; then
   resolved_ref="$(git -C "$TOOLKIT_DIR" rev-parse HEAD)"
