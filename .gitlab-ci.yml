@@ -322,7 +322,9 @@ android:release:apk:
   # so downstream jobs reuse this version decision instead of re-deriving it.
   extends: .magisk_android_release_apk
   variables:
-    MAGISK_ANDROID_RELEASE_APK_TASKS: ":app:assembleGithubRelease"
+    MAGISK_ANDROID_RELEASE_APK_TASKS: ":app:assembleGithubRelease :app:assembleGithubDebug"
+    MAGISK_ANDROID_RELEASE_APK_BUILD_TYPES: "release debug"
+    MAGISK_ANDROID_RELEASE_MAX_APK_BYTES: "52428800"
     MAGISK_ANDROID_RELEASE_GRADLE_EXTRA_ARGS: "-PbuildSplits"
   resource_group: xposed-android-release-apk
   stage: build
@@ -335,6 +337,7 @@ android:release:apk:
     expire_in: 30 days
     paths:
       - app/build/outputs/apk/**/release/*.apk
+      - app/build/outputs/apk/**/debug/*.apk
       - play-release.env
 
 android:release:aab:
@@ -490,20 +493,20 @@ android:release:modules-repo:
 telegram:release:
   extends: .magisk_telegram_release
   stage: release
-  allow_failure: true
+  allow_failure: false
   tags:
     - $XPOSED_GITLAB_LINUX_ARM64_RUNNER_TAG
   variables:
     MAGISK_TELEGRAM_PROJECT_TAG: "📌 #XposedSmsCode"
     MAGISK_TELEGRAM_PROJECT_NAME: "XposedSmsCode"
+    MAGISK_TELEGRAM_RELEASE_EXPECTED_ARTIFACT_COUNT: "2"
+    MAGISK_TELEGRAM_RELEASE_ARTIFACT_CAPTION: "📦 XposedSmsCode $CI_COMMIT_TAG · arm64-v8a · release + debug"
     # Use TG_RELEASE_CHAT_ID instead of TG_CHAT_ID so that the project-level
     # TG_CHAT_ID (which retargets CI to the new room) does NOT override this.
     TG_RELEASE_CHAT_ID: "-1003532345372"
   needs:
     - job: android:release:apk
       artifacts: true
-    - job: android:release:gitlab
-      artifacts: false
 
 telegram:ci:
   extends:
