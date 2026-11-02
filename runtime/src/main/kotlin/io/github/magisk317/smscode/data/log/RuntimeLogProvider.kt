@@ -5,11 +5,13 @@ import android.net.Uri
 import androidx.core.net.toUri
 import io.github.magisk317.smscode.common.utils.ProviderCallerGuard
 import io.github.magisk317.smscode.common.utils.RuntimeDiagnosticsBridge
+import io.github.magisk317.smscode.runtime.BuildConfig
 import io.github.magisk317.smscode.runtime.common.diagnostics.RuntimeLogStore
 import io.github.magisk317.smscode.runtime.common.utils.StorageUtils
 import io.github.magisk317.xposed.logging.BaseXposedLogProvider
 import io.github.magisk317.xposed.logging.LogProviderQuotaConfig
 import io.github.magisk317.xposed.logging.LogProviderQuotaPolicy
+import io.github.magisk317.xposed.logging.MagiskLogPolicy
 import io.github.magisk317.xposed.logging.XposedLogEvent
 import java.io.File
 import java.util.Locale
@@ -34,6 +36,8 @@ class RuntimeLogProvider : BaseXposedLogProvider() {
     )
 
     override fun appendLog(event: XposedLogEvent) {
+        if (!BuildConfig.DEBUG && !BuildConfig.IS_CI_BUILD) return
+        if (!MagiskLogPolicy.current().loggingEnabled) return
         val ctx = context?.applicationContext ?: return
         if (!RuntimeLogIngressPolicy.ensurePersistentQuota(StorageUtils.getLogDir(ctx))) return
         RuntimeDiagnosticsBridge.ensureInstalled()

@@ -25,7 +25,6 @@ interface HookPrefsAccess {
     fun isEnabled(context: Context): Boolean
     fun mobileAutomationAllowed(context: Context): Boolean
     fun isVerboseLogMode(context: Context): Boolean
-    fun isSensitiveDebugLogMode(context: Context): Boolean
     fun autoInputCodeEnabled(context: Context): Boolean
     fun getAutoInputCodeDelay(context: Context): Long
     fun getAutoInputCodeIntervalMs(context: Context): Long

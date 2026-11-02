@@ -211,6 +211,7 @@ android:build:
     - if: '$CI_COMMIT_BRANCH && $RELEASE_KEYSTORE != "" && $STORE_PASSWORD != "" && $KEY_ALIAS != "" && $KEY_PASSWORD != ""'
     - when: never
   variables:
+    MAGISK_IS_CI_BUILD: "true"
     MAGISK_ANDROID_BUILD_TASKS: >-
       :app:assembleGithubDebug
       -PbuildSplits
@@ -403,6 +404,8 @@ android:ci:aab:
       when: on_success
     - when: never
   variables:
+    # Play tracks require a signed, non-debuggable AAB, so this internal diagnostic
+    # artifact deliberately uses bundlePlayRelease while keeping the CI log channel.
     MAGISK_IS_CI_BUILD: "true"
   script:
     - |

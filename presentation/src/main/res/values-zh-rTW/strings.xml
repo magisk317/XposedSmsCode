@@ -97,7 +97,7 @@
 
 
     <string name="record_export_dialog_title">導出記錄</string>
-    <string name="record_export_current_tab_option">導出當前頁（%1$s）</string>
+    <string name="record_export_current_tab_option">導出當前頁（%1$s）\n\n導出的 JSON 包含發件人、完整簡訊正文和驗證碼原文，請謹慎儲存和分享。</string>
     <!-- preference code records end -->
 
     <!-- preference code rules -->
