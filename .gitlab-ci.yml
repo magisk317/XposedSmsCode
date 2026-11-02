@@ -572,9 +572,9 @@ android:release:github:
     - $XPOSED_GITLAB_LINUX_ARM64_RUNNER_TAG
   variables:
     # Must stay job-level: the toolkit template pins the same key at job level
-    # ("*arm64-v8a*.apk") and job variables outrank the global variables block,
+    # ("*_release.apk") and job variables outrank the global variables block,
     # so a global override here would be silently ignored.
-    MAGISK_ANDROID_RELEASE_GITHUB_ASSET_PATTERN: "*.apk"
+    MAGISK_ANDROID_RELEASE_GITHUB_ASSET_PATTERN: "*_release.apk"
   needs:
     - job: android:release:apk
       artifacts: true
