@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Build
 import io.github.magisk317.smscode.common.utils.HookPrefsReader
 import io.github.magisk317.smscode.common.utils.ProviderIpcTokenGate
+import io.github.magisk317.smscode.runtime.common.provider.HookFingerprintQuery
 import io.github.magisk317.smscode.common.utils.RuntimeDiagnosticsBridge
 import io.github.magisk317.smscode.runtime.common.diagnostics.RuntimeLogStore
 import io.github.magisk317.smscode.data.db.DBProvider
@@ -144,19 +145,18 @@ object XposedRuntimeInstaller {
                     date: Long,
                 ): SmsDuplicateCheckResult {
                     val token = HookPrefsReader.getIpcToken(context)
-                    return resolveSmsDuplicateCheck(token) {
-                        val uri = DBProvider.smsMsgContentUri(context)
-                            .buildUpon()
-                            .appendQueryParameter(ProviderIpcTokenGate.PARAM_IPC_TOKEN, token)
-                            .build()
-                        context.contentResolver.query(
-                            uri,
-                            arrayOf("_id"),
-                            "msg_type = ? AND sender = ? AND body = ? AND date = ?",
-                            arrayOf(SmsMsg.MSG_TYPE_SMS.toString(), sender.orEmpty(), body, date.toString()),
-                            null,
-                        )?.use { it.moveToFirst() }
-                    }
+                    if (token.isBlank()) return SmsDuplicateCheckResult.UNAVAILABLE
+                    return HookFingerprintQuery.query(
+                        context = context,
+                        uri = ProviderIpcTokenGate.attachToken(
+                            DBProvider.smsMsgContentUri(context),
+                            token,
+                        ),
+                        sender = sender,
+                        body = body,
+                        date = date,
+                        msgType = SmsMsg.MSG_TYPE_SMS,
+                    )
                 }
 
                 override fun claimRuntimeGate(
