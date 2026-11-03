@@ -1,5 +1,6 @@
 package io.github.magisk317.smscode.common.utils
 
+import io.github.magisk317.smscode.runtime.common.prefs.AppPreferenceCommits
 import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import android.content.Context
 import io.github.magisk317.smscode.common.constant.PrefConst
@@ -30,12 +31,11 @@ object AppPreferenceTransactions {
             AppPreferencesDataStore.persistChanges(context, changes)
         },
         edit: PreferenceEditScope.() -> Unit,
-    ): PreferenceCommitResult = createPreferenceCommitCoordinator(
-        persistence = persistence,
+    ): PreferenceCommitResult = AppPreferenceCommits.createCommitCoordinator(
+        context = context,
         invalidate = HookPrefsReader::invalidateCache,
-        publish = {
-            check(HookPreferenceMirror.publish(context)) { "Hook preference publication failed" }
-        },
+        publish = HookPreferenceMirror::publish,
+        persistence = persistence,
     ).commit(edit)
 }
 

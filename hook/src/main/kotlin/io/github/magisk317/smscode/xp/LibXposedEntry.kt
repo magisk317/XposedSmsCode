@@ -18,6 +18,7 @@ import io.github.magisk317.xposed.logging.XLog
 import io.github.magisk317.xposed.BaseHook
 import io.github.magisk317.xposed.BaseLibXposedEntry
 import io.github.magisk317.xposed.logging.MagiskOtel
+import io.github.magisk317.xposed.logging.StageEventEmitter
 
 class LibXposedEntry : BaseLibXposedEntry {
 
@@ -62,17 +63,12 @@ class LibXposedEntry : BaseLibXposedEntry {
         } catch (t: Throwable) {
             XLog.e(message = "", t)
         }
-        MagiskOtel.event(
+        StageEventEmitter.emit(
             name = "hook.load",
-            attributes = mapOf(
-                "result" to "ok",
-                "duration_ms" to "0",
-                "process" to "hook",
-                "stage" to "module_runtime",
-                "reason" to "installed",
-                "source" to "xposedsmscode",
-            ),
-            statusOk = true,
+            result = "ok",
+            stage = "module_runtime",
+            reason = "installed",
+            source = "xposedsmscode",
         )
     }
 

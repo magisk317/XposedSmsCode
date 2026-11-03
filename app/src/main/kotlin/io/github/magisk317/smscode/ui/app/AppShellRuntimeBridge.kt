@@ -7,6 +7,7 @@ import io.github.magisk317.smscode.runtime.RuntimeCodeRecordRestoreFacade
 import io.github.magisk317.smscode.runtime.RuntimeNotificationFacade
 import io.github.magisk317.smscode.common.utils.HookPrefsReader
 import io.github.magisk317.smscode.common.utils.ProviderIpcTokenGate
+import io.github.magisk317.smscode.runtime.common.provider.HookFingerprintQuery
 import io.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.smscode.verification.SmsDuplicateCheckResult
 import io.github.magisk317.smscode.verification.resolveSmsDuplicateCheck
@@ -39,19 +40,18 @@ internal object AppShellRuntimeBridge {
                     date: Long,
                 ): SmsDuplicateCheckResult {
                     val token = HookPrefsReader.getIpcToken(context)
-                    return resolveSmsDuplicateCheck(token) {
-                        val uri = DBProvider.smsMsgContentUri(context)
-                            .buildUpon()
-                            .appendQueryParameter(ProviderIpcTokenGate.PARAM_IPC_TOKEN, token)
-                            .build()
-                        context.contentResolver.query(
-                            uri,
-                            arrayOf("_id"),
-                            "msg_type = ? AND sender = ? AND body = ? AND date = ?",
-                            arrayOf(SmsMsg.MSG_TYPE_SMS.toString(), sender.orEmpty(), body, date.toString()),
-                            null,
-                        )?.use { it.moveToFirst() }
-                    }
+                    if (token.isBlank()) return SmsDuplicateCheckResult.UNAVAILABLE
+                    return HookFingerprintQuery.query(
+                        context = context,
+                        uri = ProviderIpcTokenGate.attachToken(
+                            DBProvider.smsMsgContentUri(context),
+                            token,
+                        ),
+                        sender = sender,
+                        body = body,
+                        date = date,
+                        msgType = SmsMsg.MSG_TYPE_SMS,
+                    )
                 }
 
                 override fun claimRuntimeGate(

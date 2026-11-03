@@ -33,6 +33,7 @@ import io.github.magisk317.smscode.presentation.BuildConfig
 import io.github.magisk317.smscode.presentation.R
 import io.github.magisk317.smscode.common.constant.PrefConst
 import io.github.magisk317.smscode.common.constant.TransitionConst
+import io.github.magisk317.xposed.runtime.contract.startup.StartupConflictGuards
 import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import io.github.magisk317.smscode.runtime.common.utils.FrameworkCompatibilityMonitor
 import io.github.magisk317.smscode.runtime.bridge.UiPrefsAccess
@@ -116,11 +117,13 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(Unit) {
                 startupBlockingCheckComplete = false
                 try {
-                    if (BuildConfig.ALLOW_CONFLICT_BYPASS) {
-                        XLog.w(
-                            message = "Relay conflict guard bypassed by build flag allowConflictBypass=true",
-                        )
-                    } else if (TransitionConst.isRelayInstalled(context)) {
+                    val peerInstalled = StartupConflictGuards.shouldBlockForInstalledPeer(
+                        bypassedByBuildFlag = BuildConfig.ALLOW_CONFLICT_BYPASS,
+                        productName = "SmsCode",
+                        isPeerInstalled = { TransitionConst.isRelayInstalled(context) },
+                        warn = { XLog.w(message = it) },
+                    )
+                    if (peerInstalled) {
                         blockingStartupDialog = BlockingStartupDialog.RelayConflict
                         return@LaunchedEffect
                     }

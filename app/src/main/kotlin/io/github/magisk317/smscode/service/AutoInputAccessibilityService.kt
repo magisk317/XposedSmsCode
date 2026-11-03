@@ -9,6 +9,8 @@ import android.provider.Settings
 import android.view.accessibility.AccessibilityEvent
 import androidx.core.content.ContextCompat
 import io.github.magisk317.smscode.runtime.verification.AutoInputAccessibilityNodeHelper
+import io.github.magisk317.smscode.runtime.verification.AutoInputExecutionOrchestrator
+import io.github.magisk317.xposed.runtime.contract.autoinput.AutoInputFallbackPolicy
 import io.github.magisk317.smscode.runtime.verification.AutoInputAccessibilityNodeHelper.Result as AutoInputResult
 import io.github.magisk317.smscode.runtime.verification.AutoInputAccessibilityRequestHandler
 import io.github.magisk317.smscode.common.constant.PrefConst
@@ -181,6 +183,8 @@ class AutoInputAccessibilityService : AccessibilityService() {
             "flags=${info.flags}, capabilities=$capabilities]"
     }
 
+    private val autoInputOrchestrator = AutoInputExecutionOrchestrator()
+
     private fun handleAutoInput(
         code: String,
         autoEnter: Boolean,
@@ -189,7 +193,21 @@ class AutoInputAccessibilityService : AccessibilityService() {
             XLog.i(message = "Mobile entitlement gate skipped accessibility execution")
             return AutoInputResult(false, "none", "mobile_entitlement", packageName)
         }
-        return AutoInputAccessibilityNodeHelper.performAutoInput(rootInActiveWindow, code, autoEnter)
+        // Shared window-settle retries: same policy xinyi applies, so a slowly settling
+        // target window does not fail the whole auto-input on the first attempt.
+        return autoInputOrchestrator.execute(
+            perform = { _ ->
+                AutoInputAccessibilityNodeHelper.performAutoInput(rootInActiveWindow, code, autoEnter)
+            },
+            shouldRetry = { result ->
+                AutoInputFallbackPolicy.shouldRetryAccessibilityResult(
+                    success = result.success,
+                    reason = result.reason,
+                    windowPackage = result.windowPackage,
+                    modulePackage = packageName,
+                )
+            },
+        )
     }
 
     private fun isMobileAutomationAllowed(): Boolean =

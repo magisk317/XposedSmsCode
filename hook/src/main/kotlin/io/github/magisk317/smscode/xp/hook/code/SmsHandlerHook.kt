@@ -24,8 +24,9 @@ import io.github.magisk317.smscode.xposed.hook.telephony.InboundSmsBlocker
 import io.github.magisk317.smscode.xposed.hook.telephony.SmsRoutingProbeResolver
 import io.github.magisk317.smscode.xposed.hook.telephony.InboundSmsHookClaim
 import io.github.magisk317.smscode.xposed.hook.telephony.InboundSmsHookInstaller
-import io.github.magisk317.smscode.xp.hook.SmsHookRuntimeContext
-import io.github.magisk317.smscode.xp.hook.SmsHookRuntimeSession
+import io.github.magisk317.smscode.xposed.hook.telephony.SmsHookRuntimeContext
+import io.github.magisk317.smscode.xposed.hook.telephony.SmsHookRuntimeSession
+import io.github.magisk317.smscode.xp.hook.helper.XscHookHostCapabilities
 import io.github.magisk317.smscode.xp.hook.code.action.impl.OperateSmsAction
 import io.github.magisk317.xposed.runtime.contract.sim.SmsRoutingIntentExtras
 import io.github.magisk317.smscode.runtime.verification.PendingSmsReplayQueue
@@ -34,6 +35,7 @@ import io.github.magisk317.xposed.MethodHook
 import io.github.magisk317.xposed.LoadParam
 import io.github.magisk317.xposed.MethodHookParam
 import io.github.magisk317.xposed.logging.MagiskOtel
+import io.github.magisk317.xposed.logging.StageEventEmitter
 import io.github.magisk317.xposed.runtime.contract.logging.LogRoute
 import io.github.magisk317.smscode.runtime.verification.SmsDispatchIntentDeduplicator
 import java.lang.reflect.Method
@@ -45,7 +47,7 @@ import java.util.concurrent.Executors
  */
 class SmsHandlerHook : BaseHook() {
 
-    private val runtimeSession = SmsHookRuntimeSession(SMSCODE_PACKAGE)
+    private val runtimeSession: SmsHookRuntimeSession = XscHookHostCapabilities.smsHookRuntimeSession
     private var smsInboxObserver: SmsInboxObserver? = null
     private val inboundSmsBlocker = InboundSmsBlocker(SMS_HANDLER_CLASS)
     private val smsOperationExecutor = Executors.newSingleThreadExecutor()
@@ -77,10 +79,12 @@ class SmsHandlerHook : BaseHook() {
 
     override fun onHotReloading() {
         // Release resources owned by the old module ClassLoader before libxposed hot reload.
+        hookClaim.reset()
         smsInboxObserver?.unregister()
         smsInboxObserver = null
         smsOperationExecutor.shutdownNow()
         runtimeSession.currentOrResolve()?.let { CopyCodeReceiver.unregisterMe(it.phoneContext) }
+        runtimeSession.reset()
     }
 
 
@@ -586,23 +590,29 @@ class SmsHandlerHook : BaseHook() {
         action: String?,
     ): Boolean {
         return runCatching {
-            if (eventId.isBlank() || action.isNullOrBlank()) return false
-            val claim = HookRuntimeBridge.contentProviderAccess.claimRuntimeGate(
-                context = pluginContext,
-                fileName = SmsDispatchIntentDeduplicator.DEFAULT_FILE_NAME,
-                keys = listOf("$eventId|$action"),
-                windowMs = SmsDispatchIntentDeduplicator.DEFAULT_WINDOW_MS,
-                maxEntries = SmsDispatchIntentDeduplicator.DEFAULT_MAX_ENTRIES,
+            val result = dispatchIntentDeduplicator.shouldSkipEverywhere(
+                eventId = eventId,
+                action = action,
+                claimShared = { key, windowMs, maxEntries ->
+                    val claim = HookRuntimeBridge.contentProviderAccess.claimRuntimeGate(
+                        context = pluginContext,
+                        fileName = SmsDispatchIntentDeduplicator.DEFAULT_FILE_NAME,
+                        keys = listOf(key),
+                        windowMs = windowMs,
+                        maxEntries = maxEntries,
+                    )
+                    SmsDispatchIntentDeduplicator.SharedClaimResult(claimed = claim.claimed, ageMs = claim.ageMs)
+                },
             )
-            if (!claim.claimed) {
+            if (result.shouldSkip) {
                 XLog.d(
-                    message = "Diag SMS dispatch duplicate skip: event_id=%s action=%s source=shared_store ageMs=%d",
+                    message = "Diag SMS dispatch duplicate skip: event_id=%s action=%s ageMs=%d",
                     eventId,
                     action,
-                    claim.ageMs ?: 0L,
+                    result.ageMs ?: 0L,
                 )
             }
-            !claim.claimed
+            result.shouldSkip
         }.onFailure {
             XLog.w(
                 message = "Diag SMS dispatch shared dedup failed: event_id=%s action=%s err=%s",
@@ -717,22 +727,22 @@ class SmsHandlerHook : BaseHook() {
         statusOk: Boolean = true,
         errorClass: String? = null,
     ) {
-        val attrs = mutableMapOf(
-            "result" to result,
-            "duration_ms" to "0",
-            "process" to "hook",
-            "stage" to stage,
-            "reason" to reason,
-            "source" to "sms_handler",
-            "msg_type" to "sms",
+        val extra = buildMap {
+            if (!errorClass.isNullOrBlank()) {
+                put("error_class", errorClass)
+            }
+        }
+        StageEventEmitter.emit(
+            name = "sms.process",
+            result = result,
+            stage = stage,
+            reason = reason,
+            source = "sms_handler",
+            msgType = "sms",
+            eventIdPresent = eventIdPresent,
+            statusOk = statusOk,
+            extra = extra,
         )
-        if (eventIdPresent) {
-            attrs["event_id_present"] = "true"
-        }
-        if (!errorClass.isNullOrBlank()) {
-            attrs["error_class"] = errorClass
-        }
-        MagiskOtel.event(name = "sms.process", attributes = attrs, statusOk = statusOk)
     }
 
     private fun logSuppressedOnce(stage: String) {
@@ -763,6 +773,7 @@ class SmsHandlerHook : BaseHook() {
         private const val DISPATCH_HANDLER_KEY = "sms_handler"
         private val installedHookKeys = Collections.synchronizedSet(mutableSetOf<String>())
         private val dispatchChainBlockDeduplicator = SmsDispatchChainBlockDeduplicator()
+        private val dispatchIntentDeduplicator = SmsDispatchIntentDeduplicator()
 
         fun isSmsHandlerPackage(packageName: String): Boolean {
             return packageName == ANDROID_PHONE_PACKAGE || packageName == XIAOMI_PHONE_PACKAGE
