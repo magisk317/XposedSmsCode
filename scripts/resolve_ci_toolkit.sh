@@ -38,8 +38,23 @@ repository_identity() {
       url="${url#*://}"
       url="${url#*@}"
       ;;
+    ssh://*)
+      url="${url#ssh://}"
+      url="${url#*@}"
+      ;;
+    *@*:*)
+      url="${url#*@}"
+      url="${url/:/\/}"
+      ;;
   esac
-  printf '%s\n' "${url%/}"
+  url="${url%/}"
+  url="${url%.git}"
+  case "$url" in
+    gitlab.com/magisk3171/magisk-ci-toolkit)
+      url=gitlab.com/magisk3171/shared/magisk-ci-toolkit
+      ;;
+  esac
+  printf '%s\n' "$url"
 }
 
 write_owner_marker() {
