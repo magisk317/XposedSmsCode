@@ -4,6 +4,7 @@ import io.github.magisk317.smscode.common.constant.PrefConst
 import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import android.content.Context
 import io.github.magisk317.smscode.runtime.BuildConfig
+import io.github.magisk317.smscode.runtime.common.diagnostics.LogRetentionConfigs
 import io.github.magisk317.smscode.runtime.common.diagnostics.RuntimeDiagnosticsConfig
 import io.github.magisk317.smscode.runtime.common.diagnostics.RuntimeDiagnosticsInstaller
 import io.github.magisk317.xposed.logging.MagiskLogPolicy
@@ -30,19 +31,11 @@ object RuntimeDiagnosticsBridge {
 
     fun ensureInstalled() = installer.ensureInstalled()
 
-    private fun readConfiguredLogRetentionDays(context: Context): Int {
-        // RuntimeLogStore may invoke this callback with a target-process context when the
-        // provider route is unavailable. Never interpret that process's private DataStore as
-        // module configuration.
-        if (context.packageName != BuildConfig.APPLICATION_ID) {
-            return MagiskLogPolicy.DEFAULT_LOG_RETENTION_DAYS
-        }
-        return runBlocking(Dispatchers.IO) {
-            AppPreferencesDataStore.getInt(
-                context,
-                PrefConst.KEY_RUNTIME_LOG_RETENTION_DAYS,
-                MagiskLogPolicy.DEFAULT_LOG_RETENTION_DAYS,
-            )
-        }.let(MagiskLogPolicy::retentionDays)
-    }
+    private fun readConfiguredLogRetentionDays(context: Context): Int =
+        LogRetentionConfigs.readConfiguredLogRetentionDays(
+            context = context,
+            applicationId = BuildConfig.APPLICATION_ID,
+            key = PrefConst.KEY_RUNTIME_LOG_RETENTION_DAYS,
+            dataStoreDefaultDays = MagiskLogPolicy.DEFAULT_LOG_RETENTION_DAYS,
+        )
 }
