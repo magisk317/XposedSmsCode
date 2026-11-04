@@ -5,4 +5,3 @@
 # Mirrors MiPushFramework scripts/checks/report_god_files.sh semantics.
 presentation/src/main/kotlin/io/github/magisk317/smscode/ui/home/ComposeSettingsScreen.kt|1980|Largest UI surface: settings shell across github/play flavors; the update rows moved to UpdateSettingsSection.kt, further extraction tracked in docs/ARCHITECTURE.md
 presentation/src/main/kotlin/io/github/magisk317/smscode/ui/record/CodeRecordScreen.kt|1213|Record list with metadata expansion; split candidate tracked in docs/ARCHITECTURE.md
-runtime/src/main/kotlin/io/github/magisk317/smscode/data/db/DBProvider.kt|904|DB facade over Room; entity contract migration (see xinyi docs/ARCHITECTURE.md) is the long-term path
