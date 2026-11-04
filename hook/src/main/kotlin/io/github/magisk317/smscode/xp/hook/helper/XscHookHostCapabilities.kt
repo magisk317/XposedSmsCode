@@ -33,7 +33,7 @@ internal object XscHookHostCapabilities : SmsHookCapabilities {
                 packageName = packageName,
                 processName = phoneContext.applicationInfo?.processName ?: packageName,
                 source = source,
-                verboseLogging = HookRuntimeBridge.prefsAccess.isVerboseLogMode(pluginContext),
+                verboseLogging = HookRuntimeBridge.prefsAccess.isVerboseLogMode(phoneContext),
                 route = LogRoute.SMS_HOOK.id,
             )
         },
