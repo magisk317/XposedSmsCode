@@ -11,6 +11,9 @@ import io.github.magisk317.smscode.common.utils.HookPrefsReader
 import io.github.magisk317.xposed.runtime.contract.logging.LogRoute
 import io.github.magisk317.smscode.common.utils.SmsCodeUtils
 import io.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
+import io.github.magisk317.smscode.runtime.verification.SmsRoutingBackfill
+import io.github.magisk317.smscode.runtime.verification.SmsRoutingCandidate
+import io.github.magisk317.smscode.runtime.verification.SmsRoutingStore
 import io.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.smscode.rule.utils.SmsCodeParsedMetadataResolver
 import io.github.magisk317.xposed.logging.XLog
@@ -145,65 +148,17 @@ internal class ObservedSmsHandler(
     }
 
     private fun backfillExistingSimRouting(record: ObservedInboxScanRecord): Boolean {
-        val backfillSimSlot = resolveBackfillSimSlot(record.simSlot, record.subId)
-        if (backfillSimSlot < 0 && record.subId <= 0) {
-            XLog.d(message = "Diag SMS routing backfill skip: sms_id=%d reason=no_routing", record.smsId)
-            return false
-        }
         return runCatching {
             val timestamp = if (record.date > 0) record.date else currentTimeMillis()
-            val existing = queryExistingSmsRouting(record, timestamp) ?: run {
-                XLog.d(
-                    message = "Diag SMS routing backfill skip: sms_id=%d reason=no_existing timestamp=%d simSlot=%d subId=%d",
-                    record.smsId,
-                    timestamp,
-                    backfillSimSlot,
-                    record.subId,
-                )
-                return@runCatching false
-            }
-            val shouldUpdateSimSlot = existing.simSlot < 0 && backfillSimSlot >= 0
-            val shouldUpdateSubId = existing.subId <= 0 && record.subId > 0
-            if (!shouldUpdateSimSlot && !shouldUpdateSubId) {
-                XLog.d(
-                    message = "Diag SMS routing backfill skip: sms_id=%d reason=existing_has_routing oldSlot=%d oldSubId=%d",
-                    record.smsId,
-                    existing.simSlot,
-                    existing.subId,
-                )
-                return@runCatching false
-            }
-            val newSimSlot = if (shouldUpdateSimSlot) backfillSimSlot else existing.simSlot
-            val newSubId = if (shouldUpdateSubId) record.subId else existing.subId
-            val rows = updateExistingSmsRouting(
-                recordId = existing.id,
-                simSlot = newSimSlot,
-                subId = newSubId,
+            SmsRoutingBackfill.backfill(
+                smsId = record.smsId,
+                sender = record.sender,
+                body = record.body,
+                recordSimSlot = record.simSlot,
+                recordSubId = record.subId,
+                timestampMs = timestamp,
+                store = providerRoutingStore,
             )
-            XLog.log(
-                Log.INFO,
-                LogRoute.SMS_HOOK.id,
-                false,
-                false,
-                "Diag SMS routing backfill: sms_id=%d record_id=%d rows=%d oldSlot=%d oldSubId=%d newSlot=%d newSubId=%d",
-                record.smsId,
-                existing.id,
-                rows,
-                existing.simSlot,
-                existing.subId,
-                newSimSlot,
-                newSubId,
-            )
-            XLog.d(
-                message = "Diag SMS routing backfill match: sms_id=%d record_id=%d mode=%s deltaMs=%d rawSlot=%d rawSubId=%d",
-                record.smsId,
-                existing.id,
-                existing.matchMode,
-                existing.timestampDeltaMs,
-                record.simSlot,
-                record.subId,
-            )
-            rows > 0
         }.onFailure {
             XLog.w(
                 message = "Diag SMS routing backfill failed: sms_id=%d err=%s",
@@ -213,103 +168,58 @@ internal class ObservedSmsHandler(
         }.getOrDefault(false)
     }
 
-    private fun queryExistingSmsRouting(
-        record: ObservedInboxScanRecord,
-        timestamp: Long,
-    ): ExistingSmsRouting? {
-        val uri = HookRuntimeBridge.contentProviderAccess.smsMsgContentUri(pluginContext)
-            .withProviderIpcToken(pluginContext)
-        val projection = arrayOf("_id", "sender", "body", "date", "sim_slot", "sub_id")
-        val selection = "msg_type = ?"
-        val selectionArgs = arrayOf(SmsMsg.MSG_TYPE_SMS.toString())
-        val sortOrder = "date DESC LIMIT $ROUTING_BACKFILL_QUERY_LIMIT"
-        val cursor = pluginContext.contentResolver.query(uri, projection, selection, selectionArgs, sortOrder)
-            ?: return null
-        cursor.use {
-            var bestExactMatch: ExistingSmsRouting? = null
-            val timeFallbackMatches = mutableListOf<ExistingSmsRouting>()
-            while (it.moveToNext()) {
-                val existingSender = it.getStringOrEmpty("sender")
-                val existingBody = it.getStringOrEmpty("body")
-                val existingDate = it.getLongByColumn("date")
-                val delta = kotlin.math.abs(existingDate - timestamp)
-                if (delta > ROUTING_BACKFILL_WINDOW_MS) {
-                    continue
+    /** Provider-backed transport: recent sms_msg rows + targeted routing patch. */
+    private val providerRoutingStore = object : SmsRoutingStore {
+        override fun findRecentSms(limit: Int): List<SmsRoutingCandidate> {
+            val uri = HookRuntimeBridge.contentProviderAccess.smsMsgContentUri(pluginContext)
+                .withProviderIpcToken(pluginContext)
+            val projection = arrayOf("_id", "sender", "body", "date", "sim_slot", "sub_id")
+            val selection = "msg_type = ?"
+            val selectionArgs = arrayOf(SmsMsg.MSG_TYPE_SMS.toString())
+            val sortOrder = "date DESC LIMIT $limit"
+            val cursor = pluginContext.contentResolver.query(uri, projection, selection, selectionArgs, sortOrder)
+                ?: return emptyList()
+            return cursor.use {
+                val rows = mutableListOf<SmsRoutingCandidate>()
+                while (it.moveToNext()) {
+                    rows += SmsRoutingCandidate(
+                        id = it.getLongByColumn("_id"),
+                        sender = it.getStringOrEmpty("sender"),
+                        body = it.getStringOrEmpty("body"),
+                        date = it.getLongByColumn("date"),
+                        simSlot = it.getIntByColumn("sim_slot", -1),
+                        subId = it.getIntByColumn("sub_id", 0),
+                    )
                 }
-                val candidate = ExistingSmsRouting(
-                    id = it.getLongByColumn("_id"),
-                    simSlot = it.getIntByColumn("sim_slot", -1),
-                    subId = it.getIntByColumn("sub_id", 0),
-                    timestampDeltaMs = delta,
-                    matchMode = if (existingSender == record.sender && existingBody == record.body) {
-                        ROUTING_MATCH_EXACT
-                    } else {
-                        ROUTING_MATCH_TIME_FALLBACK
-                    },
-                )
-                if (candidate.matchMode == ROUTING_MATCH_EXACT) {
-                    val currentBest = bestExactMatch
-                    if (currentBest == null || candidate.timestampDeltaMs < currentBest.timestampDeltaMs) {
-                        bestExactMatch = candidate
-                    }
-                } else if (candidate.simSlot < 0 || candidate.subId <= 0) {
-                    timeFallbackMatches += candidate
-                }
+                rows
             }
-            bestExactMatch?.let { return it }
-            if (timeFallbackMatches.size == 1) {
-                return timeFallbackMatches.single()
+        }
+
+        override fun updateRouting(recordId: Long, simSlot: Int, subId: Int): Int {
+            val uri = Uri.withAppendedPath(
+                HookRuntimeBridge.contentProviderAccess.smsMsgContentUri(pluginContext),
+                recordId.toString(),
+            ).withProviderIpcToken(pluginContext)
+            val values = ContentValues().apply {
+                put("sim_slot", simSlot)
+                put("sub_id", subId)
             }
-            if (timeFallbackMatches.size > 1) {
-                XLog.d(
-                    message = "Diag SMS routing backfill skip: sms_id=%d reason=ambiguous_time_fallback candidates=%d",
-                    record.smsId,
-                    timeFallbackMatches.size,
-                )
-            }
-            return null
+            return pluginContext.contentResolver.update(uri, values, null, null)
         }
-    }
 
-    private fun updateExistingSmsRouting(recordId: Long, simSlot: Int, subId: Int): Int {
-        val uri = Uri.withAppendedPath(HookRuntimeBridge.contentProviderAccess.smsMsgContentUri(pluginContext), recordId.toString())
-            .withProviderIpcToken(pluginContext)
-        val values = ContentValues().apply {
-            put("sim_slot", simSlot)
-            put("sub_id", subId)
+        private fun android.database.Cursor.getStringOrEmpty(column: String): String {
+            val index = getColumnIndex(column)
+            if (index < 0 || isNull(index)) return ""
+            return getString(index).orEmpty()
         }
-        return pluginContext.contentResolver.update(uri, values, null, null)
-    }
 
-    private fun Cursor.getStringOrEmpty(column: String): String {
-        val index = getColumnIndex(column)
-        if (index < 0 || isNull(index)) return ""
-        return getString(index).orEmpty()
-    }
+        private fun android.database.Cursor.getLongByColumn(column: String): Long =
+            getLong(getColumnIndexOrThrow(column))
 
-    private fun Cursor.getLongByColumn(column: String): Long {
-        return getLong(getColumnIndexOrThrow(column))
-    }
-
-    private fun Cursor.getIntByColumn(column: String, defaultValue: Int): Int {
-        val index = getColumnIndex(column)
-        if (index < 0 || isNull(index)) return defaultValue
-        return getInt(index)
-    }
-
-    private fun resolveBackfillSimSlot(simSlot: Int, subId: Int): Int {
-        if (simSlot >= 0) return simSlot
-        if (subId <= 0) return -1
-        val platformSlot = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            runCatching { SubscriptionManager.getSlotIndex(subId) }.getOrDefault(-1)
-        } else {
-            -1
-        }
-        if (platformSlot >= 0) return platformSlot
-        return when (subId) {
-            1 -> 0
-            2 -> 1
-            else -> -1
+        private fun android.database.Cursor.getIntByColumn(column: String, defaultValue: Int): Int {
+            val index = getColumnIndex(column)
+            if (index < 0 || isNull(index)) return defaultValue
+            return getInt(index)
         }
     }
 
@@ -321,11 +231,6 @@ internal class ObservedSmsHandler(
     }
 
     private companion object {
-        private const val ROUTING_BACKFILL_WINDOW_MS = 30 * 60 * 1000L
-        private const val ROUTING_BACKFILL_QUERY_LIMIT = 64
-        private const val ROUTING_MATCH_EXACT = "exact"
-        private const val ROUTING_MATCH_TIME_FALLBACK = "time_fallback"
-
         private fun resolveCompanyAndPackage(
             phoneContext: Context,
             body: String,

@@ -4,6 +4,8 @@ import android.content.Context
 import io.github.magisk317.smscode.common.utils.SmsCodeUtils
 import io.github.magisk317.smscode.hook.BuildConfig
 import io.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
+import io.github.magisk317.smscode.common.utils.HookPrefsReader
+import io.github.magisk317.smscode.xposed.hook.telephony.SmsHookRuntimeSession
 import io.github.magisk317.smscode.runtime.common.utils.StringUtils
 import io.github.magisk317.xposed.runtime.contract.logging.LogRoute
 import io.github.magisk317.smscode.xposed.hook.telephony.SmsHookCapabilities
@@ -17,6 +19,24 @@ import io.github.magisk317.smscode.xposed.hook.telephony.SmsHookCapabilities
  * 消费同一份契约。
  */
 internal object XscHookHostCapabilities : SmsHookCapabilities {
+    /** One session is shared by all XSC telephony hooks in this module classloader. */
+    internal val smsHookRuntimeSession: SmsHookRuntimeSession = SmsHookRuntimeSession(
+        applicationId = BuildConfig.APPLICATION_ID,
+        onPhoneContextInitialized = HookPrefsReader::installSnapshot,
+        onPluginContextResolved = { pluginContext, _ ->
+            onProcessInit(pluginContext)
+        },
+        heartbeatRecorder = { pluginContext, phoneContext, packageName, source ->
+            HookRuntimeBridge.contentProviderAccess.recordHookHeartbeat(
+                context = pluginContext,
+                packageName = packageName,
+                processName = phoneContext.applicationInfo?.processName ?: packageName,
+                source = source,
+                verboseLogging = HookRuntimeBridge.prefsAccess.isVerboseLogMode(pluginContext),
+                route = LogRoute.SMS_HOOK.id,
+            )
+        },
+    )
     override fun isVerboseLogMode(context: Context): Boolean =
         BuildConfig.DEBUG || BuildConfig.IS_CI_BUILD
 

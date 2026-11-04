@@ -2,7 +2,7 @@ package io.github.magisk317.smscode.xp.hook.code
 
 import android.content.Context
 import android.content.Intent
-import io.github.magisk317.smscode.xp.hook.SmsHookRuntimeContext
+import io.github.magisk317.smscode.xposed.hook.telephony.SmsHookRuntimeContext
 import io.github.magisk317.smscode.common.utils.HookPrefsReader
 import io.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.smscode.xp.helper.ModuleConflictArbiter
