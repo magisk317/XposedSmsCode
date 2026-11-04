@@ -1,29 +1,29 @@
 include:
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "79d6945f0f94cc0639802961111cc328ce5ef04d"
+    ref: "1f4fea76b2ad55d3db0ac2a7d3c9c967ad34a658"
     file: /.gitlab/ci/android.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "79d6945f0f94cc0639802961111cc328ce5ef04d"
+    ref: "1f4fea76b2ad55d3db0ac2a7d3c9c967ad34a658"
     file: /.gitlab/ci/android-release.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "79d6945f0f94cc0639802961111cc328ce5ef04d"
+    ref: "1f4fea76b2ad55d3db0ac2a7d3c9c967ad34a658"
     file: /.gitlab/ci/telegram.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "79d6945f0f94cc0639802961111cc328ce5ef04d"
+    ref: "1f4fea76b2ad55d3db0ac2a7d3c9c967ad34a658"
     file: /.gitlab/ci/renovate.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "79d6945f0f94cc0639802961111cc328ce5ef04d"
+    ref: "1f4fea76b2ad55d3db0ac2a7d3c9c967ad34a658"
     file: /.gitlab/ci/cancel-mr-pipelines.yml
   # Utility-job anchor (alpine, pinned): the GitHub mirror and the README-badge
   # job extend it instead of pinning their own image.
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "79d6945f0f94cc0639802961111cc328ce5ef04d"
+    ref: "1f4fea76b2ad55d3db0ac2a7d3c9c967ad34a658"
     file: /.gitlab/ci/utility.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "79d6945f0f94cc0639802961111cc328ce5ef04d"
+    ref: "1f4fea76b2ad55d3db0ac2a7d3c9c967ad34a658"
     file: /.gitlab/ci/github-sync.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "79d6945f0f94cc0639802961111cc328ce5ef04d"
+    ref: "1f4fea76b2ad55d3db0ac2a7d3c9c967ad34a658"
     file: /.gitlab/ci/readme-badges.yml
 
 workflow:
@@ -49,7 +49,7 @@ stages:
 
 variables:
   MAGISK_CI_TOOLKIT_REPOSITORY: "https://gitlab.com/magisk3171/shared/magisk-ci-toolkit.git"
-  MAGISK_CI_TOOLKIT_REF: "79d6945f0f94cc0639802961111cc328ce5ef04d"
+  MAGISK_CI_TOOLKIT_REF: "1f4fea76b2ad55d3db0ac2a7d3c9c967ad34a658"
   MAGISK_CANCEL_OLDER_MR_PIPELINES: "true"
   # All Android jobs (test/detekt/build/bundle/publish) read this tag, which
   # both the arm64 and the Debian ct101 amd64 group runners carry. GitLab
@@ -391,7 +391,9 @@ android:release:publish-play:
       artifacts: true
 
 android:ci:aab:
-  extends: .magisk_android_base
+  extends:
+    - .magisk_android_base
+    - .magisk_android_ci_aab_rules
   resource_group: xposed-android-release-play
   stage: build
   tags:
@@ -401,11 +403,6 @@ android:ci:aab:
   # must not wait for the build/package stages: Play publishing keeps
   # priority over the quality stage.
   needs: []
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "beta" && $CI_PIPELINE_SOURCE == "push" && $MAGISK_ANDROID_RELEASE_PUBLISH_PLAY == "true" && $RELEASE_KEYSTORE != "" && $STORE_PASSWORD != "" && $KEY_ALIAS != "" && $KEY_PASSWORD != "" && $ANDROID_PUBLISHER_CREDENTIALS != ""'
-    - if: '$CI_COMMIT_BRANCH == "beta" && $CI_PIPELINE_SOURCE == "schedule" && $CI_COMMIT_AUTHOR =~ /Renovate317@users.noreply/ && $MAGISK_ANDROID_RELEASE_PUBLISH_PLAY == "true" && $RELEASE_KEYSTORE != "" && $STORE_PASSWORD != "" && $KEY_ALIAS != "" && $KEY_PASSWORD != "" && $ANDROID_PUBLISHER_CREDENTIALS != ""'
-      when: on_success
-    - when: never
   variables:
     MAGISK_IS_CI_BUILD: "true"
   script:
@@ -433,21 +430,14 @@ android:ci:aab:
       - play-release.env
 
 android:ci:publish-play:
-  extends: .magisk_utility_base
+  extends:
+    - .magisk_utility_base
+    - .magisk_android_ci_publish_play_rules
   resource_group: xposed-android-release-play
   stage: release
   interruptible: false
   tags:
     - $XPOSED_BUILD_RUNNER_TAG
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "beta" && $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_AUTHOR =~ /Renovate317@users.noreply/ && $MAGISK_ANDROID_RELEASE_PUBLISH_PLAY == "true" && $ANDROID_PUBLISHER_CREDENTIALS != ""'
-      when: on_success
-    - if: '$CI_COMMIT_BRANCH == "beta" && $CI_PIPELINE_SOURCE == "push" && $MAGISK_ANDROID_RELEASE_PUBLISH_PLAY == "true" && $ANDROID_PUBLISHER_CREDENTIALS != ""'
-      when: on_success
-      allow_failure: true
-    - if: '$CI_COMMIT_BRANCH == "beta" && $CI_PIPELINE_SOURCE == "schedule" && $CI_COMMIT_AUTHOR =~ /Renovate317@users.noreply/ && $MAGISK_ANDROID_RELEASE_PUBLISH_PLAY == "true" && $ANDROID_PUBLISHER_CREDENTIALS != ""'
-      when: on_success
-    - when: never
   needs:
     - job: android:ci:aab
       artifacts: true
@@ -513,15 +503,9 @@ telegram:ci:
   extends:
     - .magisk_telegram_ci
     - .xposed_signed_android_rules
+    - .magisk_telegram_ci_delivery_rules
   stage: release
   allow_failure: true
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "beta" && $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_AUTHOR =~ /Renovate317@users.noreply/ && $RELEASE_KEYSTORE != "" && $STORE_PASSWORD != "" && $KEY_ALIAS != "" && $KEY_PASSWORD != ""'
-      when: on_success
-    - if: '$CI_COMMIT_BRANCH == "beta" && $CI_PIPELINE_SOURCE == "push" && $RELEASE_KEYSTORE != "" && $STORE_PASSWORD != "" && $KEY_ALIAS != "" && $KEY_PASSWORD != ""'
-      when: manual
-      allow_failure: true
-    - when: never
   tags:
     - $XPOSED_GITLAB_LINUX_ARM64_RUNNER_TAG
   variables:

@@ -37,4 +37,4 @@ jobs:
       - name: Check CI bootstrap freshness
         run: |
           TOOLKIT_DIR="$(bash scripts/resolve_ci_toolkit.sh)"
-          bash "$TOOLKIT_DIR/codegen/sync_consumer_bootstrap.sh" --check "$PWD" "79d6945f0f94cc0639802961111cc328ce5ef04d"
+          bash "$TOOLKIT_DIR/codegen/sync_consumer_bootstrap.sh" --check "$PWD" "1f4fea76b2ad55d3db0ac2a7d3c9c967ad34a658"
