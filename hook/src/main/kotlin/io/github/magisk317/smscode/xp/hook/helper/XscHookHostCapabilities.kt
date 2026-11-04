@@ -4,6 +4,7 @@ import android.content.Context
 import io.github.magisk317.smscode.common.utils.SmsCodeUtils
 import io.github.magisk317.smscode.hook.BuildConfig
 import io.github.magisk317.smscode.runtime.bridge.HookRuntimeBridge
+import io.github.magisk317.xposed.capability.helper.ProcessContextResolver
 import io.github.magisk317.smscode.common.utils.HookPrefsReader
 import io.github.magisk317.smscode.xposed.hook.telephony.SmsHookRuntimeSession
 import io.github.magisk317.smscode.runtime.common.utils.StringUtils
@@ -26,9 +27,9 @@ internal object XscHookHostCapabilities : SmsHookCapabilities {
         onPluginContextResolved = { pluginContext, _ ->
             onProcessInit(pluginContext)
         },
-        heartbeatRecorder = { pluginContext, phoneContext, packageName, source ->
+        heartbeatRecorder = { _, phoneContext, packageName, source ->
             HookRuntimeBridge.contentProviderAccess.recordHookHeartbeat(
-                context = pluginContext,
+                context = ProcessContextResolver.resolveForPackage(packageName, phoneContext) ?: phoneContext,
                 packageName = packageName,
                 processName = phoneContext.applicationInfo?.processName ?: packageName,
                 source = source,
@@ -65,8 +66,9 @@ internal object XscHookHostCapabilities : SmsHookCapabilities {
         source: String,
         verboseLogging: Boolean,
     ) {
+        val processContext = ProcessContextResolver.resolveForPackage(packageName, context) ?: context
         HookRuntimeBridge.contentProviderAccess.recordHookHeartbeat(
-            context = context,
+            context = processContext,
             packageName = packageName,
             processName = processName,
             source = source,
