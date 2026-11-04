@@ -1,29 +1,29 @@
 include:
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "1f4fea76b2ad55d3db0ac2a7d3c9c967ad34a658"
+    ref: "79de939a806727792aeebc92d54b16a839ba4268"
     file: /.gitlab/ci/android.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "1f4fea76b2ad55d3db0ac2a7d3c9c967ad34a658"
+    ref: "79de939a806727792aeebc92d54b16a839ba4268"
     file: /.gitlab/ci/android-release.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "1f4fea76b2ad55d3db0ac2a7d3c9c967ad34a658"
+    ref: "79de939a806727792aeebc92d54b16a839ba4268"
     file: /.gitlab/ci/telegram.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "1f4fea76b2ad55d3db0ac2a7d3c9c967ad34a658"
+    ref: "79de939a806727792aeebc92d54b16a839ba4268"
     file: /.gitlab/ci/renovate.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "1f4fea76b2ad55d3db0ac2a7d3c9c967ad34a658"
+    ref: "79de939a806727792aeebc92d54b16a839ba4268"
     file: /.gitlab/ci/cancel-mr-pipelines.yml
   # Utility-job anchor (alpine, pinned): the GitHub mirror and the README-badge
   # job extend it instead of pinning their own image.
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "1f4fea76b2ad55d3db0ac2a7d3c9c967ad34a658"
+    ref: "79de939a806727792aeebc92d54b16a839ba4268"
     file: /.gitlab/ci/utility.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "1f4fea76b2ad55d3db0ac2a7d3c9c967ad34a658"
+    ref: "79de939a806727792aeebc92d54b16a839ba4268"
     file: /.gitlab/ci/github-sync.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "1f4fea76b2ad55d3db0ac2a7d3c9c967ad34a658"
+    ref: "79de939a806727792aeebc92d54b16a839ba4268"
     file: /.gitlab/ci/readme-badges.yml
 
 workflow:
@@ -49,7 +49,7 @@ stages:
 
 variables:
   MAGISK_CI_TOOLKIT_REPOSITORY: "https://gitlab.com/magisk3171/shared/magisk-ci-toolkit.git"
-  MAGISK_CI_TOOLKIT_REF: "1f4fea76b2ad55d3db0ac2a7d3c9c967ad34a658"
+  MAGISK_CI_TOOLKIT_REF: "79de939a806727792aeebc92d54b16a839ba4268"
   MAGISK_CANCEL_OLDER_MR_PIPELINES: "true"
   # All Android jobs (test/detekt/build/bundle/publish) read this tag, which
   # both the arm64 and the Debian ct101 amd64 group runners carry. GitLab
