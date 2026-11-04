@@ -79,6 +79,7 @@ class SmsHandlerHook : BaseHook() {
 
     override fun onHotReloading() {
         // Release resources owned by the old module ClassLoader before libxposed hot reload.
+        hookClaim.reset()
         smsInboxObserver?.unregister()
         smsInboxObserver = null
         smsOperationExecutor.shutdownNow()
