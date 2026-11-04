@@ -89,7 +89,7 @@ internal data class OverviewUiState(
     val frameworkVersion: String,
     val hasRootAccess: Boolean,
     val appVersionName: String,
-    val appVersionCode: String,
+    val commitInfo: String,
 )
 
 private data class FrameworkDiagnostics(
@@ -156,7 +156,7 @@ fun OverviewScreen(
     var activationStatus by remember { mutableStateOf(RuntimeStatusState()) }
     var frameworkDiagnostics by remember { mutableStateOf(FrameworkDiagnostics()) }
     var hasRootAccessState by remember { mutableStateOf(false) }
-    var appVersionState by remember { mutableStateOf<Pair<String, Long>?>(null) }
+    var appVersionNameState by remember { mutableStateOf<String?>(null) }
     var hasActivationSnapshot by remember { mutableStateOf(false) }
     var hasFrameworkSnapshot by remember { mutableStateOf(false) }
     var hasRootSnapshot by remember { mutableStateOf(false) }
@@ -200,8 +200,8 @@ fun OverviewScreen(
         }
         if (!hasAppVersionSnapshot) {
             launch {
-                appVersionState = withContext(Dispatchers.IO) {
-                    xscPackageActions.getPackageVersion(context, context.packageName)
+                appVersionNameState = withContext(Dispatchers.IO) {
+                    xscPackageActions.getPackageVersion(context, context.packageName)?.first
                 }
                 hasAppVersionSnapshot = true
             }
@@ -232,9 +232,9 @@ fun OverviewScreen(
             else -> stringResource(id = R.string.not_installed)
         }
     }
-    val appVersionName = appVersionState?.first?.takeIf { it.isNotBlank() } ?: stringResource(id = R.string.unknown)
-    val appVersionCode = BuildConfig.COMMIT_HASH.takeIf { it.isNotBlank() && it != "unknown" }
-        ?: (appVersionState?.second?.toString() ?: stringResource(id = R.string.unknown))
+    val appVersionName = appVersionNameState?.takeIf { it.isNotBlank() } ?: stringResource(id = R.string.unknown)
+    val commitInfo = BuildConfig.COMMIT_HASH.takeIf { it.isNotBlank() && it != "unknown" }
+        ?: stringResource(id = R.string.unknown)
 
     val rootHint = stringResource(id = R.string.root_permission_hint)
 
@@ -252,7 +252,7 @@ fun OverviewScreen(
         frameworkVersion = frameworkVersion,
         hasRootAccess = hasRootAccessState,
         appVersionName = appVersionName,
-        appVersionCode = appVersionCode,
+        commitInfo = commitInfo,
     )
 
     val actions = OverviewActions(

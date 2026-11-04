@@ -31,7 +31,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.magisk317.smscode.presentation.R
-import io.github.magisk317.uikit.R as UiKitR
 import io.github.magisk317.uikit.surface.AppTopBar
 import io.github.magisk317.uikit.surface.DoubleTapToTopOverlay
 import io.github.magisk317.uikit.surface.OverviewAppInfoCard
@@ -115,8 +114,7 @@ internal fun OverviewScreenMaterial(
 
                     OverviewAppInfoCard(
                         appVersionName = state.appVersionName,
-                        appVersionCode = state.appVersionCode,
-                        appVersionCodeLabel = stringResource(id = UiKitR.string.uikit_version_code),
+                        commitInfo = state.commitInfo,
                         frameworkType = state.frameworkType,
                         frameworkVersion = state.frameworkVersion,
                         interactive = true,

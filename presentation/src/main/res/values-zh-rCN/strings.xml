@@ -410,7 +410,6 @@
     <string name="unknown">未知</string>
     <string name="not_installed">未安装</string>
     <string name="version_name">版本名称</string>
-    <string name="version_code">版本代码</string>
     <string name="root_permission_hint">需要 Root 权限才能读取</string>
     <string name="framework_type">框架类型</string>
     <string name="framework_version">框架版本</string>
