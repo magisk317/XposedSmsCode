@@ -17,6 +17,7 @@ import io.github.magisk317.smscode.runtime.BuildConfig as RuntimeBuildConfig
 import io.github.magisk317.smscode.runtime.common.record.CodeRecordTrimPolicy
 import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
 import io.github.magisk317.smscode.common.utils.ProviderCallerGuard
+import io.github.magisk317.smscode.common.utils.ProviderIpcTokenCodec
 import io.github.magisk317.smscode.common.utils.ProviderIpcTokenGate
 import io.github.magisk317.smscode.data.db.entity.AppInfo
 import io.github.magisk317.smscode.db.entity.SmsCodeRule
@@ -27,6 +28,12 @@ import io.github.magisk317.xposed.runtime.RuntimeStateProviderAddress
 import io.github.magisk317.xposed.runtime.RuntimeStateProviderClient
 import io.github.magisk317.xposed.runtime.RuntimeStateProviderContract
 import io.github.magisk317.smscode.runtime.common.utils.SharedRuntimeGate
+import io.github.magisk317.smscode.runtime.common.utils.RuntimeStateCallHandlers
+import io.github.magisk317.smscode.runtime.common.utils.getAllowedIntValue
+import io.github.magisk317.smscode.runtime.common.utils.getBoundedValue
+import io.github.magisk317.smscode.runtime.common.utils.getIntInRangeValue
+import io.github.magisk317.smscode.runtime.common.utils.getNonNegativeIntValue
+import io.github.magisk317.smscode.runtime.common.utils.getNonNegativeLongValue
 import io.github.magisk317.smscode.runtime.common.utils.StorageUtils
 import io.github.magisk317.smscode.runtime.contract.record.SmsMsgCursorContract
 import io.github.magisk317.xposed.logging.XLog
@@ -64,53 +71,18 @@ class DBProvider : ContentProvider() {
             putBoolean(RuntimeStateProviderContract.RESULT_OK, false)
         }
         return when (method) {
-            RuntimeStateProviderContract.METHOD_CLAIM_RUNTIME_GATE -> {
-                val fileName = arg.orEmpty()
-                val keys = extras?.getStringArrayList(RuntimeStateProviderContract.EXTRA_KEYS).orEmpty()
-                val windowMs = extras?.getLong(RuntimeStateProviderContract.EXTRA_WINDOW_MS, 0L) ?: 0L
-                val maxEntries = extras?.getInt(
-                    RuntimeStateProviderContract.EXTRA_MAX_ENTRIES,
-                    RuntimeStateProviderContract.DEFAULT_MAX_ENTRIES,
-                ) ?: RuntimeStateProviderContract.DEFAULT_MAX_ENTRIES
-                val result = runCatching {
-                    require(windowMs > 0L) { "Invalid runtime gate window" }
-                    SharedRuntimeGate.claimAllWithinWindow(
-                        file = SharedRuntimeGate.internalGateFile(ctx, fileName),
-                        keys = keys,
-                        windowMs = windowMs,
-                        maxEntries = maxEntries.coerceIn(1, MAX_RUNTIME_GATE_ENTRIES),
-                    )
-                }.getOrNull()
-                Bundle().apply {
-                    putBoolean(RuntimeStateProviderContract.RESULT_OK, result != null)
-                    // Preserve the existing fail-open behavior if app storage is unavailable.
-                    putBoolean(RuntimeStateProviderContract.RESULT_CLAIMED, result?.claimed ?: true)
-                    putLong(
-                        RuntimeStateProviderContract.RESULT_AGE_MS,
-                        result?.ageMs ?: RuntimeStateProviderContract.NO_AGE_MS,
-                    )
-                    result?.key?.let {
-                        putString(RuntimeStateProviderContract.RESULT_BLOCKED_KEY, it)
-                    }
-                }
-            }
+            RuntimeStateProviderContract.METHOD_CLAIM_RUNTIME_GATE ->
+                // Historical XSC behavior: fail open when the gate file is unreadable.
+                RuntimeStateCallHandlers.claimRuntimeGate(
+                    ctx = ctx,
+                    fileName = arg,
+                    extras = extras,
+                    failOpen = true,
+                    maxEntriesCap = MAX_RUNTIME_GATE_ENTRIES,
+                )
 
-            RuntimeStateProviderContract.METHOD_RECORD_HOOK_HEARTBEAT -> {
-                val ok = runCatching {
-                    RuntimeStateStore.recordHookHeartbeat(
-                        context = ctx,
-                        packageName = extras?.getString(RuntimeStateProviderContract.EXTRA_PACKAGE_NAME).orEmpty(),
-                        processName = extras?.getString(RuntimeStateProviderContract.EXTRA_PROCESS_NAME).orEmpty(),
-                        source = extras?.getString(RuntimeStateProviderContract.EXTRA_SOURCE).orEmpty(),
-                        verboseLogging = extras?.getBoolean(
-                            RuntimeStateProviderContract.EXTRA_VERBOSE_LOGGING,
-                            false,
-                        ) ?: false,
-                        route = extras?.getString(RuntimeStateProviderContract.EXTRA_ROUTE).orEmpty(),
-                    )
-                }.isSuccess
-                Bundle().apply { putBoolean(RuntimeStateProviderContract.RESULT_OK, ok) }
-            }
+            RuntimeStateProviderContract.METHOD_RECORD_HOOK_HEARTBEAT ->
+                RuntimeStateCallHandlers.recordHookHeartbeat(ctx, extras, defaultRoute = "")
 
             RuntimeStateProviderContract.METHOD_GET_RETENTION_DAYS -> getRetentionDays(ctx)
             else -> super.call(method, arg, extras)
@@ -428,22 +400,22 @@ class DBProvider : ContentProvider() {
     private fun updateSmsMsgById(id: Long, values: ContentValues?): Int {
         val existing = db.querySmsMsgById(id) ?: return 0
         val updated = existing.copy(
-            sender = values.getBoundedString("sender", MAX_SENDER_LENGTH) ?: existing.sender,
-            body = values.getBoundedString("body", MAX_BODY_LENGTH) ?: existing.body,
-            date = values.getNonNegativeLong("date", existing.date),
+            sender = values.getBoundedValue("sender", MAX_SENDER_LENGTH) ?: existing.sender,
+            body = values.getBoundedValue("body", MAX_BODY_LENGTH) ?: existing.body,
+            date = values.getNonNegativeLongValue("date", existing.date),
             processedTime = if (values?.containsKey("processed_time") == true) {
-                values.getNonNegativeLong("processed_time", 0L)
+                values.getNonNegativeLongValue("processed_time", 0L)
             } else {
                 existing.processedTime
             },
-            company = values.getBoundedString("company", MAX_COMPANY_LENGTH) ?: existing.company,
-            smsCode = values.getBoundedString("sms_code", MAX_CODE_LENGTH) ?: existing.smsCode,
-            packageName = values.getBoundedString("package_name", MAX_PACKAGE_NAME_LENGTH) ?: existing.packageName,
-            notifyChannelId = values.getBoundedString("notify_channel_id", MAX_CHANNEL_ID_LENGTH) ?: existing.notifyChannelId,
-            simSlot = values.getIntInRange("sim_slot", -1, 1, existing.simSlot),
-            subId = values.getNonNegativeInt("sub_id", existing.subId),
-            msgType = values.getAllowedInt("msg_type", SMS_MSG_TYPES, existing.msgType),
-            callType = values.getAllowedInt("call_type", CALL_TYPES, existing.callType),
+            company = values.getBoundedValue("company", MAX_COMPANY_LENGTH) ?: existing.company,
+            smsCode = values.getBoundedValue("sms_code", MAX_CODE_LENGTH) ?: existing.smsCode,
+            packageName = values.getBoundedValue("package_name", MAX_PACKAGE_NAME_LENGTH) ?: existing.packageName,
+            notifyChannelId = values.getBoundedValue("notify_channel_id", MAX_CHANNEL_ID_LENGTH) ?: existing.notifyChannelId,
+            simSlot = values.getIntInRangeValue("sim_slot", -1, 1, existing.simSlot),
+            subId = values.getNonNegativeIntValue("sub_id", existing.subId),
+            msgType = values.getAllowedIntValue("msg_type", SMS_MSG_TYPES, existing.msgType),
+            callType = values.getAllowedIntValue("call_type", CALL_TYPES, existing.callType),
         )
         return db.updateSmsMsg(updated)
     }
@@ -476,7 +448,7 @@ class DBProvider : ContentProvider() {
         val existing = db.queryAppInfoByPackageName(boundedPackageName) ?: AppInfo(packageName = boundedPackageName)
         val blocked = parseBooleanValue(values, "blocked", existing.blocked)
         val label = when {
-            values?.containsKey("label") == true -> values.getBoundedString("label", MAX_LABEL_LENGTH)
+            values?.containsKey("label") == true -> values.getBoundedValue("label", MAX_LABEL_LENGTH)
             else -> existing.label
         }
         return db.upsertAppInfo(existing.copy(label = label, blocked = blocked))
@@ -547,65 +519,26 @@ class DBProvider : ContentProvider() {
      * not in the trusted package allowlist. The token is presented either as a uri
      * query parameter (insert/query/update/delete) or a call() extra.
      */
-    private fun isIpcTokenAllowedByUri(uri: Uri?): Boolean {
-        val ctx = context ?: return false
-        val presented = ProviderIpcTokenGate.presentedToken(uri) ?: return false
-        return ProviderIpcTokenGate.evaluate(
-            callerAllowed = false,
-            expectedToken = ProviderIpcTokenGate.readExpectedToken(ctx),
-            presentedToken = presented,
-        )
-    }
+    private fun isIpcTokenAllowedByUri(uri: Uri?): Boolean =
+        ProviderIpcTokenCodec.allowedByUri(context, uri, PrefConst.KEY_IPC_TOKEN)
 
-    private fun isIpcTokenAllowedByExtras(extras: Bundle?): Boolean {
-        val ctx = context ?: return false
-        val presented = ProviderIpcTokenGate.presentedToken(extras) ?: return false
-        return ProviderIpcTokenGate.evaluate(
-            callerAllowed = false,
-            expectedToken = ProviderIpcTokenGate.readExpectedToken(ctx),
-            presentedToken = presented,
-        )
-    }
+    private fun isIpcTokenAllowedByExtras(extras: Bundle?): Boolean =
+        ProviderIpcTokenCodec.allowedByExtras(context, extras, PrefConst.KEY_IPC_TOKEN)
 
     private fun ContentValues?.toSmsMsg(): SmsMsg = SmsMsg(
-        sender = getBoundedString("sender", MAX_SENDER_LENGTH),
-        body = getBoundedString("body", MAX_BODY_LENGTH),
-        date = getNonNegativeLong("date", 0L),
-        processedTime = getNonNegativeLong("processed_time", System.currentTimeMillis()),
-        company = getBoundedString("company", MAX_COMPANY_LENGTH),
-        smsCode = getBoundedString("sms_code", MAX_CODE_LENGTH),
-        packageName = getBoundedString("package_name", MAX_PACKAGE_NAME_LENGTH),
-        notifyChannelId = getBoundedString("notify_channel_id", MAX_CHANNEL_ID_LENGTH).orEmpty(),
-        simSlot = getIntInRange("sim_slot", -1, 1, -1),
-        subId = getNonNegativeInt("sub_id", 0),
-        msgType = getAllowedInt("msg_type", SMS_MSG_TYPES, SmsMsg.MSG_TYPE_SMS),
-        callType = getAllowedInt("call_type", CALL_TYPES, 0),
+        sender = getBoundedValue("sender", MAX_SENDER_LENGTH),
+        body = getBoundedValue("body", MAX_BODY_LENGTH),
+        date = getNonNegativeLongValue("date", 0L),
+        processedTime = getNonNegativeLongValue("processed_time", System.currentTimeMillis()),
+        company = getBoundedValue("company", MAX_COMPANY_LENGTH),
+        smsCode = getBoundedValue("sms_code", MAX_CODE_LENGTH),
+        packageName = getBoundedValue("package_name", MAX_PACKAGE_NAME_LENGTH),
+        notifyChannelId = getBoundedValue("notify_channel_id", MAX_CHANNEL_ID_LENGTH).orEmpty(),
+        simSlot = getIntInRangeValue("sim_slot", -1, 1, -1),
+        subId = getNonNegativeIntValue("sub_id", 0),
+        msgType = getAllowedIntValue("msg_type", SMS_MSG_TYPES, SmsMsg.MSG_TYPE_SMS),
+        callType = getAllowedIntValue("call_type", CALL_TYPES, 0),
     )
-
-    private fun ContentValues?.getBoundedString(key: String, maxLength: Int): String? {
-        val raw = this?.getAsString(key) ?: return null
-        return raw.take(maxLength)
-    }
-
-    private fun ContentValues?.getNonNegativeLong(key: String, defaultValue: Long): Long {
-        val value = this?.getAsLong(key) ?: return defaultValue
-        return value.coerceAtLeast(0L)
-    }
-
-    private fun ContentValues?.getAllowedInt(key: String, allowedValues: Set<Int>, defaultValue: Int): Int {
-        val value = this?.getAsInteger(key) ?: return defaultValue
-        return value.takeIf { it in allowedValues } ?: defaultValue
-    }
-
-    private fun ContentValues?.getNonNegativeInt(key: String, defaultValue: Int): Int {
-        val value = this?.getAsInteger(key) ?: return defaultValue
-        return value.coerceAtLeast(0)
-    }
-
-    private fun ContentValues?.getIntInRange(key: String, minValue: Int, maxValue: Int, defaultValue: Int): Int {
-        val value = this?.getAsInteger(key) ?: return defaultValue
-        return value.takeIf { it in minValue..maxValue } ?: defaultValue
-    }
 
     private fun columnsOrDefault(
         projection: Array<String>?,

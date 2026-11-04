@@ -6,9 +6,6 @@ import android.net.Uri
 import android.os.Bundle
 import io.github.magisk317.smscode.common.constant.PrefConst
 import io.github.magisk317.xposed.runtime.ipc.IpcTokenMatcher
-import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 
 /**
  * IPC-token authorization channel for the module ContentProvider.
@@ -41,13 +38,6 @@ object ProviderIpcTokenGate {
      * Resolves the expected token from the module app preferences - the same source
      * KillSelfControlReceiver reads - or null when unreadable/absent.
      */
-    internal fun readExpectedToken(context: Context): String? = runCatching {
-        runBlocking(Dispatchers.IO) {
-            AppPreferencesDataStore.getString(
-                context.applicationContext ?: context,
-                PrefConst.KEY_IPC_TOKEN,
-                "",
-            )
-        }
-    }.getOrNull()?.takeIf { it.isNotBlank() }
+    internal fun readExpectedToken(context: Context): String? =
+        ProviderIpcTokenCodec.readExpectedToken(context, PrefConst.KEY_IPC_TOKEN)
 }
