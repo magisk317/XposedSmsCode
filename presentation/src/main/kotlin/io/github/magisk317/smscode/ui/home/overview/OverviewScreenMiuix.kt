@@ -134,8 +134,8 @@ internal fun OverviewScreenMiuix(
                                 onClick = { updateController.check(userInitiated = true) },
                             )
                             MiuixInfoRow(
-                                label = UiKitR.string.uikit_version_code,
-                                value = state.appVersionCode.ifBlank { unknown },
+                                label = UiKitR.string.uikit_commit_info,
+                                value = state.commitInfo.ifBlank { unknown },
                             )
                             MiuixActionRow(
                                 label = UiKitR.string.uikit_framework_type,
