@@ -402,6 +402,8 @@ android:ci:aab:
   # by Renovate's automatic delivery when applicable, keeps priority over quality.
   needs: []
   variables:
+    # Play tracks require a signed, non-debuggable AAB, so this internal diagnostic
+    # artifact deliberately uses bundlePlayRelease while keeping the CI log channel.
     MAGISK_IS_CI_BUILD: "true"
   script:
     - |

@@ -66,11 +66,10 @@ class SmsCodeApplication : Application() {
         super.onCreate()
         // Before anything logs or crashes: the policy decides both redaction and how much a
         // bundle collects, and the crash writer has to be in place to catch the rest of startup.
-        MagiskLogPolicy.install(
+        val logPolicy = MagiskLogPolicy.install(
             // -PminifyDebug makes the debug variant non-debuggable, which clears
             // BuildConfig.DEBUG; the build type still identifies the capture channel.
-            isDebugBuild = BuildConfig.DEBUG || BuildConfig.IS_CI_BUILD,
-            allowPlaintextLogs = BuildConfig.ALLOW_PLAINTEXT_LOGS,
+            isDiagnosticBuild = BuildConfig.DEBUG || BuildConfig.IS_CI_BUILD,
         )
         RuntimeCrashLogs.install(this)
         AppPreferencesDataStore.install(XscPreferenceHooks)
@@ -94,7 +93,9 @@ class SmsCodeApplication : Application() {
                 mirror = { HookPreferenceMirror.publish(applicationContext) },
             )
         }
-        android.util.Log.w("smscode", "SmsCodeApplication.onCreate() START")
+        if (logPolicy.loggingEnabled) {
+            android.util.Log.w("smscode", "SmsCodeApplication.onCreate() START")
+        }
         val installationId = AnonymousInstallationId.getOrCreate(this, TELEMETRY_PREFS_NAME)
         runBlocking {
             AppPreferencesDataStore.setString(
@@ -145,14 +146,16 @@ class SmsCodeApplication : Application() {
         )
         ensureIpcToken()
         RuntimeDiagnosticsBridge.ensureInstalled()
-        RuntimeLogStore.initialize(this, enableDetailedLogs = false)
+        if (logPolicy.loggingEnabled) {
+            RuntimeLogStore.initialize(this, enableDetailedLogs = false)
+        }
         installCoreRuntime()
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
         }
 
         startKoin {
-            androidLogger()
+            if (MagiskLogPolicy.current().loggingEnabled) androidLogger()
             androidContext(this@SmsCodeApplication)
             modules(appModule, billingModule, uiModule)
         }
@@ -238,28 +241,27 @@ class SmsCodeApplication : Application() {
             override val applicationId: String = BuildConfig.APPLICATION_ID
             override val actionNamespace: String = "io.github.magisk317.smscode"
         })
-        CoreLogSinkHolder.install(object : CoreLogSink {
-            override fun append(
-                priority: Int,
-                tag: String,
-                message: String,
-                force: Boolean,
-                route: String?,
-                sensitive: Boolean,
-                throwableText: String?,
-            ) {
-                // sensitive=true means payload may contain secrets; honor shared switch
-                // Opening pref_sensitive_debug_log_mode disables sanitization and lets
-                // plaintext through for debugging.
-                val safeMessage = if (sensitive) {
-                    DefaultLogSanitizer.sanitizeIfEnabled(message)
-                } else {
-                    message
+        if (MagiskLogPolicy.current().loggingEnabled) {
+            CoreLogSinkHolder.install(object : CoreLogSink {
+                override fun append(
+                    priority: Int,
+                    tag: String,
+                    message: String,
+                    force: Boolean,
+                    route: String?,
+                    sensitive: Boolean,
+                    throwableText: String?,
+                ) {
+                    val safeMessage = if (sensitive) {
+                        DefaultLogSanitizer.sanitizeIfEnabled(message)
+                    } else {
+                        message
+                    }
+                    RuntimeDiagnosticsBridge.ensureInstalled()
+                    RuntimeLogStore.append(priority, tag, safeMessage, force, route, throwableText)
                 }
-                RuntimeDiagnosticsBridge.ensureInstalled()
-                RuntimeLogStore.append(priority, tag, safeMessage, force, route, throwableText)
-            }
-        })
+            })
+        }
         CoreHookPolicyHolder.install(object : CoreHookPolicy {
             override fun shouldSuppressSystemHooks(context: Context?, source: String): Boolean {
                 return ModuleConflictArbiter.shouldSuppressByRelay(context, source)

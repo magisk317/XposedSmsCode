@@ -41,16 +41,9 @@ internal object XscHookHostCapabilities : SmsHookCapabilities {
     override fun isVerboseLogMode(context: Context): Boolean =
         BuildConfig.DEBUG || BuildConfig.IS_CI_BUILD
 
-    override fun isSensitiveDebugLogMode(context: Context): Boolean =
-        BuildConfig.DEBUG || BuildConfig.IS_CI_BUILD
-
     override fun escapeCode(value: String): String = StringUtils.escape(value).orEmpty()
 
-    override fun summarizeCode(value: String): String = StringUtils.summarizeCode(value)
-
     override fun escapeBody(value: String): String = StringUtils.escape(value).orEmpty()
-
-    override fun summarizeBody(value: String): String = StringUtils.summarizeBody(value)
 
     override suspend fun parseSmsCode(context: Context, content: String): String =
         SmsCodeUtils.parseSmsCodeIfExists(context, content)

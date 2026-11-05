@@ -345,7 +345,6 @@ class SettingsViewModel(
                 }
             } catch (e: Exception) {
                 XLog.e(message = "Sms code test failed", e)
-                e.printStackTrace()
                 null
             }
             val code = result?.code.orEmpty()

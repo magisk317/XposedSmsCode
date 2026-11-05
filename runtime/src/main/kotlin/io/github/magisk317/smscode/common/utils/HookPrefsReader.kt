@@ -220,9 +220,6 @@ object HookPrefsReader : HookPrefsAccess {
     override fun isVerboseLogMode(context: Context): Boolean =
         MagiskLogPolicy.current().verboseLogging
 
-    override fun isSensitiveDebugLogMode(context: Context): Boolean =
-        !MagiskLogPolicy.current().sanitizesText
-
     @JvmStatic
     fun isAnalyticsEnabled(context: Context): Boolean {
         return getBooleanViaProvider(PrefConst.KEY_ENABLE_ANALYTICS, true)

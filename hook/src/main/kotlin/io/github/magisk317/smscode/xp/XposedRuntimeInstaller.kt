@@ -45,6 +45,9 @@ object XposedRuntimeInstaller {
     private var moduleContext: Context? = null
 
     fun installEntryRuntime() {
+        val logPolicy = MagiskLogPolicy.install(
+            isDiagnosticBuild = BuildConfig.DEBUG || BuildConfig.IS_CI_BUILD,
+        )
         CoreRuntime.install(object : CoreRuntimeAccess {
             override val logTag: String = BuildConfig.LOG_TAG
             override val logLevel: Int = RuntimeBuildConfig.LOG_LEVEL
@@ -58,10 +61,12 @@ object XposedRuntimeInstaller {
                 return ModuleConflictArbiter.shouldSuppressByRelay(context, source)
             }
         })
-        XposedLogClient.configure(
-            authority = RuntimeLogProvider.authority(BuildConfig.APPLICATION_ID),
-            source = "smscode",
-        )
+        if (logPolicy.loggingEnabled) {
+            XposedLogClient.configure(
+                authority = RuntimeLogProvider.authority(BuildConfig.APPLICATION_ID),
+                source = "smscode",
+            )
+        }
         val hookApp = runCatching {
             Class.forName("android.app.ActivityThread")
                 .getMethod("currentApplication")
@@ -111,7 +116,6 @@ object XposedRuntimeInstaller {
             ),
         )
         installHookBridge()
-        installLogSink()
     }
 
     /**
@@ -197,20 +201,21 @@ object XposedRuntimeInstaller {
 
     fun ensureHookProcessLogging(moduleContext: Context) {
         this.moduleContext = moduleContext.applicationContext ?: moduleContext
-        // The hook process is its own JVM: it has to install the same build-derived policy the
-        // app installed, because nothing carries it across the process boundary.
-        val policy = MagiskLogPolicy.install(
-            isDebugBuild = BuildConfig.DEBUG || BuildConfig.IS_CI_BUILD,
-            allowPlaintextLogs = BuildConfig.ALLOW_PLAINTEXT_LOGS,
-        )
-        RuntimeDiagnosticsBridge.ensureInstalled()
-        RuntimeLogStore.initialize(this.moduleContext ?: moduleContext, enableDetailedLogs = policy.verboseLogging)
+        val policy = MagiskLogPolicy.current()
+        if (policy.loggingEnabled) {
+            RuntimeDiagnosticsBridge.ensureInstalled()
+            RuntimeLogStore.initialize(
+                this.moduleContext ?: moduleContext,
+                enableDetailedLogs = policy.verboseLogging,
+            )
+            installLogSink()
+        }
         // Cross-process cache invalidation: listen for module-app notifyChange signals.
         io.github.magisk317.smscode.common.utils.HookCacheInvalidator.register(this.moduleContext!!)
-        installLogSink()
     }
 
     private fun installLogSink() {
+        if (!MagiskLogPolicy.current().loggingEnabled) return
         if (logSinkInstalled) return
         synchronized(this) {
             if (logSinkInstalled) return

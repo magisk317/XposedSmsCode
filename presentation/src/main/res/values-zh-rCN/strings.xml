@@ -99,7 +99,7 @@
 
 
     <string name="record_export_dialog_title">导出记录</string>
-    <string name="record_export_current_tab_option">导出当前页（%1$s）</string>
+    <string name="record_export_current_tab_option">导出当前页（%1$s）\n\n导出的 JSON 包含发件人、完整短信正文和验证码原文，请谨慎保存和分享。</string>
     <!-- preference code records end -->
 
     <!-- preference code rules -->

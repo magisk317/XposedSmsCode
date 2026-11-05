@@ -76,8 +76,7 @@ interface UiNotificationAccess {
     fun hasPostNotificationsPermission(context: Context): Boolean
 }
 
-/** App-local preference reads needed by UI screens (debug log flag, SIM remark). */
+/** App-local preference reads needed by UI screens. */
 interface UiPrefsAccess {
-    suspend fun isSensitiveDebugLogMode(context: Context): Boolean
     suspend fun getSimSlotRemark(context: Context, simSlot: Int): String
 }

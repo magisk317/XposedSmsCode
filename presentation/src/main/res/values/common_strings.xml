@@ -37,7 +37,6 @@
     <string name="pref_mark_as_read">pref_mark_as_read</string>
     <string name="pref_delete_sms">pref_delete_sms</string>
 
-    <string name="pref_verbose_log_mode">pref_verbose_log_mode</string>
     <string name="pref_runtime_log_retention_days">pref_runtime_log_retention_days</string>
 
     <string name="pref_about">pref_about</string>

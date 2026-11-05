@@ -100,7 +100,7 @@
 
 
     <string name="record_export_dialog_title">Export records</string>
-    <string name="record_export_current_tab_option">Export current tab (%1$s)</string>
+    <string name="record_export_current_tab_option">Export current tab (%1$s)\n\nThe JSON contains the sender, full SMS body, and verification code in plaintext. Store and share it carefully.</string>
     <!-- preference code records end -->
 
     <!-- preference code rules -->

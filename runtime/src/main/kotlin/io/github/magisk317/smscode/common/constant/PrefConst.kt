@@ -76,11 +76,9 @@ object PrefConst {
     const val KEY_KILL_ME = "pref_kill_me"
 
     // Others
-    const val KEY_VERBOSE_LOG_MODE = "pref_verbose_log_mode"
     const val KEY_RUNTIME_LOG_RETENTION_DAYS = "pref_runtime_log_retention_days"
     val RUNTIME_LOG_RETENTION_DAYS_DEFAULT = MagiskLogPolicy.DEFAULT_LOG_RETENTION_DAYS
     val RUNTIME_LOG_RETENTION_DAYS_MIN = MagiskLogPolicy.MIN_LOG_RETENTION_DAYS
-    const val KEY_SENSITIVE_DEBUG_LOG_MODE = "pref_sensitive_debug_log_mode"
     const val KEY_ENABLE_ANALYTICS = "pref_enable_analytics"
     const val KEY_AUTO_UPDATE_ON_START = "pref_auto_update_on_start"
     const val KEY_AUTO_UPDATE_WIFI_ONLY = "pref_auto_update_wifi_only"
