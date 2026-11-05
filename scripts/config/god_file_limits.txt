@@ -3,5 +3,5 @@
 # This is not a growth budget: verifyGodFileLimits requires exact counts and rejects
 # new entries unless the architecture review explicitly updates this file.
 # Mirrors MiPushFramework scripts/checks/report_god_files.sh semantics.
-presentation/src/main/kotlin/io/github/magisk317/smscode/ui/home/ComposeSettingsScreen.kt|1980|Largest UI surface: settings shell across github/play flavors; the update rows moved to UpdateSettingsSection.kt, further extraction tracked in docs/ARCHITECTURE.md
+presentation/src/main/kotlin/io/github/magisk317/smscode/ui/home/ComposeSettingsScreen.kt|1286|Settings shell; dialogs and pref widgets extracted to SettingsDialogs.kt/SettingsPrefWidgets.kt, body-section split still tracked in docs/ARCHITECTURE.md
 presentation/src/main/kotlin/io/github/magisk317/smscode/ui/record/CodeRecordScreen.kt|1213|Record list with metadata expansion; split candidate tracked in docs/ARCHITECTURE.md
