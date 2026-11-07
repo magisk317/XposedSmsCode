@@ -3,6 +3,13 @@
 本日志记录了项目重构后的主要变更。
 
 ---
+## [v3.4.4] - 2026-11-07
+- 版本：`versionCode 138` / `versionName 3.4.4`。
+- 下一轮开发占位，发布前补充具体变更。
+
+> Full Changelog: https://gitlab.com/magisk3171/XposedSmsCode/-/compare/v3.4.3...v3.4.4
+
+---
 ## [v3.4.3] - 2026-11-07
 - 版本：`versionCode 137` / `versionName 3.4.3`。
 - `[ui]` 优化设置页与偏好控件。
