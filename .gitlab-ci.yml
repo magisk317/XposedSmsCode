@@ -1,29 +1,29 @@
 include:
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "c4e65ee5763361e415ecf36d6e919345b6f6bba5"
+    ref: "97089a373188a09c82477feb5663bc94e4bb599a"
     file: /.gitlab/ci/android.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "c4e65ee5763361e415ecf36d6e919345b6f6bba5"
+    ref: "97089a373188a09c82477feb5663bc94e4bb599a"
     file: /.gitlab/ci/android-release.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "c4e65ee5763361e415ecf36d6e919345b6f6bba5"
+    ref: "97089a373188a09c82477feb5663bc94e4bb599a"
     file: /.gitlab/ci/telegram.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "c4e65ee5763361e415ecf36d6e919345b6f6bba5"
+    ref: "97089a373188a09c82477feb5663bc94e4bb599a"
     file: /.gitlab/ci/renovate.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "c4e65ee5763361e415ecf36d6e919345b6f6bba5"
+    ref: "97089a373188a09c82477feb5663bc94e4bb599a"
     file: /.gitlab/ci/cancel-mr-pipelines.yml
   # Utility-job anchor (alpine, pinned): the GitHub mirror and the README-badge
   # job extend it instead of pinning their own image.
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "c4e65ee5763361e415ecf36d6e919345b6f6bba5"
+    ref: "97089a373188a09c82477feb5663bc94e4bb599a"
     file: /.gitlab/ci/utility.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "c4e65ee5763361e415ecf36d6e919345b6f6bba5"
+    ref: "97089a373188a09c82477feb5663bc94e4bb599a"
     file: /.gitlab/ci/github-sync.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "c4e65ee5763361e415ecf36d6e919345b6f6bba5"
+    ref: "97089a373188a09c82477feb5663bc94e4bb599a"
     file: /.gitlab/ci/readme-badges.yml
 
 workflow:
