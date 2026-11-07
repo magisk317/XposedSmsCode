@@ -8,7 +8,7 @@ inputs:
   ref:
     description: magisk-ci-toolkit commit SHA to fetch
     required: false
-    default: '7d66c3214ee5ed0064903c8796bd43706f893338'
+    default: 'e6e9f60ff895449c604bf165cd67d9dfde623509'
 
 runs:
   using: composite
