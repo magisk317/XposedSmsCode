@@ -60,4 +60,6 @@ dependencies {
     implementation(project(":magisk-xposed-kit:logging"))
     implementation(libs.androidx.core.ktx)
     compileOnly(libs.libxposed.api)
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }
