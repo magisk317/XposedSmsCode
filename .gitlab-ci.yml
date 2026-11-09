@@ -152,12 +152,12 @@ android:test:
       when: never
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH'
     - when: never
-  # Wait for automatic Renovate delivery when present; the optional manual
-  # Play action on human beta pipelines does not block this quality job.
+  # Prioritize build so compilation fails fast and releases/APKs are produced
+  # first; detekt and tests run automatically after build and do not depend on
+  # delivery or manual release actions.
   needs:
-    - job: android:ci:publish-play
+    - job: android:build
       artifacts: false
-      optional: true
   script:
     - |
       set -euo pipefail
@@ -277,12 +277,12 @@ android:detekt:
   tags:
     - $XPOSED_TEST_RUNNER_TAG
   allow_failure: true
-  # Wait for automatic Renovate delivery when present; the optional manual
-  # Play action on human beta pipelines does not block this quality job.
+  # Prioritize build so compilation fails fast and releases/APKs are produced
+  # first; detekt and tests run automatically after build and do not depend on
+  # delivery or manual release actions.
   needs:
-    - job: android:ci:publish-play
+    - job: android:build
       artifacts: false
-      optional: true
   artifacts:
     name: "XposedSmsCode-detekt-$CI_COMMIT_REF_SLUG"
     when: always
