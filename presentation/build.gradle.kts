@@ -85,24 +85,51 @@ val verifyNoRuntimeStorageImplLeak = tasks.register("verifyNoRuntimeStorageImplL
 
     val sourceRoot = layout.projectDirectory.dir("src")
     val recordSourceRoot = layout.projectDirectory.dir("src/main/kotlin/io/github/magisk317/smscode/ui/record")
+    // The UI bridge declaration is the contract surface: if a Room implementation or
+    // entity type shows up in a signature here, every consumer regains a direct path
+    // to storage internals, so the declaration file itself is guarded too.
+    val uiBridgeDeclaration = rootProject.layout.projectDirectory.file(
+        "runtime/src/main/kotlin/io/github/magisk317/smscode/runtime/bridge/UiRuntimeAccess.kt",
+    )
     val projectRoot = layout.projectDirectory.asFile
     val bannedRegexes = listOf(
         Regex("""^\s*import\s+io\.github\.magisk317\.smscode\.runtime\.Runtime\w*Facade\b"""),
         Regex("""^\s*import\s+io\.github\.magisk317\.smscode\.data\.db\.(AppDatabase|DBManager|DBProvider)\b"""),
+        Regex("""^\s*import\s+io\.github\.magisk317\.smscode\.data\.db\.entity\."""),
+        Regex("""^\s*import\s+io\.github\.magisk317\.smscode\.db\.entity\."""),
+        Regex("""^\s*import\s+io\.github\.magisk317\.smscode\.data\.repository\.Room"""),
         Regex("""^\s*import\s+io\.github\.magisk317\.smscode\.data\.update\."""),
         Regex("""^\s*import\s+io\.github\.magisk317\.smscode\.common\.utils\.(PrefsReader|HookPrefsReader)\b"""),
         Regex("""^\s*import\s+io\.github\.magisk317\.smscode\.common\.utils\.NotificationUtils\b"""),
         Regex("""\bio\.github\.magisk317\.smscode\.feature\.backup\."""),
         Regex("""\bio\.github\.magisk317\.smscode\.feature\.store\."""),
+        Regex("""\bRoomSmsCodeRuleRepository\b"""),
+        Regex("""\.dbManager\("""),
+        Regex("""\.appDatabase\("""),
+        Regex("""\.upsertAppInfo\("""),
+        Regex("""\.removeAppInfosByPackage\("""),
+        Regex("""\.queryAllAppInfos"""),
+        Regex("""\bio\.github\.magisk317\.smscode\.data\.db\.entity\.AppInfo\b"""),
+        Regex("""\bio\.github\.magisk317\.smscode\.db\.entity\.SmsCodeRule\b"""),
     )
     val recordBannedRegexes = listOf(
         Regex("""^\s*import\s+io\.github\.magisk317\.smscode\.runtime\.RuntimeStorageFacade\b"""),
         Regex("""\bRuntimeStorageFacade\.dbManager\("""),
         Regex("""^\s*import\s+io\.github\.magisk317\.smscode\.runtime\.common\.utils\.JsonUtils\b"""),
     )
+    val bridgeBannedRegexes = listOf(
+        Regex("""\bDBManager\b"""),
+        Regex("""\bAppDatabase\b"""),
+        Regex("""\bDBProvider\b"""),
+        Regex("""\bRoomSmsCodeRuleRepository\b"""),
+        Regex("""\bRoomAppConfigRepository\b"""),
+        Regex("""\bio\.github\.magisk317\.smscode\.data\.db\.entity\."""),
+        Regex("""\bio\.github\.magisk317\.smscode\.db\.entity\."""),
+    )
 
     inputs.dir(sourceRoot)
     inputs.dir(recordSourceRoot)
+    inputs.file(uiBridgeDeclaration)
 
     doLast {
         val violations = sourceRoot
@@ -129,6 +156,16 @@ val verifyNoRuntimeStorageImplLeak = tasks.register("verifyNoRuntimeStorageImplL
                         null
                     }
                 }
+            } + listOf(uiBridgeDeclaration.asFile)
+            .filter { it.isFile }
+            .flatMap { source ->
+                source.readLines().mapIndexedNotNull { index, line ->
+                    if (bridgeBannedRegexes.any { regex -> regex.containsMatchIn(line) }) {
+                        "runtime bridge ${source.name}:${index + 1}: ${line.trim()}"
+                    } else {
+                        null
+                    }
+                }
             }
 
         if (violations.isNotEmpty()) {
@@ -136,6 +173,7 @@ val verifyNoRuntimeStorageImplLeak = tasks.register("verifyNoRuntimeStorageImplL
                 buildString {
                     appendLine("Core must not directly depend on runtime storage/update implementation types or runtime feature internals:")
                     appendLine("Record UI must go through RuntimeCodeRecordFacade for storage and export operations:")
+                    appendLine("The runtime UI bridge must not declare Room implementation or entity types in its signatures:")
                     violations.forEach { appendLine(it) }
                 },
             )
