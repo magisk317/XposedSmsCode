@@ -21,7 +21,4 @@ val appModule = module {
     single<UiCodeRecordAccess> { RuntimeCodeRecordFacade }
     single<UiNotificationAccess> { RuntimeNotificationFacade }
     single<UiPrefsAccess> { AppPrefsFacade }
-
-    // Database
-    single { get<UiStorageAccess>().appDatabase(get()) }
 }

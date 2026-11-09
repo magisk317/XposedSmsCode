@@ -33,7 +33,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.magisk317.smscode.presentation.R
-import io.github.magisk317.smscode.data.db.entity.AppInfo
+import io.github.magisk317.smscode.runtime.bridge.UiAppConfig
 import io.github.magisk317.uikit.surface.AppIconImage
 import io.github.magisk317.uikit.surface.AppPullToRefresh
 import io.github.magisk317.uikit.foundation.LoadingIndicatorTokens
@@ -394,7 +394,7 @@ fun AppConfigScreen(
 }
 @Composable
 fun AppConfigItem(
-    app: AppInfo,
+    app: UiAppConfig,
     isDataActive: Boolean = true,
     onBlockedChange: (Boolean) -> Unit,
 ) {

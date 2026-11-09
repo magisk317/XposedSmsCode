@@ -25,7 +25,6 @@ import io.github.magisk317.smscode.presentation.R
 import io.github.magisk317.smscode.runtime.RuntimeBackupExportResult
 import io.github.magisk317.smscode.runtime.RuntimeBackupImportResult
 import io.github.magisk317.smscode.runtime.RuntimeBackupImportStatus
-import io.github.magisk317.smscode.runtime.RuntimeBackupRule
 import io.github.magisk317.smscode.runtime.RuntimeBackupSmsRecord
 import io.github.magisk317.smscode.runtime.bridge.UiBackupAccess
 import io.github.magisk317.smscode.runtime.bridge.UiStorageAccess
@@ -119,8 +118,7 @@ class SettingsViewModel(
     private val _themeState = MutableStateFlow(ThemeState(0, UiKitStyle.Expressive.value))
     val themeState: StateFlow<ThemeState> = _themeState.asStateFlow()
 
-    val smsRecordCount: StateFlow<Long> = storage.dbManager(application)
-        .queryAllSmsMsgCountFlow()
+    val smsRecordCount: StateFlow<Long> = storage.smsRecordCountFlow(application)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(Const.FLOW_STOP_TIMEOUT_MS),
@@ -424,8 +422,7 @@ class SettingsViewModel(
                 )
                 val rules = if (includeRules) {
                     withContext(Dispatchers.IO) {
-                        storage.dbManager(context).queryAllSmsCodeRules()
-                            .map { RuntimeBackupRule(it.company, it.codeKeyword, it.codeRegex) }
+                        backup.queryBackupRules(context)
                     }
                 } else {
                     emptyList()
@@ -433,22 +430,7 @@ class SettingsViewModel(
 
                 val records = if (includeRecords) {
                     withContext(Dispatchers.IO) {
-                        storage.dbManager(context).queryAllSmsMsg()
-                            .map {
-                                RuntimeBackupSmsRecord(
-                                    sender = it.sender,
-                                    body = it.body,
-                                    date = it.date,
-                                    processedTime = it.processedTime,
-                                    company = it.company,
-                                    smsCode = it.smsCode,
-                                    packageName = it.packageName,
-                                    simSlot = it.simSlot,
-                                    subId = it.subId,
-                                    msgType = it.msgType,
-                                    callType = it.callType,
-                                )
-                            }
+                        backup.queryBackupSmsRecords(context)
                     }
                 } else {
                     null
@@ -533,7 +515,7 @@ class SettingsViewModel(
                                 )
                             }
                         } else {
-                            if (restoreRules) restoreRules(context, importResult.rules)
+                            if (restoreRules) backup.restoreRulesFromBackup(context, importResult.rules)
                             if (restoreRecords) restoreRecords(context, importResult.records.orEmpty())
                         }
                         if (restoreConfig) restorePreferences(context, importResult.preferences.orEmpty())
@@ -553,45 +535,18 @@ class SettingsViewModel(
         }
     }
 
-    private suspend fun restoreRules(context: Context, rules: List<RuntimeBackupRule>) {
-        if (rules.isEmpty()) return
-        val dbManager = storage.dbManager(context)
-        val entities = rules.map {
-            io.github.magisk317.smscode.db.entity.SmsCodeRule(it.company, it.codeKeyword, it.codeRegex)
-        }
-        dbManager.addSmsCodeRules(entities)
-    }
-
     private suspend fun restoreRecords(context: Context, records: List<RuntimeBackupSmsRecord>) {
-        val dbManager = storage.dbManager(context)
         if (records.isEmpty()) {
             XLog.w(message = "Restore records skipped: empty list")
             return
         }
-        val beforeCount = dbManager.queryAllSmsMsg().size
-        val entities = records.map {
-            io.github.magisk317.smscode.data.db.entity.SmsMsg(
-                sender = it.sender,
-                body = it.body,
-                date = it.date,
-                processedTime = it.processedTime,
-                company = it.company,
-                smsCode = it.smsCode,
-                packageName = it.packageName,
-                simSlot = it.simSlot,
-                subId = it.subId,
-                msgType = it.msgType,
-                callType = it.callType,
-            )
-        }
-        dbManager.addSmsMsgList(entities)
-        val afterCount = dbManager.queryAllSmsMsg().size
+        val stats = backup.restoreRecordsFromBackup(context, records)
         XLog.i(
             message = "Restore records finished: requested=%d before=%d after=%d delta=%d",
             records.size,
-            beforeCount,
-            afterCount,
-            afterCount - beforeCount,
+            stats.beforeCount,
+            stats.afterCount,
+            stats.afterCount - stats.beforeCount,
         )
     }
 

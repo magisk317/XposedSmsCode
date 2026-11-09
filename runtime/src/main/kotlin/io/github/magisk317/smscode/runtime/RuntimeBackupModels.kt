@@ -1,5 +1,7 @@
 package io.github.magisk317.smscode.runtime
 
+import io.github.magisk317.smscode.data.db.entity.SmsMsg
+import io.github.magisk317.smscode.db.entity.SmsCodeRule
 import io.github.magisk317.smscode.runtime.contract.backup.BackupImportResult
 import io.github.magisk317.smscode.runtime.contract.backup.BackupRule
 import io.github.magisk317.smscode.runtime.contract.backup.BackupSmsRecord
@@ -52,6 +54,12 @@ data class RuntimeBackupImportResult(
     val preferences: Map<String, String?>? = null,
     val records: List<RuntimeBackupSmsRecord>? = null,
     val warning: RuntimeBackupImportWarning? = null,
+)
+
+/** Row counts observed around a logical record restore, for restore diagnostics. */
+data class RuntimeRecordRestoreStats(
+    val beforeCount: Int,
+    val afterCount: Int,
 )
 
 internal fun RuntimeBackupRule.toInternal(): BackupRule {
@@ -134,5 +142,53 @@ internal fun BackupImportResult.toRuntime(): RuntimeBackupImportResult {
         preferences = preferences,
         records = records?.map(BackupSmsRecord::toRuntime),
         warning = warning?.toRuntime(),
+    )
+}
+
+internal fun RuntimeBackupRule.toRuleEntity(): SmsCodeRule {
+    return SmsCodeRule(
+        company = company,
+        codeKeyword = codeKeyword,
+        codeRegex = codeRegex,
+    )
+}
+
+internal fun SmsCodeRule.toBackupRule(): RuntimeBackupRule {
+    return RuntimeBackupRule(
+        company = company,
+        codeKeyword = codeKeyword,
+        codeRegex = codeRegex,
+    )
+}
+
+internal fun RuntimeBackupSmsRecord.toSmsMsgEntity(): SmsMsg {
+    return SmsMsg(
+        sender = sender,
+        body = body,
+        date = date,
+        processedTime = processedTime,
+        company = company,
+        smsCode = smsCode,
+        packageName = packageName,
+        simSlot = simSlot,
+        subId = subId,
+        msgType = msgType,
+        callType = callType,
+    )
+}
+
+internal fun SmsMsg.toBackupRecord(): RuntimeBackupSmsRecord {
+    return RuntimeBackupSmsRecord(
+        sender = sender,
+        body = body,
+        date = date,
+        processedTime = processedTime,
+        company = company,
+        smsCode = smsCode,
+        packageName = packageName,
+        simSlot = simSlot,
+        subId = subId,
+        msgType = msgType,
+        callType = callType,
     )
 }
