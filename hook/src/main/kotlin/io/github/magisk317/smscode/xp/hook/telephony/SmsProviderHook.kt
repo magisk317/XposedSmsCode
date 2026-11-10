@@ -18,6 +18,7 @@ private object XscSmsProviderHookHost : SmsProviderHookHost {
     override val applicationId: String = BuildConfig.APPLICATION_ID
 
     override val capabilities: SmsHookCapabilities = XscHookHostCapabilities
+    override val runtimeSession = XscHookHostCapabilities.smsHookRuntimeSession
 
     override fun onInboundSmsProviderWrite(
         pluginContext: Context,
