@@ -96,6 +96,7 @@
         "smscode/*"
       ],
       "tasks": [
+        ":smscode-core:verifyModuleBoundaries",
         ":smscode-core:contract:test",
         ":smscode-core:domain:test",
         ":smscode-core:hook:testDebugUnitTest",

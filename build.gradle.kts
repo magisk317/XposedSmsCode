@@ -208,6 +208,7 @@ val verifyMainModuleDependencies = tasks.register("verifyMainModuleDependencies"
 }
 
 val verifyModuleBoundaries = tasks.register("verifyModuleBoundaries") {
+    dependsOn(":smscode-core:verifyModuleBoundaries")
     group = "verification"
     description = "Run root module-boundary checks for app/presentation/runtime and shared smscode-core."
 
