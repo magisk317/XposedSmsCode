@@ -331,6 +331,10 @@ android:release:apk:
     MAGISK_ANDROID_RELEASE_ALLOW_NON_DEBUGGABLE_DEBUG: "true"
     MAGISK_ANDROID_RELEASE_GRADLE_EXTRA_ARGS: "-PbuildSplits -PminifyDebug"
   resource_group: xposed-android-release-apk
+  # Release chain pinned to the arm64 runner (2026-11-17): the amd64 runner is
+  # the release bottleneck.
+  tags:
+    - $XPOSED_GITLAB_LINUX_ARM64_RUNNER_TAG
   stage: build
   needs:
     - job: android:release:guard

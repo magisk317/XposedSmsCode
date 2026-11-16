@@ -3,6 +3,17 @@
 本日志记录了项目重构后的主要变更。
 
 ---
+## [v3.4.4] - 2026-11-16
+- 版本：`versionCode 138` / `versionName 3.4.4`。
+- `[feat]` 优化 WebDAV 备份与恢复功能。
+- `[feat]` 标记已读尝试回归。#273
+- `[feat]` 新增俄语。#272
+- `[fix]`  改进短信处理后的恢复体验。#271
+- `[deps]` 升级 Kotlin 2.5.0 RC、Gradle 9.9.1 与相关依赖。
+
+> Full Changelog: https://gitlab.com/magisk3171/XposedSmsCode/-/compare/v3.4.3...v3.4.4
+
+---
 ## [v3.4.3] - 2026-11-07
 - 版本：`versionCode 137` / `versionName 3.4.3`。
 - `[ui]` 优化设置页与偏好控件。
