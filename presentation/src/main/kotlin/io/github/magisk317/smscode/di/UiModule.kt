@@ -3,6 +3,7 @@ package io.github.magisk317.smscode.di
 import io.github.magisk317.smscode.presentation.BuildConfig
 import io.github.magisk317.smscode.security.CiUpdateGateVault
 import io.github.magisk317.smscode.ui.home.AppConfigViewModel
+import io.github.magisk317.smscode.ui.home.CloudBackupViewModel
 import io.github.magisk317.smscode.ui.home.SettingsViewModel
 import io.github.magisk317.smscode.ui.record.CodeRecordViewModel
 import io.github.magisk317.uikit.update.AppUpdateChecker
@@ -22,6 +23,7 @@ import org.koin.dsl.module
 val uiModule = module {
     viewModelOf(::AppConfigViewModel)
     viewModelOf(::SettingsViewModel)
+    viewModelOf(::CloudBackupViewModel)
     viewModelOf(::CodeRecordViewModel)
 
     single {

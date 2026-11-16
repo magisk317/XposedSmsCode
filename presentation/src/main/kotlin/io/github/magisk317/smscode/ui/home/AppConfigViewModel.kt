@@ -8,7 +8,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.magisk317.xposed.logging.XLog
-import io.github.magisk317.smscode.data.db.entity.AppInfo
+import io.github.magisk317.smscode.runtime.bridge.UiAppConfig
 import io.github.magisk317.smscode.runtime.bridge.UiStorageAccess
 import io.github.magisk317.smscode.runtime.bridge.UiStoreAccess
 import io.github.magisk317.smscode.ui.block.AppInfoHelper
@@ -51,8 +51,8 @@ class AppConfigViewModel(
     private val storage: UiStorageAccess,
     private val store: UiStoreAccess,
 ) : AndroidViewModel(application) {
-    private val _appsFlow = MutableStateFlow<ImmutableList<AppInfo>>(persistentListOf())
-    val appsFlow: StateFlow<ImmutableList<AppInfo>> = _appsFlow.asStateFlow()
+    private val _appsFlow = MutableStateFlow<ImmutableList<UiAppConfig>>(persistentListOf())
+    val appsFlow: StateFlow<ImmutableList<UiAppConfig>> = _appsFlow.asStateFlow()
 
     private val _loadingFlow = MutableStateFlow(false)
     val loadingFlow: StateFlow<Boolean> = _loadingFlow.asStateFlow()
@@ -79,8 +79,8 @@ class AppConfigViewModel(
         object ShowUsageStatsPermission : AppConfigEvent()
     }
 
-    private var apps: ImmutableList<AppInfo> = persistentListOf()
-    private var filteredApps: ImmutableList<AppInfo> = persistentListOf()
+    private var apps: ImmutableList<UiAppConfig> = persistentListOf()
+    private var filteredApps: ImmutableList<UiAppConfig> = persistentListOf()
     private var visibleAppCount = 0
     private var isLoadSucceed = false
     private var systemApps: Set<String> = emptySet()
@@ -142,7 +142,8 @@ class AppConfigViewModel(
                         val context = getApplication<Application>()
                         val pm = context.packageManager
                         // Load app blocked configs from DB.
-                        val configs = storage.dbManager(context).queryAllAppInfosSuspend()
+                        val appConfigRepository = storage.appConfigRepository(context)
+                        val configs = appConfigRepository.getAll()
                         store.persistAppConfigs(context, configs.filter(::hasEffectiveConfig))
 
                         val installedApps = pm.getInstalledApplications(PackageManager.MATCH_ALL)
@@ -313,7 +314,7 @@ class AppConfigViewModel(
         _hasMoreAppsFlow.value = endIndex < filteredApps.size
     }
 
-    fun setBlocked(item: AppInfo, blocked: Boolean) {
+    fun setBlocked(item: UiAppConfig, blocked: Boolean) {
         setBlocked(item.packageName, blocked)
     }
 
@@ -321,11 +322,11 @@ class AppConfigViewModel(
         updateApp(packageName) { it.copy(blocked = blocked) }
     }
 
-    fun getAppByPackageName(packageName: String): AppInfo? {
+    fun getAppByPackageName(packageName: String): UiAppConfig? {
         return apps.firstOrNull { it.packageName == packageName }
     }
 
-    private fun updateApp(packageName: String, updater: (AppInfo) -> AppInfo) {
+    private fun updateApp(packageName: String, updater: (UiAppConfig) -> UiAppConfig) {
         if (refreshJob != null) {
             refreshGeneration.invalidate()
             refreshJob?.cancel()
@@ -347,12 +348,12 @@ class AppConfigViewModel(
             try {
                 withContext(Dispatchers.IO) {
                     persistMutex.withLock {
-                        val dbManager = storage.dbManager(getApplication())
+                        val appConfigRepository = storage.appConfigRepository(getApplication())
                         if (target != null) {
                             if (hasEffectiveConfig(target)) {
-                                dbManager.upsertAppInfo(target)
+                                appConfigRepository.upsert(target)
                             } else {
-                                dbManager.removeAppInfosByPackage(listOf(target.packageName))
+                                appConfigRepository.removeByPackages(listOf(target.packageName))
                             }
                         }
                         store.persistAppConfigs(getApplication(), changedConfigs)
@@ -365,7 +366,7 @@ class AppConfigViewModel(
         }
     }
 
-    private fun hasEffectiveConfig(appInfo: AppInfo): Boolean {
+    private fun hasEffectiveConfig(appInfo: UiAppConfig): Boolean {
         return appInfo.blocked
     }
 
@@ -373,7 +374,7 @@ class AppConfigViewModel(
         sortOption: SortOption,
         ascending: Boolean,
         usageStats: Map<String, Long>,
-    ) = Comparator<AppInfo> { o1, o2 ->
+    ) = Comparator<UiAppConfig> { o1, o2 ->
         // Keep configured apps pinned on top regardless of selected sort mode.
         val configCompare = compareConfigPriority(o1, o2)
         if (configCompare != 0) {
@@ -394,7 +395,7 @@ class AppConfigViewModel(
         if (ascending) result else -result
     }
 
-    private fun compareConfigPriority(o1: AppInfo, o2: AppInfo): Int {
+    private fun compareConfigPriority(o1: UiAppConfig, o2: UiAppConfig): Int {
         val hasConfig1 = hasEffectiveConfig(o1)
         val hasConfig2 = hasEffectiveConfig(o2)
         if (hasConfig1 != hasConfig2) {
@@ -413,7 +414,7 @@ class AppConfigViewModel(
     }
 
     private data class AppCatalog(
-        val apps: ImmutableList<AppInfo>,
+        val apps: ImmutableList<UiAppConfig>,
         val systemApps: Set<String>,
     )
 

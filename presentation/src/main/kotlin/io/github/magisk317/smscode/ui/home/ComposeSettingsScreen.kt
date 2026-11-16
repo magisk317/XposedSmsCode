@@ -990,6 +990,37 @@ internal fun ComposeSettingsScreenBody(
                             onSaved = markPrefsSaved,
                         )
                         SwitchItem(
+                            title = stringResource(id = R.string.pref_mark_as_read_title),
+                            summary = stringResource(id = R.string.pref_mark_as_read_summary),
+                            key = PrefConst.KEY_MARK_AS_READ,
+                            defaultValue = false,
+                            onSaved = markPrefsSaved,
+                            onToggle = { enabled ->
+                                if (enabled && !isCodeMarkReadListenerEnabled(context)) {
+                                    context.startActivity(
+                                        Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+                                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                                    )
+                                }
+                            },
+                        )
+                        AppArrowItem(
+                            title = stringResource(id = R.string.pref_notification_listener_title),
+                            summary = stringResource(id = R.string.pref_notification_listener_summary),
+                        ) {
+                            context.startActivity(
+                                Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                            )
+                        }
+                        SwitchItem(
+                            title = stringResource(id = R.string.pref_delete_sms_title),
+                            summary = stringResource(id = R.string.pref_delete_sms_summary),
+                            key = PrefConst.KEY_DELETE_SMS,
+                            defaultValue = false,
+                            onSaved = markPrefsSaved,
+                        )
+                        SwitchItem(
                             title = stringResource(id = R.string.pref_kill_me_title),
                             summary = stringResource(id = R.string.pref_kill_me_summary),
                             key = PrefConst.KEY_KILL_ME,
@@ -1009,6 +1040,13 @@ internal fun ComposeSettingsScreenBody(
                             title = stringResource(id = UiKitR.string.pref_backup_title),
                             summary = stringResource(id = UiKitR.string.pref_backup_summary),
                         ) { showBackupDialog = true }
+                        val navigateToCloudBackup = LocalCloudBackupNavigation.current
+                        AppArrowItem(
+                            title = stringResource(id = R.string.pref_cloud_backup_title),
+                            summary = stringResource(id = R.string.pref_cloud_backup_summary),
+                        ) {
+                            navigateToCloudBackup?.invoke()
+                        }
                         AppArrowItem(
                             title = stringResource(id = UiKitR.string.pref_restore_title),
                             summary = stringResource(id = UiKitR.string.pref_restore_summary),

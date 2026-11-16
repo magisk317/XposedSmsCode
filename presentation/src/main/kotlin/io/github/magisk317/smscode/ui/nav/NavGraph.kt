@@ -22,6 +22,9 @@ object SettingsRoute
 object ThemeSettingsRoute
 
 @Serializable
+object CloudBackupRoute
+
+@Serializable
 object RecordsRoute
 
 @Serializable

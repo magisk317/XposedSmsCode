@@ -152,6 +152,27 @@ internal fun isAutoInputAccessibilityServiceEnabled(context: android.content.Con
     }
 }
 
+internal const val CODE_MARK_READ_LISTENER_CLASS_NAME =
+    "io.github.magisk317.smscode.service.CodeMarkReadNotificationService"
+
+internal fun isCodeMarkReadListenerEnabled(context: android.content.Context): Boolean {
+    val expectedListener = ComponentName(
+        context.packageName,
+        CODE_MARK_READ_LISTENER_CLASS_NAME,
+    ).flattenToString()
+    val enabledListeners = Settings.Secure.getString(
+        context.contentResolver,
+        ENABLED_NOTIFICATION_LISTENERS_KEY,
+    ).orEmpty()
+    if (enabledListeners.isBlank()) return false
+    return enabledListeners.split(':').any { candidate ->
+        candidate.equals(expectedListener, ignoreCase = true)
+    }
+}
+
+/** Mirrors Settings.Secure.ENABLED_NOTIFICATION_LISTENERS ("enabled_notification_listeners"). */
+internal const val ENABLED_NOTIFICATION_LISTENERS_KEY = "enabled_notification_listeners"
+
 @Composable
 fun SwitchItem(
     title: String,

@@ -44,6 +44,7 @@ import io.github.magisk317.smscode.ui.nav.MainRoutePagerSynchronizer
 import io.github.magisk317.smscode.ui.nav.MainTopLevelPage
 import io.github.magisk317.smscode.ui.nav.OverviewRoute
 import io.github.magisk317.smscode.ui.nav.ThemeSettingsRoute
+import io.github.magisk317.smscode.ui.nav.CloudBackupRoute
 import io.github.magisk317.smscode.ui.theme.ThemeSettingsPage
 import io.github.magisk317.smscode.ui.nav.RecordSwipeGestureArbitrator
 import io.github.magisk317.smscode.ui.nav.RecordsRoute
@@ -139,6 +140,7 @@ fun MainScreen(
     val navController = rememberNavController()
     val appConfigViewModel: AppConfigViewModel = koinViewModel()
     val themeViewModel: SettingsViewModel = koinViewModel()
+    val cloudBackupViewModel: CloudBackupViewModel = koinViewModel()
     val chromeThemeState by themeViewModel.themeState.collectAsStateWithLifecycle()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -510,6 +512,7 @@ fun MainScreen(
                     )
                     MainTopLevelPage.SETTINGS.index -> androidx.compose.runtime.CompositionLocalProvider(
                         LocalThemeSettingsNavigation provides { navController.navigate(ThemeSettingsRoute) },
+                        LocalCloudBackupNavigation provides { navController.navigate(CloudBackupRoute) },
                     ) {
                         ComposeSettingsScreen(
                             onExit = { /* In tab, ignore exit */ },
@@ -668,6 +671,7 @@ fun MainScreen(
                     composable<SettingsRoute> {
                         androidx.compose.runtime.CompositionLocalProvider(
                             LocalThemeSettingsNavigation provides { navController.navigate(ThemeSettingsRoute) },
+                            LocalCloudBackupNavigation provides { navController.navigate(CloudBackupRoute) },
                         ) {
                             ComposeSettingsScreen(
                                 onExit = { /* In tab, ignore exit */ },
@@ -685,6 +689,12 @@ fun MainScreen(
                             // already observe; a plain koinViewModel() here would resolve to
                             // the NavBackStackEntry scope and write to an orphan instance.
                             viewModel = themeViewModel,
+                            onBack = { navController.popBackStack() },
+                        )
+                    }
+                    composable<CloudBackupRoute> {
+                        CloudBackupSettingsScreen(
+                            viewModel = cloudBackupViewModel,
                             onBack = { navController.popBackStack() },
                         )
                     }

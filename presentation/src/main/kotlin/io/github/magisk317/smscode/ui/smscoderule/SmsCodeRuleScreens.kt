@@ -55,7 +55,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.magisk317.smscode.presentation.R
 import io.github.magisk317.uikit.R as UiKitR
 import io.github.magisk317.smscode.common.utils.SmsCodeUtils as AppSmsCodeUtils
-import io.github.magisk317.smscode.db.entity.SmsCodeRule
+import io.github.magisk317.smscode.rule.model.SmsCodeRuleSpec
+import io.github.magisk317.smscode.rule.repository.SmsCodeRuleRecord
 import io.github.magisk317.smscode.runtime.bridge.UiStorageAccess
 import org.koin.compose.koinInject
 import io.github.magisk317.smscode.rule.model.BuiltinSmsCodeRuleSpec
@@ -124,7 +125,7 @@ fun SmsCodeRuleListScreen(
     val officialRefreshFailed = stringResource(id = R.string.official_code_rules_refresh_failed)
     val userTitle = stringResource(id = R.string.user_code_rules_title)
     val userSummary = stringResource(id = R.string.user_code_rules_summary)
-    val rules by ruleRepository.observeRuleEntities().collectAsStateWithLifecycle(initialValue = emptyList())
+    val rules by ruleRepository.observeRules().collectAsStateWithLifecycle(initialValue = emptyList())
     var officialSnapshot by remember { mutableStateOf<SmsCodeRuleCatalogSnapshot?>(null) }
     var officialLoading by remember { mutableStateOf(false) }
     val officialRules = officialSnapshot?.rules.orEmpty()
@@ -230,15 +231,15 @@ fun SmsCodeRuleListScreen(
                     }
                 }
             } else {
-                itemsIndexed(rules, key = { _, rule -> rule.id ?: 0L }) { index, rule ->
+                itemsIndexed(rules, key = { _, rule -> rule.id }) { index, rule ->
                     SmsCodeRuleCard(
                         rule = rule,
                         ordinal = index + 1,
-                        onEdit = { rule.id?.let(onEditClick) },
+                        onEdit = { onEditClick(rule.id) },
                         onDelete = {
                             scope.launch {
-                                ruleRepository.deleteEntity(rule)
-                                snackbarHostState.showSnackbar("$removedLabel: ${rule.codeKeyword}")
+                                ruleRepository.delete(rule)
+                                snackbarHostState.showSnackbar("$removedLabel: ${rule.spec.codeKeyword}")
                             }
                         },
                     )
@@ -361,14 +362,14 @@ private fun OfficialSmsCodeRuleCard(
 
 @Composable
 private fun SmsCodeRuleCard(
-    rule: SmsCodeRule,
+    rule: SmsCodeRuleRecord,
     ordinal: Int,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
 ) {
     val userBadge = stringResource(id = R.string.user_rule_badge_format, ordinal)
     DetailSectionCard(
-        title = rule.company?.takeIf { it.isNotBlank() } ?: rule.codeKeyword,
+        title = rule.spec.company?.takeIf { it.isNotBlank() } ?: rule.spec.codeKeyword,
         summary = userBadge,
         modifier = Modifier.fillMaxWidth(),
     ) {
@@ -379,14 +380,14 @@ private fun SmsCodeRuleCard(
                 .padding(horizontal = 18.dp, vertical = 14.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            if (!rule.company.isNullOrBlank()) {
+            if (!rule.spec.company.isNullOrBlank()) {
                 AppText(
-                    text = rule.codeKeyword,
+                    text = rule.spec.codeKeyword,
                     role = AppTextRole.Body,
                 )
             }
             AppText(
-                text = rule.codeRegex,
+                text = rule.spec.codeRegex,
                 role = AppTextRole.BodySmall,
                 color = appColor(AppColorRole.OnSurfaceVariant),
                 maxLines = 3,
@@ -461,15 +462,15 @@ fun SmsCodeRuleEditorScreen(
             loading = false
             return@LaunchedEffect
         }
-        val rule = ruleRepository.getEntityById(ruleId)
+        val rule = ruleRepository.getById(ruleId)
         if (rule == null) {
             snackbarHostState.showSnackbar(loadFailedText)
             onBack()
             return@LaunchedEffect
         }
-        company.setTextAndPlaceCursorAtEnd(rule.company.orEmpty())
-        keyword.setTextAndPlaceCursorAtEnd(rule.codeKeyword)
-        regex.setTextAndPlaceCursorAtEnd(rule.codeRegex)
+        company.setTextAndPlaceCursorAtEnd(rule.spec.company.orEmpty())
+        keyword.setTextAndPlaceCursorAtEnd(rule.spec.codeKeyword)
+        regex.setTextAndPlaceCursorAtEnd(rule.spec.codeRegex)
         loading = false
     }
 
@@ -495,27 +496,25 @@ fun SmsCodeRuleEditorScreen(
                 snackbarHostState.showSnackbar(it.message ?: saveFailedText)
                 return@launch
             }
-            val duplicated = ruleRepository.getAllEntities().firstOrNull { existing ->
+            val duplicated = ruleRepository.getAll().firstOrNull { existing ->
                 existing.id != ruleId &&
-                    existing.company.orEmpty().trim() == normalizedCompany.orEmpty() &&
-                    existing.codeKeyword.trim() == normalizedKeyword &&
-                    existing.codeRegex.trim() == normalizedRegex
+                    existing.spec.company.orEmpty().trim() == normalizedCompany.orEmpty() &&
+                    existing.spec.codeKeyword.trim() == normalizedKeyword &&
+                    existing.spec.codeRegex.trim() == normalizedRegex
             }
             if (duplicated != null) {
                 snackbarHostState.showSnackbar(duplicateText)
                 return@launch
             }
-            val targetRule = SmsCodeRule(
-                company = normalizedCompany,
-                codeKeyword = normalizedKeyword,
-                codeRegex = normalizedRegex,
-                id = ruleId.takeIf { it > 0L },
+            val targetRule = SmsCodeRuleRecord(
+                id = ruleId.takeIf { it > 0L } ?: 0L,
+                spec = SmsCodeRuleSpec(
+                    company = normalizedCompany,
+                    codeKeyword = normalizedKeyword,
+                    codeRegex = normalizedRegex,
+                ),
             )
-            if (ruleId > 0L) {
-                ruleRepository.upsertEntity(targetRule)
-            } else {
-                ruleRepository.upsertEntity(targetRule)
-            }
+            ruleRepository.upsert(targetRule)
             onBack()
         }
     }

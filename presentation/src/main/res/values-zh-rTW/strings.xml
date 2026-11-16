@@ -437,4 +437,25 @@
     <string name="settings_group_notification_summary">Toast、驗證碼通知與保留時長</string>
     <string name="settings_group_experimental_summary">進階使用者適用的風險功能</string>
     <string name="settings_group_others_summary">備份、還原、更新與隱私</string>
+    <!-- cloud backup -->
+    <string name="pref_cloud_backup_title">雲端備份</string>
+    <string name="pref_cloud_backup_summary">透過 WebDAV 備份與還原</string>
+    <string name="cloud_backup_list_failed">載入雲端備份失敗</string>
+    <string name="cloud_backup_webdav_required">請先設定 WebDAV 再進行備份</string>
+    <string name="cloud_backup_webdav_saved">WebDAV 設定已儲存</string>
+    <string name="cloud_backup_webdav_save_failed">儲存 WebDAV 設定失敗</string>
+    <string name="cloud_backup_webdav_removed">已移除 WebDAV 設定</string>
+    <string name="cloud_backup_webdav_connection_success">WebDAV 連線成功</string>
+    <string name="cloud_backup_webdav_connection_failed">WebDAV 連線失敗</string>
+    <string name="cloud_backup_delete_failed">刪除雲端備份失敗</string>
+    <string name="cloud_backup_restore_confirm_title">還原雲端備份？</string>
+    <string name="cloud_backup_restore_confirm_message">本機資料將被所選備份覆寫。</string>
+    <string name="cloud_backup_restore_confirm_action">還原</string>
+    <!-- mark as read (experimental) -->
+    <string name="pref_mark_as_read_title">驗證碼簡訊標記為已讀</string>
+    <string name="pref_mark_as_read_summary">擷取成功後自動將驗證碼簡訊標記為已讀</string>
+    <string name="pref_notification_listener_title">通知使用權限</string>
+    <string name="pref_notification_listener_summary">標記為已讀需要通知使用權限，用於同步清除簡訊應用發出的驗證碼通知</string>
+    <string name="pref_delete_sms_title">驗證碼簡訊刪除</string>
+    <string name="pref_delete_sms_summary">警告：擷取成功後驗證碼簡訊將被刪除</string>
 </resources>

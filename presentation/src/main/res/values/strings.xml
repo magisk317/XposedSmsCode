@@ -500,4 +500,25 @@
     <string name="pref_bottom_bar_backdrop_summary">Capture the page behind the floating bar for a static liquid-glass effect when supported.</string>
     <string name="pref_navigation_badges_title">Navigation badges</string>
     <string name="pref_navigation_badges_summary">Show badges when a navigation item provides a meaningful status.</string>
+    <!-- cloud backup -->
+    <string name="pref_cloud_backup_title">Cloud backup</string>
+    <string name="pref_cloud_backup_summary">Back up and restore via WebDAV</string>
+    <string name="cloud_backup_list_failed">Failed to load cloud backups</string>
+    <string name="cloud_backup_webdav_required">Configure WebDAV before backing up</string>
+    <string name="cloud_backup_webdav_saved">WebDAV configuration saved</string>
+    <string name="cloud_backup_webdav_save_failed">Failed to save WebDAV configuration</string>
+    <string name="cloud_backup_webdav_removed">WebDAV configuration removed</string>
+    <string name="cloud_backup_webdav_connection_success">WebDAV connection successful</string>
+    <string name="cloud_backup_webdav_connection_failed">WebDAV connection failed</string>
+    <string name="cloud_backup_delete_failed">Failed to delete cloud backup</string>
+    <string name="cloud_backup_restore_confirm_title">Restore cloud backup?</string>
+    <string name="cloud_backup_restore_confirm_message">Existing local data will be replaced by the selected backup.</string>
+    <string name="cloud_backup_restore_confirm_action">Restore</string>
+    <!-- mark as read (experimental) -->
+    <string name="pref_mark_as_read_title">Mark code SMS as read</string>
+    <string name="pref_mark_as_read_summary">Automatically mark verification code SMS as read after extraction</string>
+    <string name="pref_notification_listener_title">Notification access</string>
+    <string name="pref_notification_listener_summary">Grant notification access so code SMS notifications can be cleared when mark-as-read is enabled</string>
+    <string name="pref_delete_sms_title">Delete code SMS</string>
+    <string name="pref_delete_sms_summary">Warning! Code SMS will be deleted if extraction succeeds</string>
 </resources>

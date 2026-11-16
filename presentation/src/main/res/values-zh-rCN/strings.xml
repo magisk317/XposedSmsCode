@@ -494,4 +494,25 @@
     <string name="pref_bottom_bar_backdrop_summary">在设备支持时捕获悬浮栏下方页面，呈现静态液态玻璃效果。</string>
     <string name="pref_navigation_badges_title">导航角标</string>
     <string name="pref_navigation_badges_summary">仅当导航项提供明确状态时显示角标。</string>
+    <!-- cloud backup -->
+    <string name="pref_cloud_backup_title">云备份</string>
+    <string name="pref_cloud_backup_summary">通过 WebDAV 备份与恢复</string>
+    <string name="cloud_backup_list_failed">加载云端备份失败</string>
+    <string name="cloud_backup_webdav_required">请先配置 WebDAV 再进行备份</string>
+    <string name="cloud_backup_webdav_saved">WebDAV 配置已保存</string>
+    <string name="cloud_backup_webdav_save_failed">保存 WebDAV 配置失败</string>
+    <string name="cloud_backup_webdav_removed">已移除 WebDAV 配置</string>
+    <string name="cloud_backup_webdav_connection_success">WebDAV 连接成功</string>
+    <string name="cloud_backup_webdav_connection_failed">WebDAV 连接失败</string>
+    <string name="cloud_backup_delete_failed">删除云端备份失败</string>
+    <string name="cloud_backup_restore_confirm_title">恢复云端备份？</string>
+    <string name="cloud_backup_restore_confirm_message">本地数据将被所选备份覆盖。</string>
+    <string name="cloud_backup_restore_confirm_action">恢复</string>
+    <!-- mark as read (experimental) -->
+    <string name="pref_mark_as_read_title">验证码短信标记为已读</string>
+    <string name="pref_mark_as_read_summary">提取成功后自动将验证码短信标记为已读</string>
+    <string name="pref_notification_listener_title">通知使用权</string>
+    <string name="pref_notification_listener_summary">标记为已读需要通知使用权，用于同步清除短信应用发出的验证码通知</string>
+    <string name="pref_delete_sms_title">验证码短信删除</string>
+    <string name="pref_delete_sms_summary">警告：提取成功后验证码短信将被删除</string>
 </resources>
