@@ -55,7 +55,7 @@ android {
 
 
     androidResources {
-        localeFilters.addAll(listOf("en", "zh-rCN", "zh-rTW"))
+        localeFilters.addAll(listOf("en", "ru", "zh-rCN", "zh-rTW"))
     }
 
     defaultConfig {
@@ -121,6 +121,8 @@ dependencies {
     implementation(project(":runtime"))
     implementation(project(":smscode-core:domain"))
     implementation(project(":smscode-core:runtime"))
+    implementation(project(":smscode-core:verification-runtime"))
+    implementation(project(":smscode-core:rule"))
     implementation(project(":smscode-core:db"))
     implementation(project(":smscode-core:verification"))
     implementation(project(":smscode-core:hook"))

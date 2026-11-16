@@ -160,6 +160,7 @@ val sharedCoreProjectPaths = listOf(
     ":smscode-core:rule",
     ":smscode-core:runtime",
     ":smscode-core:verification",
+    ":smscode-core:verification-runtime",
     ":smscode-core:db",
 )
 val forbiddenMainModuleDependencies = buildMap {
@@ -207,6 +208,7 @@ val verifyMainModuleDependencies = tasks.register("verifyMainModuleDependencies"
 }
 
 val verifyModuleBoundaries = tasks.register("verifyModuleBoundaries") {
+    dependsOn(":smscode-core:verifyModuleBoundaries")
     group = "verification"
     description = "Run root module-boundary checks for app/presentation/runtime and shared smscode-core."
 

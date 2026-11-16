@@ -79,6 +79,11 @@ dependencies {
     implementation(project(":magisk-xposed-kit:runtime"))
     implementation(project(":magisk-xposed-kit:entitlement"))
     implementation(project(":magisk-xposed-kit:logging"))
+    // The cloud backup payload source and provider resolver are runtime API
+    // types the app shell composes in DI, so the kit backup modules must stay
+    // visible to consumers of this module.
+    api(project(":magisk-xposed-kit:backup"))
+    api(project(":magisk-xposed-kit:backup-webdav"))
     implementation(project(":smscode-core:contract"))
     implementation(project(":smscode-core:verification"))
     implementation(project(":smscode-core:hook"))
