@@ -6,6 +6,8 @@ import io.github.magisk317.smscode.common.utils.HookPrefsReader
 import io.github.magisk317.smscode.xp.hook.code.SmsHandlerHook
 import io.github.magisk317.smscode.xp.hook.me.ModuleUtilsHook
 import io.github.magisk317.smscode.xp.hook.mms.MmsMessagesHook
+import io.github.magisk317.smscode.xp.hook.mms.XscBugleReadStateHost
+import io.github.magisk317.smscode.xposed.hook.vendor.MiuiBugleReadStateHook
 import io.github.magisk317.smscode.xp.hook.telephony.SmsProviderHook
 import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModule
@@ -33,6 +35,7 @@ class LibXposedEntry : BaseLibXposedEntry {
     override val hooks: List<BaseHook> = listOf(
         SmsHandlerHook(),
         MmsMessagesHook(),
+        MiuiBugleReadStateHook(XscBugleReadStateHost),
         ModuleUtilsHook(),
         PermissionGranterHook(),
         SystemInputInjectorHook(),

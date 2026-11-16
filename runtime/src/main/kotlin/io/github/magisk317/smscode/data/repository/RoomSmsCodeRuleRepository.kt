@@ -10,69 +10,44 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 /**
- * XSC rule storage on top of the Room DAO, speaking the Room entity the screens
- * already use.
- *
- * The shared contract in core deals in [SmsCodeRuleRecord] so neither app has to know
- * about Room. This adapter is the one place that translates, which keeps the screens
- * free of record/entity plumbing.
+ * XSC rule storage on top of the Room DAO, speaking the shared
+ * [SmsCodeRuleRepository] contract in [SmsCodeRuleRecord]s so neither app has to
+ * know about Room. This adapter is the one place that translates, which keeps the
+ * screens free of record/entity plumbing.
  */
 class RoomSmsCodeRuleRepository(
     private val dbManager: DBManager,
 ) : SmsCodeRuleRepository {
 
-    fun observeRuleEntities(): Flow<List<SmsCodeRule>> =
-        dbManager.queryAllSmsCodeRulesFlow()
-
-    suspend fun getAllEntities(): List<SmsCodeRule> = dbManager.queryAllSmsCodeRulesSuspend()
-
-    suspend fun getEntityById(id: Long): SmsCodeRule? = dbManager.querySmsCodeRuleByIdSuspend(id)
-
-    suspend fun upsertEntity(rule: SmsCodeRule) {
-        if (rule.id == null || rule.id == 0L) {
-            dbManager.addSmsCodeRuleSuspend(rule)
-        } else {
-            dbManager.updateSmsCodeRuleSuspend(rule)
-        }
-    }
-
-    suspend fun deleteEntity(rule: SmsCodeRule) {
-        dbManager.removeSmsCodeRuleSuspend(rule)
-    }
-
-    suspend fun insertAllEntities(rules: List<SmsCodeRule>) {
-        dbManager.addSmsCodeRulesSuspend(rules)
-    }
-
-    suspend fun clearAllEntities() {
-        getAllEntities().forEach { dbManager.removeSmsCodeRuleSuspend(it) }
-    }
-
-    // --- the shared contract, expressed in records ---------------------------
-
     override fun observeRules(): Flow<List<SmsCodeRuleRecord>> =
-        observeRuleEntities().map { rules -> rules.map { it.toRecord() } }
+        dbManager.queryAllSmsCodeRulesFlow().map { rules -> rules.map { it.toRecord() } }
 
-    override suspend fun getAll(): List<SmsCodeRuleRecord> = getAllEntities().map { it.toRecord() }
+    override suspend fun getAll(): List<SmsCodeRuleRecord> =
+        dbManager.queryAllSmsCodeRulesSuspend().map { it.toRecord() }
 
-    override suspend fun getById(id: Long): SmsCodeRuleRecord? = getEntityById(id)?.toRecord()
+    override suspend fun getById(id: Long): SmsCodeRuleRecord? =
+        dbManager.querySmsCodeRuleByIdSuspend(id)?.toRecord()
 
     override suspend fun upsert(record: SmsCodeRuleRecord): Long {
         val entity = record.toEntity()
-        upsertEntity(entity)
+        if (entity.id == null || entity.id == 0L) {
+            dbManager.addSmsCodeRuleSuspend(entity)
+        } else {
+            dbManager.updateSmsCodeRuleSuspend(entity)
+        }
         return entity.id ?: record.id
     }
 
     override suspend fun delete(record: SmsCodeRuleRecord) {
-        deleteEntity(record.toEntity())
+        dbManager.removeSmsCodeRuleSuspend(record.toEntity())
     }
 
     override suspend fun insertAll(records: List<SmsCodeRuleRecord>) {
-        insertAllEntities(records.map { it.toEntity() })
+        dbManager.addSmsCodeRulesSuspend(records.map { it.toEntity() })
     }
 
     override suspend fun clearAll() {
-        clearAllEntities()
+        dbManager.queryAllSmsCodeRulesSuspend().forEach { dbManager.removeSmsCodeRuleSuspend(it) }
     }
 }
 

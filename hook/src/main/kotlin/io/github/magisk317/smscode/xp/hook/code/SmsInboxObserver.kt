@@ -31,7 +31,7 @@ internal class SmsInboxObserver(
     private val delegate = SharedSmsInboxObserver(
         pluginContext = pluginContext,
         phoneContext = phoneContext,
-        recordHandler = { record -> observedSmsHandler.handle(record) },
+        recordHandler = { record -> !observedSmsHandler.handle(record).retryable },
         capabilities = XscHookHostCapabilities,
     )
 
@@ -42,5 +42,6 @@ internal class SmsInboxObserver(
 
     fun unregister() {
         delegate.unregister()
+        queryExecutor.shutdownNow()
     }
 }

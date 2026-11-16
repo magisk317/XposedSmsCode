@@ -34,6 +34,7 @@ import io.github.magisk317.xposed.capability.runtime.CoreLogSinkHolder
 import io.github.magisk317.xposed.capability.runtime.CoreRuntime
 import io.github.magisk317.xposed.capability.runtime.CoreRuntimeAccess
 import io.github.magisk317.xposed.logging.XposedLogClient
+import io.github.magisk317.xposed.logging.XLog
 
 @SuppressLint("LogNotTimber", "PrivateApi", "StaticFieldLeak")
 object XposedRuntimeInstaller {
@@ -149,7 +150,9 @@ object XposedRuntimeInstaller {
                     date: Long,
                 ): SmsDuplicateCheckResult {
                     val token = HookPrefsReader.getIpcToken(context)
-                    if (token.isBlank()) return SmsDuplicateCheckResult.UNAVAILABLE
+                    if (token.isBlank()) {
+                        XLog.w("SMS dedup token_missing: querying under provider caller policy")
+                    }
                     return HookFingerprintQuery.query(
                         context = context,
                         uri = ProviderIpcTokenGate.attachToken(
@@ -160,6 +163,7 @@ object XposedRuntimeInstaller {
                         body = body,
                         date = date,
                         msgType = SmsMsg.MSG_TYPE_SMS,
+                        onUnavailable = { failure -> XLog.w(failure.toLogMessage()) },
                     )
                 }
 

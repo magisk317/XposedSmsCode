@@ -52,6 +52,7 @@ dependencies {
     implementation(project(":smscode-core:rule"))
     implementation(project(":smscode-core:contract"))
     implementation(project(":smscode-core:runtime"))
+    implementation(project(":smscode-core:verification-runtime"))
     implementation(project(":smscode-core:db"))
     implementation(project(":smscode-core:verification"))
     implementation(project(":magisk-xposed-kit"))
@@ -60,4 +61,6 @@ dependencies {
     implementation(project(":magisk-xposed-kit:logging"))
     implementation(libs.androidx.core.ktx)
     compileOnly(libs.libxposed.api)
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }

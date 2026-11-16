@@ -40,6 +40,8 @@ import io.github.magisk317.xposed.runtime.contract.logging.LogRoute
 import io.github.magisk317.smscode.runtime.verification.SmsDispatchIntentDeduplicator
 import java.lang.reflect.Method
 import java.util.Collections
+import io.github.magisk317.smscode.runtime.verification.BoundedSmsRetryQueue
+import io.github.magisk317.smscode.runtime.verification.SmsProcessingState
 import java.util.concurrent.Executors
 
 /**
@@ -50,7 +52,19 @@ class SmsHandlerHook : BaseHook() {
     private val runtimeSession: SmsHookRuntimeSession = XscHookHostCapabilities.smsHookRuntimeSession
     private var smsInboxObserver: SmsInboxObserver? = null
     private val inboundSmsBlocker = InboundSmsBlocker(SMS_HANDLER_CLASS)
-    private val smsOperationExecutor = Executors.newSingleThreadExecutor()
+    private val smsOperationExecutor = Executors.newSingleThreadScheduledExecutor()
+    private val blockedSmsRecovery = BoundedSmsRetryQueue(
+        scheduler = smsOperationExecutor,
+        onFinished = { eventId, reason, attempts ->
+            XLog.w(
+                message = "Blocked SMS recovery: event_id=%s result=%s attempts=%d",
+                eventId,
+                reason.name.lowercase(),
+                attempts,
+            )
+        },
+    )
+
     private val constructorInitializer = createXscConstructorInitializer(
         runtimeInitializer = runtimeSession::initialize,
         notificationChannelInitializer = { runtime -> initNotificationChannel(runtime) },
@@ -82,6 +96,8 @@ class SmsHandlerHook : BaseHook() {
         hookClaim.reset()
         smsInboxObserver?.unregister()
         smsInboxObserver = null
+        blockedSmsRecovery.close()
+        SmsProcessingState.clear()
         smsOperationExecutor.shutdownNow()
         runtimeSession.currentOrResolve()?.let { CopyCodeReceiver.unregisterMe(it.phoneContext) }
         runtimeSession.reset()
@@ -663,10 +679,20 @@ class SmsHandlerHook : BaseHook() {
             reason,
             eventId,
         )
-        // CodeWorker.parse() is async: only does toast/notification/clipboard side effects.
-        // The block decision was already made above. Don't block the dispatch chain.
-        smsOperationExecutor.execute {
-            CodeWorker(pluginContext, phoneContext, intent, eventId).parse()
+        // Take responsibility before suppressing delivery. A full/closed queue leaves the
+        // original SMS available to the system; blacklist blocking keeps its existing policy.
+        if (reason == SmsBlockEvaluator.BLOCK_REASON_PREF_BLOCK) {
+            val accepted = blockedSmsRecovery.submit(eventId) {
+                CodeWorker(pluginContext, phoneContext, intent, eventId).parse() != null
+            }
+            if (!accepted) {
+                XLog.w(message = "SMS block skipped: recovery unavailable event_id=%s", eventId)
+                return
+            }
+        } else {
+            smsOperationExecutor.execute {
+                CodeWorker(pluginContext, phoneContext, intent, eventId).parse()
+            }
         }
         val inbound = param.thisObject ?: return
         val smsReceiver = VerificationSmsIntentHookSupport.findRawTableReceiver(param.args)

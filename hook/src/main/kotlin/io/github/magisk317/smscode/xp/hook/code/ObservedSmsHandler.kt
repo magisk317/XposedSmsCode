@@ -22,6 +22,8 @@ import io.github.magisk317.smscode.runtime.verification.ObservedSmsHandler as Sh
 import io.github.magisk317.smscode.verification.SmsDuplicateCheckResult
 import io.github.magisk317.smscode.runtime.verification.SmsCodePostParseCoordinator
 import io.github.magisk317.smscode.verification.SmsInboxObserverDecision
+import io.github.magisk317.smscode.verification.SmsProcessingClaims
+import io.github.magisk317.smscode.runtime.verification.SmsProcessingState
 import io.github.magisk317.smscode.xp.helper.ModuleConflictArbiter
 import java.util.concurrent.ScheduledExecutorService
 
@@ -81,11 +83,13 @@ internal class ObservedSmsHandler(
         )
     },
     private val currentTimeMillis: () -> Long = System::currentTimeMillis,
+    private val processingClaims: SmsProcessingClaims = SmsProcessingState.claims,
 ) {
     data class Outcome(
         val eventId: String,
         val decision: SmsInboxObserverDecision.Decision,
         val dispatched: Boolean,
+        val retryable: Boolean = false,
     )
 
     private data class ExistingSmsRouting(
@@ -113,6 +117,7 @@ internal class ObservedSmsHandler(
         smsEnricher = smsEnricher,
         dispatcher = dispatcher,
         currentTimeMillis = currentTimeMillis,
+        processingClaims = processingClaims,
     )
 
     fun handle(record: ObservedInboxScanRecord): Outcome {
@@ -122,6 +127,7 @@ internal class ObservedSmsHandler(
             eventId = outcome.eventId,
             decision = outcome.decision,
             dispatched = outcome.dispatched,
+            retryable = outcome.retryable,
         )
     }
 
