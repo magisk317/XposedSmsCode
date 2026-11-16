@@ -47,7 +47,7 @@ class LogChannelContractTest {
     @Test
     fun `SMS parser never logs successful sender body or code plaintext`() {
         val source = projectFile(
-            "smscode/core/runtime/src/main/java/io/github/magisk317/smscode/runtime/verification/SmsParseAction.kt",
+            "smscode/core/verification-runtime/src/main/java/io/github/magisk317/smscode/runtime/verification/SmsParseAction.kt",
         ).readText()
 
         assertFalse(source.contains("Sender" + ": %s"))
