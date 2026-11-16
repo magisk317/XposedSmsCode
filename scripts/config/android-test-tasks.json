@@ -7,12 +7,14 @@
     ":magisk-ui-kit:jvmTest",
     ":magisk-ui-kit:billing:testDebugUnitTest",
     ":magisk-ui-kit:update:testGithubDebugUnitTest",
+    ":magisk-ui-kit:update:testPlayDebugUnitTest",
     ":smscode-core:contract:test",
     ":smscode-core:domain:test",
     ":smscode-core:hook:testDebugUnitTest",
     ":smscode-core:runtime:testDebugUnitTest",
     ":smscode-core:verification:detekt",
     ":smscode-core:verification:test",
+    ":smscode-core:verification-runtime:testDebugUnitTest",
     ":smscode-core:rule:test",
     ":magisk-xposed-kit:testDebugUnitTest",
     ":magisk-xposed-kit:logging:jvmTest",
@@ -26,7 +28,15 @@
     ":app:koverVerifyGithubDebug",
     ":app:koverHtmlReportGithubDebug",
     "verifyModuleBoundaries",
-    "verifyGodFileLimits"
+    "verifyGodFileLimits",
+    ":magisk-xposed-kit:contract:test",
+    ":magisk-xposed-kit:capability:testDebugUnitTest",
+    ":magisk-xposed-kit:runtime:testDebugUnitTest",
+    ":magisk-xposed-kit:permission:testDebugUnitTest",
+    ":magisk-xposed-kit:service:testDebugUnitTest",
+    ":hook:check",
+    ":hook:compileGithubDebugKotlin",
+    "verifyNoGlobalWarningMute"
   ],
   "full_paths": [
     "build.gradle*",
@@ -95,12 +105,14 @@
         "smscode/*"
       ],
       "tasks": [
+        ":smscode-core:verifyModuleBoundaries",
         ":smscode-core:contract:test",
         ":smscode-core:domain:test",
         ":smscode-core:hook:testDebugUnitTest",
         ":smscode-core:runtime:testDebugUnitTest",
         ":smscode-core:verification:detekt",
         ":smscode-core:verification:test",
+        ":smscode-core:verification-runtime:testDebugUnitTest",
         ":smscode-core:rule:test"
       ]
     },
@@ -112,7 +124,8 @@
         ":magisk-ui-kit:testAndroidHostTest",
         ":magisk-ui-kit:jvmTest",
         ":magisk-ui-kit:billing:testDebugUnitTest",
-        ":magisk-ui-kit:update:testGithubDebugUnitTest"
+        ":magisk-ui-kit:update:testGithubDebugUnitTest",
+        ":magisk-ui-kit:update:testPlayDebugUnitTest"
       ]
     },
     {
@@ -122,7 +135,12 @@
       "tasks": [
         ":magisk-xposed-kit:testDebugUnitTest",
         ":magisk-xposed-kit:logging:jvmTest",
-        ":magisk-xposed-kit:diagnostics:testDebugUnitTest"
+        ":magisk-xposed-kit:diagnostics:testDebugUnitTest",
+        ":magisk-xposed-kit:contract:test",
+        ":magisk-xposed-kit:capability:testDebugUnitTest",
+        ":magisk-xposed-kit:runtime:testDebugUnitTest",
+        ":magisk-xposed-kit:permission:testDebugUnitTest",
+        ":magisk-xposed-kit:service:testDebugUnitTest"
       ]
     }
   ]

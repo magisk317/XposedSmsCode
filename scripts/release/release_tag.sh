@@ -25,6 +25,7 @@ run_pre_push_checks() {
     :runtime:compilePlayDebugAndroidTestKotlin \
     :app:assembleGithubDebug \
     -PbuildSplits
+  run_fastlane_sync "$ROOT_DIR"
 }
 
 # Run the release tag with XposedSmsCode configuration

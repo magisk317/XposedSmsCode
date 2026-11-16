@@ -9,5 +9,7 @@
   "whatsnew_locales": ["en-US", "zh-CN"],
   "whatsnew_directory": "distribution/whatsnew",
   "whatsnew_max_length": 500,
+  "fastlane_locales": ["en-US", "zh-CN"],
+  "fastlane_min_screenshots": 0,
   "project_checks": []
 }

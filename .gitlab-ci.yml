@@ -1,29 +1,29 @@
 include:
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "7d66c3214ee5ed0064903c8796bd43706f893338"
+    ref: "ae9df2649ee47934c35f676439e1ffd9528db604"
     file: /.gitlab/ci/android.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "7d66c3214ee5ed0064903c8796bd43706f893338"
+    ref: "ae9df2649ee47934c35f676439e1ffd9528db604"
     file: /.gitlab/ci/android-release.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "7d66c3214ee5ed0064903c8796bd43706f893338"
+    ref: "ae9df2649ee47934c35f676439e1ffd9528db604"
     file: /.gitlab/ci/telegram.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "7d66c3214ee5ed0064903c8796bd43706f893338"
+    ref: "ae9df2649ee47934c35f676439e1ffd9528db604"
     file: /.gitlab/ci/renovate.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "7d66c3214ee5ed0064903c8796bd43706f893338"
+    ref: "ae9df2649ee47934c35f676439e1ffd9528db604"
     file: /.gitlab/ci/cancel-mr-pipelines.yml
   # Utility-job anchor (alpine, pinned): the GitHub mirror and the README-badge
   # job extend it instead of pinning their own image.
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "7d66c3214ee5ed0064903c8796bd43706f893338"
+    ref: "ae9df2649ee47934c35f676439e1ffd9528db604"
     file: /.gitlab/ci/utility.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "7d66c3214ee5ed0064903c8796bd43706f893338"
+    ref: "ae9df2649ee47934c35f676439e1ffd9528db604"
     file: /.gitlab/ci/github-sync.yml
   - project: magisk3171/shared/magisk-ci-toolkit
-    ref: "7d66c3214ee5ed0064903c8796bd43706f893338"
+    ref: "ae9df2649ee47934c35f676439e1ffd9528db604"
     file: /.gitlab/ci/readme-badges.yml
 
 workflow:
@@ -49,7 +49,7 @@ stages:
 
 variables:
   MAGISK_CI_TOOLKIT_REPOSITORY: "https://gitlab.com/magisk3171/shared/magisk-ci-toolkit.git"
-  MAGISK_CI_TOOLKIT_REF: "7d66c3214ee5ed0064903c8796bd43706f893338"
+  MAGISK_CI_TOOLKIT_REF: "ae9df2649ee47934c35f676439e1ffd9528db604"
   MAGISK_CANCEL_OLDER_MR_PIPELINES: "true"
   # All Android jobs (test/detekt/build/bundle/publish) read this tag, which
   # both the arm64 and the Debian ct101 amd64 group runners carry. GitLab
@@ -136,6 +136,18 @@ android:check:
       bash "$MAGISK_CI_TOOLKIT_DIR/gradle/run_gradle_with_retry.sh" \
         ${MAGISK_GRADLE_ARGS:---warning-mode all} "${selected_tasks[@]}" -PenableKover=true
 
+uikit:duplicates:
+  extends:
+    - .magisk_utility_base
+    - .xposed_android_rules
+  stage: quality
+  tags:
+    - $XPOSED_TEST_RUNNER_TAG
+  before_script:
+    - apk add --no-cache bash ca-certificates curl git python3
+  script:
+    - python3 magisk-ui-kit/tools/uikit_governance.py check-app "$CI_PROJECT_DIR" --name XposedSmsCode --kit "$CI_PROJECT_DIR/magisk-ui-kit"
+
 android:test:
   extends:
     - .magisk_android_base
@@ -152,12 +164,12 @@ android:test:
       when: never
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH'
     - when: never
-  # Wait for automatic Renovate delivery when present; the optional manual
-  # Play action on human beta pipelines does not block this quality job.
+  # Prioritize build so compilation fails fast and releases/APKs are produced
+  # first; detekt and tests run automatically after build and do not depend on
+  # delivery or manual release actions.
   needs:
-    - job: android:ci:publish-play
+    - job: android:build
       artifacts: false
-      optional: true
   script:
     - |
       set -euo pipefail
@@ -277,12 +289,12 @@ android:detekt:
   tags:
     - $XPOSED_TEST_RUNNER_TAG
   allow_failure: true
-  # Wait for automatic Renovate delivery when present; the optional manual
-  # Play action on human beta pipelines does not block this quality job.
+  # Prioritize build so compilation fails fast and releases/APKs are produced
+  # first; detekt and tests run automatically after build and do not depend on
+  # delivery or manual release actions.
   needs:
-    - job: android:ci:publish-play
+    - job: android:build
       artifacts: false
-      optional: true
   artifacts:
     name: "XposedSmsCode-detekt-$CI_COMMIT_REF_SLUG"
     when: always
@@ -534,10 +546,6 @@ sync:github:
   needs:
     - job: android:release:guard
       optional: true
-    - job: android:release:apk
-      artifacts: true
-    - job: android:release:aab
-      artifacts: true
   variables:
     # Written out rather than reused from MAGISK_ANDROID_RELEASE_GITHUB_REPOSITORY:
     # the mirror target is its own contract and must not follow a release setting.
