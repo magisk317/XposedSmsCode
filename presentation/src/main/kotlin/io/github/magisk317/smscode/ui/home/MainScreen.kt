@@ -140,7 +140,7 @@ fun MainScreen(
     val navController = rememberNavController()
     val appConfigViewModel: AppConfigViewModel = koinViewModel()
     val themeViewModel: SettingsViewModel = koinViewModel()
-    val cloudBackupViewModel: CloudBackupViewModel = koinViewModel()
+    val cloudBackupViewModel: CloudBackupShellViewModel = koinViewModel()
     val chromeThemeState by themeViewModel.themeState.collectAsStateWithLifecycle()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination

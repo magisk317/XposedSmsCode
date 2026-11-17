@@ -24,7 +24,7 @@ import kotlinx.coroutines.withContext
  * backup state lives in the shared model. WebDAV remains the only source and no
  * automatic-backup trigger is wired in this app, so the switch stays hidden.
  */
-class CloudBackupViewModel(
+class CloudBackupShellViewModel(
     application: Application,
     cloudBackup: UiCloudBackupAccess,
 ) : AndroidViewModel(application) {

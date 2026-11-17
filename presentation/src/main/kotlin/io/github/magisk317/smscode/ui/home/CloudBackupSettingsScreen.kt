@@ -44,11 +44,11 @@ internal val LocalCloudBackupNavigation = staticCompositionLocalOf<(() -> Unit)?
 /**
  * Cloud backup settings page: hosts the ui-kit [CloudBackupPanel] and adds the
  * host-owned restore confirmation. All provider logic lives in
- * [CloudBackupViewModel]; this composable only maps user gestures to it.
+ * [CloudBackupShellViewModel]; this composable only maps user gestures to it.
  */
 @Composable
 fun CloudBackupSettingsScreen(
-    viewModel: CloudBackupViewModel,
+    viewModel: CloudBackupShellViewModel,
     onBack: () -> Unit,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
