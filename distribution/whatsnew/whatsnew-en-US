@@ -1,6 +1,3 @@
-- Updated to 3.4.4 (138).
-- Improved WebDAV backup and restore.
-- SMS read-state restored on a trial basis. (#273)
-- Added Russian localization. (#272)
-- Improved SMS recovery after processing. (#271)
+- Updated to 3.4.5 (139).
+- Development build; release notes will be updated before publishing.
 - https://gitlab.com/magisk3171/XposedSmsCode/-/releases
