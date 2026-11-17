@@ -55,11 +55,11 @@ hook_selection="$(
 )"
 assert_tasks_selected "hook change" "$hook_selection" :hook:check :hook:compileGithubDebugKotlin
 ui_update_variant_tasks=(
-  :magisk-ui-kit:update:testGithubDebugUnitTest
-  :magisk-ui-kit:update:testPlayDebugUnitTest
+  :magisk-ui-kit:governance:testGithubDebugUnitTest
+  :magisk-ui-kit:governance:testPlayDebugUnitTest
 )
 assert_tasks_selected "beta update channel coverage" "$beta_selection" "${ui_update_variant_tasks[@]}"
-for changed_path in magisk-ui-kit magisk-ui-kit/update/src/main/kotlin/UpdateSource.kt; do
+for changed_path in magisk-ui-kit magisk-ui-kit/governance/src/main/kotlin/UpdateSource.kt; do
   ui_selection="$(
     env -u CI_COMMIT_TAG -u CI_COMMIT_BRANCH -u GITHUB_REF_TYPE -u GITHUB_REF_NAME \
       python3 "$selector" --root "$root_dir" --toolkit "$toolkit_dir" --config "$config" \

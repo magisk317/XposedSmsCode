@@ -53,7 +53,7 @@ dependencies {
     implementation(libs.okhttp)
     implementation(project(":runtime"))
     api(project(":magisk-ui-kit"))
-    api(project(":magisk-ui-kit:update"))
+    api(project(":magisk-ui-kit:governance"))
     implementation(project(":magisk-ui-kit:backup"))
     implementation(project(":magisk-xposed-kit:logging"))
     implementation(project(":magisk-xposed-kit:runtime"))

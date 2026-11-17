@@ -6,8 +6,8 @@
     ":magisk-ui-kit:testAndroidHostTest",
     ":magisk-ui-kit:jvmTest",
     ":magisk-ui-kit:billing:testDebugUnitTest",
-    ":magisk-ui-kit:update:testGithubDebugUnitTest",
-    ":magisk-ui-kit:update:testPlayDebugUnitTest",
+    ":magisk-ui-kit:governance:testGithubDebugUnitTest",
+    ":magisk-ui-kit:governance:testPlayDebugUnitTest",
     ":smscode-core:contract:test",
     ":smscode-core:domain:test",
     ":smscode-core:hook:testDebugUnitTest",
@@ -123,8 +123,8 @@
         ":magisk-ui-kit:testAndroidHostTest",
         ":magisk-ui-kit:jvmTest",
         ":magisk-ui-kit:billing:testDebugUnitTest",
-        ":magisk-ui-kit:update:testGithubDebugUnitTest",
-        ":magisk-ui-kit:update:testPlayDebugUnitTest"
+        ":magisk-ui-kit:governance:testGithubDebugUnitTest",
+        ":magisk-ui-kit:governance:testPlayDebugUnitTest"
       ]
     },
     {

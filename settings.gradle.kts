@@ -49,7 +49,7 @@ include(
     ":smscode-core:db",
     ":magisk-ui-kit",
     ":magisk-ui-kit:billing",
-    ":magisk-ui-kit:update",
+    ":magisk-ui-kit:governance",
     ":magisk-ui-kit:backup",
     ":magisk-xposed-kit",
     ":magisk-xposed-kit:contract",
@@ -84,5 +84,5 @@ project(":magisk-xposed-kit:service").projectDir = file("magisk-xposed-kit/servi
 project(":magisk-xposed-kit:backup").projectDir = file("magisk-xposed-kit/backup")
 project(":magisk-xposed-kit:backup-webdav").projectDir = file("magisk-xposed-kit/backup-webdav")
 project(":magisk-ui-kit:billing").projectDir = file("magisk-ui-kit/billing")
-project(":magisk-ui-kit:update").projectDir = file("magisk-ui-kit/update")
+project(":magisk-ui-kit:governance").projectDir = file("magisk-ui-kit/governance")
 project(":magisk-ui-kit:backup").projectDir = file("magisk-ui-kit/backup")
