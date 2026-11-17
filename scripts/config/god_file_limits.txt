@@ -3,4 +3,3 @@
 # This is not a growth budget: verifyGodFileLimits requires exact counts and rejects
 # new entries unless the architecture review explicitly updates this file.
 # Mirrors MiPushFramework scripts/checks/report_god_files.sh semantics.
-presentation/src/main/kotlin/io/github/magisk317/smscode/ui/record/CodeRecordScreen.kt|1213|Record list with metadata expansion; split candidate tracked in docs/ARCHITECTURE.md
