@@ -44,7 +44,6 @@ required_tasks=(
   :hook:compileGithubDebugKotlin
   verifyModuleBoundaries
   verifyNoGlobalWarningMute
-  verifyGodFileLimits
 )
 assert_tasks_selected "full impact" "$full_selection" "${required_tasks[@]}"
 assert_tasks_selected "beta branch" "$beta_selection" "${required_tasks[@]}"

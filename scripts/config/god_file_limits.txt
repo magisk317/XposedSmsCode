@@ -1,5 +1,0 @@
-# Production Kotlin god-file review debt (XposedSmsCode).
-# Format: PATH|EXACT_LINES|REVIEW_REASON
-# This is not a growth budget: verifyGodFileLimits requires exact counts and rejects
-# new entries unless the architecture review explicitly updates this file.
-# Mirrors MiPushFramework scripts/checks/report_god_files.sh semantics.

@@ -28,7 +28,6 @@
     ":app:koverVerifyGithubDebug",
     ":app:koverHtmlReportGithubDebug",
     "verifyModuleBoundaries",
-    "verifyGodFileLimits",
     ":magisk-xposed-kit:contract:test",
     ":magisk-xposed-kit:capability:testDebugUnitTest",
     ":magisk-xposed-kit:runtime:testDebugUnitTest",

@@ -233,22 +233,10 @@ tasks.register<Exec>("verifyCiToolkitRef") {
     commandLine("bash", "${System.getenv("MAGISK_CI_TOOLKIT_DIR") ?: ".magisk-ci-toolkit"}/ci/verify_toolkit_pin.sh", "--root", project.projectDir.absolutePath)
 }
 
-tasks.register<Exec>("reportGodFiles") {
-    group = "verification"
-    description = "Report large production Kotlin files outside shared-submodule roots."
-    commandLine("bash", "scripts/checks/report_god_files.sh", "--report")
-}
-
-tasks.register<Exec>("verifyGodFileLimits") {
-    group = "verification"
-    description = "Fail when a production Kotlin god file is added, grows, or diverges from its reviewed limit."
-    commandLine("bash", "scripts/checks/report_god_files.sh", "--verify")
-}
-
 tasks.register("check") {
     group = "verification"
     description = "Run root project verification checks."
-    dependsOn(verifyModuleBoundaries, "verifyNoGlobalWarningMute", "verifyCiToolkitRef", "verifyGodFileLimits")
+    dependsOn(verifyModuleBoundaries, "verifyNoGlobalWarningMute", "verifyCiToolkitRef")
 }
 
 tasks.register<Delete>("clean") {

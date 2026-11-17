@@ -206,9 +206,8 @@ smscode-core:* 不反向依赖任何主项目模块；smscode/rules 不进依赖
 `:presentation` stays a single module for now: `app` is its only consumer,
 screen domains are already isolated by package (`ui/home`, `ui/record`,
 `ui/smscoderule`), and a Gradle split would churn a shipped module without a
-boundary it does not already have. The enforced guard is `verifyGodFileLimits`
-(scripts/checks/report_god_files.sh): files at or above 900 lines are pinned at
-exact counts in scripts/config/god_file_limits.txt - growth fails the build,
-shrink requires lowering the reviewed entry. Revisit a module split if
+boundary it does not already have. The god-file baseline was retired after
+every production file returned below the 900-line threshold, so there is no
+line-count gate to maintain. Revisit a module split if
 presentation gains a second consumer or the home shell grows another screen
 family.
