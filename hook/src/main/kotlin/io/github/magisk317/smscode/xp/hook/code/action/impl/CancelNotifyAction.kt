@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Bundle
 import io.github.magisk317.smscode.data.db.entity.SmsMsg
 import io.github.magisk317.smscode.runtime.verification.CodeNotificationActionPayload
+import io.github.magisk317.smscode.runtime.verification.PhoneOwnedNotificationDispatcher
 import io.github.magisk317.xposed.logging.XLog
 import io.github.magisk317.smscode.xp.hook.code.action.CallableAction
 
@@ -26,7 +27,7 @@ class CancelNotifyAction(pluginContext: Context, phoneContext: Context, smsMsg: 
         if (CodeNotificationActionPayload.hasNotificationId(mNotificationId, NOTIFICATION_NONE)) {
             val manager = mPhoneContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager?
             manager?.let {
-                it.cancel(mNotificationId)
+                it.cancel(PhoneOwnedNotificationDispatcher.SELF_POST_TAG, mNotificationId)
                 XLog.d(message = "Notification auto cancelled")
             }
         }

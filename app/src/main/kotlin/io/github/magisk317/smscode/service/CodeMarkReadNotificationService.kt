@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
  *
  * Requires the user to grant notification access; the settings screen links to the grant page
  * when the toggle is enabled. Every decision is emitted as the `sms.notify_read` OTel event by
- * the shared coordinator, feeding the vendor adaptation backlog (docs/vendor-sms-apps.md).
+ * the shared coordinator, feeding the vendor adaptation backlog (smscode-core docs/vendor-sms-apps.md).
  */
 class CodeMarkReadNotificationService : NotificationListenerService() {
 
@@ -60,7 +60,13 @@ class CodeMarkReadNotificationService : NotificationListenerService() {
         val title = extras?.getCharSequence(Notification.EXTRA_TITLE)
         val text = extras?.getCharSequence(Notification.EXTRA_TEXT)
             ?: extras?.getCharSequence(Notification.EXTRA_BIG_TEXT)
-        val decision = buildCoordinator(context).maybeMarkAsRead(packageName, title, text, notification)
+        val decision = buildCoordinator(context).maybeMarkAsRead(
+            packageName = packageName,
+            title = title,
+            text = text,
+            notification = notification,
+            tag = sbn.tag,
+        )
         if (decision == CodeNotificationReadCoordinator.Decision.NO_READ_ACTION) {
             // Vendor SMS apps (MIUI and friends) post code notifications without a read action.
             // The DB write already marked telephony read/seen; cancel the leftover notification
