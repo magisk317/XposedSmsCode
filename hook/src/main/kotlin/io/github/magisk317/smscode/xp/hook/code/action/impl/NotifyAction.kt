@@ -173,6 +173,13 @@ class NotifyAction(
         // empty group header - i.e. exactly the reported "nothing in the status bar".
         if (request.autoCancelEnabled && request.retentionTimeMs > 0L) {
             builder.setTimeoutAfter(request.retentionTimeMs)
+            // Render the remaining retention time as a countdown (issue #274). Mirrors the
+            // app-owned builder in smscode/core CodeNotificationDeliveryHelper so both
+            // delivery paths behave the same; a future `when` makes the system chronometer
+            // count down to the timeoutAfter removal.
+            builder.setUsesChronometer(true)
+            builder.setChronometerCountDown(true)
+            builder.setWhen(System.currentTimeMillis() + request.retentionTimeMs)
         }
         return builder.build()
     }
