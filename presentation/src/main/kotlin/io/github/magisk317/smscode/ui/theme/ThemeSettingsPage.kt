@@ -13,6 +13,8 @@ import androidx.compose.material3.MaterialTheme
 import io.github.magisk317.uikit.theme.spacing
 import io.github.magisk317.uikit.preference.SectionCard
 import io.github.magisk317.uikit.preference.SettingsChoiceRow
+import io.github.magisk317.uikit.preference.ThemeSettingsContent
+import io.github.magisk317.uikit.preference.ThemeSettingsContentLabels
 import io.github.magisk317.uikit.surface.SectionColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -31,6 +33,7 @@ import io.github.magisk317.uikit.preference.StateSwitchItem as SettingsSwitchIte
 import io.github.magisk317.uikit.theme.UiKitColorSpec
 import io.github.magisk317.uikit.theme.UiKitLayoutScale
 import io.github.magisk317.uikit.theme.UiKitPaletteStyle
+import io.github.magisk317.uikit.theme.MagiskThemeMode
 import io.github.magisk317.uikit.theme.UiKitStyle
 import io.github.magisk317.uikit.theme.currentUiKitStyle
 
@@ -41,12 +44,6 @@ fun ThemeSettingsPage(
 ) {
     val themeState by viewModel.themeState.collectAsStateWithLifecycle()
 
-    val themeOptions = listOf(
-        stringResource(UiKitR.string.uikit_theme_follow_system),
-        stringResource(UiKitR.string.uikit_theme_light),
-        stringResource(UiKitR.string.uikit_theme_dark),
-        stringResource(UiKitR.string.uikit_theme_black),
-    )
     val uiKitStyleOptions = listOf(
         stringResource(R.string.ui_kit_style_expressive),
         stringResource(R.string.ui_kit_style_miuix),
@@ -79,7 +76,6 @@ fun ThemeSettingsPage(
         stringResource(R.string.accent_orange),
         stringResource(R.string.accent_rose),
     )
-    val selectedTheme = themeState.mode.coerceIn(0, themeOptions.lastIndex)
     val selectedUiKitStyle = UiKitStyle.fromValue(themeState.uiKitStyle).value
     val selectedLayoutScale = UiKitLayoutScale.fromValue(themeState.layoutScale).value
     val selectedPaletteStyle = UiKitPaletteStyle.fromValue(themeState.paletteStyle).value
@@ -111,12 +107,16 @@ fun ThemeSettingsPage(
                 sectionExpanded = true,
                 onExpandedChange = {},
             ) {
-                SettingsChoiceRow(
-                    title = stringResource(UiKitR.string.pref_choose_theme_title),
-                    summary = themeOptions[selectedTheme],
-                    options = themeOptions,
-                    selectedIndex = selectedTheme,
-                    onSelect = { index -> viewModel.setThemeMode(index) },
+                ThemeSettingsContent(
+                    themeMode = MagiskThemeMode.fromValue(themeState.mode),
+                    labels = ThemeSettingsContentLabels(
+                        title = stringResource(UiKitR.string.pref_choose_theme_title),
+                        system = stringResource(UiKitR.string.uikit_theme_follow_system),
+                        light = stringResource(UiKitR.string.uikit_theme_light),
+                        dark = stringResource(UiKitR.string.uikit_theme_dark),
+                        pureBlack = stringResource(UiKitR.string.uikit_theme_black),
+                    ),
+                    onThemeModeChange = { mode -> viewModel.setThemeMode(mode.value) },
                 )
                 SettingsChoiceRow(
                     title = stringResource(UiKitR.string.pref_ui_kit_style_title),
