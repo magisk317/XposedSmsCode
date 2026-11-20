@@ -4,12 +4,12 @@ package io.github.magisk317.smscode.ui.record
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -18,7 +18,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventPass
@@ -34,6 +33,9 @@ import io.github.magisk317.smscode.runtime.contract.record.SmsMsgRecordData
 import io.github.magisk317.xposed.contract.sim.SimSlotLabelFormatter
 import io.github.magisk317.uikit.surface.AppIconImage
 import io.github.magisk317.uikit.surface.AppSurface
+import io.github.magisk317.uikit.surface.AppBasicDialog
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.window.DialogProperties
 import io.github.magisk317.uikit.surface.AppHorizontalDivider
 import io.github.magisk317.uikit.preference.AppCheckbox
 import io.github.magisk317.uikit.surface.WorkspaceListItem
@@ -71,37 +73,33 @@ internal fun RecordDetailOverlay(
         SimSlotLabelFormatter.format(sms.simSlot, simSlotRemarkResolver)
     }
     val content = sms.body.orEmpty()
-    val dismissInteraction = remember { MutableInteractionSource() }
+    val maxDialogHeight = LocalConfiguration.current.screenHeightDp.dp * 0.55f
     val detailTitleRes = R.string.message_details
     val copyTextRes = R.string.copy_sms
     val copyToastRes = R.string.prompt_sms_copied
     val deleteTextRes = R.string.delete_sms_action
     val copyLabel = "sms_body"
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(appColor(AppColorRole.Scrim).copy(alpha = 0.28f))
-            .clickable(
-                interactionSource = dismissInteraction,
-                indication = null,
-            ) { onDismiss() },
-        contentAlignment = Alignment.Center,
+    AppBasicDialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true,
+        ),
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                ) {},
+        io.github.magisk317.uikit.surface.AppDialogSurface(
+            title = stringResource(detailTitleRes),
         ) {
-            io.github.magisk317.uikit.surface.AppDialogSurface(
-                title = stringResource(detailTitleRes),
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = maxDialogHeight),
             ) {
                 Column(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f, fill = false)
+                        .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     AppText(
@@ -214,31 +212,31 @@ internal fun RecordDetailOverlay(
                             }
                         },
                     )
-                    AppHorizontalDivider()
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        io.github.magisk317.uikit.surface.AppSecondaryButton(
-                            text = stringResource(copyTextRes),
-                            modifier = Modifier.weight(1f),
-                            onClick = {
-                                if (content.isNotEmpty()) {
-                                    val message = context.getString(copyToastRes)
-                                    onCopy(copyLabel, content, message)
-                                }
-                                onDismiss()
-                            },
-                        )
-                        io.github.magisk317.uikit.surface.AppPrimaryButton(
-                            text = stringResource(deleteTextRes),
-                            modifier = Modifier.weight(1f),
-                            onClick = {
-                                onDelete()
-                                onDismiss()
-                            },
-                        )
-                    }
+                }
+                AppHorizontalDivider()
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    io.github.magisk317.uikit.surface.AppSecondaryButton(
+                        text = stringResource(copyTextRes),
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+                            if (content.isNotEmpty()) {
+                                val message = context.getString(copyToastRes)
+                                onCopy(copyLabel, content, message)
+                            }
+                            onDismiss()
+                        },
+                    )
+                    io.github.magisk317.uikit.surface.AppPrimaryButton(
+                        text = stringResource(deleteTextRes),
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+                            onDelete()
+                            onDismiss()
+                        },
+                    )
                 }
             }
         }

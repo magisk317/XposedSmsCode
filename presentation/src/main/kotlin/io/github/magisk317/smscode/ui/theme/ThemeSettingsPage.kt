@@ -16,6 +16,9 @@ import io.github.magisk317.uikit.preference.SettingsChoiceRow
 import io.github.magisk317.uikit.surface.SectionColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -85,6 +88,8 @@ fun ThemeSettingsPage(
     val floatingBottomBar = themeState.floatingBottomBar
     val bottomBarBlur = themeState.bottomBarBlur
     val bottomBarBackdrop = themeState.bottomBarBackdrop
+    var colorSectionExpanded by rememberSaveable { mutableStateOf(false) }
+    var navigationSectionExpanded by rememberSaveable { mutableStateOf(false) }
 
     val isMiuixStyle = currentUiKitStyle() == UiKitStyle.Miuix
     val body: @Composable (PaddingValues, Modifier) -> Unit = { listPadding, scrollModifier ->
@@ -131,9 +136,9 @@ fun ThemeSettingsPage(
 
             SectionCard(
                 title = stringResource(R.string.pref_theme_group_color),
-                accordionMode = false,
-                sectionExpanded = true,
-                onExpandedChange = {},
+                accordionMode = true,
+                sectionExpanded = colorSectionExpanded,
+                onExpandedChange = { colorSectionExpanded = !colorSectionExpanded },
             ) {
                 SettingsSwitchItem(
                     title = stringResource(R.string.pref_monet_title),
@@ -142,20 +147,22 @@ fun ThemeSettingsPage(
                 ) { enabled ->
                     viewModel.setMonetEnabled(enabled)
                 }
-                SettingsChoiceRow(
-                    title = stringResource(R.string.pref_palette_style_title),
-                    summary = paletteStyleOptions[selectedPaletteStyle],
-                    options = paletteStyleOptions,
-                    selectedIndex = selectedPaletteStyle,
-                    onSelect = { index -> viewModel.setPaletteStyle(index) },
-                )
-                SettingsChoiceRow(
-                    title = stringResource(R.string.pref_color_spec_title),
-                    summary = colorSpecOptions[selectedColorSpec],
-                    options = colorSpecOptions,
-                    selectedIndex = selectedColorSpec,
-                    onSelect = { index -> viewModel.setColorSpec(index) },
-                )
+                if (themeState.monetEnabled) {
+                    SettingsChoiceRow(
+                        title = stringResource(R.string.pref_palette_style_title),
+                        summary = paletteStyleOptions[selectedPaletteStyle],
+                        options = paletteStyleOptions,
+                        selectedIndex = selectedPaletteStyle,
+                        onSelect = { index -> viewModel.setPaletteStyle(index) },
+                    )
+                    SettingsChoiceRow(
+                        title = stringResource(R.string.pref_color_spec_title),
+                        summary = colorSpecOptions[selectedColorSpec],
+                        options = colorSpecOptions,
+                        selectedIndex = selectedColorSpec,
+                        onSelect = { index -> viewModel.setColorSpec(index) },
+                    )
+                }
                 SettingsSwitchItem(
                     title = stringResource(R.string.pref_surface_blur_title),
                     summary = stringResource(R.string.pref_surface_blur_summary),
@@ -163,13 +170,14 @@ fun ThemeSettingsPage(
                 ) { enabled ->
                     viewModel.setSurfaceBlurEnabled(enabled)
                 }
-                SettingsSwitchItem(
-                    title = stringResource(R.string.pref_dynamic_color_title),
-                    summary = stringResource(R.string.pref_dynamic_color_summary),
-                    checked = themeState.dynamicColor,
-                    enabled = selectedAccent == ThemeAccent.System.value,
-                ) { enabled ->
-                    viewModel.setDynamicColorEnabled(enabled)
+                if (selectedAccent == ThemeAccent.System.value) {
+                    SettingsSwitchItem(
+                        title = stringResource(R.string.pref_dynamic_color_title),
+                        summary = stringResource(R.string.pref_dynamic_color_summary),
+                        checked = themeState.dynamicColor,
+                    ) { enabled ->
+                        viewModel.setDynamicColorEnabled(enabled)
+                    }
                 }
                 SettingsChoiceRow(
                     title = stringResource(R.string.pref_accent_color_title),
@@ -185,9 +193,9 @@ fun ThemeSettingsPage(
 
             SectionCard(
                 title = stringResource(R.string.pref_theme_group_navigation),
-                accordionMode = false,
-                sectionExpanded = true,
-                onExpandedChange = {},
+                accordionMode = true,
+                sectionExpanded = navigationSectionExpanded,
+                onExpandedChange = { navigationSectionExpanded = !navigationSectionExpanded },
             ) {
                 SettingsSwitchItem(
                     title = stringResource(R.string.pref_floating_bottom_bar_title),
@@ -200,23 +208,26 @@ fun ThemeSettingsPage(
                 ) { enabled ->
                     viewModel.setFloatingBottomBarEnabled(enabled)
                 }
-                SettingsSwitchItem(
-                    title = stringResource(R.string.pref_bottom_bar_blur_title),
-                    summary = stringResource(R.string.pref_bottom_bar_blur_summary),
-                    checked = bottomBarBlur,
-                    enabled = floatingBottomBar && isMiuixStyle,
-                ) { enabled ->
-                    viewModel.setBottomBarBlurEnabled(enabled)
+                if (floatingBottomBar && isMiuixStyle) {
+                    SettingsSwitchItem(
+                        title = stringResource(R.string.pref_bottom_bar_blur_title),
+                        summary = stringResource(R.string.pref_bottom_bar_blur_summary),
+                        checked = bottomBarBlur,
+                    ) { enabled ->
+                        viewModel.setBottomBarBlurEnabled(enabled)
+                    }
                 }
-                SettingsSwitchItem(
-                    title = stringResource(R.string.pref_bottom_bar_backdrop_title),
-                    summary = stringResource(R.string.pref_bottom_bar_backdrop_summary),
-                    checked = bottomBarBackdrop,
-                    enabled = floatingBottomBar && bottomBarBlur &&
-                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                        isMiuixStyle,
-                ) { enabled ->
-                    viewModel.setBottomBarBackdropEnabled(enabled)
+                if (floatingBottomBar && bottomBarBlur &&
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                    isMiuixStyle
+                ) {
+                    SettingsSwitchItem(
+                        title = stringResource(R.string.pref_bottom_bar_backdrop_title),
+                        summary = stringResource(R.string.pref_bottom_bar_backdrop_summary),
+                        checked = bottomBarBackdrop,
+                    ) { enabled ->
+                        viewModel.setBottomBarBackdropEnabled(enabled)
+                    }
                 }
         }
     }

@@ -55,7 +55,7 @@ fun CloudBackupSettingsScreen(
     val snackbarHostState = remember { AppSnackbarHostState() }
     var pendingRestoreId by remember { mutableStateOf<String?>(null) }
 
-    val body: @Composable (PaddingValues, Modifier) -> Unit = { listPadding, _ ->
+    val body: @Composable (PaddingValues, Modifier) -> Unit = { listPadding, scrollModifier ->
         CompositionLocalProvider(LocalSnackbarHostState provides snackbarHostState) {
             Box(modifier = Modifier.fillMaxSize()) {
                 CloudBackupPanel(
@@ -65,6 +65,7 @@ fun CloudBackupSettingsScreen(
                     ),
                     modifier = Modifier
                         .fillMaxSize()
+                        .then(scrollModifier)
                         .padding(top = listPadding.calculateTopPadding()),
                 )
                 AppSnackbarHost(

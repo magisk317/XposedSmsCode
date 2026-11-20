@@ -505,6 +505,7 @@ fun MainScreen(
                         onBack = null,
                         refreshTrigger = recordsRefreshTrigger,
                         scrollChromeState = activePageScrollChromeState,
+                        bottomNavigationPadding = contentPadding.calculateBottomPadding(),
                         isActive = pageState.isActive,
                         keepDataActive = pageState.isDataActive,
                         onPageDataReady = { cacheHit -> recordPageDataReady(page, cacheHit) },
@@ -553,7 +554,7 @@ fun MainScreen(
                         currentBottomPaddingCallback(bottomPadding)
                     }
                 },
-            ) { _ ->
+            ) { contentPadding ->
                 NavHost(
                     navController = navController,
                     startDestination = OverviewRoute,
@@ -661,6 +662,7 @@ fun MainScreen(
                             onBack = null,
                             refreshTrigger = recordsRefreshTrigger,
                             scrollChromeState = pageScrollChromeState,
+                            bottomNavigationPadding = contentPadding.calculateBottomPadding(),
                             isActive = currentDestination?.hasRoute(RecordsRoute::class) == true,
                             onPageDataReady = { cacheHit ->
                                 recordPageDataReady(MainTopLevelPage.RECORDS.index, cacheHit)

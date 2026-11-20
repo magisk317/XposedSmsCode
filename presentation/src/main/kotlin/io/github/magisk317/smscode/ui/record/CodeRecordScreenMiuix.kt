@@ -37,6 +37,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import io.github.magisk317.smscode.presentation.R
 import io.github.magisk317.uikit.R as UiKitR
 import io.github.magisk317.uikit.scroll.ScrollChromeState
@@ -72,6 +73,7 @@ internal fun CodeRecordScreenMiuix(
     onOpenSettings: () -> Unit,
     onOpenExport: () -> Unit,
     scrollChromeState: ScrollChromeState?,
+    bottomNavigationPadding: Dp,
     listState: LazyListState,
     body: @Composable (PaddingValues, Modifier) -> Unit,
 ) {
@@ -92,7 +94,7 @@ internal fun CodeRecordScreenMiuix(
         defaultTopPadding
     }
     val topPadding = (measuredTopHeight + headerOffset).coerceAtLeast(0.dp)
-    val bottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 80.dp
+    val bottomPadding = bottomNavigationPadding
 
     // Paint the page with the same surface as the chrome. Without it the window backdrop
     // (#242424 in dark) shows through: it appears as a seam between the title bar and the tab

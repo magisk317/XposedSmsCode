@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.unit.Dp
 import io.github.magisk317.smscode.common.utils.HookPreferenceMirror
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
@@ -104,6 +105,7 @@ fun CodeRecordScreen(
     onRecordSwipeGestureActiveChanged: (Boolean) -> Unit = {},
     viewModel: CodeRecordViewModel = koinViewModel(),
     scrollChromeState: io.github.magisk317.uikit.scroll.ScrollChromeState? = null,
+    bottomNavigationPadding: Dp = 0.dp,
 ) {
     val currentOnPageDataReady by rememberUpdatedState(onPageDataReady)
     val currentOnRecordSwipeGestureActiveChanged by rememberUpdatedState(
@@ -260,7 +262,7 @@ fun CodeRecordScreen(
     }
 
     // Back Handler
-    BackHandler(enabled = isSelectionMode) {
+    BackHandler(enabled = isActive && detailSmsMsg == null && isSelectionMode) {
         isSelectionMode = false
         selectedIds = emptySet()
     }
@@ -582,6 +584,7 @@ fun CodeRecordScreen(
                     onOpenSettings = { showSettingsSheet = true },
                     onOpenExport = { showExportDialog = true },
                     scrollChromeState = scrollChromeState,
+                    bottomNavigationPadding = bottomNavigationPadding,
                     listState = recordListState,
                     body = body,
                 )
@@ -596,6 +599,7 @@ fun CodeRecordScreen(
                     onOpenSettings = { showSettingsSheet = true },
                     onOpenExport = { showExportDialog = true },
                     scrollChromeState = scrollChromeState,
+                    bottomNavigationPadding = bottomNavigationPadding,
                     listState = recordListState,
                     body = body,
                 )
